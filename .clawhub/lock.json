@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "skills": {
+    "stagehand-browser-cli": {
+      "version": "1.0.0",
+      "installedAt": 1771034272101
+    },
+    "gog": {
+      "version": "1.0.0",
+      "installedAt": 1771034578993
+    },
+    "github": {
+      "version": "1.0.0",
+      "installedAt": 1771034604331
+    },
+    "web-search": {
+      "version": "1.0.0",
+      "installedAt": 1771034681815
+    },
+    "tavily-search": {
+      "version": "1.0.0",
+      "installedAt": 1771034759097
+    },
+    "find-skills": {
+      "version": "0.1.0",
+      "installedAt": 1771039686944
+    },
+    "ontology": {
+      "version": "0.1.2",
+      "installedAt": 1771044144257
+    },
+    "humanizer": {
+      "version": "1.0.0",
+      "installedAt": 1771044583612
+    },
+    "scholar": {
+      "version": "1.0.0",
+      "installedAt": 1771045361981
+    }
+  }
+}
