@@ -17,11 +17,19 @@ from pathlib import Path
 from typing import List, Dict, Optional, Any
 
 try:
-    from duckduckgo_search import DDGS
-except ImportError as e:
-    print(f"Error: Missing required dependency: {e}", file=sys.stderr)
-    print("Install with: pip install duckduckgo-search", file=sys.stderr)
-    sys.exit(1)
+    from ddgs import DDGS
+except ImportError:
+    try:
+        from duckduckgo_search import DDGS
+    except ImportError as e:
+        print(f"Error: Missing required dependency: {e}", file=sys.stderr)
+        print("Install with: pip install duckduckgo-search", file=sys.stderr)
+        sys.exit(1)
+
+# Force UTF-8 output for Windows consoles
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
 
 
 class WebSearch:
@@ -65,7 +73,7 @@ class WebSearch:
         try:
             with DDGS() as ddgs:
                 results = list(ddgs.text(
-                    keywords=query,
+                    query,
                     region=self.region,
                     safesearch=self.safe_search,
                     timelimit=time_range,
@@ -96,7 +104,7 @@ class WebSearch:
         try:
             with DDGS() as ddgs:
                 results = list(ddgs.news(
-                    keywords=query,
+                    query,
                     region=self.region,
                     safesearch=self.safe_search,
                     timelimit=time_range,
@@ -134,7 +142,7 @@ class WebSearch:
         try:
             with DDGS() as ddgs:
                 results = list(ddgs.images(
-                    keywords=query,
+                    query,
                     region=self.region,
                     safesearch=self.safe_search,
                     size=size,
@@ -170,7 +178,7 @@ class WebSearch:
         try:
             with DDGS() as ddgs:
                 results = list(ddgs.videos(
-                    keywords=query,
+                    query,
                     region=self.region,
                     safesearch=self.safe_search,
                     duration=duration,
