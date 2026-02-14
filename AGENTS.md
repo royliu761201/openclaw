@@ -138,6 +138,26 @@
 - Status output: keep tables + ANSI-safe wrapping (`src/terminal/table.ts`); `status --all` = read-only/pasteable, `status --deep` = probes.
 - Gateway currently runs only as the menubar app; there is no separate LaunchAgent/helper label installed. Restart via the OpenClaw Mac app or `scripts/restart-mac.sh`; to verify/kill use `launchctl print gui/$UID | grep openclaw` rather than assuming a fixed label. **When debugging on macOS, start/stop the gateway via the app, not ad-hoc tmux sessions; kill any temporary tunnels before handoff.**
 - macOS logs: use `./scripts/clawlog.sh` to query unified logs for the OpenClaw subsystem; it supports follow/tail/category filters and expects passwordless sudo for `/usr/bin/log`.
+
+## Configured Agents
+
+### Senior Researcher (Phase 2 validated)
+- **ID**: `researcher`
+- **Role**: Deep inquiry, experiment execution, paper synthesis.
+- **Skills**:
+  - `academic`: ArXiv search/download.
+  - `kaggle`: Dataset/Kernel management (Python SDK).
+  - `github`: Version control for code/papers.
+  - `ssh`: Remote GPU, Conda env management, customized file ops.
+  - `latex`: Paper compilation.
+  - `huggingface`: Model downloading.
+  - `wandb`: Experiment tracking.
+- **Workflow**: Idea -> ArXiv -> Kaggle/SSH Experiment -> WandB -> Latex Paper.
+
+### WeChat Agent (Phase 4 pending)
+- **ID**: `wechat`
+- **Role**: Social interface, link summarization.
+- **Status**: Bridge installed, awaiting login.
 - If shared guardrails are available locally, review them; otherwise follow this repo's guidance.
 - SwiftUI state management (iOS/macOS): prefer the `Observation` framework (`@Observable`, `@Bindable`) over `ObservableObject`/`@StateObject`; don’t introduce new `ObservableObject` unless required for compatibility, and migrate existing usages when touching related code.
 - Connection providers: when adding a new connection, update every UI surface and docs (macOS app, web UI, mobile if applicable, onboarding/overview docs) and add matching status + configuration forms so provider lists and settings stay in sync.
