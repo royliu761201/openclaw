@@ -28,6 +28,8 @@ secrets.json
 client_secret.json
 bridge.json
 qrcode.txt
+skills/wechat/
+agents/wechat/
 
 # Editor
 .vscode/
