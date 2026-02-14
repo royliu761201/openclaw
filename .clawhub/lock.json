@@ -36,6 +36,14 @@
     "scholar": {
       "version": "1.0.0",
       "installedAt": 1771045361981
+    },
+    "lark-integration": {
+      "version": "1.0.0",
+      "installedAt": 1771078350400
+    },
+    "agent-browser": {
+      "version": "0.2.0",
+      "installedAt": 1771084510199
     }
   }
 }
