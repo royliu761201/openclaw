@@ -1,29 +1,29 @@
 ---
 name: latex
-description: Compile LaTeX documents to PDF.
-metadata: { "openclaw": { "requires": { "bins": ["pdflatex"] } } }
+description: Compile LaTeX documents to PDF with BibTeX support.
+metadata: { "openclaw": { "requires": { "bins": ["pdflatex", "bibtex"] } } }
 ---
 
 # LaTeX Compiler
 
-Wraps `pdflatex` to compile academic papers.
+Wraps `pdflatex` and `bibtex` to compile academic papers with full citation resolution.
 
 ## Tools
 
 ### `compile_tex`
-Compile a `.tex` file to PDF.
+
+Compile a `.tex` file to PDF using a multi-pass strategy (pdflatex -> bibtex -> pdflatex -> pdflatex).
 
 - **file** (string, required): Path to the `.tex` file.
-- **clean** (boolean, optional): Clean auxiliary files after build (default: true).
+- **clean** (boolean, optional): Clean auxiliary files (.aux, .log, .bbl, etc) after build (default: true).
+- **timeout** (integer, optional): Compilation timeout in seconds (default: 300).
 
 ## Usage
+
 Run the python wrapper to compile and clean up auxiliary files:
 
 ```bash
-python skills/latex/scripts/compile.py workspace/paper.tex --clean
+python3 skills/latex/scripts/compile.py workspace/paper.tex --clean
 ```
 
-Or raw command (not recommended):
-```bash
-pdflatex -interaction=nonstopmode -output-directory=workspace/papers my_paper.tex
-```
+This will automatically handle cross-references and bibliography generation.
