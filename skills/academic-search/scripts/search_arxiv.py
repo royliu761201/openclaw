@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import argparse
 import json
 import arxiv
@@ -5,6 +6,7 @@ import os
 
 def search_arxiv_papers(query, max_results=5):
     try:
+        client = arxiv.Client()
         search = arxiv.Search(
             query=query,
             max_results=max_results,
@@ -12,7 +14,7 @@ def search_arxiv_papers(query, max_results=5):
         )
 
         results = []
-        for result in search.results():
+        for result in client.results(search):
             paper = {
                 'id': result.entry_id.split('/')[-1],
                 'title': result.title,
@@ -28,24 +30,6 @@ def search_arxiv_papers(query, max_results=5):
     except Exception as e:
         print(json.dumps({"error": str(e)}))
 
-def download_paper(paper_id, filename=None):
-    try:
-        # Arxiv library download
-        paper = next(arxiv.Search(id_list=[paper_id]).results())
-        
-        # Ensure workspace/papers exists
-        output_dir = os.path.join(os.getcwd(), 'workspace', 'papers')
-        os.makedirs(output_dir, exist_ok=True)
-        
-        if not filename:
-            filename = f"{paper_id}.pdf"
-            
-        path = paper.download_pdf(dirpath=output_dir, filename=filename)
-        print(json.dumps({"status": "success", "path": path}))
-        
-    except Exception as e:
-         print(json.dumps({"error": str(e)}))
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='ArXiv Tool')
     subparsers = parser.add_subparsers(dest='command')
@@ -54,13 +38,13 @@ if __name__ == "__main__":
     search_parser.add_argument('--query', required=True)
     search_parser.add_argument('--max_results', type=int, default=5)
     
-    download_parser = subparsers.add_parser('download')
-    download_parser.add_argument('--id', required=True)
-    download_parser.add_argument('--filename')
-    
     args = parser.parse_args()
     
     if args.command == 'search':
         search_arxiv_papers(args.query, args.max_results)
-    elif args.command == 'download':
-        download_paper(args.id, args.filename)
+    else:
+        # Default behavior if query argument is present (backwards compatibility or simpler usage)
+        if hasattr(args, 'query') and args.query:
+             search_arxiv_papers(args.query, args.max_results)
+        else:
+             parser.print_help()
