@@ -1,5 +1,5 @@
 ---
-name: duckduckgo
+name: duckduckgo-search
 description: Search the web using DuckDuckGo (free, no API key required). Supports web, news, images, and videos with filtering options. Use python3 to run the script.
 homepage: https://duckduckgo.com
 metadata:
