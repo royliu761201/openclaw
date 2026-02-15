@@ -620,7 +620,7 @@ export declare const OpenClawSchema: z.ZodObject<{
         web: z.ZodOptional<z.ZodObject<{
             search: z.ZodOptional<z.ZodObject<{
                 enabled: z.ZodOptional<z.ZodBoolean>;
-                provider: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"brave">, z.ZodLiteral<"perplexity">, z.ZodLiteral<"grok">]>>;
+                provider: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"brave">, z.ZodLiteral<"perplexity">, z.ZodLiteral<"grok">, z.ZodLiteral<"tavily">]>>;
                 apiKey: z.ZodOptional<z.ZodString>;
                 maxResults: z.ZodOptional<z.ZodNumber>;
                 timeoutSeconds: z.ZodOptional<z.ZodNumber>;
