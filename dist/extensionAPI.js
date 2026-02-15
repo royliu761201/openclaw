@@ -4,21 +4,21 @@ import { $ as colorize, A as isPlainObject, B as shortenHomeInString, C as CONFI
 import { B as resolveOpenClawAgentDir, C as getShellPathFromLoginShell, F as resolveApiKeyForProfile, G as DEFAULT_MODEL, H as normalizeSecretInput, I as listProfilesForProvider, K as DEFAULT_PROVIDER, L as markAuthProfileGood, M as isProfileInCooldown, N as markAuthProfileFailure, O as isTruthyEnvValue, P as markAuthProfileUsed, R as ensureAuthProfileStore, S as resolveModelAuthMode, T as resolveShellEnvFallbackTimeoutMs, U as resolveAuthProfileDisplayLabel, V as withFileLock$1, W as DEFAULT_CONTEXT_TOKENS, _ as getApiKeyForModel, a as modelKey, b as resolveApiKeyForProvider, c as resolveConfiguredModelRef, d as resolveThinkingDefault, i as isCliProvider, j as resolveAuthProfileOrder, k as parseBooleanValue$1, l as resolveDefaultModelForAgent, n as buildConfiguredAllowlistKeys, o as normalizeProviderId, r as buildModelAliasIndex, t as buildAllowedModelSet, u as resolveModelRefFromString, v as getCustomProviderApiKey, x as resolveEnvApiKey, y as requireApiKey, z as resolveAuthStorePathForDisplay } from "./model-selection-Cnk098t1.js";
 import { a as saveJsonFile, i as loadJsonFile } from "./github-copilot-token-c9Igt3ZH.js";
 import { n as resolveCliName, t as formatCliCommand } from "./command-format-CFzL448l.js";
-import { A as loadWebMediaRaw, B as isSafeFenceBreak, C as parseInlineDirectives$1, D as markdownToIR, E as chunkMarkdownIR, F as chunkText, G as SILENT_REPLY_TOKEN, H as getGlobalHookRunner, I as chunkTextWithMode, K as isSilentReplyText, L as resolveChunkMode, M as chunkByNewline, N as chunkMarkdownText, O as markdownToIRWithMeta, P as chunkMarkdownTextWithMode, R as resolveTextChunkLimit, S as splitMediaFromOutput, T as wrapFetchWithAbortSignal, U as initializeGlobalHookRunner, V as parseFenceSpans, W as HEARTBEAT_TOKEN, _ as buildTargetResolverSignature, a as applyReplyThreading, b as throwIfAborted, c as shouldSuppressMessagingToolReplies, d as sendMessageSignal, f as sendReadReceiptSignal, g as streamSignalEvents, h as signalRpcRequest, i as applyReplyTagsToPayload, j as resolveMarkdownTableMode, k as loadWebMedia, l as createReplyToModeFilterForChannel, m as signalCheck, o as filterMessagingToolDuplicates, p as sendTypingSignal, r as normalizeReplyPayloadsForDelivery, s as isRenderablePayload, t as deliverOutboundPayloads, u as resolveReplyToMode, v as normalizeChannelTargetInput, w as resolveFetch, x as parseReplyDirectives, y as normalizeTargetForProvider, z as findFenceSpanAt } from "./deliver-F-0x_vXM.js";
-import { $ as updateLastRoute, $n as normalizeDiscordToken, $t as applySkillEnvOverrides, A as isBillingAssistantError, An as isGifMedia, At as resolveBrowserConfig, B as isTransientHttpError, Bn as isWhatsAppGroupJid, C as BILLING_ERROR_USER_MESSAGE, Cn as GATEWAY_CLIENT_MODES, Ct as resolveChannelGroupPolicy, D as formatRawAssistantErrorForUi, Dn as getFileExtension, Dt as resolveGroupSessionKey, E as formatBillingErrorMessage, En as extensionForMime, Et as resolveConversationLabel, F as isFailoverErrorMessage, Fn as listEnabledSignalAccounts, G as resolveSandboxContext, Gn as resolveTelegramToken, Gt as buildWorkspaceSkillCommandSpecs, H as parseImageSizeError, Hn as listEnabledTelegramAccounts, Ht as isBlockedHostname, I as isLikelyContextOverflowError, In as resolveSignalAccount, It as resizeToJpeg, Jn as resolveSlackAppToken, Jt as resolveSkillsPromptForRun, K as resolveSandboxRuntimeStatus, Kn as listBindings, Kt as buildWorkspaceSkillSnapshot, L as isRateLimitAssistantError, Ln as getChannelPlugin, Lt as getMediaDir, M as isCompactionFailureError, Mn as MAX_IMAGE_BYTES, N as isContextOverflowError, Nt as getImageMetadata, O as getApiErrorPayloadFingerprint, On as imageMimeFromFormat, Ot as createBrowserRouteContext, P as isFailoverAssistantError, Pn as mediaKindFromMime, Q as saveSessionStore, Qn as resolveDiscordAccount, Qt as resolveSandboxedMediaSource, R as isRawApiErrorPayload, Rn as listChannelPlugins, Rt as saveMediaBuffer, S as isGoogleModelApi, Sn as GATEWAY_CLIENT_IDS, St as resolveIMessageAccount, T as formatAssistantErrorText, Tn as detectMime, Tt as resolveChannelGroupToolsPolicy, U as sanitizeUserFacingText, Un as listTelegramAccountIds, Ut as isPrivateIpAddress, V as parseImageDimensionError, Vn as normalizeWhatsAppTarget, W as ensureSandboxWorkspaceForSession, Wn as resolveTelegramAccount, X as readSessionUpdatedAt, Xn as normalizeChatType, Xt as assertMediaNotDataUrl, Y as loadSessionStore, Yn as resolveSlackBotToken, Yt as resolvePluginSkillDirs, Z as recordSessionMetaFromInbound, Zn as listEnabledDiscordAccounts, Zt as assertSandboxPath, _ as sanitizeSessionMessagesImages, _n as isMarkdownCapableMessageChannel, _t as resolveFreshSessionTotalTokens, a as formatXHighModelHint, an as expandPolicyWithPluginGroups, at as deliveryContextKey, b as downgradeOpenAIReasoningBlocks, bn as resolveGatewayMessageChannel, bt as getChannelDock, c as normalizeReasoningLevel, cn as resolveToolProfilePolicy, ct as normalizeSessionDeliveryFields, d as normalizeVerboseLevel, dn as ensureSessionHeader, dt as evaluateSessionFreshness, en as applySkillEnvOverridesFromSnapshot, et as updateSessionStore, f as resolveResponseUsageMode, fn as resolveBootstrapMaxChars, ft as resolveChannelResetConfig, g as normalizeTextForComparison, gn as isInternalMessageChannel, gt as DEFAULT_RESET_TRIGGERS, h as isMessagingToolDuplicateNormalized, hn as isDeliverableMessageChannel, ht as resolveThreadFlag, i as formatThinkingLevels, in as collectExplicitAllowlist, it as deliveryContextFromSession, j as isCloudCodeAssistFormatError, jt as resolveProfile, k as isAuthAssistantError, kn as isAudioFileName, kt as registerBrowserRoutes, l as normalizeThinkLevel, ln as stripPluginOnlyAllowlist, lt as acquireSessionWriteLock, mn as INTERNAL_MESSAGE_CHANNEL, mt as resolveSessionResetType, n as validateGeminiTurns, nn as applyOwnerOnlyToolPolicy, nt as isCacheEnabled, o as listThinkingLevels, on as expandToolGroups, ot as mergeDeliveryContext, p as supportsXHighThinking, pn as sanitizeGoogleTurnOrdering, pt as resolveSessionResetPolicy, q as appendAssistantMessageToSessionTranscript, qn as resolveSlackAccount, qt as loadWorkspaceSkillEntries, r as pickFallbackThinkingLevel, rn as buildPluginToolGroups, rt as resolveCacheTtlMs$1, s as normalizeElevatedLevel, sn as normalizeToolName, st as normalizeDeliveryContext, t as validateAnthropicTurns, tn as resolveSandboxConfigForAgent, tt as updateSessionStoreEntry, u as normalizeUsageDisplay, un as buildBootstrapContextFiles, ut as resolveSessionKey$1, v as sanitizeImageBlocks, vn as listDeliverableMessageChannels, vt as resolveMainSessionKey, w as classifyFailoverReason, wn as GATEWAY_CLIENT_NAMES, wt as resolveChannelGroupRequireMention, x as isAntigravityClaude, xn as resolveMessageChannel, xt as listChannelDocks, y as sanitizeToolResultImages, yn as normalizeMessageChannel, yt as deriveSessionMetaPatch, z as isTimeoutErrorMessage, zn as normalizeChannelId$1, zt as SsrFBlockedError } from "./pi-embedded-helpers-DjJcmpva.js";
-import { A as VERSION, B as webAuthExists, C as unsetConfigOverride, D as unsetConfigValueAtPath, E as setConfigValueAtPath, I as readWebSelfId, M as getWebAuthAgeMs, N as logWebSelfId, O as isSafeExecutableValue, P as logoutWeb, S as setConfigOverride, T as parseConfigPath, _ as normalizePluginsConfig, a as validateConfigObjectWithPlugins, b as getConfigOverrides, c as normalizeTelegramCommandName, d as validateJsonSchemaValue, f as loadPluginManifestRegistry, g as applyTestPluginDefaults, i as writeConfigFile, j as resolveWhatsAppAccount, k as resolveAgentMaxConcurrent, l as resolveTelegramCustomCommands, n as readConfigFileSnapshot, p as discoverOpenClawPlugins, r as resolveConfigSnapshotHash, s as TELEGRAM_COMMAND_NAME_PATTERN, t as loadConfig, u as parseDurationMs, v as resolveEnableState, w as getConfigValueAtPath, x as resetConfigOverrides, y as resolveMemorySlotDecision } from "./config-Cq5GKtNh.js";
+import { A as loadWebMediaRaw, B as isSafeFenceBreak, C as parseInlineDirectives$1, D as markdownToIR, E as chunkMarkdownIR, F as chunkText, G as SILENT_REPLY_TOKEN, H as getGlobalHookRunner, I as chunkTextWithMode, K as isSilentReplyText, L as resolveChunkMode, M as chunkByNewline, N as chunkMarkdownText, O as markdownToIRWithMeta, P as chunkMarkdownTextWithMode, R as resolveTextChunkLimit, S as splitMediaFromOutput, T as wrapFetchWithAbortSignal, U as initializeGlobalHookRunner, V as parseFenceSpans, W as HEARTBEAT_TOKEN, _ as buildTargetResolverSignature, a as applyReplyThreading, b as throwIfAborted, c as shouldSuppressMessagingToolReplies, d as sendMessageSignal, f as sendReadReceiptSignal, g as streamSignalEvents, h as signalRpcRequest, i as applyReplyTagsToPayload, j as resolveMarkdownTableMode, k as loadWebMedia, l as createReplyToModeFilterForChannel, m as signalCheck, o as filterMessagingToolDuplicates, p as sendTypingSignal, r as normalizeReplyPayloadsForDelivery, s as isRenderablePayload, t as deliverOutboundPayloads, u as resolveReplyToMode, v as normalizeChannelTargetInput, w as resolveFetch, x as parseReplyDirectives, y as normalizeTargetForProvider, z as findFenceSpanAt } from "./deliver-55FR86ks.js";
+import { $ as updateLastRoute, $n as normalizeDiscordToken, $t as applySkillEnvOverrides, A as isBillingAssistantError, An as isGifMedia, At as resolveBrowserConfig, B as isTransientHttpError, Bn as isWhatsAppGroupJid, C as BILLING_ERROR_USER_MESSAGE, Cn as GATEWAY_CLIENT_MODES, Ct as resolveChannelGroupPolicy, D as formatRawAssistantErrorForUi, Dn as getFileExtension, Dt as resolveGroupSessionKey, E as formatBillingErrorMessage, En as extensionForMime, Et as resolveConversationLabel, F as isFailoverErrorMessage, Fn as listEnabledSignalAccounts, G as resolveSandboxContext, Gn as resolveTelegramToken, Gt as buildWorkspaceSkillCommandSpecs, H as parseImageSizeError, Hn as listEnabledTelegramAccounts, Ht as isBlockedHostname, I as isLikelyContextOverflowError, In as resolveSignalAccount, It as resizeToJpeg, Jn as resolveSlackAppToken, Jt as resolveSkillsPromptForRun, K as resolveSandboxRuntimeStatus, Kn as listBindings, Kt as buildWorkspaceSkillSnapshot, L as isRateLimitAssistantError, Ln as getChannelPlugin, Lt as getMediaDir, M as isCompactionFailureError, Mn as MAX_IMAGE_BYTES, N as isContextOverflowError, Nt as getImageMetadata, O as getApiErrorPayloadFingerprint, On as imageMimeFromFormat, Ot as createBrowserRouteContext, P as isFailoverAssistantError, Pn as mediaKindFromMime, Q as saveSessionStore, Qn as resolveDiscordAccount, Qt as resolveSandboxedMediaSource, R as isRawApiErrorPayload, Rn as listChannelPlugins, Rt as saveMediaBuffer, S as isGoogleModelApi, Sn as GATEWAY_CLIENT_IDS, St as resolveIMessageAccount, T as formatAssistantErrorText, Tn as detectMime, Tt as resolveChannelGroupToolsPolicy, U as sanitizeUserFacingText, Un as listTelegramAccountIds, Ut as isPrivateIpAddress, V as parseImageDimensionError, Vn as normalizeWhatsAppTarget, W as ensureSandboxWorkspaceForSession, Wn as resolveTelegramAccount, X as readSessionUpdatedAt, Xn as normalizeChatType, Xt as assertMediaNotDataUrl, Y as loadSessionStore, Yn as resolveSlackBotToken, Yt as resolvePluginSkillDirs, Z as recordSessionMetaFromInbound, Zn as listEnabledDiscordAccounts, Zt as assertSandboxPath, _ as sanitizeSessionMessagesImages, _n as isMarkdownCapableMessageChannel, _t as resolveFreshSessionTotalTokens, a as formatXHighModelHint, an as expandPolicyWithPluginGroups, at as deliveryContextKey, b as downgradeOpenAIReasoningBlocks, bn as resolveGatewayMessageChannel, bt as getChannelDock, c as normalizeReasoningLevel, cn as resolveToolProfilePolicy, ct as normalizeSessionDeliveryFields, d as normalizeVerboseLevel, dn as ensureSessionHeader, dt as evaluateSessionFreshness, en as applySkillEnvOverridesFromSnapshot, et as updateSessionStore, f as resolveResponseUsageMode, fn as resolveBootstrapMaxChars, ft as resolveChannelResetConfig, g as normalizeTextForComparison, gn as isInternalMessageChannel, gt as DEFAULT_RESET_TRIGGERS, h as isMessagingToolDuplicateNormalized, hn as isDeliverableMessageChannel, ht as resolveThreadFlag, i as formatThinkingLevels, in as collectExplicitAllowlist, it as deliveryContextFromSession, j as isCloudCodeAssistFormatError, jt as resolveProfile, k as isAuthAssistantError, kn as isAudioFileName, kt as registerBrowserRoutes, l as normalizeThinkLevel, ln as stripPluginOnlyAllowlist, lt as acquireSessionWriteLock, mn as INTERNAL_MESSAGE_CHANNEL, mt as resolveSessionResetType, n as validateGeminiTurns, nn as applyOwnerOnlyToolPolicy, nt as isCacheEnabled, o as listThinkingLevels, on as expandToolGroups, ot as mergeDeliveryContext, p as supportsXHighThinking, pn as sanitizeGoogleTurnOrdering, pt as resolveSessionResetPolicy, q as appendAssistantMessageToSessionTranscript, qn as resolveSlackAccount, qt as loadWorkspaceSkillEntries, r as pickFallbackThinkingLevel, rn as buildPluginToolGroups, rt as resolveCacheTtlMs$1, s as normalizeElevatedLevel, sn as normalizeToolName, st as normalizeDeliveryContext, t as validateAnthropicTurns, tn as resolveSandboxConfigForAgent, tt as updateSessionStoreEntry, u as normalizeUsageDisplay, un as buildBootstrapContextFiles, ut as resolveSessionKey$1, v as sanitizeImageBlocks, vn as listDeliverableMessageChannels, vt as resolveMainSessionKey, w as classifyFailoverReason, wn as GATEWAY_CLIENT_NAMES, wt as resolveChannelGroupRequireMention, x as isAntigravityClaude, xn as resolveMessageChannel, xt as listChannelDocks, y as sanitizeToolResultImages, yn as normalizeMessageChannel, yt as deriveSessionMetaPatch, z as isTimeoutErrorMessage, zn as normalizeChannelId$1, zt as SsrFBlockedError } from "./pi-embedded-helpers-CLT0CumA.js";
+import { A as VERSION, B as webAuthExists, C as unsetConfigOverride, D as unsetConfigValueAtPath, E as setConfigValueAtPath, I as readWebSelfId, M as getWebAuthAgeMs, N as logWebSelfId, O as isSafeExecutableValue, P as logoutWeb, S as setConfigOverride, T as parseConfigPath, _ as normalizePluginsConfig, a as validateConfigObjectWithPlugins, b as getConfigOverrides, c as normalizeTelegramCommandName, d as validateJsonSchemaValue, f as loadPluginManifestRegistry, g as applyTestPluginDefaults, i as writeConfigFile, j as resolveWhatsAppAccount, k as resolveAgentMaxConcurrent, l as resolveTelegramCustomCommands, n as readConfigFileSnapshot, p as discoverOpenClawPlugins, r as resolveConfigSnapshotHash, s as TELEGRAM_COMMAND_NAME_PATTERN, t as loadConfig, u as parseDurationMs, v as resolveEnableState, w as getConfigValueAtPath, x as resetConfigOverrides, y as resolveMemorySlotDecision } from "./config-BkZbwuTm.js";
 import { n as discoverModels, t as discoverAuthStorage } from "./pi-model-discovery-EhM2JAQo.js";
-import { S as pickPrimaryTailnetIPv4, T as DEFAULT_AI_SNAPSHOT_MAX_CHARS, _ as ensureChromeExtensionRelayServer, x as pickPrimaryLanIPv4, y as rawDataToString } from "./chrome-C-O8a2cW.js";
+import { S as pickPrimaryTailnetIPv4, T as DEFAULT_AI_SNAPSHOT_MAX_CHARS, _ as ensureChromeExtensionRelayServer, x as pickPrimaryLanIPv4, y as rawDataToString } from "./chrome-BG_KmAjS.js";
 import { n as formatErrorMessage, r as formatUncaughtError, t as extractErrorCode } from "./errors-dpUbQseI.js";
 import { a as resolveSessionTranscriptsDirForAgent, i as resolveSessionTranscriptPath, n as resolveSessionFilePath, o as resolveStorePath, r as resolveSessionFilePathOptions } from "./paths-CZU8VRRP.js";
 import { t as emitSessionTranscriptUpdate } from "./transcript-events-BrkSiEN9.js";
-import { _ as stripThinkingTagsFromText, a as decodeDataUrl, b as ensureOpenClawModelsJson, c as extractAssistantText$1, d as extractThinkingFromTaggedText, f as formatReasoningMessage, g as stripMinimaxToolCallXml, h as stripDowngradedToolCallText, i as coerceImageModelConfig, l as extractAssistantThinking, m as promoteThinkingTagsToBlocks, o as resolveProviderVisionModelFromConfig, p as inferToolMetaFromArgs, r as coerceImageAssistantText, s as minimaxUnderstandImage, u as extractThinkingFromTaggedStream, v as resolveToolDisplay, y as stripReasoningTagsFromText } from "./image-BZtw1qk3.js";
+import { _ as stripThinkingTagsFromText, a as decodeDataUrl, b as ensureOpenClawModelsJson, c as extractAssistantText$1, d as extractThinkingFromTaggedText, f as formatReasoningMessage, g as stripMinimaxToolCallXml, h as stripDowngradedToolCallText, i as coerceImageModelConfig, l as extractAssistantThinking, m as promoteThinkingTagsToBlocks, o as resolveProviderVisionModelFromConfig, p as inferToolMetaFromArgs, r as coerceImageAssistantText, s as minimaxUnderstandImage, u as extractThinkingFromTaggedStream, v as resolveToolDisplay, y as stripReasoningTagsFromText } from "./image-Dj-KemSH.js";
 import { i as resolveMemorySearchConfig, n as resolveRetryConfig, r as retryAsync } from "./manager-f90gkFnY.js";
 import { d as listMemoryFiles, f as normalizeExtraMemoryPaths } from "./sqlite-Byvu3oFV.js";
 import { t as redactSensitiveText } from "./redact-BIMJ3ntQ.js";
-import { a as fetchWithTimeout, i as bindAbortRelay, n as fetchRemoteMedia, r as fetchWithSsrFGuard } from "./fetch-CiMZofEf.js";
-import { _ as applyTemplate, a as runCapability, c as modelSupportsVision, d as registerUnhandledRejectionHandler, f as resolveConcurrency, g as CLI_OUTPUT_MAX_BUFFER, h as resolveMediaUnderstandingScope, i as resolveAutoImageModel, m as normalizeMediaUnderstandingChatType, n as createMediaAttachmentCache, o as findModelInCatalog, p as resolveTimeoutMs$1, r as normalizeMediaAttachments, s as loadModelCatalog, t as buildProviderRegistry, u as resolveAttachmentKind } from "./runner-Dv1oO08Z.js";
-import { a as formatError$1, i as createWaSocket, n as startWebLoginWithQr, o as getStatusCode$1, r as waitForWebLogin, s as waitForWaConnection } from "./login-qr-CFyrEfiz.js";
+import { a as fetchWithTimeout, i as bindAbortRelay, n as fetchRemoteMedia, r as fetchWithSsrFGuard } from "./fetch-Cs_b06uy.js";
+import { _ as applyTemplate, a as runCapability, c as modelSupportsVision, d as registerUnhandledRejectionHandler, f as resolveConcurrency, g as CLI_OUTPUT_MAX_BUFFER, h as resolveMediaUnderstandingScope, i as resolveAutoImageModel, m as normalizeMediaUnderstandingChatType, n as createMediaAttachmentCache, o as findModelInCatalog, p as resolveTimeoutMs$1, r as normalizeMediaAttachments, s as loadModelCatalog, t as buildProviderRegistry, u as resolveAttachmentKind } from "./runner-81DfAFVg.js";
+import { a as formatError$1, i as createWaSocket, n as startWebLoginWithQr, o as getStatusCode$1, r as waitForWebLogin, s as waitForWaConnection } from "./login-qr-D3uFeVeY.js";
 import { createRequire } from "node:module";
 import * as path$1 from "node:path";
 import path from "node:path";
@@ -37,7 +37,7 @@ import { EdgeTTS } from "node-edge-tts";
 import AjvPkg from "ajv";
 import { createServer } from "node:http";
 import { ProxyAgent, fetch as fetch$1 } from "undici";
-import { WebSocket as WebSocket$1 } from "ws";
+import { WebSocket } from "ws";
 import * as net$1 from "node:net";
 import net from "node:net";
 import { Buffer as Buffer$1 } from "node:buffer";
@@ -8197,7 +8197,7 @@ var GatewayClient = class {
 				if (fingerprint !== expected) return /* @__PURE__ */ new Error("gateway tls fingerprint mismatch");
 			});
 		}
-		this.ws = new WebSocket$1(url, wsOptions);
+		this.ws = new WebSocket(url, wsOptions);
 		this.ws.on("open", () => {
 			if (url.startsWith("wss://") && this.opts.tlsFingerprint) {
 				const tlsError = this.validateTlsFingerprint();
@@ -8401,7 +8401,7 @@ var GatewayClient = class {
 		return null;
 	}
 	async request(method, params, opts) {
-		if (!this.ws || this.ws.readyState !== WebSocket$1.OPEN) throw new Error("gateway not connected");
+		if (!this.ws || this.ws.readyState !== WebSocket.OPEN) throw new Error("gateway not connected");
 		const id = randomUUID();
 		const frame = {
 			type: "req",
@@ -9323,7 +9323,7 @@ async function routeReply(params) {
 	const resolvedReplyToId = replyToId ?? (channelId === "slack" && threadId != null && threadId !== "" ? String(threadId) : void 0);
 	const resolvedThreadId = channelId === "slack" ? null : threadId ?? null;
 	try {
-		const { deliverOutboundPayloads } = await import("./deliver-F-0x_vXM.js").then((n) => n.n);
+		const { deliverOutboundPayloads } = await import("./deliver-55FR86ks.js").then((n) => n.n);
 		return {
 			ok: true,
 			messageId: (await deliverOutboundPayloads({
@@ -35195,6 +35195,7 @@ const PERPLEXITY_KEY_PREFIXES = ["pplx-"];
 const OPENROUTER_KEY_PREFIXES = ["sk-or-"];
 const XAI_API_ENDPOINT = "https://api.x.ai/v1/responses";
 const DEFAULT_GROK_MODEL = "grok-4-1-fast";
+const TAVILY_API_ENDPOINT = "https://api.tavily.com/search";
 const SEARCH_CACHE = /* @__PURE__ */ new Map();
 const BRAVE_FRESHNESS_SHORTCUTS = new Set([
 	"pd",
@@ -35257,6 +35258,11 @@ function missingSearchKeyPayload(provider) {
 		message: "web_search (grok) needs an xAI API key. Set XAI_API_KEY in the Gateway environment, or configure tools.web.search.grok.apiKey.",
 		docs: "https://docs.openclaw.ai/tools/web"
 	};
+	if (provider === "tavily") return {
+		error: "missing_tavily_api_key",
+		message: "web_search (tavily) needs a Tavily API key. Set TAVILY_API_KEY in the Gateway environment, or configure tools.web.search.tavily.apiKey.",
+		docs: "https://docs.openclaw.ai/tools/web"
+	};
 	return {
 		error: "missing_brave_api_key",
 		message: `web_search needs a Brave Search API key. Run \`${formatCliCommand("openclaw configure --section web")}\` to store it, or set BRAVE_API_KEY in the Gateway environment.`,
@@ -35267,6 +35273,7 @@ function resolveSearchProvider(search) {
 	const raw = search && "provider" in search && typeof search.provider === "string" ? search.provider.trim().toLowerCase() : "";
 	if (raw === "perplexity") return "perplexity";
 	if (raw === "grok") return "grok";
+	if (raw === "tavily") return "tavily";
 	if (raw === "brave") return "brave";
 	return "brave";
 }
@@ -35351,6 +35358,17 @@ function resolveGrokModel(grok) {
 function resolveGrokInlineCitations(grok) {
 	return grok?.inlineCitations === true;
 }
+function resolveTavilyConfig(search) {
+	if (!search || typeof search !== "object") return {};
+	const tavily = "tavily" in search ? search.tavily : void 0;
+	if (!tavily || typeof tavily !== "object") return {};
+	return tavily;
+}
+function resolveTavilyApiKey(tavily) {
+	const fromConfig = normalizeApiKey(tavily?.apiKey);
+	if (fromConfig) return fromConfig;
+	return normalizeApiKey(process.env.TAVILY_API_KEY) || void 0;
+}
 function resolveSearchCount(value, fallback) {
 	const parsed = typeof value === "number" && Number.isFinite(value) ? value : fallback;
 	return Math.max(1, Math.min(MAX_SEARCH_COUNT, Math.floor(parsed)));
@@ -35382,6 +35400,32 @@ function resolveSiteName(url) {
 	} catch {
 		return;
 	}
+}
+async function runTavilySearch(params) {
+	const res = await fetch(TAVILY_API_ENDPOINT, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+			api_key: params.apiKey,
+			query: params.query,
+			max_results: params.count,
+			include_answer: true
+		}),
+		signal: withTimeout$3(void 0, params.timeoutSeconds * 1e3)
+	});
+	if (!res.ok) {
+		const detail = await readResponseText(res);
+		throw new Error(`Tavily API error (${res.status}): ${detail || res.statusText}`);
+	}
+	const data = await res.json();
+	return {
+		results: (data.results ?? []).map((r) => ({
+			title: r.title ?? "",
+			url: r.url ?? "",
+			content: r.content ?? ""
+		})),
+		answer: data.answer
+	};
 }
 async function runPerplexitySearch(params) {
 	const baseUrl = params.baseUrl.trim().replace(/\/$/, "");
@@ -35445,7 +35489,7 @@ async function runGrokSearch(params) {
 	};
 }
 async function runWebSearch(params) {
-	const cacheKey = normalizeCacheKey(params.provider === "brave" ? `${params.provider}:${params.query}:${params.count}:${params.country || "default"}:${params.search_lang || "default"}:${params.ui_lang || "default"}:${params.freshness || "default"}` : params.provider === "perplexity" ? `${params.provider}:${params.query}:${params.perplexityBaseUrl ?? DEFAULT_PERPLEXITY_BASE_URL}:${params.perplexityModel ?? DEFAULT_PERPLEXITY_MODEL}` : `${params.provider}:${params.query}:${params.grokModel ?? DEFAULT_GROK_MODEL}:${String(params.grokInlineCitations ?? false)}`);
+	const cacheKey = normalizeCacheKey(params.provider === "brave" ? `${params.provider}:${params.query}:${params.count}:${params.country || "default"}:${params.search_lang || "default"}:${params.ui_lang || "default"}:${params.freshness || "default"}` : params.provider === "perplexity" ? `${params.provider}:${params.query}:${params.perplexityBaseUrl ?? DEFAULT_PERPLEXITY_BASE_URL}:${params.perplexityModel ?? DEFAULT_PERPLEXITY_MODEL}` : params.provider === "tavily" ? `${params.provider}:${params.query}:${params.count}` : `${params.provider}:${params.query}:${params.grokModel ?? DEFAULT_GROK_MODEL}:${String(params.grokInlineCitations ?? false)}`);
 	const cached = readCache(SEARCH_CACHE, cacheKey);
 	if (cached) return {
 		...cached.value,
@@ -35499,6 +35543,36 @@ async function runWebSearch(params) {
 			content: wrapWebContent(content),
 			citations,
 			inlineCitations
+		};
+		writeCache(SEARCH_CACHE, cacheKey, payload, params.cacheTtlMs);
+		return payload;
+	}
+	if (params.provider === "tavily") {
+		const { results, answer } = await runTavilySearch({
+			query: params.query,
+			apiKey: params.apiKey,
+			count: params.count,
+			timeoutSeconds: params.timeoutSeconds
+		});
+		const mapped = results.map((r) => ({
+			title: r.title ? wrapWebContent(r.title, "web_search") : "",
+			url: r.url,
+			description: r.content ? wrapWebContent(r.content, "web_search") : "",
+			siteName: resolveSiteName(r.url)
+		}));
+		const payload = {
+			query: params.query,
+			provider: params.provider,
+			count: mapped.length,
+			tookMs: Date.now() - start,
+			externalContent: {
+				untrusted: true,
+				source: "web_search",
+				provider: params.provider,
+				wrapped: true
+			},
+			results: mapped,
+			answer: answer ? wrapWebContent(answer, "web_search") : void 0
 		};
 		writeCache(SEARCH_CACHE, cacheKey, payload, params.cacheTtlMs);
 		return payload;
@@ -35562,14 +35636,15 @@ function createWebSearchTool(options) {
 	const provider = resolveSearchProvider(search);
 	const perplexityConfig = resolvePerplexityConfig(search);
 	const grokConfig = resolveGrokConfig(search);
+	const tavilyConfig = resolveTavilyConfig(search);
 	return {
 		label: "Web Search",
 		name: "web_search",
-		description: provider === "perplexity" ? "Search the web using Perplexity Sonar (direct or via OpenRouter). Returns AI-synthesized answers with citations from real-time web search." : provider === "grok" ? "Search the web using xAI Grok. Returns AI-synthesized answers with citations from real-time web search." : "Search the web using Brave Search API. Supports region-specific and localized search via country and language parameters. Returns titles, URLs, and snippets for fast research.",
+		description: provider === "perplexity" ? "Search the web using Perplexity Sonar (direct or via OpenRouter). Returns AI-synthesized answers with citations from real-time web search." : provider === "grok" ? "Search the web using xAI Grok. Returns AI-synthesized answers with citations from real-time web search." : provider === "tavily" ? "Search the web using Tavily AI. Returns high-quality, curated search results with optional AI-synthesized answers optimized for LLM applications." : "Search the web using Brave Search API. Supports region-specific and localized search via country and language parameters. Returns titles, URLs, and snippets for fast research.",
 		parameters: WebSearchSchema,
 		execute: async (_toolCallId, args) => {
 			const perplexityAuth = provider === "perplexity" ? resolvePerplexityApiKey(perplexityConfig) : void 0;
-			const apiKey = provider === "perplexity" ? perplexityAuth?.apiKey : provider === "grok" ? resolveGrokApiKey(grokConfig) : resolveSearchApiKey(search);
+			const apiKey = provider === "perplexity" ? perplexityAuth?.apiKey : provider === "grok" ? resolveGrokApiKey(grokConfig) : provider === "tavily" ? resolveTavilyApiKey(tavilyConfig) : resolveSearchApiKey(search);
 			if (!apiKey) return jsonResult(missingSearchKeyPayload(provider));
 			const params = args;
 			const query = readStringParam(params, "query", { required: true });
@@ -39048,7 +39123,7 @@ async function deliverSessionMaintenanceWarning(params) {
 		return;
 	}
 	try {
-		const { deliverOutboundPayloads } = await import("./deliver-F-0x_vXM.js").then((n) => n.n);
+		const { deliverOutboundPayloads } = await import("./deliver-55FR86ks.js").then((n) => n.n);
 		await deliverOutboundPayloads({
 			cfg: params.cfg,
 			channel,
@@ -44117,7 +44192,7 @@ async function describeStickerImage(params) {
 	logVerbose(`telegram: describing sticker with ${provider}/${model}`);
 	try {
 		const buffer = await fs$1.readFile(imagePath);
-		const { describeImageWithModel } = await import("./image-BZtw1qk3.js").then((n) => n.n);
+		const { describeImageWithModel } = await import("./image-Dj-KemSH.js").then((n) => n.n);
 		return (await describeImageWithModel({
 			buffer,
 			fileName: "sticker.webp",
@@ -44479,7 +44554,7 @@ function createWhatsAppLoginTool() {
 			force: Type.Optional(Type.Boolean())
 		}),
 		execute: async (_toolCallId, args) => {
-			const { startWebLoginWithQr, waitForWebLogin } = await import("./login-qr-CFyrEfiz.js").then((n) => n.t);
+			const { startWebLoginWithQr, waitForWebLogin } = await import("./login-qr-D3uFeVeY.js").then((n) => n.t);
 			if ((args?.action ?? "start") === "wait") {
 				const result = await waitForWebLogin({ timeoutMs: typeof args.timeoutMs === "number" ? args.timeoutMs : void 0 });
 				return {
@@ -48409,7 +48484,7 @@ async function preflightDiscordMessage(params) {
 	let preflightTranscript;
 	const hasAudioAttachment = message.attachments?.some((att) => att.contentType?.startsWith("audio/"));
 	if (!isDirectMessage && shouldRequireMention && hasAudioAttachment && !baseText && mentionRegexes.length > 0) try {
-		const { transcribeFirstAudio } = await import("./audio-preflight-CTMm6Yk0.js");
+		const { transcribeFirstAudio } = await import("./audio-preflight-qD-wO-eq.js");
 		const audioPaths = message.attachments?.filter((att) => att.contentType?.startsWith("audio/")).map((att) => att.url) ?? [];
 		if (audioPaths.length > 0) preflightTranscript = await transcribeFirstAudio({
 			ctx: {
@@ -59053,7 +59128,7 @@ const buildTelegramMessageContext = async ({ primaryCtx, allMedia, storeAllowFro
 	let preflightTranscript;
 	const hasAudio = allMedia.some((media) => media.contentType?.startsWith("audio/"));
 	if (isGroup && requireMention && hasAudio && !hasUserText && mentionRegexes.length > 0) try {
-		const { transcribeFirstAudio } = await import("./audio-preflight-CTMm6Yk0.js");
+		const { transcribeFirstAudio } = await import("./audio-preflight-qD-wO-eq.js");
 		preflightTranscript = await transcribeFirstAudio({
 			ctx: {
 				MediaPaths: allMedia.length > 0 ? allMedia.map((m) => m.path) : void 0,

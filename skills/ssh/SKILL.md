@@ -1,7 +1,7 @@
 ---
 name: ssh
 description: Execute commands and transfer files on remote servers via SSH.
-metadata: { "openclaw": { "requires": { "env": ["SSH_HOST", "SSH_USER", "SSH_KEY"] } } }
+metadata: { "openclaw": { "requires": { "bins": ["python3"] } } }
 ---
 
 # SSH Skill
@@ -11,6 +11,7 @@ Remote execution and file transfer using Paramiko.
 ## Tools
 
 ### `ssh_exec`
+
 Execute a command on a remote server.
 
 - **command** (string, required): Command to run (e.g., "nvidia-smi").
@@ -18,44 +19,52 @@ Execute a command on a remote server.
 - **user** (string, optional): Override default user.
 
 **Usage**:
+
 ```bash
-python skills/ssh/scripts/ssh_tool.py exec "nvidia-smi"
+python3 skills/ssh/scripts/ssh_tool.py exec "nvidia-smi"
 ```
 
 ### `ssh_upload`
+
 Upload a file to the remote server.
 
 - **local** (string, required): Local path.
 - **remote** (string, required): Remote path.
 
 **Usage**:
+
 ```bash
-python skills/ssh/scripts/ssh_tool.py upload "workspace/script.py" "/home/user/script.py"
+python3 skills/ssh/scripts/ssh_tool.py upload "workspace/script.py" "/home/user/script.py"
 ```
 
 ### `ssh_write`
+
 Write content directly to a remote file.
 
 - **remote** (string, required): Remote path.
 - **content** (string, required): Content to write.
 
 **Usage**:
+
 ```bash
-python skills/ssh/scripts/ssh_tool.py write "/tmp/hello.txt" "Hello World"
+python3 skills/ssh/scripts/ssh_tool.py write "/tmp/hello.txt" "Hello World"
 ```
 
 ### `ssh_download`
+
 Download a file from the remote server.
 
 - **remote** (string, required): Remote path.
 - **local** (string, required): Local path.
 
 **Usage**:
+
 ```bash
-python skills/ssh/scripts/ssh_tool.py download "/home/user/output.log" "workspace/output.log"
+python3 skills/ssh/scripts/ssh_tool.py download "/home/user/output.log" "workspace/output.log"
 ```
 
 ### `ssh_conda`
+
 Manage remote Conda environments.
 
 - **subcommand** (string): `create`, `clone`, `delete`, `install`, `update`, `list`, or `install-manager`.
@@ -65,19 +74,20 @@ Manage remote Conda environments.
 - **clone_from** (string, optional): Source environment (clone).
 
 **Usage**:
+
 ```bash
 # Auto-Install Miniconda (if missing)
-python skills/ssh/scripts/ssh_tool.py conda install-manager
+python3 skills/ssh/scripts/ssh_tool.py conda install-manager
 
 # Create (Offline/Background)
-python skills/ssh/scripts/ssh_tool.py conda create -n my_env --packages python=3.9 numpy --detach
+python3 skills/ssh/scripts/ssh_tool.py conda create -n my_env --packages python=3.9 numpy --detach
 
 # Install (Long Running)
-python skills/ssh/scripts/ssh_tool.py conda install -n my_env --packages torch --detach
+python3 skills/ssh/scripts/ssh_tool.py conda install -n my_env --packages torch --detach
 
 # Clone
-python skills/ssh/scripts/ssh_tool.py conda clone -n new_env --clone-from old_env
+python3 skills/ssh/scripts/ssh_tool.py conda clone -n new_env --clone-from old_env
 
 # Execute in Env
-python skills/ssh/scripts/ssh_tool.py exec "python train.py" --conda_env my_env
+python3 skills/ssh/scripts/ssh_tool.py exec "python train.py" --conda_env my_env
 ```

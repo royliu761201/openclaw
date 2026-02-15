@@ -1012,7 +1012,8 @@ const ToolsWebSearchSchema = z.object({
 	provider: z.union([
 		z.literal("brave"),
 		z.literal("perplexity"),
-		z.literal("grok")
+		z.literal("grok"),
+		z.literal("tavily")
 	]).optional(),
 	apiKey: z.string().optional().register(sensitive),
 	maxResults: z.number().int().positive().optional(),
