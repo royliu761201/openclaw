@@ -20,36 +20,36 @@ Free web search powered by DuckDuckGo. No API keys required.
 
 ```bash
 # Simple web search
-python3 skills/web-search/scripts/search.py "python asyncio tutorial"
+python3 skills/duckduckgo-search/scripts/search.py "python asyncio tutorial"
 
 # Limit results
-python3 skills/web-search/scripts/search.py "machine learning" --max-results 20
+python3 skills/duckduckgo-search/scripts/search.py "machine learning" --max-results 20
 
 # Time filter (d=day, w=week, m=month, y=year)
-python3 skills/web-search/scripts/search.py "AI news" --time-range w
+python3 skills/duckduckgo-search/scripts/search.py "AI news" --time-range w
 ```
 
 ### News Search
 
 ```bash
 # Recent news
-python3 skills/web-search/scripts/search.py "climate change" --type news --time-range w
+python3 skills/duckduckgo-search/scripts/search.py "climate change" --type news --time-range w
 
 # More news results
-python3 skills/web-search/scripts/search.py "technology" --type news --max-results 15
+python3 skills/duckduckgo-search/scripts/search.py "technology" --type news --max-results 15
 ```
 
 ### Image Search
 
 ```bash
 # Basic image search
-python3 skills/web-search/scripts/search.py "sunset" --type images --max-results 20
+python3 skills/duckduckgo-search/scripts/search.py "sunset" --type images --max-results 20
 
 # Image with size filter
-python3 skills/web-search/scripts/search.py "landscape" --type images --image-size Large
+python3 skills/duckduckgo-search/scripts/search.py "landscape" --type images --image-size Large
 
 # Image with color filter
-python3 skills/web-search/scripts/search.py "abstract art" --type images --image-color Blue
+python3 skills/duckduckgo-search/scripts/search.py "abstract art" --type images --image-color Blue
 ```
 
 **Image filters**:
@@ -63,10 +63,10 @@ python3 skills/web-search/scripts/search.py "abstract art" --type images --image
 
 ```bash
 # Video search
-python3 skills/web-search/scripts/search.py "python tutorial" --type videos --max-results 15
+python3 skills/duckduckgo-search/scripts/search.py "python tutorial" --type videos --max-results 15
 
 # Short videos
-python3 skills/web-search/scripts/search.py "cooking recipes" --type videos --video-duration short
+python3 skills/duckduckgo-search/scripts/search.py "cooking recipes" --type videos --video-duration short
 ```
 
 **Video filters**:
@@ -79,32 +79,32 @@ python3 skills/web-search/scripts/search.py "cooking recipes" --type videos --vi
 ### Text (Default)
 
 ```bash
-python3 skills/web-search/scripts/search.py "quantum computing"
+python3 skills/duckduckgo-search/scripts/search.py "quantum computing"
 ```
 
 ### Markdown
 
 ```bash
-python3 skills/web-search/scripts/search.py "AI research" --format markdown
+python3 skills/duckduckgo-search/scripts/search.py "AI research" --format markdown
 ```
 
 ### JSON
 
 ```bash
-python3 skills/web-search/scripts/search.py "machine learning" --format json
+python3 skills/duckduckgo-search/scripts/search.py "machine learning" --format json
 ```
 
 ## Save to File
 
 ```bash
 # Save web results
-python3 skills/web-search/scripts/search.py "AI trends" --output results.txt
+python3 skills/duckduckgo-search/scripts/search.py "AI trends" --output results.txt
 
 # Save news as markdown
-python3 skills/web-search/scripts/search.py "tech news" --type news --format markdown --output news.md
+python3 skills/duckduckgo-search/scripts/search.py "tech news" --type news --format markdown --output news.md
 
 # Save as JSON
-python3 skills/web-search/scripts/search.py "research" --format json --output data.json
+python3 skills/duckduckgo-search/scripts/search.py "research" --format json --output data.json
 ```
 
 ## Advanced Options
@@ -112,7 +112,7 @@ python3 skills/web-search/scripts/search.py "research" --format json --output da
 ### Region-Specific Search
 
 ```bash
-python3 skills/web-search/scripts/search.py "local news" --region us-en --type news
+python3 skills/duckduckgo-search/scripts/search.py "local news" --region us-en --type news
 ```
 
 Common regions: `us-en`, `uk-en`, `ca-en`, `au-en`, `wt-wt` (worldwide)
@@ -120,7 +120,7 @@ Common regions: `us-en`, `uk-en`, `ca-en`, `au-en`, `wt-wt` (worldwide)
 ### Safe Search
 
 ```bash
-python3 skills/web-search/scripts/search.py "medical info" --safe-search on
+python3 skills/duckduckgo-search/scripts/search.py "medical info" --safe-search on
 ```
 
 Options: `on`, `moderate` (default), `off`
@@ -170,5 +170,5 @@ pip install duckduckgo-search
 ## Full Help
 
 ```bash
-python3 skills/web-search/scripts/search.py --help
+python3 skills/duckduckgo-search/scripts/search.py --help
 ```
