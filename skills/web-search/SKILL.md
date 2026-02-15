@@ -1,7 +1,177 @@
 ---
 name: web-search
-description: This skill should be used when users need to search the web for information, find current content, look up news articles, search for images, or find videos. It uses DuckDuckGo's search API to return results in clean, formatted output (text, markdown, or JSON). Use for research, fact-checking, finding recent information, or gathering web resources.
+description: Search the web using DuckDuckGo (free, no API key required). Supports web, news, images, and videos with filtering options. Use python3 to run the script.
+homepage: https://duckduckgo.com
+metadata:
+  openclaw:
+    emoji: 🦆
+    requires:
+      bins: ["python3"]
+      packages: ["duckduckgo-search"]
 ---
+
+# Web Search Skill
+
+Free web search powered by DuckDuckGo. No API keys required.
+
+## CLI Usage
+
+### Basic Web Search
+
+```bash
+# Simple web search
+python3 skills/web-search/scripts/search.py "python asyncio tutorial"
+
+# Limit results
+python3 skills/web-search/scripts/search.py "machine learning" --max-results 20
+
+# Time filter (d=day, w=week, m=month, y=year)
+python3 skills/web-search/scripts/search.py "AI news" --time-range w
+```
+
+### News Search
+
+```bash
+# Recent news
+python3 skills/web-search/scripts/search.py "climate change" --type news --time-range w
+
+# More news results
+python3 skills/web-search/scripts/search.py "technology" --type news --max-results 15
+```
+
+### Image Search
+
+```bash
+# Basic image search
+python3 skills/web-search/scripts/search.py "sunset" --type images --max-results 20
+
+# Image with size filter
+python3 skills/web-search/scripts/search.py "landscape" --type images --image-size Large
+
+# Image with color filter
+python3 skills/web-search/scripts/search.py "abstract art" --type images --image-color Blue
+```
+
+**Image filters**:
+
+- Size: `Small`, `Medium`, `Large`, `Wallpaper`
+- Color: `Red`, `Orange`, `Yellow`, `Green`, `Blue`, `Purple`, `Pink`, `Monochrome`, etc.
+- Type: `photo`, `clipart`, `gif`, `transparent`, `line`
+- Layout: `Square`, `Tall`, `Wide`
+
+### Video Search
+
+```bash
+# Video search
+python3 skills/web-search/scripts/search.py "python tutorial" --type videos --max-results 15
+
+# Short videos
+python3 skills/web-search/scripts/search.py "cooking recipes" --type videos --video-duration short
+```
+
+**Video filters**:
+
+- Duration: `short`, `medium`, `long`
+- Resolution: `high`, `standard`
+
+## Output Formats
+
+### Text (Default)
+
+```bash
+python3 skills/web-search/scripts/search.py "quantum computing"
+```
+
+### Markdown
+
+```bash
+python3 skills/web-search/scripts/search.py "AI research" --format markdown
+```
+
+### JSON
+
+```bash
+python3 skills/web-search/scripts/search.py "machine learning" --format json
+```
+
+## Save to File
+
+```bash
+# Save web results
+python3 skills/web-search/scripts/search.py "AI trends" --output results.txt
+
+# Save news as markdown
+python3 skills/web-search/scripts/search.py "tech news" --type news --format markdown --output news.md
+
+# Save as JSON
+python3 skills/web-search/scripts/search.py "research" --format json --output data.json
+```
+
+## Advanced Options
+
+### Region-Specific Search
+
+```bash
+python3 skills/web-search/scripts/search.py "local news" --region us-en --type news
+```
+
+Common regions: `us-en`, `uk-en`, `ca-en`, `au-en`, `wt-wt` (worldwide)
+
+### Safe Search
+
+```bash
+python3 skills/web-search/scripts/search.py "medical info" --safe-search on
+```
+
+Options: `on`, `moderate` (default), `off`
+
+## Common Parameters
+
+- `--type` or `-t`: Search type (`web`, `news`, `images`, `videos`)
+- `--max-results` or `-n`: Maximum results (default: 10)
+- `--time-range`: Time filter (`d`, `w`, `m`, `y`)
+- `--region` or `-r`: Region code (default: `wt-wt`)
+- `--format` or `-f`: Output format (`text`, `markdown`, `json`)
+- `--output` or `-o`: Save to file
+
+## Output Examples
+
+**Text format**:
+
+```
+1. Page Title
+   URL: https://example.com
+   Description of the page...
+```
+
+**Markdown format**:
+
+```markdown
+## 1. Page Title
+
+**URL:** https://example.com
+Description of the page...
+```
+
+**JSON format**:
+
+```json
+[{ "title": "Page Title", "href": "https://example.com", "body": "Description..." }]
+```
+
+## Installation
+
+Install required dependency:
+
+```bash
+pip install duckduckgo-search
+```
+
+## Full Help
+
+```bash
+python3 skills/web-search/scripts/search.py --help
+```
 
 # Web Search
 
@@ -12,6 +182,7 @@ Search the web using DuckDuckGo's API to find information across web pages, news
 ## When to Use This Skill
 
 Use this skill when users request:
+
 - Web searches for information or resources
 - Finding current or recent information online
 - Looking up news articles about specific topics
@@ -42,6 +213,7 @@ python scripts/search.py "<query>"
 ```
 
 **Example:**
+
 ```bash
 python scripts/search.py "python asyncio tutorial"
 ```
@@ -57,11 +229,13 @@ python scripts/search.py "<query>" --max-results <N>
 ```
 
 **Example:**
+
 ```bash
 python scripts/search.py "machine learning frameworks" --max-results 20
 ```
 
 Useful for:
+
 - Getting more comprehensive results (increase limit)
 - Quick lookups with fewer results (decrease limit)
 - Balancing detail vs. processing time
@@ -75,17 +249,20 @@ python scripts/search.py "<query>" --time-range <d|w|m|y>
 ```
 
 **Time range options:**
+
 - `d` - Past day
 - `w` - Past week
 - `m` - Past month
 - `y` - Past year
 
 **Example:**
+
 ```bash
 python scripts/search.py "artificial intelligence news" --time-range w
 ```
 
 Great for:
+
 - Finding recent news or updates
 - Filtering out outdated content
 - Tracking recent developments
@@ -99,11 +276,13 @@ python scripts/search.py "<query>" --type news
 ```
 
 **Example:**
+
 ```bash
 python scripts/search.py "climate change" --type news --time-range w --max-results 15
 ```
 
 News results include:
+
 - Article title
 - Source publication
 - Publication date
@@ -119,6 +298,7 @@ python scripts/search.py "<query>" --type images
 ```
 
 **Example:**
+
 ```bash
 python scripts/search.py "sunset over mountains" --type images --max-results 20
 ```
@@ -126,30 +306,39 @@ python scripts/search.py "sunset over mountains" --type images --max-results 20
 **Image filtering options:**
 
 Size filters:
+
 ```bash
 python scripts/search.py "landscape photos" --type images --image-size Large
 ```
+
 Options: `Small`, `Medium`, `Large`, `Wallpaper`
 
 Color filters:
+
 ```bash
 python scripts/search.py "abstract art" --type images --image-color Blue
 ```
+
 Options: `color`, `Monochrome`, `Red`, `Orange`, `Yellow`, `Green`, `Blue`, `Purple`, `Pink`, `Brown`, `Black`, `Gray`, `Teal`, `White`
 
 Type filters:
+
 ```bash
 python scripts/search.py "icons" --type images --image-type transparent
 ```
+
 Options: `photo`, `clipart`, `gif`, `transparent`, `line`
 
 Layout filters:
+
 ```bash
 python scripts/search.py "wallpapers" --type images --image-layout Wide
 ```
+
 Options: `Square`, `Tall`, `Wide`
 
 Image results include:
+
 - Image title
 - Image URL (direct link to image)
 - Thumbnail URL
@@ -165,6 +354,7 @@ python scripts/search.py "<query>" --type videos
 ```
 
 **Example:**
+
 ```bash
 python scripts/search.py "python tutorial" --type videos --max-results 15
 ```
@@ -172,18 +362,23 @@ python scripts/search.py "python tutorial" --type videos --max-results 15
 **Video filtering options:**
 
 Duration filters:
+
 ```bash
 python scripts/search.py "cooking recipes" --type videos --video-duration short
 ```
+
 Options: `short`, `medium`, `long`
 
 Resolution filters:
+
 ```bash
 python scripts/search.py "documentary" --type videos --video-resolution high
 ```
+
 Options: `high`, `standard`
 
 Video results include:
+
 - Video title
 - Publisher/channel
 - Duration
@@ -200,6 +395,7 @@ python scripts/search.py "<query>" --region <region-code>
 ```
 
 **Common region codes:**
+
 - `us-en` - United States (English)
 - `uk-en` - United Kingdom (English)
 - `ca-en` - Canada (English)
@@ -209,6 +405,7 @@ python scripts/search.py "<query>" --region <region-code>
 - `wt-wt` - Worldwide (default)
 
 **Example:**
+
 ```bash
 python scripts/search.py "local news" --region us-en --type news
 ```
@@ -222,11 +419,13 @@ python scripts/search.py "<query>" --safe-search <on|moderate|off>
 ```
 
 **Options:**
+
 - `on` - Strict filtering
 - `moderate` - Balanced filtering (default)
 - `off` - No filtering
 
 **Example:**
+
 ```bash
 python scripts/search.py "medical information" --safe-search on
 ```
@@ -236,6 +435,7 @@ python scripts/search.py "medical information" --safe-search on
 Choose how results are formatted:
 
 **Text format (default):**
+
 ```bash
 python scripts/search.py "quantum computing"
 ```
@@ -243,6 +443,7 @@ python scripts/search.py "quantum computing"
 Clean, readable plain text with numbered results.
 
 **Markdown format:**
+
 ```bash
 python scripts/search.py "quantum computing" --format markdown
 ```
@@ -250,6 +451,7 @@ python scripts/search.py "quantum computing" --format markdown
 Formatted markdown with headers, bold text, and links.
 
 **JSON format:**
+
 ```bash
 python scripts/search.py "quantum computing" --format json
 ```
@@ -265,6 +467,7 @@ python scripts/search.py "<query>" --output <file-path>
 ```
 
 **Example:**
+
 ```bash
 python scripts/search.py "artificial intelligence" --output ai_results.txt
 python scripts/search.py "AI news" --type news --format markdown --output ai_news.md
@@ -276,6 +479,7 @@ The file format is determined by the `--format` flag, not the file extension.
 ## Output Format Examples
 
 ### Text Format
+
 ```
 1. Page Title Here
    URL: https://example.com/page
@@ -287,6 +491,7 @@ The file format is determined by the `--format` flag, not the file extension.
 ```
 
 ### Markdown Format
+
 ```markdown
 ## 1. Page Title Here
 
@@ -302,6 +507,7 @@ Another description...
 ```
 
 ### JSON Format
+
 ```json
 [
   {
@@ -409,11 +615,13 @@ When users request web searches:
 ## Quick Reference
 
 **Command structure:**
+
 ```bash
 python scripts/search.py "<query>" [options]
 ```
 
 **Essential options:**
+
 - `-t, --type` - Search type (web, news, images, videos)
 - `-n, --max-results` - Maximum results (default: 10)
 - `--time-range` - Time filter (d, w, m, y)
@@ -423,16 +631,19 @@ python scripts/search.py "<query>" [options]
 - `-o, --output` - Save to file
 
 **Image-specific options:**
+
 - `--image-size` - Size filter (Small, Medium, Large, Wallpaper)
 - `--image-color` - Color filter
 - `--image-type` - Type filter (photo, clipart, gif, transparent, line)
 - `--image-layout` - Layout filter (Square, Tall, Wide)
 
 **Video-specific options:**
+
 - `--video-duration` - Duration filter (short, medium, long)
 - `--video-resolution` - Resolution filter (high, standard)
 
 **Get full help:**
+
 ```bash
 python scripts/search.py --help
 ```
