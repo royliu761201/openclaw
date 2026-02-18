@@ -101,7 +101,10 @@ describe("workspace path resolution", () => {
 
   it("defaults exec cwd to workspaceDir when workdir is omitted", async () => {
     await withTempDir("openclaw-ws-", async (workspaceDir) => {
-      const tools = createOpenClawCodingTools({ workspaceDir, exec: { host: "gateway" } });
+      const tools = createOpenClawCodingTools({
+        workspaceDir,
+        exec: { host: "gateway", ask: "off", security: "full" },
+      });
       const execTool = tools.find((tool) => tool.name === "exec");
       expect(execTool).toBeDefined();
 
@@ -124,7 +127,10 @@ describe("workspace path resolution", () => {
   it("lets exec workdir override the workspace default", async () => {
     await withTempDir("openclaw-ws-", async (workspaceDir) => {
       await withTempDir("openclaw-override-", async (overrideDir) => {
-        const tools = createOpenClawCodingTools({ workspaceDir, exec: { host: "gateway" } });
+        const tools = createOpenClawCodingTools({
+          workspaceDir,
+          exec: { host: "gateway", ask: "off", security: "full" },
+        });
         const execTool = tools.find((tool) => tool.name === "exec");
         expect(execTool).toBeDefined();
 
@@ -156,7 +162,7 @@ describe("sandboxed workspace paths", () => {
           sessionKey: "sandbox:test",
           workspaceDir: sandboxDir,
           agentWorkspaceDir: workspaceDir,
-          workspaceAccess: "rw",
+          workspaceAccess: "rw" as const,
           containerName: "openclaw-sbx-test",
           containerWorkdir: "/workspace",
           fsBridge: createHostSandboxFsBridge(sandboxDir),
