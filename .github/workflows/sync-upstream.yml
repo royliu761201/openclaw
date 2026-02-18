@@ -1,0 +1,67 @@
+name: Sync Upstream
+
+on:
+  schedule:
+    # Daily at 03:30 UTC
+    - cron: "30 3 * * *"
+  workflow_dispatch:
+    inputs:
+      target_branch:
+        description: Branch in this fork to sync
+        required: false
+        default: main
+      upstream_branch:
+        description: Branch in openclaw/openclaw to merge from
+        required: false
+        default: main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-upstream-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.target_branch || 'main' }}
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch upstream
+        run: |
+          git remote add upstream https://github.com/openclaw/openclaw.git
+          git fetch upstream "${{ github.event.inputs.upstream_branch || 'main' }}"
+
+      - name: Merge upstream branch
+        id: merge
+        run: |
+          set -euo pipefail
+          TARGET="${{ github.event.inputs.target_branch || 'main' }}"
+          UPSTREAM="${{ github.event.inputs.upstream_branch || 'main' }}"
+
+          git checkout "$TARGET"
+
+          if git merge-base --is-ancestor "upstream/$UPSTREAM" HEAD; then
+            echo "No changes to sync."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          git merge --no-edit "upstream/$UPSTREAM"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Push merged result
+        if: steps.merge.outputs.changed == 'true'
+        run: |
+          TARGET="${{ github.event.inputs.target_branch || 'main' }}"
+          git push origin "HEAD:$TARGET"
