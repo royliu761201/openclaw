@@ -1,3 +1,5 @@
+import { isGoogleProvider } from "./provider-family.js";
+
 export type ModelRef = {
   provider?: string | null;
   id?: string | null;
@@ -55,12 +57,12 @@ export function isModernModelRef(ref: ModelRef): boolean {
     return matchesExactOrPrefix(id, CODEX_MODELS);
   }
 
-  if (provider === "google" || provider === "google-gemini-cli") {
-    return matchesPrefix(id, GOOGLE_PREFIXES);
-  }
-
   if (provider === "google-antigravity") {
     return matchesPrefix(id, GOOGLE_PREFIXES) || matchesPrefix(id, ANTHROPIC_PREFIXES);
+  }
+
+  if (isGoogleProvider(provider)) {
+    return matchesPrefix(id, GOOGLE_PREFIXES);
   }
 
   if (provider === "zai") {

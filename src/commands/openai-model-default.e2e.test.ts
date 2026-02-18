@@ -7,6 +7,11 @@ import {
   GOOGLE_GEMINI_DEFAULT_MODEL,
 } from "./google-gemini-model-default.js";
 import {
+  applyGoogleVertexConfig,
+  applyGoogleVertexProviderConfig,
+  GOOGLE_VERTEX_DEFAULT_MODEL,
+} from "./google-vertex-model-default.js";
+import {
   applyOpenAICodexModelDefault,
   OPENAI_CODEX_DEFAULT_MODEL,
 } from "./openai-codex-model-default.js";
@@ -121,6 +126,43 @@ describe("applyGoogleGeminiModelDefault", () => {
     const applied = applyGoogleGeminiModelDefault(cfg);
     expect(applied.changed).toBe(false);
     expect(applied.next).toEqual(cfg);
+  });
+});
+
+describe("applyGoogleVertexProviderConfig", () => {
+  it("adds allowlist entry for default model", () => {
+    const next = applyGoogleVertexProviderConfig({});
+    expect(Object.keys(next.agents?.defaults?.models ?? {})).toContain(GOOGLE_VERTEX_DEFAULT_MODEL);
+  });
+
+  it("preserves existing alias for default model", () => {
+    const next = applyGoogleVertexProviderConfig({
+      agents: {
+        defaults: {
+          models: {
+            [GOOGLE_VERTEX_DEFAULT_MODEL]: { alias: "My Vertex" },
+          },
+        },
+      },
+    });
+    expect(next.agents?.defaults?.models?.[GOOGLE_VERTEX_DEFAULT_MODEL]?.alias).toBe("My Vertex");
+  });
+});
+
+describe("applyGoogleVertexConfig", () => {
+  it("sets default when model is unset", () => {
+    const next = applyGoogleVertexConfig({});
+    expect(next.agents?.defaults?.model).toEqual({ primary: GOOGLE_VERTEX_DEFAULT_MODEL });
+  });
+
+  it("overrides model.primary when model object already exists", () => {
+    const next = applyGoogleVertexConfig({
+      agents: { defaults: { model: { primary: "anthropic/claude-opus-4-6", fallback: [] } } },
+    });
+    expect(next.agents?.defaults?.model).toEqual({
+      primary: GOOGLE_VERTEX_DEFAULT_MODEL,
+      fallback: [],
+    });
   });
 });
 
