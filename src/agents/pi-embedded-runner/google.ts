@@ -16,6 +16,7 @@ import {
   sanitizeSessionMessagesImages,
 } from "../pi-embedded-helpers.js";
 import { cleanToolSchemaForGemini } from "../pi-tools.schema.js";
+import { requiresGoogleToolSchemaSanitization } from "../provider-family.js";
 import {
   sanitizeToolCallInputs,
   sanitizeToolUseResultPairing,
@@ -244,7 +245,7 @@ export function sanitizeToolsForGoogle<
   tools: AgentTool<TSchemaType, TResult>[];
   provider: string;
 }): AgentTool<TSchemaType, TResult>[] {
-  if (params.provider !== "google-antigravity" && params.provider !== "google-gemini-cli") {
+  if (!requiresGoogleToolSchemaSanitization(params.provider)) {
     return params.tools;
   }
   return params.tools.map((tool) => {
@@ -261,7 +262,7 @@ export function sanitizeToolsForGoogle<
 }
 
 export function logToolSchemasForGoogle(params: { tools: AgentTool[]; provider: string }) {
-  if (params.provider !== "google-antigravity" && params.provider !== "google-gemini-cli") {
+  if (!requiresGoogleToolSchemaSanitization(params.provider)) {
     return;
   }
   const toolNames = params.tools.map((tool, index) => `${index}:${tool.name}`);

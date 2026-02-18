@@ -1,36 +1,71 @@
-# System
-.DS_Store
-Thumbs.db
-
-# Node
-node_modules/
-npm-debug.log
-yarn-error.log
 
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Env
 .venv
 venv/
-.env
+env/
 
-# OpenClaw Workspace & Temporary
-workspace/
-wandb/
-*.log
-*.pdf
-*.tex
-*.zip
-
-# Secrets
-secrets.json
-client_secret.json
-bridge.json
-qrcode.txt
-skills/wechat/
-agents/wechat/
-
-# Editor
-.vscode/
+# IDE
 .idea/
+.vscode/
+
+# Security
+secrets.json
+*.key
+*.pem
+id_ed25519*
+
+# Logs and Databases
+*.log
+*.sqlite
+wandb/
+mobile_agent.log
+
+# Temporary Root Files
+*.png
+*.jpg
+*.jpeg
+*.zip
+*.tar.gz
+*.rar
+missing_citations.txt
+autonomous_output*.log
+final_verification.log
+all_keys.txt
+all_refs.txt
+used_keys.txt
+used_refs.txt
+verify_archivist.py
+reproduce_draft.py
+emergency_draft.py
+exp_*.py
+
+# Runtime Workspaces
+.lanes/
+
+# Large Binary Artifacts
+*.pt
+*.pth
+*.ckpt
+*.pdf

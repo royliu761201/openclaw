@@ -2,6 +2,7 @@ import type { OpenClawConfig } from "../../../config/config.js";
 import type { RuntimeEnv } from "../../../runtime.js";
 import type { AuthChoice, OnboardOptions } from "../../onboard-types.js";
 import { upsertAuthProfile } from "../../../agents/auth-profiles.js";
+import { resolveEnvApiKey } from "../../../agents/model-auth.js";
 import { normalizeProviderId } from "../../../agents/model-selection.js";
 import { parseDurationMs } from "../../../cli/parse-duration.js";
 import { upsertSharedEnvVar } from "../../../infra/env-file.js";
@@ -9,6 +10,10 @@ import { shortenHomePath } from "../../../utils.js";
 import { normalizeSecretInput } from "../../../utils/normalize-secret-input.js";
 import { buildTokenProfileId, validateAnthropicSetupToken } from "../../auth-token.js";
 import { applyGoogleGeminiModelDefault } from "../../google-gemini-model-default.js";
+import {
+  applyGoogleVertexConfig,
+  GOOGLE_VERTEX_DEFAULT_MODEL,
+} from "../../google-vertex-model-default.js";
 import {
   applyAuthProfileConfig,
   applyCloudflareAiGatewayConfig,
@@ -199,6 +204,23 @@ export async function applyNonInteractiveAuthChoice(params: {
       mode: "api_key",
     });
     return applyGoogleGeminiModelDefault(nextConfig).next;
+  }
+
+  if (authChoice === "google-vertex") {
+    const envAuth = resolveEnvApiKey("google-vertex");
+    if (!envAuth) {
+      runtime.error(
+        [
+          "Google Vertex auth is not configured.",
+          "Run `gcloud auth application-default login` and set GOOGLE_CLOUD_PROJECT (or GCLOUD_PROJECT) and GOOGLE_CLOUD_LOCATION.",
+        ].join("\n"),
+      );
+      runtime.exit(1);
+      return null;
+    }
+    runtime.log(`Using Google Vertex auth from ${envAuth.source}`);
+    runtime.log(`Default model set to ${GOOGLE_VERTEX_DEFAULT_MODEL}`);
+    return applyGoogleVertexConfig(nextConfig);
   }
 
   if (

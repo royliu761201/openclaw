@@ -54,8 +54,8 @@ const AUTH_CHOICE_GROUP_DEFS: {
   {
     value: "google",
     label: "Google",
-    hint: "Gemini API key + OAuth",
-    choices: ["gemini-api-key", "google-antigravity", "google-gemini-cli"],
+    hint: "Gemini API key + OAuth + Vertex ADC",
+    choices: ["gemini-api-key", "google-vertex", "google-antigravity", "google-gemini-cli"],
   },
   {
     value: "xai",
@@ -233,6 +233,11 @@ export function buildAuthChoiceOptions(params: {
     hint: "Uses GitHub device flow",
   });
   options.push({ value: "gemini-api-key", label: "Google Gemini API key" });
+  options.push({
+    value: "google-vertex",
+    label: "Google Vertex (ADC)",
+    hint: "Requires gcloud ADC + project + location env vars",
+  });
   options.push({
     value: "google-antigravity",
     label: "Google Antigravity OAuth",

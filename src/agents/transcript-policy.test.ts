@@ -21,6 +21,17 @@ describe("resolveTranscriptPolicy", () => {
     expect(policy.sanitizeToolCallIds).toBe(true);
   });
 
+  it("applies Google policy for google-vertex APIs", () => {
+    const policy = resolveTranscriptPolicy({
+      provider: "google-vertex",
+      modelId: "gemini-2.5-pro",
+      modelApi: "google-vertex",
+    });
+    expect(policy.sanitizeToolCallIds).toBe(true);
+    expect(policy.applyGoogleTurnOrdering).toBe(true);
+    expect(policy.validateGeminiTurns).toBe(true);
+  });
+
   it("enables sanitizeToolCallIds for Mistral provider", () => {
     const policy = resolveTranscriptPolicy({
       provider: "mistral",
