@@ -1,6 +1,6 @@
 import type { AuthProfileStore } from "../agents/auth-profiles.js";
-import type { AuthChoice, AuthChoiceGroupId } from "./onboard-types.js";
 import { AUTH_CHOICE_LEGACY_ALIASES_FOR_CLI } from "./auth-choice-legacy.js";
+import type { AuthChoice, AuthChoiceGroupId } from "./onboard-types.js";
 
 export type { AuthChoiceGroupId };
 
@@ -233,6 +233,11 @@ const BASE_AUTH_CHOICE_OPTIONS: ReadonlyArray<AuthChoiceOption> = [
     hint: "Uses GitHub device flow",
   },
   { value: "gemini-api-key", label: "Google Gemini API key" },
+  {
+    value: "google-vertex",
+    label: "Google Vertex (ADC)",
+    hint: "Requires gcloud ADC + project/location env vars",
+  },
   {
     value: "google-antigravity",
     label: "Google Antigravity OAuth",

@@ -1,12 +1,25 @@
 ---
 name: ssh
+emoji: 🖥️
 description: Execute commands and transfer files on remote servers via SSH.
 metadata: { "openclaw": { "requires": { "bins": ["python3"] } } }
 ---
 
 # SSH Skill
 
-Remote execution and file transfer using Paramiko.
+Execute commands and transfer files on remote servers via SSH (Paramiko).
+
+## Requirements
+
+To use this skill, you must set the following variables in your `.env` file:
+
+```bash
+SSH_HOST=ip_or_hostname
+SSH_USER=username
+SSH_KEY=/path/to/private_key  # Optional (Recommended)
+SSH_PASS=password             # Optional (Fallback)
+SSH_PORT=22                   # Optional (Default: 22)
+```
 
 ## Tools
 
@@ -17,27 +30,33 @@ Execute a command on a remote server.
 - **command** (string, required): Command to run (e.g., "nvidia-smi").
 - **host** (string, optional): Override default host.
 - **user** (string, optional): Override default user.
+- **detach** (flag, optional): Run in background (nohup). Returns PID immediately.
 
 **Usage**:
 
 ```bash
-python3 skills/ssh/scripts/ssh_tool.py exec "nvidia-smi"
+# Sync Execution (Wait for output)
+./scripts/ssh_tool.py exec "nvidia-smi"
+
+# Async Execution (Detached)
+./scripts/ssh_tool.py exec "python train.py" --detach
 ```
 
-### `ssh_upload`
+### 📤 `ssh_upload`
 
 Upload a file to the remote server.
 
 - **local** (string, required): Local path.
 - **remote** (string, required): Remote path.
+- **resume** (flag, optional): Skip if remote file exists and size matches.
 
 **Usage**:
 
 ```bash
-python3 skills/ssh/scripts/ssh_tool.py upload "workspace/script.py" "/home/user/script.py"
+./scripts/ssh_tool.py upload "workspace/script.py" "/home/user/script.py"
 ```
 
-### `ssh_write`
+### 📝 `ssh_write`
 
 Write content directly to a remote file.
 
@@ -47,10 +66,10 @@ Write content directly to a remote file.
 **Usage**:
 
 ```bash
-python3 skills/ssh/scripts/ssh_tool.py write "/tmp/hello.txt" "Hello World"
+./scripts/ssh_tool.py write "/tmp/hello.txt" "Hello World"
 ```
 
-### `ssh_download`
+### 📥 `ssh_download`
 
 Download a file from the remote server.
 
@@ -60,10 +79,10 @@ Download a file from the remote server.
 **Usage**:
 
 ```bash
-python3 skills/ssh/scripts/ssh_tool.py download "/home/user/output.log" "workspace/output.log"
+./scripts/ssh_tool.py download "/home/user/output.log" "workspace/output.log"
 ```
 
-### `ssh_conda`
+### 🐍 `ssh_conda`
 
 Manage remote Conda environments.
 
@@ -77,17 +96,17 @@ Manage remote Conda environments.
 
 ```bash
 # Auto-Install Miniconda (if missing)
-python3 skills/ssh/scripts/ssh_tool.py conda install-manager
+./scripts/ssh_tool.py conda install-manager
 
 # Create (Offline/Background)
-python3 skills/ssh/scripts/ssh_tool.py conda create -n my_env --packages python=3.9 numpy --detach
+./scripts/ssh_tool.py conda create -n my_env --packages python=3.9 numpy --detach
 
 # Install (Long Running)
-python3 skills/ssh/scripts/ssh_tool.py conda install -n my_env --packages torch --detach
+./scripts/ssh_tool.py conda install -n my_env --packages torch --detach
 
 # Clone
-python3 skills/ssh/scripts/ssh_tool.py conda clone -n new_env --clone-from old_env
+./scripts/ssh_tool.py conda clone -n new_env --clone-from old_env
 
-# Execute in Env
-python3 skills/ssh/scripts/ssh_tool.py exec "python train.py" --conda_env my_env
+# Execute in Env (Background)
+./scripts/ssh_tool.py exec "python train.py" --conda_env my_env --detach
 ```

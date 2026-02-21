@@ -4,6 +4,7 @@ import { setTimeout as delay } from "node:timers/promises";
 import { describe, expect, it } from "vitest";
 import { makeTempWorkspace } from "../test-helpers/workspace.js";
 import { captureEnv } from "../test-utils/env.js";
+import { GOOGLE_VERTEX_DEFAULT_MODEL } from "./google-vertex-model-default.js";
 import { MINIMAX_API_BASE_URL, MINIMAX_CN_API_BASE_URL } from "./onboard-auth.js";
 import {
   createThrowingRuntime,
@@ -66,6 +67,10 @@ async function withOnboardEnv(
     "OPENCLAW_GATEWAY_PASSWORD",
     "CUSTOM_API_KEY",
     "OPENCLAW_DISABLE_CONFIG_CACHE",
+    "GOOGLE_APPLICATION_CREDENTIALS",
+    "GOOGLE_CLOUD_PROJECT",
+    "GCLOUD_PROJECT",
+    "GOOGLE_CLOUD_LOCATION",
   ]);
 
   process.env.OPENCLAW_SKIP_CHANNELS = "1";
@@ -76,6 +81,10 @@ async function withOnboardEnv(
   delete process.env.OPENCLAW_GATEWAY_TOKEN;
   delete process.env.OPENCLAW_GATEWAY_PASSWORD;
   delete process.env.CUSTOM_API_KEY;
+  delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  delete process.env.GOOGLE_CLOUD_PROJECT;
+  delete process.env.GCLOUD_PROJECT;
+  delete process.env.GOOGLE_CLOUD_LOCATION;
 
   const tempHome = await makeTempWorkspace(prefix);
   const configPath = path.join(tempHome, "openclaw.json");
@@ -283,6 +292,58 @@ describe("onboard (non-interactive): provider auth", () => {
       });
 
       expect(cfg.agents?.defaults?.model?.primary).toBe(OPENAI_DEFAULT_MODEL);
+    });
+  }, 60_000);
+
+  it("configures Google Vertex when ADC + project/location env are present", async () => {
+    await withOnboardEnv("openclaw-onboard-google-vertex-", async (env) => {
+      const adcDir = path.join(process.env.HOME ?? "", ".config", "gcloud");
+      await fs.mkdir(adcDir, { recursive: true });
+      const adcPath = path.join(adcDir, "application_default_credentials.json");
+      await fs.writeFile(
+        adcPath,
+        JSON.stringify({
+          type: "authorized_user",
+          client_id: "test-client-id",
+          client_secret: "test-client-secret",
+          refresh_token: "test-refresh-token",
+        }),
+      );
+
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = adcPath;
+      process.env.GOOGLE_CLOUD_PROJECT = "vertex-test-project";
+      process.env.GOOGLE_CLOUD_LOCATION = "us-central1";
+      delete process.env.GCLOUD_PROJECT;
+
+      const cfg = await runOnboardingAndReadConfig(env, {
+        authChoice: "google-vertex",
+      });
+
+      expect(cfg.agents?.defaults?.model?.primary).toBe(GOOGLE_VERTEX_DEFAULT_MODEL);
+      expect(cfg.agents?.defaults?.models?.[GOOGLE_VERTEX_DEFAULT_MODEL]).toEqual({
+        alias: "Gemini Vertex",
+      });
+    });
+  }, 60_000);
+
+  it("fails Google Vertex auth choice when project/location env are missing", async () => {
+    await withOnboardEnv("openclaw-onboard-google-vertex-missing-env-", async ({ runtime }) => {
+      const adcDir = path.join(process.env.HOME ?? "", ".config", "gcloud");
+      await fs.mkdir(adcDir, { recursive: true });
+      const adcPath = path.join(adcDir, "application_default_credentials.json");
+      await fs.writeFile(adcPath, "{}");
+
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = adcPath;
+      delete process.env.GOOGLE_CLOUD_PROJECT;
+      delete process.env.GCLOUD_PROJECT;
+      delete process.env.GOOGLE_CLOUD_LOCATION;
+
+      await expect(
+        runNonInteractiveOnboardingWithDefaults(runtime, {
+          authChoice: "google-vertex",
+          skipSkills: true,
+        }),
+      ).rejects.toThrow("Google Vertex auth is not configured.");
     });
   }, 60_000);
 

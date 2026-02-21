@@ -1,12 +1,34 @@
 ---
 name: kaggle
+emoji: 🏅
 description: Interact with Kaggle API (Datasets, Kernels).
 metadata: { "openclaw": { "requires": { "bins": ["python3"] } } }
 ---
 
 # Kaggle Skill
 
-Advanced tools for Kaggle automation. Requires `dotenv` loaded credentials or `~/.kaggle/kaggle.json`.
+Advanced tools for Kaggle automation.
+
+## Requirements
+
+The script requires Kaggle authentication credentials. You can provide these in two ways:
+
+1.  **Environment Variables** (Recommended):
+    Add the following to your project's `.env` file:
+    ```bash
+    KAGGLE_USERNAME=your_username
+    KAGGLE_KEY=your_key
+    ```
+2.  **Kaggle CLI Config**:
+    Place your `kaggle.json` key file in `~/.kaggle/kaggle.json`.
+
+## Remote Standards (L20 Cluster)
+
+**CRITICAL**: When running on the remote server (`research-bot`), adhere to these paths:
+
+1.  **Data Download**: ALWAYS download datasets to `/root/research_bot/data/kaggle/[dataset_name]`.
+    - Do NOT download to the project folder. Use `ln -s` to link it.
+2.  **Kernels**: Run kernels that output to `/root/research_bot/results/kaggle`.
 
 ## Tools
 
@@ -21,7 +43,7 @@ Create or update a Kaggle dataset. Code-as-Dataset supported.
 **Usage**:
 
 ```bash
-python3 skills/kaggle/scripts/kaggle_tool.py dataset_push "workspace/my_dataset" -m "Update" -z
+./scripts/kaggle_tool.py dataset_push "workspace/my_dataset" -m "Update" -z
 ```
 
 ### `kaggle_kernel_push`
@@ -33,20 +55,20 @@ Push (deploy) a kernel to Kaggle.
 **Usage**:
 
 ```bash
-python3 skills/kaggle/scripts/kaggle_tool.py kernel_push "workspace/my_kernel"
+./scripts/kaggle_tool.py kernel_push "workspace/my_kernel"
 ```
 
 ### `kaggle_kernels_list`
 
 List kernels to check status.
 
-- **user** (string, optional): Filter by user.
+- **user** (string, optional): Filter by user. If omitted, lists **your** kernels.
 - **search** (string, optional): Filter by title text.
 
 **Usage**:
 
 ```bash
-python3 skills/kaggle/scripts/kaggle_tool.py kernels_list --user "username" --search "openclaw"
+./scripts/kaggle_tool.py kernels_list --user "username" --search "openclaw"
 ```
 
 ### `kaggle_kernels_output`
@@ -59,7 +81,7 @@ Download logs and output files from a kernel run.
 **Usage**:
 
 ```bash
-python3 skills/kaggle/scripts/kaggle_tool.py kernels_output "xiaohualiu/openclaw-experiment" "workspace/output"
+./scripts/kaggle_tool.py kernels_output "xiaohualiu/openclaw-experiment" "workspace/output"
 ```
 
 ## Troubleshooting (FAQ)

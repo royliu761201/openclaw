@@ -113,6 +113,8 @@ USER.md
 !.agent/workflows/
 /local/
 package-lock.json
+.env
+config/vertex_service_account.json
 
 # Local iOS signing overrides
 apps/ios/LocalSigning.xcconfig
@@ -122,3 +124,9 @@ apps/ios/LocalSigning.xcconfig
 !src/auto-reply/reply/export-html/vendor/**
 !ui/src/i18n/lib/
 !ui/src/i18n/lib/**
+._src
+.tmp-openclaw-state/
+
+# Archive
+_archive/
+node_modules

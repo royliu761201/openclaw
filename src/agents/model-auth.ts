@@ -1,8 +1,10 @@
-import { type Api, getEnvApiKey, type Model } from "@mariozechner/pi-ai";
+import { existsSync } from "node:fs";
+import { homedir } from "node:os";
 import path from "node:path";
+import { type Api, type Model } from "@mariozechner/pi-ai";
+import { formatCliCommand } from "../cli/command-format.js";
 import type { OpenClawConfig } from "../config/config.js";
 import type { ModelProviderAuthMode, ModelProviderConfig } from "../config/types.js";
-import { formatCliCommand } from "../cli/command-format.js";
 import { getShellEnvAppliedKeys } from "../infra/shell-env.js";
 import {
   normalizeOptionalSecretInput,
@@ -235,6 +237,26 @@ export async function resolveApiKeyForProvider(params: {
 export type EnvApiKeyResult = { apiKey: string; source: string };
 export type ModelAuthMode = "api-key" | "oauth" | "token" | "mixed" | "aws-sdk" | "unknown";
 
+function hasGoogleVertexAdcCredentials(env: NodeJS.ProcessEnv = process.env): boolean {
+  const candidates: string[] = [];
+  const configured = normalizeOptionalSecretInput(env.GOOGLE_APPLICATION_CREDENTIALS);
+  if (configured) {
+    candidates.push(configured);
+  }
+
+  const home = normalizeOptionalSecretInput(env.HOME) ?? homedir();
+  if (home) {
+    candidates.push(path.join(home, ".config", "gcloud", "application_default_credentials.json"));
+  }
+
+  const appData = normalizeOptionalSecretInput(env.APPDATA);
+  if (appData) {
+    candidates.push(path.join(appData, "gcloud", "application_default_credentials.json"));
+  }
+
+  return candidates.some((candidate) => existsSync(candidate));
+}
+
 export function resolveEnvApiKey(provider: string): EnvApiKeyResult | null {
   const normalized = normalizeProviderId(provider);
   const applied = new Set(getShellEnvAppliedKeys());
@@ -264,11 +286,15 @@ export function resolveEnvApiKey(provider: string): EnvApiKeyResult | null {
   }
 
   if (normalized === "google-vertex") {
-    const envKey = getEnvApiKey(normalized);
-    if (!envKey) {
+    const project =
+      normalizeOptionalSecretInput(process.env.GOOGLE_CLOUD_PROJECT) ??
+      normalizeOptionalSecretInput(process.env.GCLOUD_PROJECT) ??
+      normalizeOptionalSecretInput(process.env.GOOGLE_CLOUD_PROJECT_ID);
+    const location = normalizeOptionalSecretInput(process.env.GOOGLE_CLOUD_LOCATION);
+    if (!project || !location || !hasGoogleVertexAdcCredentials(process.env)) {
       return null;
     }
-    return { apiKey: envKey, source: "gcloud adc" };
+    return { apiKey: "<authenticated>", source: "gcloud adc" };
   }
 
   if (normalized === "opencode") {

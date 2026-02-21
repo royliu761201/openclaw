@@ -1,0 +1,70 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.2.18",
+    "lastTouchedAt": "2026-02-21T07:03:42.888Z"
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "google/gemini-3-flash-preview"
+      },
+      "skipBootstrap": true,
+      "compaction": {
+        "mode": "safeguard"
+      }
+    }
+  },
+  "tools": {
+    "web": {
+      "search": {
+        "enabled": true,
+        "provider": "tavily"
+      }
+    }
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto"
+  },
+  "channels": {
+    "feishu": {
+      "enabled": true,
+      "domain": "feishu",
+      "connectionMode": "websocket",
+      "dmPolicy": "open",
+      "groupPolicy": "allowlist",
+      "allowFrom": ["*"]
+    },
+    "wecom": {
+      "enabled": true,
+      "mode": "app",
+      "defaultAccount": "app",
+      "allowFrom": ["*"],
+      "accounts": {
+        "app": {
+          "mode": "app",
+          "webhookPath": "/wecom/app"
+        }
+      }
+    }
+  },
+  "gateway": {
+    "mode": "local",
+    "auth": {
+      "token": "dev-token-123"
+    }
+  },
+  "plugins": {
+    "load": {
+      "paths": ["/Users/roy-jd/Documents/projects/openclaw/node_modules/@marshulll/openclaw-wecom"]
+    },
+    "entries": {
+      "feishu": {
+        "enabled": true
+      },
+      "openclaw-wecom": {
+        "enabled": true
+      }
+    }
+  }
+}

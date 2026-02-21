@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import argparse
 import os
 from dotenv import load_dotenv
@@ -79,8 +80,13 @@ def list_kernels(args):
     search = args.search
     user = args.user
     
-    print(f"Listing kernels for user {user} search '{search}'...")
-    kernels = api.kernels_list(user=user, search=search, sort_by='dateRun')
+    if user:
+        print(f"Listing kernels for user {user} search '{search}'...")
+        kernels = api.kernels_list(user=user, search=search, sort_by='dateRun')
+    else:
+        print(f"Listing MY kernels search '{search}'...")
+        kernels = api.kernels_list(mine=True, search=search, sort_by='dateRun')
+        
     for k in kernels:
         print(f"Ref: {k.ref}, LastRun: {getattr(k, 'lastRunTime', 'N/A')}")
 
