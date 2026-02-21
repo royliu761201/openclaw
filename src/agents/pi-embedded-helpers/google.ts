@@ -1,9 +1,8 @@
+import { isGoogleModelApi as isKnownGoogleModelApi } from "../provider-family.js";
 import { sanitizeGoogleTurnOrdering } from "./bootstrap.js";
 
 export function isGoogleModelApi(api?: string | null): boolean {
-  return (
-    api === "google-gemini-cli" || api === "google-generative-ai" || api === "google-antigravity"
-  );
+  return isKnownGoogleModelApi(api);
 }
 
 export function isAntigravityClaude(params: {

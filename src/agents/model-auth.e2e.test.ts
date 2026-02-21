@@ -1,7 +1,7 @@
-import type { Api, Model } from "@mariozechner/pi-ai";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import type { Api, Model } from "@mariozechner/pi-ai";
 import { describe, expect, it } from "vitest";
 import { captureEnv } from "../test-utils/env.js";
 import { ensureAuthProfileStore } from "./auth-profiles.js";
@@ -393,5 +393,51 @@ describe("getApiKeyForModel", () => {
         expect(resolved?.source).toContain("HF_TOKEN");
       },
     );
+  });
+
+  it("resolveEnvApiKey('google-vertex') returns authenticated when ADC + project/location are set", async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-vertex-adc-"));
+    const adcPath = path.join(tempDir, "application_default_credentials.json");
+    await fs.writeFile(adcPath, "{}\n", "utf8");
+
+    try {
+      await withEnvUpdates(
+        {
+          GOOGLE_APPLICATION_CREDENTIALS: adcPath,
+          GOOGLE_CLOUD_PROJECT: "vertex-test-project",
+          GCLOUD_PROJECT: undefined,
+          GOOGLE_CLOUD_LOCATION: "us-central1",
+        },
+        async () => {
+          const resolved = resolveEnvApiKey("google-vertex");
+          expect(resolved?.apiKey).toBe("<authenticated>");
+          expect(resolved?.source).toBe("gcloud adc");
+        },
+      );
+    } finally {
+      await fs.rm(tempDir, { recursive: true, force: true });
+    }
+  });
+
+  it("resolveEnvApiKey('google-vertex') returns null when location is missing", async () => {
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-vertex-adc-missing-"));
+    const adcPath = path.join(tempDir, "application_default_credentials.json");
+    await fs.writeFile(adcPath, "{}\n", "utf8");
+
+    try {
+      await withEnvUpdates(
+        {
+          GOOGLE_APPLICATION_CREDENTIALS: adcPath,
+          GOOGLE_CLOUD_PROJECT: "vertex-test-project",
+          GCLOUD_PROJECT: undefined,
+          GOOGLE_CLOUD_LOCATION: undefined,
+        },
+        async () => {
+          expect(resolveEnvApiKey("google-vertex")).toBeNull();
+        },
+      );
+    } finally {
+      await fs.rm(tempDir, { recursive: true, force: true });
+    }
   });
 });

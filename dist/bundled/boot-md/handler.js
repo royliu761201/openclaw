@@ -1,23 +1,68 @@
-import "../../paths-BZtyHNCi.js";
-import { M as normalizeAgentId, N as normalizeMainKey, P as resolveAgentIdFromSessionKey, a as resolveAgentModelPrimary, i as resolveAgentModelFallbacksOverride, o as resolveAgentSkillsFilter, r as resolveAgentDir, s as resolveAgentWorkspaceDir, t as listAgentIds, y as ensureAgentWorkspace } from "../../agent-scope-CmO3C9bx.js";
-import { g as DEFAULT_CHAT_CHANNEL, l as createSubsystemLogger, u as defaultRuntime } from "../../exec-C8pFr4y3.js";
-import { J as SILENT_REPLY_TOKEN, a as normalizeOutboundPayloadsForJson, i as normalizeOutboundPayloads, m as sendMessageSignal, r as formatOutboundPayloadLog, t as deliverOutboundPayloads } from "../../deliver-CmSo3uK6.js";
-import { C as emitAgentEvent, D as sendMessageSlack, E as sendMessageWhatsApp, S as clearAgentRunContext, _ as clearSessionAuthProfileOverride, a as getCliSessionId, b as resolveAgentTimeoutMs, c as resolveOutboundTarget, d as deriveSessionTotalTokens, f as hasNonzeroUsage, g as lookupContextTokens, h as getSkillsSnapshotVersion, i as sendMessageDiscord, l as resolveSessionDeliveryTarget, m as getRemoteSkillEligibility, n as sendMessageIMessage, o as setCliSessionId, p as resolveSendPolicy, r as sendMessageTelegram, s as runCliAgent, t as runEmbeddedPiAgent, u as runWithModelFallback, v as applyModelOverrideToSessionEntry, w as registerAgentRunContext, x as AGENT_LANE_NESTED, y as applyVerboseOverride } from "../../pi-embedded-_B2ophzB.js";
-import { $ as updateSessionStore, Cn as resolveMessageChannel, Vn as normalizeChannelId, Y as loadSessionStore, _n as isGatewayMessageChannel, a as formatXHighModelHint, ct as normalizeAccountId, d as normalizeVerboseLevel, dt as evaluateSessionFreshness, ft as resolveChannelResetConfig, gn as isDeliverableMessageChannel, hn as INTERNAL_MESSAGE_CHANNEL, i as formatThinkingLevels, l as normalizeThinkLevel, mt as resolveSessionResetType, p as supportsXHighThinking, pt as resolveSessionResetPolicy, qt as buildWorkspaceSkillSnapshot, ut as resolveSessionKey, vn as isInternalMessageChannel, vt as resolveExplicitAgentSessionKey, xn as normalizeMessageChannel, yt as resolveMainSessionKey, zn as getChannelPlugin } from "../../pi-embedded-helpers-BkRgt1IC.js";
-import { C as modelKey, E as resolveConfiguredModelRef, F as DEFAULT_CONTEXT_TOKENS, I as DEFAULT_MODEL, L as DEFAULT_PROVIDER, S as isCliProvider, h as ensureAuthProfileStore, k as resolveThinkingDefault, y as buildAllowedModelSet } from "../../model-auth-SqbPPe-9.js";
-import { t as formatCliCommand } from "../../command-format-qUVxzqYm.js";
-import { t as loadConfig } from "../../config-D0LE8qI9.js";
-import "../../github-copilot-token-DatTe1w-.js";
-import "../../pi-model-discovery-DqgqUyAv.js";
-import "../../chrome-qGZVYEiR.js";
-import { n as resolveSessionFilePath, o as resolveStorePath } from "../../paths-0BFkMlIT.js";
-import "../../image-CLc5YVU8.js";
-import "../../manager-UZhwLA9c.js";
-import "../../sqlite--tLy8g4N.js";
-import "../../redact-BrXLgslJ.js";
-import "../../fetch-gFAta2Dw.js";
-import { s as loadModelCatalog } from "../../runner-D10isehw.js";
-import "../../login-qr-ByKX7OFJ.js";
+import "../../paths-CyR9Pa1R.js";
+import { d as resolveAgentIdFromSessionKey, l as normalizeAgentId, u as normalizeMainKey } from "../../session-key-CgcjHuX_.js";
+import { r as DEFAULT_CHAT_CHANNEL } from "../../registry-B3v_dMjW.js";
+import { a as resolveAgentModelPrimary, l as resolveEffectiveModelFallbacks, o as resolveAgentSkillsFilter, r as resolveAgentDir, s as resolveAgentWorkspaceDir, t as listAgentIds, u as resolveSessionAgentId } from "../../agent-scope-DanU6CT8.js";
+import { r as defaultRuntime, t as createSubsystemLogger } from "../../subsystem-12Cr1qkN.js";
+import "../../exec-BcuB7agq.js";
+import { l as ensureAgentWorkspace } from "../../workspace-BBSUSFTB.js";
+import { n as SILENT_REPLY_TOKEN } from "../../tokens-BIWsvHaB.js";
+import { A as applyModelOverrideToSessionEntry, D as resolveSendPolicy, G as registerAgentRunContext, H as resolveAgentTimeoutMs, O as lookupContextTokens, T as hasNonzeroUsage, U as clearAgentRunContext, W as emitAgentEvent, _ as resolveOutboundTarget, b as AGENT_LANE_NESTED, g as runCliAgent, h as setCliSessionId, j as applyVerboseOverride, k as clearSessionAuthProfileOverride, m as getCliSessionId, t as runEmbeddedPiAgent, v as resolveSessionDeliveryTarget, w as deriveSessionTotalTokens, x as AGENT_LANE_SUBAGENT, y as runWithModelFallback } from "../../pi-embedded-DEWtyBVP.js";
+import "../../accounts-DmbLHz3-.js";
+import "../../normalize-Cve15Q9q.js";
+import "../../boolean-CE7i9tBR.js";
+import "../../env-CHgPw2cH.js";
+import "../../bindings-Dxat9suu.js";
+import { t as formatCliCommand } from "../../command-format-DUn-q_CN.js";
+import "../../send-CbJFPx1A.js";
+import { r as normalizeChannelId, t as getChannelPlugin } from "../../plugins-Dy_YZOpV.js";
+import "../../send-CocpQMpH.js";
+import { a as normalizeOutboundPayloadsForJson, i as normalizeOutboundPayloads, r as formatOutboundPayloadLog, t as deliverOutboundPayloads } from "../../deliver-CnE5WvUi.js";
+import "../../diagnostic-CJC2Qdcb.js";
+import "../../diagnostic-session-state-C1vRJs5w.js";
+import "../../accounts-BFVCDHLN.js";
+import "../../send-rj7ANh9g.js";
+import "../../image-ops-qpGLqv9k.js";
+import { C as buildAllowedModelSet, D as isCliProvider, G as DEFAULT_MODEL, I as resolveThinkingDefault, K as DEFAULT_PROVIDER, M as resolveConfiguredModelRef, O as modelKey, W as DEFAULT_CONTEXT_TOKENS, _ as ensureAuthProfileStore, k as normalizeModelRef } from "../../model-auth-BWr5qEtA.js";
+import "../../github-copilot-token-D5ISrFy7.js";
+import "../../pi-model-discovery-DIA4gIzW.js";
+import { i as isInternalMessageChannel, l as resolveMessageChannel, n as isDeliverableMessageChannel, r as isGatewayMessageChannel, s as normalizeMessageChannel, t as INTERNAL_MESSAGE_CHANNEL } from "../../message-channel-BSPy_J6t.js";
+import { G as updateSessionStore, V as loadSessionStore, dt as resolveChannelResetConfig, et as normalizeAccountId, ft as resolveSessionResetPolicy, lt as resolveSessionKey, pt as resolveSessionResetType, ut as evaluateSessionFreshness, vt as resolveExplicitAgentSessionKey, yt as resolveMainSessionKey } from "../../pi-embedded-helpers-CzEuJFFV.js";
+import { n as loadConfig } from "../../config-DXPgdIgF.js";
+import "../../manifest-registry-BGtqiFuf.js";
+import "../../chrome-BkJNYiGr.js";
+import "../../frontmatter-BPvsEU3m.js";
+import { n as buildWorkspaceSkillSnapshot } from "../../skills-Cj-bjVUG.js";
+import "../../redact-9hYpOXID.js";
+import "../../errors-pj0CRkCB.js";
+import "../../store-D13UGRE4.js";
+import { c as normalizeVerboseLevel, n as formatXHighModelHint, o as normalizeThinkLevel, t as formatThinkingLevels, u as supportsXHighThinking } from "../../thinking-DqJWj_Tw.js";
+import "../../accounts-CrNX3S4t.js";
+import { n as resolveSessionFilePath, s as resolveStorePath } from "../../paths-gnW-md4M.js";
+import "../../tool-images-ht-C9kvN.js";
+import "../../image-BG4i5HHN.js";
+import "../../reply-prefix-CBsUYPbZ.js";
+import "../../manager-C6BVw5y3.js";
+import "../../gemini-auth-B8uGVM0W.js";
+import "../../sqlite-wwudzAAI.js";
+import "../../retry-DVtnPnF6.js";
+import "../../common-CbpTVFY9.js";
+import "../../chunk-CTULoyP3.js";
+import "../../markdown-tables-C6ikgcr9.js";
+import "../../fetch-DssVrA3_.js";
+import "../../ir-B31LmBFu.js";
+import "../../render-DwEu-aCr.js";
+import "../../commands-registry-ucu-TW_N.js";
+import { s as loadModelCatalog } from "../../runner-H0xBWDT9.js";
+import { c as getSkillsSnapshotVersion, o as getRemoteSkillEligibility } from "../../skill-commands-HACo2-aM.js";
+import "../../fetch-BBkSX75a.js";
+import "../../send-CL8sncrd.js";
+import "../../outbound-attachment-ttO57Lkw.js";
+import "../../send-CgzaUKIS.js";
+import "../../resolve-route-7_Yxg3Cy.js";
+import "../../channel-activity-BXFDwXVQ.js";
+import "../../tables-axXG6H7h.js";
+import "../../proxy-DVy9foH0.js";
+import "../../replies-RekRpCy5.js";
 import fs from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -25,12 +70,30 @@ import crypto from "node:crypto";
 //#region src/cli/deps.ts
 function createDefaultDeps() {
 	return {
-		sendMessageWhatsApp,
-		sendMessageTelegram,
-		sendMessageDiscord,
-		sendMessageSlack,
-		sendMessageSignal,
-		sendMessageIMessage
+		sendMessageWhatsApp: async (...args) => {
+			const { sendMessageWhatsApp } = await import("../../web-oLNGtiU5.js");
+			return await sendMessageWhatsApp(...args);
+		},
+		sendMessageTelegram: async (...args) => {
+			const { sendMessageTelegram } = await import("../../send-rj7ANh9g.js").then((n) => n.l);
+			return await sendMessageTelegram(...args);
+		},
+		sendMessageDiscord: async (...args) => {
+			const { sendMessageDiscord } = await import("../../send-CocpQMpH.js").then((n) => n.t);
+			return await sendMessageDiscord(...args);
+		},
+		sendMessageSlack: async (...args) => {
+			const { sendMessageSlack } = await import("../../send-CbJFPx1A.js").then((n) => n.n);
+			return await sendMessageSlack(...args);
+		},
+		sendMessageSignal: async (...args) => {
+			const { sendMessageSignal } = await import("../../send-CL8sncrd.js").then((n) => n.i);
+			return await sendMessageSignal(...args);
+		},
+		sendMessageIMessage: async (...args) => {
+			const { sendMessageIMessage } = await import("../../send-CgzaUKIS.js").then((n) => n.n);
+			return await sendMessageIMessage(...args);
+		}
 	};
 }
 
@@ -227,6 +290,10 @@ async function deliverAgentCommandResult(params) {
 			to: deliveryTarget,
 			accountId: resolvedAccountId,
 			payloads: deliveryPayloads,
+			agentId: opts.agentId ?? (opts.sessionKey ? resolveSessionAgentId({
+				sessionKey: opts.sessionKey,
+				config: cfg
+			}) : void 0),
 			replyToId: resolvedReplyToId ?? null,
 			threadId: resolvedThreadTarget ?? null,
 			bestEffort: bestEffortDeliver,
@@ -387,6 +454,84 @@ function resolveSession(opts) {
 
 //#endregion
 //#region src/commands/agent.ts
+async function persistSessionEntry(params) {
+	params.sessionStore[params.sessionKey] = params.entry;
+	await updateSessionStore(params.storePath, (store) => {
+		store[params.sessionKey] = params.entry;
+	});
+}
+function resolveFallbackRetryPrompt(params) {
+	if (!params.isFallbackRetry) return params.body;
+	return "Continue where you left off. The previous model attempt failed or timed out.";
+}
+function runAgentAttempt(params) {
+	const effectivePrompt = resolveFallbackRetryPrompt({
+		body: params.body,
+		isFallbackRetry: params.isFallbackRetry
+	});
+	if (isCliProvider(params.providerOverride, params.cfg)) {
+		const cliSessionId = getCliSessionId(params.sessionEntry, params.providerOverride);
+		return runCliAgent({
+			sessionId: params.sessionId,
+			sessionKey: params.sessionKey,
+			agentId: params.sessionAgentId,
+			sessionFile: params.sessionFile,
+			workspaceDir: params.workspaceDir,
+			config: params.cfg,
+			prompt: effectivePrompt,
+			provider: params.providerOverride,
+			model: params.modelOverride,
+			thinkLevel: params.resolvedThinkLevel,
+			timeoutMs: params.timeoutMs,
+			runId: params.runId,
+			extraSystemPrompt: params.opts.extraSystemPrompt,
+			cliSessionId,
+			images: params.isFallbackRetry ? void 0 : params.opts.images,
+			streamParams: params.opts.streamParams
+		});
+	}
+	const authProfileId = params.providerOverride === params.primaryProvider ? params.sessionEntry?.authProfileOverride : void 0;
+	return runEmbeddedPiAgent({
+		sessionId: params.sessionId,
+		sessionKey: params.sessionKey,
+		agentId: params.sessionAgentId,
+		messageChannel: params.messageChannel,
+		agentAccountId: params.runContext.accountId,
+		messageTo: params.opts.replyTo ?? params.opts.to,
+		messageThreadId: params.opts.threadId,
+		groupId: params.runContext.groupId,
+		groupChannel: params.runContext.groupChannel,
+		groupSpace: params.runContext.groupSpace,
+		spawnedBy: params.spawnedBy,
+		currentChannelId: params.runContext.currentChannelId,
+		currentThreadTs: params.runContext.currentThreadTs,
+		replyToMode: params.runContext.replyToMode,
+		hasRepliedRef: params.runContext.hasRepliedRef,
+		senderIsOwner: true,
+		sessionFile: params.sessionFile,
+		workspaceDir: params.workspaceDir,
+		config: params.cfg,
+		skillsSnapshot: params.skillsSnapshot,
+		prompt: effectivePrompt,
+		images: params.isFallbackRetry ? void 0 : params.opts.images,
+		clientTools: params.opts.clientTools,
+		provider: params.providerOverride,
+		model: params.modelOverride,
+		authProfileId,
+		authProfileIdSource: authProfileId ? params.sessionEntry?.authProfileOverrideSource : void 0,
+		thinkLevel: params.resolvedThinkLevel,
+		verboseLevel: params.resolvedVerboseLevel,
+		timeoutMs: params.timeoutMs,
+		runId: params.runId,
+		lane: params.opts.lane,
+		abortSignal: params.opts.abortSignal,
+		extraSystemPrompt: params.opts.extraSystemPrompt,
+		inputProvenance: params.opts.inputProvenance,
+		streamParams: params.opts.streamParams,
+		agentDir: params.agentDir,
+		onAgentEvent: params.onAgentEvent
+	});
+}
 async function agentCommand(opts, runtime = defaultRuntime, deps = createDefaultDeps()) {
 	const body = (opts.message ?? "").trim();
 	if (!body) throw new Error("Message (--message) is required");
@@ -421,8 +566,9 @@ async function agentCommand(opts, runtime = defaultRuntime, deps = createDefault
 	if (opts.thinkingOnce && !thinkOnce) throw new Error(`Invalid one-shot thinking level. Use one of: ${thinkingLevelsHint}.`);
 	const verboseOverride = normalizeVerboseLevel(opts.verbose);
 	if (opts.verbose && !verboseOverride) throw new Error("Invalid verbose level. Use \"on\", \"full\", or \"off\".");
-	const timeoutSecondsRaw = opts.timeout !== void 0 ? Number.parseInt(String(opts.timeout), 10) : void 0;
-	if (timeoutSecondsRaw !== void 0 && (Number.isNaN(timeoutSecondsRaw) || timeoutSecondsRaw <= 0)) throw new Error("--timeout must be a positive integer (seconds)");
+	const isSubagentLane = (typeof opts.lane === "string" ? opts.lane.trim() : "") === String(AGENT_LANE_SUBAGENT);
+	const timeoutSecondsRaw = opts.timeout !== void 0 ? Number.parseInt(String(opts.timeout), 10) : isSubagentLane ? 0 : void 0;
+	if (timeoutSecondsRaw !== void 0 && (Number.isNaN(timeoutSecondsRaw) || timeoutSecondsRaw < 0)) throw new Error("--timeout must be a non-negative integer (seconds; 0 means no timeout)");
 	const timeoutMs = resolveAgentTimeoutMs({
 		cfg,
 		overrideSeconds: timeoutSecondsRaw
@@ -471,9 +617,11 @@ async function agentCommand(opts, runtime = defaultRuntime, deps = createDefault
 				updatedAt: Date.now(),
 				skillsSnapshot
 			};
-			sessionStore[sessionKey] = next;
-			await updateSessionStore(storePath, (store) => {
-				store[sessionKey] = next;
+			await persistSessionEntry({
+				sessionStore,
+				sessionKey,
+				storePath,
+				entry: next
 			});
 			sessionEntry = next;
 		}
@@ -488,13 +636,15 @@ async function agentCommand(opts, runtime = defaultRuntime, deps = createDefault
 			};
 			if (thinkOverride) next.thinkingLevel = thinkOverride;
 			applyVerboseOverride(next, verboseOverride);
-			sessionStore[sessionKey] = next;
-			await updateSessionStore(storePath, (store) => {
-				store[sessionKey] = next;
+			await persistSessionEntry({
+				sessionStore,
+				sessionKey,
+				storePath,
+				entry: next
 			});
 		}
 		const agentModelPrimary = resolveAgentModelPrimary(cfg, sessionAgentId);
-		const { provider: defaultProvider, model: defaultModel } = resolveConfiguredModelRef({
+		const configuredDefaultRef = resolveConfiguredModelRef({
 			cfg: agentModelPrimary ? {
 				...cfg,
 				agents: {
@@ -511,6 +661,7 @@ async function agentCommand(opts, runtime = defaultRuntime, deps = createDefault
 			defaultProvider: DEFAULT_PROVIDER,
 			defaultModel: DEFAULT_MODEL
 		});
+		const { provider: defaultProvider, model: defaultModel } = normalizeModelRef(configuredDefaultRef.provider, configuredDefaultRef.model);
 		let provider = defaultProvider;
 		let model = defaultModel;
 		const hasAllowlist = agentCfg?.models && Object.keys(agentCfg.models).length > 0;
@@ -535,8 +686,9 @@ async function agentCommand(opts, runtime = defaultRuntime, deps = createDefault
 			const overrideProvider = sessionEntry.providerOverride?.trim() || defaultProvider;
 			const overrideModel = sessionEntry.modelOverride?.trim();
 			if (overrideModel) {
-				const key = modelKey(overrideProvider, overrideModel);
-				if (!isCliProvider(overrideProvider, cfg) && allowedModelKeys.size > 0 && !allowedModelKeys.has(key)) {
+				const normalizedOverride = normalizeModelRef(overrideProvider, overrideModel);
+				const key = modelKey(normalizedOverride.provider, normalizedOverride.model);
+				if (!isCliProvider(normalizedOverride.provider, cfg) && allowedModelKeys.size > 0 && !allowedModelKeys.has(key)) {
 					const { updated } = applyModelOverrideToSessionEntry({
 						entry,
 						selection: {
@@ -545,23 +697,23 @@ async function agentCommand(opts, runtime = defaultRuntime, deps = createDefault
 							isDefault: true
 						}
 					});
-					if (updated) {
-						sessionStore[sessionKey] = entry;
-						await updateSessionStore(storePath, (store) => {
-							store[sessionKey] = entry;
-						});
-					}
+					if (updated) await persistSessionEntry({
+						sessionStore,
+						sessionKey,
+						storePath,
+						entry
+					});
 				}
 			}
 		}
 		const storedProviderOverride = sessionEntry?.providerOverride?.trim();
 		const storedModelOverride = sessionEntry?.modelOverride?.trim();
 		if (storedModelOverride) {
-			const candidateProvider = storedProviderOverride || defaultProvider;
-			const key = modelKey(candidateProvider, storedModelOverride);
-			if (isCliProvider(candidateProvider, cfg) || allowedModelKeys.size === 0 || allowedModelKeys.has(key)) {
-				provider = candidateProvider;
-				model = storedModelOverride;
+			const normalizedStored = normalizeModelRef(storedProviderOverride || defaultProvider, storedModelOverride);
+			const key = modelKey(normalizedStored.provider, normalizedStored.model);
+			if (isCliProvider(normalizedStored.provider, cfg) || allowedModelKeys.size === 0 || allowedModelKeys.has(key)) {
+				provider = normalizedStored.provider;
+				model = normalizedStored.model;
 			}
 		}
 		if (sessionEntry) {
@@ -599,9 +751,11 @@ async function agentCommand(opts, runtime = defaultRuntime, deps = createDefault
 				const entry = sessionEntry;
 				entry.thinkingLevel = "high";
 				entry.updatedAt = Date.now();
-				sessionStore[sessionKey] = entry;
-				await updateSessionStore(storePath, (store) => {
-					store[sessionKey] = entry;
+				await persistSessionEntry({
+					sessionStore,
+					sessionKey,
+					storePath,
+					entry
 				});
 			}
 		}
@@ -615,73 +769,44 @@ async function agentCommand(opts, runtime = defaultRuntime, deps = createDefault
 			const runContext = resolveAgentRunContext(opts);
 			const messageChannel = resolveMessageChannel(runContext.messageChannel, opts.replyChannel ?? opts.channel);
 			const spawnedBy = opts.spawnedBy ?? sessionEntry?.spawnedBy;
+			const effectiveFallbacksOverride = resolveEffectiveModelFallbacks({
+				cfg,
+				agentId: sessionAgentId,
+				hasSessionModelOverride: Boolean(storedModelOverride)
+			});
+			let fallbackAttemptIndex = 0;
 			const fallbackResult = await runWithModelFallback({
 				cfg,
 				provider,
 				model,
 				agentDir,
-				fallbacksOverride: resolveAgentModelFallbacksOverride(cfg, sessionAgentId),
+				fallbacksOverride: effectiveFallbacksOverride,
 				run: (providerOverride, modelOverride) => {
-					if (isCliProvider(providerOverride, cfg)) {
-						const cliSessionId = getCliSessionId(sessionEntry, providerOverride);
-						return runCliAgent({
-							sessionId,
-							sessionKey,
-							agentId: sessionAgentId,
-							sessionFile,
-							workspaceDir,
-							config: cfg,
-							prompt: body,
-							provider: providerOverride,
-							model: modelOverride,
-							thinkLevel: resolvedThinkLevel,
-							timeoutMs,
-							runId,
-							extraSystemPrompt: opts.extraSystemPrompt,
-							cliSessionId,
-							images: opts.images,
-							streamParams: opts.streamParams
-						});
-					}
-					const authProfileId = providerOverride === provider ? sessionEntry?.authProfileOverride : void 0;
-					return runEmbeddedPiAgent({
+					const isFallbackRetry = fallbackAttemptIndex > 0;
+					fallbackAttemptIndex += 1;
+					return runAgentAttempt({
+						providerOverride,
+						modelOverride,
+						cfg,
+						sessionEntry,
 						sessionId,
 						sessionKey,
-						agentId: sessionAgentId,
-						messageChannel,
-						agentAccountId: runContext.accountId,
-						messageTo: opts.replyTo ?? opts.to,
-						messageThreadId: opts.threadId,
-						groupId: runContext.groupId,
-						groupChannel: runContext.groupChannel,
-						groupSpace: runContext.groupSpace,
-						spawnedBy,
-						currentChannelId: runContext.currentChannelId,
-						currentThreadTs: runContext.currentThreadTs,
-						replyToMode: runContext.replyToMode,
-						hasRepliedRef: runContext.hasRepliedRef,
-						senderIsOwner: true,
+						sessionAgentId,
 						sessionFile,
 						workspaceDir,
-						config: cfg,
-						skillsSnapshot,
-						prompt: body,
-						images: opts.images,
-						clientTools: opts.clientTools,
-						provider: providerOverride,
-						model: modelOverride,
-						authProfileId,
-						authProfileIdSource: authProfileId ? sessionEntry?.authProfileOverrideSource : void 0,
-						thinkLevel: resolvedThinkLevel,
-						verboseLevel: resolvedVerboseLevel,
+						body,
+						isFallbackRetry,
+						resolvedThinkLevel,
 						timeoutMs,
 						runId,
-						lane: opts.lane,
-						abortSignal: opts.abortSignal,
-						extraSystemPrompt: opts.extraSystemPrompt,
-						inputProvenance: opts.inputProvenance,
-						streamParams: opts.streamParams,
+						opts,
+						runContext,
+						spawnedBy,
+						messageChannel,
+						skillsSnapshot,
+						resolvedVerboseLevel,
 						agentDir,
+						primaryProvider: provider,
 						onAgentEvent: (evt) => {
 							if (evt.stream === "lifecycle" && typeof evt.data?.phase === "string" && (evt.data.phase === "end" || evt.data.phase === "error")) lifecycleEnded = true;
 						}
@@ -776,6 +901,52 @@ async function loadBootFile(workspaceDir) {
 		throw err;
 	}
 }
+function snapshotMainSessionMapping(params) {
+	const agentId = resolveAgentIdFromSessionKey(params.sessionKey);
+	const storePath = resolveStorePath(params.cfg.session?.store, { agentId });
+	try {
+		const entry = loadSessionStore(storePath, { skipCache: true })[params.sessionKey];
+		if (!entry) return {
+			storePath,
+			sessionKey: params.sessionKey,
+			canRestore: true,
+			hadEntry: false
+		};
+		return {
+			storePath,
+			sessionKey: params.sessionKey,
+			canRestore: true,
+			hadEntry: true,
+			entry: structuredClone(entry)
+		};
+	} catch (err) {
+		log.debug("boot: could not snapshot main session mapping", {
+			sessionKey: params.sessionKey,
+			error: String(err)
+		});
+		return {
+			storePath,
+			sessionKey: params.sessionKey,
+			canRestore: false,
+			hadEntry: false
+		};
+	}
+}
+async function restoreMainSessionMapping(snapshot) {
+	if (!snapshot.canRestore) return;
+	try {
+		await updateSessionStore(snapshot.storePath, (store) => {
+			if (snapshot.hadEntry && snapshot.entry) {
+				store[snapshot.sessionKey] = snapshot.entry;
+				return;
+			}
+			delete store[snapshot.sessionKey];
+		}, { activeSessionKey: snapshot.sessionKey });
+		return;
+	} catch (err) {
+		return err instanceof Error ? err.message : String(err);
+	}
+}
 async function runBootOnce(params) {
 	const bootRuntime = {
 		log: () => {},
@@ -800,6 +971,11 @@ async function runBootOnce(params) {
 	const sessionKey = resolveMainSessionKey(params.cfg);
 	const message = buildBootPrompt(result.content ?? "");
 	const sessionId = generateBootSessionId();
+	const mappingSnapshot = snapshotMainSessionMapping({
+		cfg: params.cfg,
+		sessionKey
+	});
+	let agentFailure;
 	try {
 		await agentCommand({
 			message,
@@ -807,15 +983,17 @@ async function runBootOnce(params) {
 			sessionId,
 			deliver: false
 		}, bootRuntime, params.deps);
-		return { status: "ran" };
 	} catch (err) {
-		const messageText = err instanceof Error ? err.message : String(err);
-		log.error(`boot: agent run failed: ${messageText}`);
-		return {
-			status: "failed",
-			reason: messageText
-		};
+		agentFailure = err instanceof Error ? err.message : String(err);
+		log.error(`boot: agent run failed: ${agentFailure}`);
 	}
+	const mappingRestoreFailure = await restoreMainSessionMapping(mappingSnapshot);
+	if (mappingRestoreFailure) log.error(`boot: failed to restore main session mapping: ${mappingRestoreFailure}`);
+	if (!agentFailure && !mappingRestoreFailure) return { status: "ran" };
+	return {
+		status: "failed",
+		reason: [agentFailure ? `agent run failed: ${agentFailure}` : void 0, mappingRestoreFailure ? `mapping restore failed: ${mappingRestoreFailure}` : void 0].filter((part) => Boolean(part)).join("; ")
+	};
 }
 
 //#endregion

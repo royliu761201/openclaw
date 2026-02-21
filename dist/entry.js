@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 import { createRequire } from "node:module";
 import { spawn } from "node:child_process";
-import path from "node:path";
 import process$1 from "node:process";
 import os from "node:os";
-import chalk, { Chalk } from "chalk";
+import path from "node:path";
 import fs from "node:fs";
+import chalk, { Chalk } from "chalk";
+import util, { inspect } from "node:util";
 import { Logger } from "tslog";
 import JSON5 from "json5";
-import util from "node:util";
 
 //#region src/infra/home-dir.ts
 function normalize(value) {
@@ -158,209 +158,238 @@ function applyCliProfileEnv(params) {
 }
 
 //#endregion
-//#region src/plugins/runtime.ts
-const createEmptyRegistry = () => ({
-	plugins: [],
-	tools: [],
-	hooks: [],
-	typedHooks: [],
-	channels: [],
-	providers: [],
-	gatewayHandlers: {},
-	httpHandlers: [],
-	httpRoutes: [],
-	cliRegistrars: [],
-	services: [],
-	commands: [],
-	diagnostics: []
-});
-const REGISTRY_STATE = Symbol.for("openclaw.pluginRegistryState");
-const state = (() => {
-	const globalState = globalThis;
-	if (!globalState[REGISTRY_STATE]) globalState[REGISTRY_STATE] = {
-		registry: createEmptyRegistry(),
-		key: null
+//#region src/cli/argv.ts
+const HELP_FLAGS = new Set(["-h", "--help"]);
+const VERSION_FLAGS = new Set([
+	"-v",
+	"-V",
+	"--version"
+]);
+const FLAG_TERMINATOR = "--";
+function hasHelpOrVersion(argv) {
+	return argv.some((arg) => HELP_FLAGS.has(arg) || VERSION_FLAGS.has(arg));
+}
+function isValueToken(arg) {
+	if (!arg) return false;
+	if (arg === FLAG_TERMINATOR) return false;
+	if (!arg.startsWith("-")) return true;
+	return /^-\d+(?:\.\d+)?$/.test(arg);
+}
+function parsePositiveInt(value) {
+	const parsed = Number.parseInt(value, 10);
+	if (Number.isNaN(parsed) || parsed <= 0) return;
+	return parsed;
+}
+function hasFlag(argv, name) {
+	const args = argv.slice(2);
+	for (const arg of args) {
+		if (arg === FLAG_TERMINATOR) break;
+		if (arg === name) return true;
+	}
+	return false;
+}
+function getFlagValue(argv, name) {
+	const args = argv.slice(2);
+	for (let i = 0; i < args.length; i += 1) {
+		const arg = args[i];
+		if (arg === FLAG_TERMINATOR) break;
+		if (arg === name) {
+			const next = args[i + 1];
+			return isValueToken(next) ? next : null;
+		}
+		if (arg.startsWith(`${name}=`)) {
+			const value = arg.slice(name.length + 1);
+			return value ? value : null;
+		}
+	}
+}
+function getVerboseFlag(argv, options) {
+	if (hasFlag(argv, "--verbose")) return true;
+	if (options?.includeDebug && hasFlag(argv, "--debug")) return true;
+	return false;
+}
+function getPositiveIntFlagValue(argv, name) {
+	const raw = getFlagValue(argv, name);
+	if (raw === null || raw === void 0) return raw;
+	return parsePositiveInt(raw);
+}
+function getCommandPath(argv, depth = 2) {
+	const args = argv.slice(2);
+	const path = [];
+	for (let i = 0; i < args.length; i += 1) {
+		const arg = args[i];
+		if (!arg) continue;
+		if (arg === "--") break;
+		if (arg.startsWith("-")) continue;
+		path.push(arg);
+		if (path.length >= depth) break;
+	}
+	return path;
+}
+function getPrimaryCommand(argv) {
+	const [primary] = getCommandPath(argv, 1);
+	return primary ?? null;
+}
+function buildParseArgv(params) {
+	const baseArgv = params.rawArgs && params.rawArgs.length > 0 ? params.rawArgs : params.fallbackArgv && params.fallbackArgv.length > 0 ? params.fallbackArgv : process.argv;
+	const programName = params.programName ?? "";
+	const normalizedArgv = programName && baseArgv[0] === programName ? baseArgv.slice(1) : baseArgv[0]?.endsWith("openclaw") ? baseArgv.slice(1) : baseArgv;
+	const executable = (normalizedArgv[0]?.split(/[/\\]/).pop() ?? "").toLowerCase();
+	if (normalizedArgv.length >= 2 && (isNodeExecutable(executable) || isBunExecutable(executable))) return normalizedArgv;
+	return [
+		"node",
+		programName || "openclaw",
+		...normalizedArgv
+	];
+}
+const nodeExecutablePattern = /^node-\d+(?:\.\d+)*(?:\.exe)?$/;
+function isNodeExecutable(executable) {
+	return executable === "node" || executable === "node.exe" || executable === "nodejs" || executable === "nodejs.exe" || nodeExecutablePattern.test(executable);
+}
+function isBunExecutable(executable) {
+	return executable === "bun" || executable === "bun.exe";
+}
+function shouldMigrateStateFromPath(path) {
+	if (path.length === 0) return true;
+	const [primary, secondary] = path;
+	if (primary === "health" || primary === "status" || primary === "sessions") return false;
+	if (primary === "config" && (secondary === "get" || secondary === "unset")) return false;
+	if (primary === "models" && (secondary === "list" || secondary === "status")) return false;
+	if (primary === "memory" && secondary === "status") return false;
+	if (primary === "agent") return false;
+	return true;
+}
+
+//#endregion
+//#region src/cli/respawn-policy.ts
+function shouldSkipRespawnForArgv(argv) {
+	return hasHelpOrVersion(argv);
+}
+
+//#endregion
+//#region src/cli/windows-argv.ts
+function normalizeWindowsArgv(argv) {
+	if (process.platform !== "win32") return argv;
+	if (argv.length < 2) return argv;
+	const stripControlChars = (value) => {
+		let out = "";
+		for (let i = 0; i < value.length; i += 1) {
+			const code = value.charCodeAt(i);
+			if (code >= 32 && code !== 127) out += value[i];
+		}
+		return out;
 	};
-	return globalState[REGISTRY_STATE];
-})();
-function setActivePluginRegistry(registry, cacheKey) {
-	state.registry = registry;
-	state.key = cacheKey ?? null;
-}
-function getActivePluginRegistry() {
-	return state.registry;
-}
-function requireActivePluginRegistry() {
-	if (!state.registry) state.registry = createEmptyRegistry();
-	return state.registry;
-}
-
-//#endregion
-//#region src/channels/registry.ts
-const CHAT_CHANNEL_ORDER = [
-	"telegram",
-	"whatsapp",
-	"discord",
-	"irc",
-	"googlechat",
-	"slack",
-	"signal",
-	"imessage"
-];
-const CHANNEL_IDS = [...CHAT_CHANNEL_ORDER];
-const DEFAULT_CHAT_CHANNEL = "whatsapp";
-const CHAT_CHANNEL_META = {
-	telegram: {
-		id: "telegram",
-		label: "Telegram",
-		selectionLabel: "Telegram (Bot API)",
-		detailLabel: "Telegram Bot",
-		docsPath: "/channels/telegram",
-		docsLabel: "telegram",
-		blurb: "simplest way to get started — register a bot with @BotFather and get going.",
-		systemImage: "paperplane",
-		selectionDocsPrefix: "",
-		selectionDocsOmitLabel: true,
-		selectionExtras: ["https://openclaw.ai"]
-	},
-	whatsapp: {
-		id: "whatsapp",
-		label: "WhatsApp",
-		selectionLabel: "WhatsApp (QR link)",
-		detailLabel: "WhatsApp Web",
-		docsPath: "/channels/whatsapp",
-		docsLabel: "whatsapp",
-		blurb: "works with your own number; recommend a separate phone + eSIM.",
-		systemImage: "message"
-	},
-	discord: {
-		id: "discord",
-		label: "Discord",
-		selectionLabel: "Discord (Bot API)",
-		detailLabel: "Discord Bot",
-		docsPath: "/channels/discord",
-		docsLabel: "discord",
-		blurb: "very well supported right now.",
-		systemImage: "bubble.left.and.bubble.right"
-	},
-	irc: {
-		id: "irc",
-		label: "IRC",
-		selectionLabel: "IRC (Server + Nick)",
-		detailLabel: "IRC",
-		docsPath: "/channels/irc",
-		docsLabel: "irc",
-		blurb: "classic IRC networks with DM/channel routing and pairing controls.",
-		systemImage: "network"
-	},
-	googlechat: {
-		id: "googlechat",
-		label: "Google Chat",
-		selectionLabel: "Google Chat (Chat API)",
-		detailLabel: "Google Chat",
-		docsPath: "/channels/googlechat",
-		docsLabel: "googlechat",
-		blurb: "Google Workspace Chat app with HTTP webhook.",
-		systemImage: "message.badge"
-	},
-	slack: {
-		id: "slack",
-		label: "Slack",
-		selectionLabel: "Slack (Socket Mode)",
-		detailLabel: "Slack Bot",
-		docsPath: "/channels/slack",
-		docsLabel: "slack",
-		blurb: "supported (Socket Mode).",
-		systemImage: "number"
-	},
-	signal: {
-		id: "signal",
-		label: "Signal",
-		selectionLabel: "Signal (signal-cli)",
-		detailLabel: "Signal REST",
-		docsPath: "/channels/signal",
-		docsLabel: "signal",
-		blurb: "signal-cli linked device; more setup (David Reagans: \"Hop on Discord.\").",
-		systemImage: "antenna.radiowaves.left.and.right"
-	},
-	imessage: {
-		id: "imessage",
-		label: "iMessage",
-		selectionLabel: "iMessage (imsg)",
-		detailLabel: "iMessage",
-		docsPath: "/channels/imessage",
-		docsLabel: "imessage",
-		blurb: "this is still a work in progress.",
-		systemImage: "message.fill"
+	const normalizeArg = (value) => stripControlChars(value).replace(/^['"]+|['"]+$/g, "").trim();
+	const normalizeCandidate = (value) => normalizeArg(value).replace(/^\\\\\\?\\/, "");
+	const execPath = normalizeCandidate(process.execPath);
+	const execPathLower = execPath.toLowerCase();
+	const execBase = path.basename(execPath).toLowerCase();
+	const isExecPath = (value) => {
+		if (!value) return false;
+		const normalized = normalizeCandidate(value);
+		if (!normalized) return false;
+		const lower = normalized.toLowerCase();
+		return lower === execPathLower || path.basename(lower) === execBase || lower.endsWith("\\node.exe") || lower.endsWith("/node.exe") || lower.includes("node.exe") || path.basename(lower) === "node.exe" && fs.existsSync(normalized);
+	};
+	const next = [...argv];
+	for (let i = 1; i <= 3 && i < next.length;) {
+		if (isExecPath(next[i])) {
+			next.splice(i, 1);
+			continue;
+		}
+		i += 1;
 	}
-};
-const CHAT_CHANNEL_ALIASES = {
-	imsg: "imessage",
-	"internet-relay-chat": "irc",
-	"google-chat": "googlechat",
-	gchat: "googlechat"
-};
-const normalizeChannelKey = (raw) => {
-	return raw?.trim().toLowerCase() || void 0;
-};
-function listChatChannels() {
-	return CHAT_CHANNEL_ORDER.map((id) => CHAT_CHANNEL_META[id]);
-}
-function getChatChannelMeta(id) {
-	return CHAT_CHANNEL_META[id];
-}
-function normalizeChatChannelId(raw) {
-	const normalized = normalizeChannelKey(raw);
-	if (!normalized) return null;
-	const resolved = CHAT_CHANNEL_ALIASES[normalized] ?? normalized;
-	return CHAT_CHANNEL_ORDER.includes(resolved) ? resolved : null;
-}
-function normalizeChannelId(raw) {
-	return normalizeChatChannelId(raw);
-}
-function normalizeAnyChannelId(raw) {
-	const key = normalizeChannelKey(raw);
-	if (!key) return null;
-	return requireActivePluginRegistry().channels.find((entry) => {
-		const id = String(entry.plugin.id ?? "").trim().toLowerCase();
-		if (id && id === key) return true;
-		return (entry.plugin.meta.aliases ?? []).some((alias) => alias.trim().toLowerCase() === key);
-	})?.plugin.id ?? null;
-}
-function formatChannelPrimerLine(meta) {
-	return `${meta.label}: ${meta.blurb}`;
-}
-function formatChannelSelectionLine(meta, docsLink) {
-	const docsPrefix = meta.selectionDocsPrefix ?? "Docs:";
-	const docsLabel = meta.docsLabel ?? meta.id;
-	const docs = meta.selectionDocsOmitLabel ? docsLink(meta.docsPath) : docsLink(meta.docsPath, docsLabel);
-	const extras = (meta.selectionExtras ?? []).filter(Boolean).join(" ");
-	return `${meta.label} — ${meta.blurb} ${docsPrefix ? `${docsPrefix} ` : ""}${docs}${extras ? ` ${extras}` : ""}`;
+	const filtered = next.filter((arg, index) => index === 0 || !isExecPath(arg));
+	if (filtered.length < 3) return filtered;
+	const cleaned = [...filtered];
+	for (let i = 2; i < cleaned.length;) {
+		const arg = cleaned[i];
+		if (!arg || arg.startsWith("-")) {
+			i += 1;
+			continue;
+		}
+		if (isExecPath(arg)) {
+			cleaned.splice(i, 1);
+			continue;
+		}
+		break;
+	}
+	return cleaned;
 }
 
 //#endregion
-//#region src/infra/tmp-openclaw-dir.ts
-const POSIX_OPENCLAW_TMP_DIR = "/tmp/openclaw";
-function isNodeErrorWithCode(err, code) {
-	return typeof err === "object" && err !== null && "code" in err && err.code === code;
+//#region src/hooks/internal-hooks.ts
+/** Registry of hook handlers by event key */
+const handlers = /* @__PURE__ */ new Map();
+/**
+* Register a hook handler for a specific event type or event:action combination
+*
+* @param eventKey - Event type (e.g., 'command') or specific action (e.g., 'command:new')
+* @param handler - Function to call when the event is triggered
+*
+* @example
+* ```ts
+* // Listen to all command events
+* registerInternalHook('command', async (event) => {
+*   console.log('Command:', event.action);
+* });
+*
+* // Listen only to /new commands
+* registerInternalHook('command:new', async (event) => {
+*   await saveSessionToMemory(event);
+* });
+* ```
+*/
+function registerInternalHook(eventKey, handler) {
+	if (!handlers.has(eventKey)) handlers.set(eventKey, []);
+	handlers.get(eventKey).push(handler);
 }
-function resolvePreferredOpenClawTmpDir(options = {}) {
-	const accessSync = options.accessSync ?? fs.accessSync;
-	const statSync = options.statSync ?? fs.statSync;
-	const tmpdir = options.tmpdir ?? os.tmpdir;
-	try {
-		if (!statSync(POSIX_OPENCLAW_TMP_DIR).isDirectory()) return path.join(tmpdir(), "openclaw");
-		accessSync(POSIX_OPENCLAW_TMP_DIR, fs.constants.W_OK | fs.constants.X_OK);
-		return POSIX_OPENCLAW_TMP_DIR;
+/**
+* Clear all registered hooks (useful for testing)
+*/
+function clearInternalHooks() {
+	handlers.clear();
+}
+/**
+* Trigger a hook event
+*
+* Calls all handlers registered for:
+* 1. The general event type (e.g., 'command')
+* 2. The specific event:action combination (e.g., 'command:new')
+*
+* Handlers are called in registration order. Errors are caught and logged
+* but don't prevent other handlers from running.
+*
+* @param event - The event to trigger
+*/
+async function triggerInternalHook(event) {
+	const typeHandlers = handlers.get(event.type) ?? [];
+	const specificHandlers = handlers.get(`${event.type}:${event.action}`) ?? [];
+	const allHandlers = [...typeHandlers, ...specificHandlers];
+	if (allHandlers.length === 0) return;
+	for (const handler of allHandlers) try {
+		await handler(event);
 	} catch (err) {
-		if (!isNodeErrorWithCode(err, "ENOENT")) return path.join(tmpdir(), "openclaw");
+		console.error(`Hook error [${event.type}:${event.action}]:`, err instanceof Error ? err.message : String(err));
 	}
-	try {
-		accessSync("/tmp", fs.constants.W_OK | fs.constants.X_OK);
-		return POSIX_OPENCLAW_TMP_DIR;
-	} catch {
-		return path.join(tmpdir(), "openclaw");
-	}
+}
+/**
+* Create a hook event with common fields filled in
+*
+* @param type - The event type
+* @param action - The action within that type
+* @param sessionKey - The session key
+* @param context - Additional context
+*/
+function createInternalHookEvent(type, action, sessionKey, context = {}) {
+	return {
+		type,
+		action,
+		sessionKey,
+		context,
+		timestamp: /* @__PURE__ */ new Date(),
+		messages: []
+	};
 }
 
 //#endregion
@@ -378,15 +407,15 @@ function resolveIsNixMode(env = process.env) {
 const isNixMode = resolveIsNixMode();
 const LEGACY_STATE_DIRNAMES = [
 	".clawdbot",
-	".moltbot",
-	".moldbot"
+	".moldbot",
+	".moltbot"
 ];
 const NEW_STATE_DIRNAME = ".openclaw";
 const CONFIG_FILENAME = "openclaw.json";
 const LEGACY_CONFIG_FILENAMES = [
 	"clawdbot.json",
-	"moltbot.json",
-	"moldbot.json"
+	"moldbot.json",
+	"moltbot.json"
 ];
 function resolveDefaultHomeDir() {
 	return resolveRequiredHomeDir(process.env, os.homedir);
@@ -415,7 +444,7 @@ function resolveNewStateDir(homedir = resolveDefaultHomeDir) {
 function resolveStateDir(env = process.env, homedir = envHomedir(env)) {
 	const effectiveHomedir = () => resolveRequiredHomeDir(env, homedir);
 	const override = env.OPENCLAW_STATE_DIR?.trim() || env.CLAWDBOT_STATE_DIR?.trim();
-	if (override) return resolveUserPath(override, env, effectiveHomedir);
+	if (override) return resolveUserPath$1(override, env, effectiveHomedir);
 	const newDir = newStateDir(effectiveHomedir);
 	const legacyDirs = legacyStateDirs(effectiveHomedir);
 	if (fs.existsSync(newDir)) return newDir;
@@ -429,7 +458,7 @@ function resolveStateDir(env = process.env, homedir = envHomedir(env)) {
 	if (existingLegacy) return existingLegacy;
 	return newDir;
 }
-function resolveUserPath(input, env = process.env, homedir = envHomedir(env)) {
+function resolveUserPath$1(input, env = process.env, homedir = envHomedir(env)) {
 	const trimmed = input.trim();
 	if (!trimmed) return trimmed;
 	if (trimmed.startsWith("~")) {
@@ -450,7 +479,7 @@ const STATE_DIR = resolveStateDir();
 */
 function resolveCanonicalConfigPath(env = process.env, stateDir = resolveStateDir(env, envHomedir(env))) {
 	const override = env.OPENCLAW_CONFIG_PATH?.trim() || env.CLAWDBOT_CONFIG_PATH?.trim();
-	if (override) return resolveUserPath(override, env, envHomedir(env));
+	if (override) return resolveUserPath$1(override, env, envHomedir(env));
 	return path.join(stateDir, CONFIG_FILENAME);
 }
 /**
@@ -473,7 +502,7 @@ function resolveConfigPathCandidate(env = process.env, homedir = envHomedir(env)
 */
 function resolveConfigPath(env = process.env, stateDir = resolveStateDir(env, envHomedir(env)), homedir = envHomedir(env)) {
 	const override = env.OPENCLAW_CONFIG_PATH?.trim();
-	if (override) return resolveUserPath(override, env, homedir);
+	if (override) return resolveUserPath$1(override, env, homedir);
 	const stateOverride = env.OPENCLAW_STATE_DIR?.trim();
 	const existing = [path.join(stateDir, CONFIG_FILENAME), ...LEGACY_CONFIG_FILENAMES.map((name) => path.join(stateDir, name))].find((candidate) => {
 		try {
@@ -496,11 +525,11 @@ const CONFIG_PATH = resolveConfigPathCandidate();
 function resolveDefaultConfigCandidates(env = process.env, homedir = envHomedir(env)) {
 	const effectiveHomedir = () => resolveRequiredHomeDir(env, homedir);
 	const explicit = env.OPENCLAW_CONFIG_PATH?.trim() || env.CLAWDBOT_CONFIG_PATH?.trim();
-	if (explicit) return [resolveUserPath(explicit, env, effectiveHomedir)];
+	if (explicit) return [resolveUserPath$1(explicit, env, effectiveHomedir)];
 	const candidates = [];
 	const openclawStateDir = env.OPENCLAW_STATE_DIR?.trim() || env.CLAWDBOT_STATE_DIR?.trim();
 	if (openclawStateDir) {
-		const resolved = resolveUserPath(openclawStateDir, env, effectiveHomedir);
+		const resolved = resolveUserPath$1(openclawStateDir, env, effectiveHomedir);
 		candidates.push(path.join(resolved, CONFIG_FILENAME));
 		candidates.push(...LEGACY_CONFIG_FILENAMES.map((name) => path.join(resolved, name)));
 	}
@@ -532,7 +561,7 @@ const OAUTH_FILENAME = "oauth.json";
 */
 function resolveOAuthDir(env = process.env, stateDir = resolveStateDir(env, envHomedir(env))) {
 	const override = env.OPENCLAW_OAUTH_DIR?.trim();
-	if (override) return resolveUserPath(override, env, envHomedir(env));
+	if (override) return resolveUserPath$1(override, env, envHomedir(env));
 	return path.join(stateDir, "credentials");
 }
 function resolveOAuthPath(env = process.env, stateDir = resolveStateDir(env, envHomedir(env))) {
@@ -549,6 +578,64 @@ function resolveGatewayPort(cfg, env = process.env) {
 		if (configPort > 0) return configPort;
 	}
 	return DEFAULT_GATEWAY_PORT;
+}
+
+//#endregion
+//#region src/infra/tmp-openclaw-dir.ts
+const POSIX_OPENCLAW_TMP_DIR = "/tmp/openclaw";
+function isNodeErrorWithCode(err, code) {
+	return typeof err === "object" && err !== null && "code" in err && err.code === code;
+}
+function resolvePreferredOpenClawTmpDir(options = {}) {
+	const accessSync = options.accessSync ?? fs.accessSync;
+	const lstatSync = options.lstatSync ?? fs.lstatSync;
+	const mkdirSync = options.mkdirSync ?? fs.mkdirSync;
+	const getuid = options.getuid ?? (() => {
+		try {
+			return typeof process.getuid === "function" ? process.getuid() : void 0;
+		} catch {
+			return;
+		}
+	});
+	const tmpdir = options.tmpdir ?? os.tmpdir;
+	const uid = getuid();
+	const isSecureDirForUser = (st) => {
+		if (uid === void 0) return true;
+		if (typeof st.uid === "number" && st.uid !== uid) return false;
+		if (typeof st.mode === "number" && (st.mode & 18) !== 0) return false;
+		return true;
+	};
+	const fallback = () => {
+		const base = tmpdir();
+		const suffix = uid === void 0 ? "openclaw" : `openclaw-${uid}`;
+		return path.join(base, suffix);
+	};
+	try {
+		const preferred = lstatSync(POSIX_OPENCLAW_TMP_DIR);
+		if (!preferred.isDirectory() || preferred.isSymbolicLink()) return fallback();
+		accessSync(POSIX_OPENCLAW_TMP_DIR, fs.constants.W_OK | fs.constants.X_OK);
+		if (!isSecureDirForUser(preferred)) return fallback();
+		return POSIX_OPENCLAW_TMP_DIR;
+	} catch (err) {
+		if (!isNodeErrorWithCode(err, "ENOENT")) return fallback();
+	}
+	try {
+		accessSync("/tmp", fs.constants.W_OK | fs.constants.X_OK);
+		mkdirSync(POSIX_OPENCLAW_TMP_DIR, {
+			recursive: true,
+			mode: 448
+		});
+		try {
+			const preferred = lstatSync(POSIX_OPENCLAW_TMP_DIR);
+			if (!preferred.isDirectory() || preferred.isSymbolicLink()) return fallback();
+			if (!isSecureDirForUser(preferred)) return fallback();
+		} catch {
+			return fallback();
+		}
+		return POSIX_OPENCLAW_TMP_DIR;
+	} catch {
+		return fallback();
+	}
 }
 
 //#endregion
@@ -633,8 +720,9 @@ function resolveSettings() {
 	} catch {
 		cfg = void 0;
 	}
+	const defaultLevel = process.env.VITEST === "true" && process.env.OPENCLAW_TEST_FILE_LOG !== "1" ? "silent" : "info";
 	return {
-		level: normalizeLogLevel(cfg?.level, "info"),
+		level: normalizeLogLevel(cfg?.level, defaultLevel),
 		file: cfg?.file ?? defaultRollingPathForToday()
 	};
 }
@@ -799,6 +887,902 @@ const info = theme.info;
 const danger = theme.error;
 
 //#endregion
+//#region src/utils.ts
+async function ensureDir(dir) {
+	await fs.promises.mkdir(dir, { recursive: true });
+}
+/**
+* Check if a file or directory exists at the given path.
+*/
+async function pathExists(targetPath) {
+	try {
+		await fs.promises.access(targetPath);
+		return true;
+	} catch {
+		return false;
+	}
+}
+function clampNumber(value, min, max) {
+	return Math.max(min, Math.min(max, value));
+}
+function clampInt(value, min, max) {
+	return clampNumber(Math.floor(value), min, max);
+}
+/** Alias for clampNumber (shorter, more common name) */
+const clamp = clampNumber;
+/**
+* Escapes special regex characters in a string so it can be used in a RegExp constructor.
+*/
+function escapeRegExp(value) {
+	return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+/**
+* Safely parse JSON, returning null on error instead of throwing.
+*/
+function safeParseJson(raw) {
+	try {
+		return JSON.parse(raw);
+	} catch {
+		return null;
+	}
+}
+/**
+* Type guard for plain objects (not arrays, null, Date, RegExp, etc.).
+* Uses Object.prototype.toString for maximum safety.
+*/
+function isPlainObject(value) {
+	return typeof value === "object" && value !== null && !Array.isArray(value) && Object.prototype.toString.call(value) === "[object Object]";
+}
+/**
+* Type guard for Record<string, unknown> (less strict than isPlainObject).
+* Accepts any non-null object that isn't an array.
+*/
+function isRecord(value) {
+	return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function normalizeE164(number) {
+	const digits = number.replace(/^whatsapp:/, "").trim().replace(/[^\d+]/g, "");
+	if (digits.startsWith("+")) return `+${digits.slice(1)}`;
+	return `+${digits}`;
+}
+/**
+* "Self-chat mode" heuristic (single phone): the gateway is logged in as the owner's own WhatsApp account,
+* and `channels.whatsapp.allowFrom` includes that same number. Used to avoid side-effects that make no sense when the
+* "bot" and the human are the same WhatsApp identity (e.g. auto read receipts, @mention JID triggers).
+*/
+function isSelfChatMode(selfE164, allowFrom) {
+	if (!selfE164) return false;
+	if (!Array.isArray(allowFrom) || allowFrom.length === 0) return false;
+	const normalizedSelf = normalizeE164(selfE164);
+	return allowFrom.some((n) => {
+		if (n === "*") return false;
+		try {
+			return normalizeE164(String(n)) === normalizedSelf;
+		} catch {
+			return false;
+		}
+	});
+}
+function toWhatsappJid(number) {
+	const withoutPrefix = number.replace(/^whatsapp:/, "").trim();
+	if (withoutPrefix.includes("@")) return withoutPrefix;
+	return `${normalizeE164(withoutPrefix).replace(/\D/g, "")}@s.whatsapp.net`;
+}
+function resolveLidMappingDirs(opts) {
+	const dirs = /* @__PURE__ */ new Set();
+	const addDir = (dir) => {
+		if (!dir) return;
+		dirs.add(resolveUserPath(dir));
+	};
+	addDir(opts?.authDir);
+	for (const dir of opts?.lidMappingDirs ?? []) addDir(dir);
+	addDir(resolveOAuthDir());
+	addDir(path.join(CONFIG_DIR, "credentials"));
+	return [...dirs];
+}
+function readLidReverseMapping(lid, opts) {
+	const mappingFilename = `lid-mapping-${lid}_reverse.json`;
+	const mappingDirs = resolveLidMappingDirs(opts);
+	for (const dir of mappingDirs) {
+		const mappingPath = path.join(dir, mappingFilename);
+		try {
+			const data = fs.readFileSync(mappingPath, "utf8");
+			const phone = JSON.parse(data);
+			if (phone === null || phone === void 0) continue;
+			return normalizeE164(String(phone));
+		} catch {}
+	}
+	return null;
+}
+function jidToE164(jid, opts) {
+	const match = jid.match(/^(\d+)(?::\d+)?@(s\.whatsapp\.net|hosted)$/);
+	if (match) return `+${match[1]}`;
+	const lidMatch = jid.match(/^(\d+)(?::\d+)?@(lid|hosted\.lid)$/);
+	if (lidMatch) {
+		const lid = lidMatch[1];
+		const phone = readLidReverseMapping(lid, opts);
+		if (phone) return phone;
+		if (opts?.logMissing ?? shouldLogVerbose()) logVerbose(`LID mapping not found for ${lid}; skipping inbound message`);
+	}
+	return null;
+}
+async function resolveJidToE164(jid, opts) {
+	if (!jid) return null;
+	const direct = jidToE164(jid, opts);
+	if (direct) return direct;
+	if (!/(@lid|@hosted\.lid)$/.test(jid)) return null;
+	if (!opts?.lidLookup?.getPNForLID) return null;
+	try {
+		const pnJid = await opts.lidLookup.getPNForLID(jid);
+		if (!pnJid) return null;
+		return jidToE164(pnJid, opts);
+	} catch (err) {
+		if (shouldLogVerbose()) logVerbose(`LID mapping lookup failed for ${jid}: ${String(err)}`);
+		return null;
+	}
+}
+function sleep(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+function isHighSurrogate(codeUnit) {
+	return codeUnit >= 55296 && codeUnit <= 56319;
+}
+function isLowSurrogate(codeUnit) {
+	return codeUnit >= 56320 && codeUnit <= 57343;
+}
+function sliceUtf16Safe(input, start, end) {
+	const len = input.length;
+	let from = start < 0 ? Math.max(len + start, 0) : Math.min(start, len);
+	let to = end === void 0 ? len : end < 0 ? Math.max(len + end, 0) : Math.min(end, len);
+	if (to < from) {
+		const tmp = from;
+		from = to;
+		to = tmp;
+	}
+	if (from > 0 && from < len) {
+		if (isLowSurrogate(input.charCodeAt(from)) && isHighSurrogate(input.charCodeAt(from - 1))) from += 1;
+	}
+	if (to > 0 && to < len) {
+		if (isHighSurrogate(input.charCodeAt(to - 1)) && isLowSurrogate(input.charCodeAt(to))) to -= 1;
+	}
+	return input.slice(from, to);
+}
+function truncateUtf16Safe(input, maxLen) {
+	const limit = Math.max(0, Math.floor(maxLen));
+	if (input.length <= limit) return input;
+	return sliceUtf16Safe(input, 0, limit);
+}
+function resolveUserPath(input) {
+	const trimmed = input.trim();
+	if (!trimmed) return trimmed;
+	if (trimmed.startsWith("~")) {
+		const expanded = expandHomePrefix(trimmed, {
+			home: resolveRequiredHomeDir(process.env, os.homedir),
+			env: process.env,
+			homedir: os.homedir
+		});
+		return path.resolve(expanded);
+	}
+	return path.resolve(trimmed);
+}
+function resolveConfigDir(env = process.env, homedir = os.homedir) {
+	const override = env.OPENCLAW_STATE_DIR?.trim() || env.CLAWDBOT_STATE_DIR?.trim();
+	if (override) return resolveUserPath(override);
+	const newDir = path.join(resolveRequiredHomeDir(env, homedir), ".openclaw");
+	try {
+		if (fs.existsSync(newDir)) return newDir;
+	} catch {}
+	return newDir;
+}
+function resolveHomeDir() {
+	return resolveEffectiveHomeDir(process.env, os.homedir);
+}
+function resolveHomeDisplayPrefix() {
+	const home = resolveHomeDir();
+	if (!home) return;
+	if (process.env.OPENCLAW_HOME?.trim()) return {
+		home,
+		prefix: "$OPENCLAW_HOME"
+	};
+	return {
+		home,
+		prefix: "~"
+	};
+}
+function shortenHomePath(input) {
+	if (!input) return input;
+	const display = resolveHomeDisplayPrefix();
+	if (!display) return input;
+	const { home, prefix } = display;
+	if (input === home) return prefix;
+	if (input.startsWith(`${home}/`) || input.startsWith(`${home}\\`)) return `${prefix}${input.slice(home.length)}`;
+	return input;
+}
+function shortenHomeInString(input) {
+	if (!input) return input;
+	const display = resolveHomeDisplayPrefix();
+	if (!display) return input;
+	return input.split(display.home).join(display.prefix);
+}
+function displayPath(input) {
+	return shortenHomePath(input);
+}
+function displayString(input) {
+	return shortenHomeInString(input);
+}
+function formatTerminalLink(label, url, opts) {
+	const esc = "\x1B";
+	const safeLabel = label.replaceAll(esc, "");
+	const safeUrl = url.replaceAll(esc, "");
+	if (!(opts?.force === true ? true : opts?.force === false ? false : Boolean(process.stdout.isTTY))) return opts?.fallback ?? `${safeLabel} (${safeUrl})`;
+	return `\u001b]8;;${safeUrl}\u0007${safeLabel}\u001b]8;;\u0007`;
+}
+const CONFIG_DIR = resolveConfigDir();
+
+//#endregion
+//#region src/plugins/commands.ts
+const pluginCommands = /* @__PURE__ */ new Map();
+let registryLocked = false;
+const MAX_ARGS_LENGTH = 4096;
+/**
+* Reserved command names that plugins cannot override.
+* These are built-in commands from commands-registry.data.ts.
+*/
+const RESERVED_COMMANDS = new Set([
+	"help",
+	"commands",
+	"status",
+	"whoami",
+	"context",
+	"stop",
+	"restart",
+	"reset",
+	"new",
+	"compact",
+	"config",
+	"debug",
+	"allowlist",
+	"activation",
+	"skill",
+	"subagents",
+	"kill",
+	"steer",
+	"tell",
+	"model",
+	"models",
+	"queue",
+	"send",
+	"bash",
+	"exec",
+	"think",
+	"verbose",
+	"reasoning",
+	"elevated",
+	"usage"
+]);
+/**
+* Validate a command name.
+* Returns an error message if invalid, or null if valid.
+*/
+function validateCommandName(name) {
+	const trimmed = name.trim().toLowerCase();
+	if (!trimmed) return "Command name cannot be empty";
+	if (!/^[a-z][a-z0-9_-]*$/.test(trimmed)) return "Command name must start with a letter and contain only letters, numbers, hyphens, and underscores";
+	if (RESERVED_COMMANDS.has(trimmed)) return `Command name "${trimmed}" is reserved by a built-in command`;
+	return null;
+}
+/**
+* Register a plugin command.
+* Returns an error if the command name is invalid or reserved.
+*/
+function registerPluginCommand(pluginId, command) {
+	if (registryLocked) return {
+		ok: false,
+		error: "Cannot register commands while processing is in progress"
+	};
+	if (typeof command.handler !== "function") return {
+		ok: false,
+		error: "Command handler must be a function"
+	};
+	const validationError = validateCommandName(command.name);
+	if (validationError) return {
+		ok: false,
+		error: validationError
+	};
+	const key = `/${command.name.toLowerCase()}`;
+	if (pluginCommands.has(key)) {
+		const existing = pluginCommands.get(key);
+		return {
+			ok: false,
+			error: `Command "${command.name}" already registered by plugin "${existing.pluginId}"`
+		};
+	}
+	pluginCommands.set(key, {
+		...command,
+		pluginId
+	});
+	logVerbose(`Registered plugin command: ${key} (plugin: ${pluginId})`);
+	return { ok: true };
+}
+/**
+* Clear all registered plugin commands.
+* Called during plugin reload.
+*/
+function clearPluginCommands() {
+	pluginCommands.clear();
+}
+/**
+* Check if a command body matches a registered plugin command.
+* Returns the command definition and parsed args if matched.
+*
+* Note: If a command has `acceptsArgs: false` and the user provides arguments,
+* the command will not match. This allows the message to fall through to
+* built-in handlers or the agent. Document this behavior to plugin authors.
+*/
+function matchPluginCommand(commandBody) {
+	const trimmed = commandBody.trim();
+	if (!trimmed.startsWith("/")) return null;
+	const spaceIndex = trimmed.indexOf(" ");
+	const commandName = spaceIndex === -1 ? trimmed : trimmed.slice(0, spaceIndex);
+	const args = spaceIndex === -1 ? void 0 : trimmed.slice(spaceIndex + 1).trim();
+	const key = commandName.toLowerCase();
+	const command = pluginCommands.get(key);
+	if (!command) return null;
+	if (args && !command.acceptsArgs) return null;
+	return {
+		command,
+		args: args || void 0
+	};
+}
+/**
+* Sanitize command arguments to prevent injection attacks.
+* Removes control characters and enforces length limits.
+*/
+function sanitizeArgs(args) {
+	if (!args) return;
+	if (args.length > MAX_ARGS_LENGTH) return args.slice(0, MAX_ARGS_LENGTH);
+	let sanitized = "";
+	for (const char of args) {
+		const code = char.charCodeAt(0);
+		if (!(code <= 31 && code !== 9 && code !== 10 || code === 127)) sanitized += char;
+	}
+	return sanitized;
+}
+/**
+* Execute a plugin command handler.
+*
+* Note: Plugin authors should still validate and sanitize ctx.args for their
+* specific use case. This function provides basic defense-in-depth sanitization.
+*/
+async function executePluginCommand(params) {
+	const { command, args, senderId, channel, isAuthorizedSender, commandBody, config } = params;
+	if (command.requireAuth !== false && !isAuthorizedSender) {
+		logVerbose(`Plugin command /${command.name} blocked: unauthorized sender ${senderId || "<unknown>"}`);
+		return { text: "⚠️ This command requires authorization." };
+	}
+	const sanitizedArgs = sanitizeArgs(args);
+	const ctx = {
+		senderId,
+		channel,
+		channelId: params.channelId,
+		isAuthorizedSender,
+		args: sanitizedArgs,
+		commandBody,
+		config,
+		from: params.from,
+		to: params.to,
+		accountId: params.accountId,
+		messageThreadId: params.messageThreadId
+	};
+	registryLocked = true;
+	try {
+		const result = await command.handler(ctx);
+		logVerbose(`Plugin command /${command.name} executed successfully for ${senderId || "unknown"}`);
+		return result;
+	} catch (err) {
+		const error = err;
+		logVerbose(`Plugin command /${command.name} error: ${error.message}`);
+		return { text: "⚠️ Command failed. Please try again later." };
+	} finally {
+		registryLocked = false;
+	}
+}
+/**
+* List all registered plugin commands.
+* Used for /help and /commands output.
+*/
+function listPluginCommands() {
+	return Array.from(pluginCommands.values()).map((cmd) => ({
+		name: cmd.name,
+		description: cmd.description,
+		pluginId: cmd.pluginId
+	}));
+}
+/**
+* Get plugin command specs for native command registration (e.g., Telegram).
+*/
+function getPluginCommandSpecs() {
+	return Array.from(pluginCommands.values()).map((cmd) => ({
+		name: cmd.name,
+		description: cmd.description
+	}));
+}
+
+//#endregion
+//#region src/plugins/http-path.ts
+function normalizePluginHttpPath(path, fallback) {
+	const trimmed = path?.trim();
+	if (!trimmed) {
+		const fallbackTrimmed = fallback?.trim();
+		if (!fallbackTrimmed) return null;
+		return fallbackTrimmed.startsWith("/") ? fallbackTrimmed : `/${fallbackTrimmed}`;
+	}
+	return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+}
+
+//#endregion
+//#region src/plugins/registry.ts
+function createEmptyPluginRegistry() {
+	return {
+		plugins: [],
+		tools: [],
+		hooks: [],
+		typedHooks: [],
+		channels: [],
+		providers: [],
+		gatewayHandlers: {},
+		httpHandlers: [],
+		httpRoutes: [],
+		cliRegistrars: [],
+		services: [],
+		commands: [],
+		diagnostics: []
+	};
+}
+function createPluginRegistry(registryParams) {
+	const registry = createEmptyPluginRegistry();
+	const coreGatewayMethods = new Set(Object.keys(registryParams.coreGatewayHandlers ?? {}));
+	const pushDiagnostic = (diag) => {
+		registry.diagnostics.push(diag);
+	};
+	const registerTool = (record, tool, opts) => {
+		const names = opts?.names ?? (opts?.name ? [opts.name] : []);
+		const optional = opts?.optional === true;
+		const factory = typeof tool === "function" ? tool : (_ctx) => tool;
+		if (typeof tool !== "function") names.push(tool.name);
+		const normalized = names.map((name) => name.trim()).filter(Boolean);
+		if (normalized.length > 0) record.toolNames.push(...normalized);
+		registry.tools.push({
+			pluginId: record.id,
+			factory,
+			names: normalized,
+			optional,
+			source: record.source
+		});
+	};
+	const registerHook = (record, events, handler, opts, config) => {
+		const normalizedEvents = (Array.isArray(events) ? events : [events]).map((event) => event.trim()).filter(Boolean);
+		const entry = opts?.entry ?? null;
+		const name = entry?.hook.name ?? opts?.name?.trim();
+		if (!name) {
+			pushDiagnostic({
+				level: "warn",
+				pluginId: record.id,
+				source: record.source,
+				message: "hook registration missing name"
+			});
+			return;
+		}
+		const description = entry?.hook.description ?? opts?.description ?? "";
+		const hookEntry = entry ? {
+			...entry,
+			hook: {
+				...entry.hook,
+				name,
+				description,
+				source: "openclaw-plugin",
+				pluginId: record.id
+			},
+			metadata: {
+				...entry.metadata,
+				events: normalizedEvents
+			}
+		} : {
+			hook: {
+				name,
+				description,
+				source: "openclaw-plugin",
+				pluginId: record.id,
+				filePath: record.source,
+				baseDir: path.dirname(record.source),
+				handlerPath: record.source
+			},
+			frontmatter: {},
+			metadata: { events: normalizedEvents },
+			invocation: { enabled: true }
+		};
+		record.hookNames.push(name);
+		registry.hooks.push({
+			pluginId: record.id,
+			entry: hookEntry,
+			events: normalizedEvents,
+			source: record.source
+		});
+		if (!(config?.hooks?.internal?.enabled === true) || opts?.register === false) return;
+		for (const event of normalizedEvents) registerInternalHook(event, handler);
+	};
+	const registerGatewayMethod = (record, method, handler) => {
+		const trimmed = method.trim();
+		if (!trimmed) return;
+		if (coreGatewayMethods.has(trimmed) || registry.gatewayHandlers[trimmed]) {
+			pushDiagnostic({
+				level: "error",
+				pluginId: record.id,
+				source: record.source,
+				message: `gateway method already registered: ${trimmed}`
+			});
+			return;
+		}
+		registry.gatewayHandlers[trimmed] = handler;
+		record.gatewayMethods.push(trimmed);
+	};
+	const registerHttpHandler = (record, handler) => {
+		record.httpHandlers += 1;
+		registry.httpHandlers.push({
+			pluginId: record.id,
+			handler,
+			source: record.source
+		});
+	};
+	const registerHttpRoute = (record, params) => {
+		const normalizedPath = normalizePluginHttpPath(params.path);
+		if (!normalizedPath) {
+			pushDiagnostic({
+				level: "warn",
+				pluginId: record.id,
+				source: record.source,
+				message: "http route registration missing path"
+			});
+			return;
+		}
+		if (registry.httpRoutes.some((entry) => entry.path === normalizedPath)) {
+			pushDiagnostic({
+				level: "error",
+				pluginId: record.id,
+				source: record.source,
+				message: `http route already registered: ${normalizedPath}`
+			});
+			return;
+		}
+		record.httpHandlers += 1;
+		registry.httpRoutes.push({
+			pluginId: record.id,
+			path: normalizedPath,
+			handler: params.handler,
+			source: record.source
+		});
+	};
+	const registerChannel = (record, registration) => {
+		const normalized = typeof registration.plugin === "object" ? registration : { plugin: registration };
+		const plugin = normalized.plugin;
+		const id = typeof plugin?.id === "string" ? plugin.id.trim() : String(plugin?.id ?? "").trim();
+		if (!id) {
+			pushDiagnostic({
+				level: "error",
+				pluginId: record.id,
+				source: record.source,
+				message: "channel registration missing id"
+			});
+			return;
+		}
+		record.channelIds.push(id);
+		registry.channels.push({
+			pluginId: record.id,
+			plugin,
+			dock: normalized.dock,
+			source: record.source
+		});
+	};
+	const registerProvider = (record, provider) => {
+		const id = typeof provider?.id === "string" ? provider.id.trim() : "";
+		if (!id) {
+			pushDiagnostic({
+				level: "error",
+				pluginId: record.id,
+				source: record.source,
+				message: "provider registration missing id"
+			});
+			return;
+		}
+		const existing = registry.providers.find((entry) => entry.provider.id === id);
+		if (existing) {
+			pushDiagnostic({
+				level: "error",
+				pluginId: record.id,
+				source: record.source,
+				message: `provider already registered: ${id} (${existing.pluginId})`
+			});
+			return;
+		}
+		record.providerIds.push(id);
+		registry.providers.push({
+			pluginId: record.id,
+			provider,
+			source: record.source
+		});
+	};
+	const registerCli = (record, registrar, opts) => {
+		const commands = (opts?.commands ?? []).map((cmd) => cmd.trim()).filter(Boolean);
+		record.cliCommands.push(...commands);
+		registry.cliRegistrars.push({
+			pluginId: record.id,
+			register: registrar,
+			commands,
+			source: record.source
+		});
+	};
+	const registerService = (record, service) => {
+		const id = service.id.trim();
+		if (!id) return;
+		record.services.push(id);
+		registry.services.push({
+			pluginId: record.id,
+			service,
+			source: record.source
+		});
+	};
+	const registerCommand = (record, command) => {
+		const name = command.name.trim();
+		if (!name) {
+			pushDiagnostic({
+				level: "error",
+				pluginId: record.id,
+				source: record.source,
+				message: "command registration missing name"
+			});
+			return;
+		}
+		const result = registerPluginCommand(record.id, command);
+		if (!result.ok) {
+			pushDiagnostic({
+				level: "error",
+				pluginId: record.id,
+				source: record.source,
+				message: `command registration failed: ${result.error}`
+			});
+			return;
+		}
+		record.commands.push(name);
+		registry.commands.push({
+			pluginId: record.id,
+			command,
+			source: record.source
+		});
+	};
+	const registerTypedHook = (record, hookName, handler, opts) => {
+		record.hookCount += 1;
+		registry.typedHooks.push({
+			pluginId: record.id,
+			hookName,
+			handler,
+			priority: opts?.priority,
+			source: record.source
+		});
+	};
+	const normalizeLogger = (logger) => ({
+		info: logger.info,
+		warn: logger.warn,
+		error: logger.error,
+		debug: logger.debug
+	});
+	const createApi = (record, params) => {
+		return {
+			id: record.id,
+			name: record.name,
+			version: record.version,
+			description: record.description,
+			source: record.source,
+			config: params.config,
+			pluginConfig: params.pluginConfig,
+			runtime: registryParams.runtime,
+			logger: normalizeLogger(registryParams.logger),
+			registerTool: (tool, opts) => registerTool(record, tool, opts),
+			registerHook: (events, handler, opts) => registerHook(record, events, handler, opts, params.config),
+			registerHttpHandler: (handler) => registerHttpHandler(record, handler),
+			registerHttpRoute: (params) => registerHttpRoute(record, params),
+			registerChannel: (registration) => registerChannel(record, registration),
+			registerProvider: (provider) => registerProvider(record, provider),
+			registerGatewayMethod: (method, handler) => registerGatewayMethod(record, method, handler),
+			registerCli: (registrar, opts) => registerCli(record, registrar, opts),
+			registerService: (service) => registerService(record, service),
+			registerCommand: (command) => registerCommand(record, command),
+			resolvePath: (input) => resolveUserPath(input),
+			on: (hookName, handler, opts) => registerTypedHook(record, hookName, handler, opts)
+		};
+	};
+	return {
+		registry,
+		createApi,
+		pushDiagnostic,
+		registerTool,
+		registerChannel,
+		registerProvider,
+		registerGatewayMethod,
+		registerCli,
+		registerService,
+		registerCommand,
+		registerHook,
+		registerTypedHook
+	};
+}
+
+//#endregion
+//#region src/plugins/runtime.ts
+const REGISTRY_STATE = Symbol.for("openclaw.pluginRegistryState");
+const state = (() => {
+	const globalState = globalThis;
+	if (!globalState[REGISTRY_STATE]) globalState[REGISTRY_STATE] = {
+		registry: createEmptyPluginRegistry(),
+		key: null
+	};
+	return globalState[REGISTRY_STATE];
+})();
+function setActivePluginRegistry(registry, cacheKey) {
+	state.registry = registry;
+	state.key = cacheKey ?? null;
+}
+function getActivePluginRegistry() {
+	return state.registry;
+}
+function requireActivePluginRegistry() {
+	if (!state.registry) state.registry = createEmptyPluginRegistry();
+	return state.registry;
+}
+
+//#endregion
+//#region src/channels/registry.ts
+const CHAT_CHANNEL_ORDER = [
+	"telegram",
+	"whatsapp",
+	"discord",
+	"irc",
+	"googlechat",
+	"slack",
+	"signal",
+	"imessage"
+];
+const CHANNEL_IDS = [...CHAT_CHANNEL_ORDER];
+const DEFAULT_CHAT_CHANNEL = "whatsapp";
+const CHAT_CHANNEL_META = {
+	telegram: {
+		id: "telegram",
+		label: "Telegram",
+		selectionLabel: "Telegram (Bot API)",
+		detailLabel: "Telegram Bot",
+		docsPath: "/channels/telegram",
+		docsLabel: "telegram",
+		blurb: "simplest way to get started — register a bot with @BotFather and get going.",
+		systemImage: "paperplane",
+		selectionDocsPrefix: "",
+		selectionDocsOmitLabel: true,
+		selectionExtras: ["https://openclaw.ai"]
+	},
+	whatsapp: {
+		id: "whatsapp",
+		label: "WhatsApp",
+		selectionLabel: "WhatsApp (QR link)",
+		detailLabel: "WhatsApp Web",
+		docsPath: "/channels/whatsapp",
+		docsLabel: "whatsapp",
+		blurb: "works with your own number; recommend a separate phone + eSIM.",
+		systemImage: "message"
+	},
+	discord: {
+		id: "discord",
+		label: "Discord",
+		selectionLabel: "Discord (Bot API)",
+		detailLabel: "Discord Bot",
+		docsPath: "/channels/discord",
+		docsLabel: "discord",
+		blurb: "very well supported right now.",
+		systemImage: "bubble.left.and.bubble.right"
+	},
+	irc: {
+		id: "irc",
+		label: "IRC",
+		selectionLabel: "IRC (Server + Nick)",
+		detailLabel: "IRC",
+		docsPath: "/channels/irc",
+		docsLabel: "irc",
+		blurb: "classic IRC networks with DM/channel routing and pairing controls.",
+		systemImage: "network"
+	},
+	googlechat: {
+		id: "googlechat",
+		label: "Google Chat",
+		selectionLabel: "Google Chat (Chat API)",
+		detailLabel: "Google Chat",
+		docsPath: "/channels/googlechat",
+		docsLabel: "googlechat",
+		blurb: "Google Workspace Chat app with HTTP webhook.",
+		systemImage: "message.badge"
+	},
+	slack: {
+		id: "slack",
+		label: "Slack",
+		selectionLabel: "Slack (Socket Mode)",
+		detailLabel: "Slack Bot",
+		docsPath: "/channels/slack",
+		docsLabel: "slack",
+		blurb: "supported (Socket Mode).",
+		systemImage: "number"
+	},
+	signal: {
+		id: "signal",
+		label: "Signal",
+		selectionLabel: "Signal (signal-cli)",
+		detailLabel: "Signal REST",
+		docsPath: "/channels/signal",
+		docsLabel: "signal",
+		blurb: "signal-cli linked device; more setup (David Reagans: \"Hop on Discord.\").",
+		systemImage: "antenna.radiowaves.left.and.right"
+	},
+	imessage: {
+		id: "imessage",
+		label: "iMessage",
+		selectionLabel: "iMessage (imsg)",
+		detailLabel: "iMessage",
+		docsPath: "/channels/imessage",
+		docsLabel: "imessage",
+		blurb: "this is still a work in progress.",
+		systemImage: "message.fill"
+	}
+};
+const CHAT_CHANNEL_ALIASES = {
+	imsg: "imessage",
+	"internet-relay-chat": "irc",
+	"google-chat": "googlechat",
+	gchat: "googlechat"
+};
+const normalizeChannelKey = (raw) => {
+	return raw?.trim().toLowerCase() || void 0;
+};
+function listChatChannels() {
+	return CHAT_CHANNEL_ORDER.map((id) => CHAT_CHANNEL_META[id]);
+}
+function getChatChannelMeta(id) {
+	return CHAT_CHANNEL_META[id];
+}
+function normalizeChatChannelId(raw) {
+	const normalized = normalizeChannelKey(raw);
+	if (!normalized) return null;
+	const resolved = CHAT_CHANNEL_ALIASES[normalized] ?? normalized;
+	return CHAT_CHANNEL_ORDER.includes(resolved) ? resolved : null;
+}
+function normalizeChannelId(raw) {
+	return normalizeChatChannelId(raw);
+}
+function normalizeAnyChannelId(raw) {
+	const key = normalizeChannelKey(raw);
+	if (!key) return null;
+	return requireActivePluginRegistry().channels.find((entry) => {
+		const id = String(entry.plugin.id ?? "").trim().toLowerCase();
+		if (id && id === key) return true;
+		return (entry.plugin.meta.aliases ?? []).some((alias) => alias.trim().toLowerCase() === key);
+	})?.plugin.id ?? null;
+}
+function formatChannelPrimerLine(meta) {
+	return `${meta.label}: ${meta.blurb}`;
+}
+function formatChannelSelectionLine(meta, docsLink) {
+	const docsPrefix = meta.selectionDocsPrefix ?? "Docs:";
+	const docsLabel = meta.docsLabel ?? meta.id;
+	const docs = meta.selectionDocsOmitLabel ? docsLink(meta.docsPath) : docsLink(meta.docsPath, docsLabel);
+	const extras = (meta.selectionExtras ?? []).filter(Boolean).join(" ");
+	return `${meta.label} — ${meta.blurb} ${docsPrefix ? `${docsPrefix} ` : ""}${docs}${extras ? ` ${extras}` : ""}`;
+}
+
+//#endregion
 //#region src/terminal/progress-line.ts
 let activeStream = null;
 function registerActiveProgressLine(stream) {
@@ -827,17 +1811,25 @@ function reportRestoreFailure(scope, err, reason) {
 		console.error(`[terminal] restore reporting failed${suffix}: ${String(writeErr)}`);
 	}
 }
-function restoreTerminalState(reason) {
+function restoreTerminalState(reason, options = {}) {
+	const resumeStdin = options.resumeStdinIfPaused ?? options.resumeStdin ?? false;
 	try {
 		clearActiveProgressLine();
 	} catch (err) {
 		reportRestoreFailure("progress line", err, reason);
 	}
 	const stdin = process.stdin;
-	if (stdin.isTTY && typeof stdin.setRawMode === "function") try {
-		stdin.setRawMode(false);
-	} catch (err) {
-		reportRestoreFailure("raw mode", err, reason);
+	if (stdin.isTTY && typeof stdin.setRawMode === "function") {
+		try {
+			stdin.setRawMode(false);
+		} catch (err) {
+			reportRestoreFailure("raw mode", err, reason);
+		}
+		if (resumeStdin && typeof stdin.isPaused === "function" && stdin.isPaused()) try {
+			stdin.resume();
+		} catch (err) {
+			reportRestoreFailure("stdin resume", err, reason);
+		}
 	}
 	if (process.stdout.isTTY) try {
 		process.stdout.write(RESET_SEQUENCE);
@@ -848,21 +1840,40 @@ function restoreTerminalState(reason) {
 
 //#endregion
 //#region src/runtime.ts
+function shouldEmitRuntimeLog(env = process.env) {
+	if (env.VITEST !== "true") return true;
+	if (env.OPENCLAW_TEST_RUNTIME_LOG === "1") return true;
+	return typeof console.log.mock === "object";
+}
+function createRuntimeIo() {
+	return {
+		log: (...args) => {
+			if (!shouldEmitRuntimeLog()) return;
+			clearActiveProgressLine();
+			console.log(...args);
+		},
+		error: (...args) => {
+			clearActiveProgressLine();
+			console.error(...args);
+		}
+	};
+}
 const defaultRuntime = {
-	log: (...args) => {
-		clearActiveProgressLine();
-		console.log(...args);
-	},
-	error: (...args) => {
-		clearActiveProgressLine();
-		console.error(...args);
-	},
+	...createRuntimeIo(),
 	exit: (code) => {
-		restoreTerminalState("runtime exit");
+		restoreTerminalState("runtime exit", { resumeStdinIfPaused: false });
 		process.exit(code);
 		throw new Error("unreachable");
 	}
 };
+function createNonExitingRuntime() {
+	return {
+		...createRuntimeIo(),
+		exit: (code) => {
+			throw new Error(`exit ${code}`);
+		}
+	};
+}
 
 //#endregion
 //#region src/terminal/ansi.ts
@@ -878,6 +1889,20 @@ function visibleWidth(input) {
 }
 
 //#endregion
+//#region src/logging/timestamps.ts
+function formatLocalIsoWithOffset(now) {
+	const year = now.getFullYear();
+	const month = String(now.getMonth() + 1).padStart(2, "0");
+	const day = String(now.getDate()).padStart(2, "0");
+	const h = String(now.getHours()).padStart(2, "0");
+	const m = String(now.getMinutes()).padStart(2, "0");
+	const s = String(now.getSeconds()).padStart(2, "0");
+	const ms = String(now.getMilliseconds()).padStart(3, "0");
+	const tzOffset = now.getTimezoneOffset();
+	return `${year}-${month}-${day}T${h}:${m}:${s}.${ms}${tzOffset <= 0 ? "+" : "-"}${String(Math.floor(Math.abs(tzOffset) / 60)).padStart(2, "0")}:${String(Math.abs(tzOffset) % 60).padStart(2, "0")}`;
+}
+
+//#endregion
 //#region src/logging/console.ts
 const requireConfig = createRequire(import.meta.url);
 const loadConfigFallbackDefault = () => {
@@ -890,6 +1915,7 @@ const loadConfigFallbackDefault = () => {
 let loadConfigFallback = loadConfigFallbackDefault;
 function normalizeConsoleLevel(level) {
 	if (isVerbose()) return "debug";
+	if (!level && process.env.VITEST === "true" && process.env.OPENCLAW_TEST_CONSOLE !== "1") return "silent";
 	return normalizeLogLevel(level, "info");
 }
 function normalizeConsoleStyle(style) {
@@ -922,6 +1948,9 @@ function getConsoleSettings() {
 	const cached = loggingState.cachedConsoleSettings;
 	if (!cached || consoleSettingsChanged(cached, settings)) loggingState.cachedConsoleSettings = settings;
 	return loggingState.cachedConsoleSettings;
+}
+function routeLogsToStderr() {
+	loggingState.forceConsoleToStderr = true;
 }
 function setConsoleSubsystemFilter(filters) {
 	if (!filters || filters.length === 0) {
@@ -959,15 +1988,7 @@ function isEpipeError(err) {
 function formatConsoleTimestamp(style) {
 	const now = /* @__PURE__ */ new Date();
 	if (style === "pretty") return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}:${String(now.getSeconds()).padStart(2, "0")}`;
-	const year = now.getFullYear();
-	const month = String(now.getMonth() + 1).padStart(2, "0");
-	const day = String(now.getDate()).padStart(2, "0");
-	const h = String(now.getHours()).padStart(2, "0");
-	const m = String(now.getMinutes()).padStart(2, "0");
-	const s = String(now.getSeconds()).padStart(2, "0");
-	const ms = String(now.getMilliseconds()).padStart(3, "0");
-	const tzOffset = now.getTimezoneOffset();
-	return `${year}-${month}-${day}T${h}:${m}:${s}.${ms}${tzOffset <= 0 ? "+" : "-"}${String(Math.floor(Math.abs(tzOffset) / 60)).padStart(2, "0")}:${String(Math.abs(tzOffset) % 60).padStart(2, "0")}`;
+	return formatLocalIsoWithOffset(now);
 }
 function hasTimestampPrefix(value) {
 	return /^(?:\d{2}:\d{2}:\d{2}|\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?)/.test(value);
@@ -1195,8 +2216,17 @@ function createSubsystemLogger(subsystem) {
 			meta: fileMeta
 		}));
 	};
+	const isConsoleEnabled = (level) => {
+		return shouldLogToConsole(level, { level: getConsoleSettings().level }) && shouldLogSubsystemToConsole(subsystem);
+	};
+	const isFileEnabled = (level) => isFileLogLevelEnabled(level);
 	return {
 		subsystem,
+		isEnabled: (level, target = "any") => {
+			if (target === "console") return isConsoleEnabled(level);
+			if (target === "file") return isFileEnabled(level);
+			return isConsoleEnabled(level) || isFileEnabled(level);
+		},
 		trace: (message, meta) => emit("trace", message, meta),
 		debug: (message, meta) => emit("debug", message, meta),
 		info: (message, meta) => emit("info", message, meta),
@@ -1214,9 +2244,10 @@ function createSubsystemLogger(subsystem) {
 	};
 }
 function runtimeForLogger(logger, exit = defaultRuntime.exit) {
+	const formatArgs = (...args) => args.map((arg) => typeof arg === "string" ? arg : inspect(arg)).join(" ").trim();
 	return {
-		log: (message) => logger.info(message),
-		error: (message) => logger.error(message),
+		log: (...args) => logger.info(formatArgs(...args)),
+		error: (...args) => logger.error(formatArgs(...args)),
 		exit
 	};
 }
@@ -1377,6 +2408,7 @@ function hasExperimentalWarningSuppressed() {
 	return false;
 }
 function ensureExperimentalWarningSuppressed() {
+	if (shouldSkipRespawnForArgv(process$1.argv)) return false;
 	if (isTruthyEnvValue(process$1.env.OPENCLAW_NO_RESPAWN)) return false;
 	if (isTruthyEnvValue(process$1.env.OPENCLAW_NODE_OPTIONS_READY)) return false;
 	if (hasExperimentalWarningSuppressed()) return false;
@@ -1403,52 +2435,6 @@ function ensureExperimentalWarningSuppressed() {
 	});
 	return true;
 }
-function normalizeWindowsArgv(argv) {
-	if (process$1.platform !== "win32") return argv;
-	if (argv.length < 2) return argv;
-	const stripControlChars = (value) => {
-		let out = "";
-		for (let i = 0; i < value.length; i += 1) {
-			const code = value.charCodeAt(i);
-			if (code >= 32 && code !== 127) out += value[i];
-		}
-		return out;
-	};
-	const normalizeArg = (value) => stripControlChars(value).replace(/^['"]+|['"]+$/g, "").trim();
-	const normalizeCandidate = (value) => normalizeArg(value).replace(/^\\\\\\?\\/, "");
-	const execPath = normalizeCandidate(process$1.execPath);
-	const execPathLower = execPath.toLowerCase();
-	const execBase = path.basename(execPath).toLowerCase();
-	const isExecPath = (value) => {
-		if (!value) return false;
-		const lower = normalizeCandidate(value).toLowerCase();
-		return lower === execPathLower || path.basename(lower) === execBase || lower.endsWith("\\node.exe") || lower.endsWith("/node.exe") || lower.includes("node.exe");
-	};
-	const next = [...argv];
-	for (let i = 1; i <= 3 && i < next.length;) {
-		if (isExecPath(next[i])) {
-			next.splice(i, 1);
-			continue;
-		}
-		i += 1;
-	}
-	const filtered = next.filter((arg, index) => index === 0 || !isExecPath(arg));
-	if (filtered.length < 3) return filtered;
-	const cleaned = [...filtered];
-	for (let i = 2; i < cleaned.length;) {
-		const arg = cleaned[i];
-		if (!arg || arg.startsWith("-")) {
-			i += 1;
-			continue;
-		}
-		if (isExecPath(arg)) {
-			cleaned.splice(i, 1);
-			continue;
-		}
-		break;
-	}
-	return cleaned;
-}
 process$1.argv = normalizeWindowsArgv(process$1.argv);
 if (!ensureExperimentalWarningSuppressed()) {
 	const parsed = parseCliProfileArgs(process$1.argv);
@@ -1460,11 +2446,11 @@ if (!ensureExperimentalWarningSuppressed()) {
 		applyCliProfileEnv({ profile: parsed.profile });
 		process$1.argv = parsed.argv;
 	}
-	import("./run-main-DuJbi6NB.js").then(({ runCli }) => runCli(process$1.argv)).catch((error) => {
+	import("./run-main-Ci6bfcHZ.js").then(({ runCli }) => runCli(process$1.argv)).catch((error) => {
 		console.error("[openclaw] Failed to start CLI:", error instanceof Error ? error.stack ?? error.message : error);
 		process$1.exitCode = 1;
 	});
 }
 
 //#endregion
-export { CHANNEL_IDS as $, theme as A, resolveCanonicalConfigPath as B, logVerboseConsole as C, warn as D, success as E, normalizeLogLevel as F, resolveGatewayPort as G, resolveConfigPathCandidate as H, CONFIG_PATH as I, resolveNewStateDir as J, resolveIsNixMode as K, DEFAULT_GATEWAY_PORT as L, getLogger as M, getResolvedLoggerSettings as N, colorize as O, toPinoLikeLogger as P, resolvePreferredOpenClawTmpDir as Q, STATE_DIR as R, logVerbose as S, shouldLogVerbose as T, resolveDefaultConfigCandidates as U, resolveConfigPath as V, resolveGatewayLockDir as W, resolveOAuthPath as X, resolveOAuthDir as Y, resolveStateDir as Z, unregisterActiveProgressLine as _, parseBooleanValue as a, listChatChannels as at, isVerbose as b, enableConsoleCapture as c, normalizeChatChannelId as ct, shouldLogSubsystemToConsole as d, setActivePluginRegistry as dt, CHAT_CHANNEL_ORDER as et, visibleWidth as f, normalizeProfileName as ft, registerActiveProgressLine as g, clearActiveProgressLine as h, resolveRequiredHomeDir as ht, normalizeEnv as i, getChatChannelMeta as it, getChildLogger as j, isRich as k, setConsoleSubsystemFilter as l, getActivePluginRegistry as lt, restoreTerminalState as m, resolveEffectiveHomeDir as mt, isTruthyEnvValue as n, formatChannelPrimerLine as nt, createSubsystemLogger as o, normalizeAnyChannelId as ot, defaultRuntime as p, expandHomePrefix as pt, resolveLegacyStateDirs as q, logAcceptedEnvOption as r, formatChannelSelectionLine as rt, runtimeForLogger as s, normalizeChannelId as st, installProcessWarningFilter as t, DEFAULT_CHAT_CHANNEL as tt, setConsoleTimestampPrefix as u, requireActivePluginRegistry as ut, danger as v, setVerbose as w, isYes as x, info as y, isNixMode as z };
+export { isRecord as $, triggerInternalHook as $t, normalizeChannelId as A, getResolvedLoggerSettings as At, getPluginCommandSpecs as B, resolveConfigPathCandidate as Bt, CHAT_CHANNEL_ORDER as C, success as Ct, getChatChannelMeta as D, theme as Dt, formatChannelSelectionLine as E, isRich as Et, createEmptyPluginRegistry as F, DEFAULT_GATEWAY_PORT as Ft, clampInt as G, resolveLegacyStateDirs as Gt, matchPluginCommand as H, resolveGatewayLockDir as Ht, createPluginRegistry as I, STATE_DIR as It, displayString as J, resolveOAuthPath as Jt, clampNumber as K, resolveNewStateDir as Kt, normalizePluginHttpPath as L, isNixMode as Lt, getActivePluginRegistry as M, normalizeLogLevel as Mt, requireActivePluginRegistry as N, resolvePreferredOpenClawTmpDir as Nt, listChatChannels as O, getChildLogger as Ot, setActivePluginRegistry as P, CONFIG_PATH as Pt, isPlainObject as Q, registerInternalHook as Qt, clearPluginCommands as R, resolveCanonicalConfigPath as Rt, CHANNEL_IDS as S, shouldLogVerbose as St, formatChannelPrimerLine as T, colorize as Tt, CONFIG_DIR as U, resolveGatewayPort as Ut, listPluginCommands as V, resolveDefaultConfigCandidates as Vt, clamp as W, resolveIsNixMode as Wt, escapeRegExp as X, clearInternalHooks as Xt, ensureDir as Y, resolveStateDir as Yt, formatTerminalLink as Z, createInternalHookEvent as Zt, defaultRuntime as _, isVerbose as _t, parseBooleanValue as a, getPrimaryCommand as an, resolveHomeDir as at, registerActiveProgressLine as b, logVerboseConsole as bt, enableConsoleCapture as c, hasHelpOrVersion as cn, safeParseJson as ct, setConsoleTimestampPrefix as d, expandHomePrefix as dn, sleep as dt, normalizeWindowsArgv as en, isSelfChatMode as et, shouldLogSubsystemToConsole as f, resolveRequiredHomeDir as fn, sliceUtf16Safe as ft, createNonExitingRuntime as g, info as gt, visibleWidth as h, danger as ht, normalizeEnv as i, getPositiveIntFlagValue as in, resolveConfigDir as it, normalizeChatChannelId as j, toPinoLikeLogger as jt, normalizeAnyChannelId as k, getLogger as kt, routeLogsToStderr as l, shouldMigrateStateFromPath as ln, shortenHomeInString as lt, stripAnsi as m, truncateUtf16Safe as mt, isTruthyEnvValue as n, getCommandPath as nn, normalizeE164 as nt, createSubsystemLogger as o, getVerboseFlag as on, resolveJidToE164 as ot, formatLocalIsoWithOffset as p, toWhatsappJid as pt, displayPath as q, resolveOAuthDir as qt, logAcceptedEnvOption as r, getFlagValue as rn, pathExists as rt, runtimeForLogger as s, hasFlag as sn, resolveUserPath as st, installProcessWarningFilter as t, buildParseArgv as tn, jidToE164 as tt, setConsoleSubsystemFilter as u, normalizeProfileName as un, shortenHomePath as ut, restoreTerminalState as v, isYes as vt, DEFAULT_CHAT_CHANNEL as w, warn as wt, unregisterActiveProgressLine as x, setVerbose as xt, clearActiveProgressLine as y, logVerbose as yt, executePluginCommand as z, resolveConfigPath as zt };
