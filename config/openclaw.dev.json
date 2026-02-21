@@ -40,23 +40,26 @@
       "mode": "app",
       "defaultAccount": "app",
       "allowFrom": ["*"],
-      "accounts": {
-        "app": {
-          "mode": "app",
-          "webhookPath": "/wecom/app"
-        }
-      }
+      "corpId": "${WECOM_CORPID}",
+      "corpSecret": "${WECOM_SECRET}",
+      "agentId": 1000003,
+      "webhookPath": "/wecom",
+      "token": "${WECOM_TOKEN}",
+      "encodingAESKey": "${WECOM_ENCODING_AES_KEY}"
     }
   },
   "gateway": {
     "mode": "local",
     "auth": {
       "token": "dev-token-123"
+    },
+    "remote": {
+      "token": "dev-token-123"
     }
   },
   "plugins": {
     "load": {
-      "paths": ["/Users/roy-jd/Documents/projects/openclaw/node_modules/@marshulll/openclaw-wecom"]
+      "paths": ["/Users/roy-jd/.openclaw/extensions"]
     },
     "entries": {
       "feishu": {
