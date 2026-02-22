@@ -5,7 +5,9 @@ export type TelegramFormattedChunk = {
 };
 export declare function markdownToTelegramHtml(markdown: string, options?: {
     tableMode?: MarkdownTableMode;
+    wrapFileRefs?: boolean;
 }): string;
+export declare function wrapFileReferencesInHtml(html: string): string;
 export declare function renderTelegramHtmlText(text: string, options?: {
     textMode?: "markdown" | "html";
     tableMode?: MarkdownTableMode;

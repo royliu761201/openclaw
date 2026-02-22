@@ -18,6 +18,7 @@ export declare const AgentsSchema: z.ZodOptional<z.ZodObject<{
         repoRoot: z.ZodOptional<z.ZodString>;
         skipBootstrap: z.ZodOptional<z.ZodBoolean>;
         bootstrapMaxChars: z.ZodOptional<z.ZodNumber>;
+        bootstrapTotalMaxChars: z.ZodOptional<z.ZodNumber>;
         userTimezone: z.ZodOptional<z.ZodString>;
         timeFormat: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"auto">, z.ZodLiteral<"12">, z.ZodLiteral<"24">]>>;
         envelopeTimezone: z.ZodOptional<z.ZodString>;
@@ -46,6 +47,22 @@ export declare const AgentsSchema: z.ZodOptional<z.ZodObject<{
             imageArg: z.ZodOptional<z.ZodString>;
             imageMode: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"repeat">, z.ZodLiteral<"list">]>>;
             serialize: z.ZodOptional<z.ZodBoolean>;
+            reliability: z.ZodOptional<z.ZodObject<{
+                watchdog: z.ZodOptional<z.ZodObject<{
+                    fresh: z.ZodOptional<z.ZodObject<{
+                        noOutputTimeoutMs: z.ZodOptional<z.ZodNumber>;
+                        noOutputTimeoutRatio: z.ZodOptional<z.ZodNumber>;
+                        minMs: z.ZodOptional<z.ZodNumber>;
+                        maxMs: z.ZodOptional<z.ZodNumber>;
+                    }, z.core.$strict>>;
+                    resume: z.ZodOptional<z.ZodObject<{
+                        noOutputTimeoutMs: z.ZodOptional<z.ZodNumber>;
+                        noOutputTimeoutRatio: z.ZodOptional<z.ZodNumber>;
+                        minMs: z.ZodOptional<z.ZodNumber>;
+                        maxMs: z.ZodOptional<z.ZodNumber>;
+                    }, z.core.$strict>>;
+                }, z.core.$strict>>;
+            }, z.core.$strict>>;
         }, z.core.$strict>>>;
         memorySearch: z.ZodOptional<z.ZodObject<{
             enabled: z.ZodOptional<z.ZodBoolean>;
@@ -104,6 +121,14 @@ export declare const AgentsSchema: z.ZodOptional<z.ZodObject<{
                     vectorWeight: z.ZodOptional<z.ZodNumber>;
                     textWeight: z.ZodOptional<z.ZodNumber>;
                     candidateMultiplier: z.ZodOptional<z.ZodNumber>;
+                    mmr: z.ZodOptional<z.ZodObject<{
+                        enabled: z.ZodOptional<z.ZodBoolean>;
+                        lambda: z.ZodOptional<z.ZodNumber>;
+                    }, z.core.$strict>>;
+                    temporalDecay: z.ZodOptional<z.ZodObject<{
+                        enabled: z.ZodOptional<z.ZodBoolean>;
+                        halfLifeDays: z.ZodOptional<z.ZodNumber>;
+                    }, z.core.$strict>>;
                 }, z.core.$strict>>;
             }, z.core.$strict>>;
             cache: z.ZodOptional<z.ZodObject<{
@@ -165,6 +190,7 @@ export declare const AgentsSchema: z.ZodOptional<z.ZodObject<{
         }, z.core.$strict>>;
         timeoutSeconds: z.ZodOptional<z.ZodNumber>;
         mediaMaxMb: z.ZodOptional<z.ZodNumber>;
+        imageMaxDimensionPx: z.ZodOptional<z.ZodNumber>;
         typingIntervalSeconds: z.ZodOptional<z.ZodNumber>;
         typingMode: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"never">, z.ZodLiteral<"instant">, z.ZodLiteral<"thinking">, z.ZodLiteral<"message">]>>;
         heartbeat: z.ZodOptional<z.ZodObject<{
@@ -182,10 +208,13 @@ export declare const AgentsSchema: z.ZodOptional<z.ZodObject<{
             accountId: z.ZodOptional<z.ZodString>;
             prompt: z.ZodOptional<z.ZodString>;
             ackMaxChars: z.ZodOptional<z.ZodNumber>;
+            suppressToolErrorWarnings: z.ZodOptional<z.ZodBoolean>;
         }, z.core.$strict>>;
         maxConcurrent: z.ZodOptional<z.ZodNumber>;
         subagents: z.ZodOptional<z.ZodObject<{
             maxConcurrent: z.ZodOptional<z.ZodNumber>;
+            maxSpawnDepth: z.ZodOptional<z.ZodNumber>;
+            maxChildrenPerAgent: z.ZodOptional<z.ZodNumber>;
             archiveAfterMinutes: z.ZodOptional<z.ZodNumber>;
             model: z.ZodOptional<z.ZodUnion<readonly [z.ZodString, z.ZodObject<{
                 primary: z.ZodOptional<z.ZodString>;
@@ -237,6 +266,7 @@ export declare const AgentsSchema: z.ZodOptional<z.ZodObject<{
                 allowHostControl: z.ZodOptional<z.ZodBoolean>;
                 autoStart: z.ZodOptional<z.ZodBoolean>;
                 autoStartTimeoutMs: z.ZodOptional<z.ZodNumber>;
+                binds: z.ZodOptional<z.ZodArray<z.ZodString>>;
             }, z.core.$strict>>;
             prune: z.ZodOptional<z.ZodObject<{
                 idleHours: z.ZodOptional<z.ZodNumber>;
@@ -312,6 +342,14 @@ export declare const AgentsSchema: z.ZodOptional<z.ZodObject<{
                     vectorWeight: z.ZodOptional<z.ZodNumber>;
                     textWeight: z.ZodOptional<z.ZodNumber>;
                     candidateMultiplier: z.ZodOptional<z.ZodNumber>;
+                    mmr: z.ZodOptional<z.ZodObject<{
+                        enabled: z.ZodOptional<z.ZodBoolean>;
+                        lambda: z.ZodOptional<z.ZodNumber>;
+                    }, z.core.$strict>>;
+                    temporalDecay: z.ZodOptional<z.ZodObject<{
+                        enabled: z.ZodOptional<z.ZodBoolean>;
+                        halfLifeDays: z.ZodOptional<z.ZodNumber>;
+                    }, z.core.$strict>>;
                 }, z.core.$strict>>;
             }, z.core.$strict>>;
             cache: z.ZodOptional<z.ZodObject<{
@@ -339,6 +377,7 @@ export declare const AgentsSchema: z.ZodOptional<z.ZodObject<{
             accountId: z.ZodOptional<z.ZodString>;
             prompt: z.ZodOptional<z.ZodString>;
             ackMaxChars: z.ZodOptional<z.ZodNumber>;
+            suppressToolErrorWarnings: z.ZodOptional<z.ZodBoolean>;
         }, z.core.$strict>>;
         identity: z.ZodOptional<z.ZodObject<{
             name: z.ZodOptional<z.ZodString>;
@@ -402,6 +441,7 @@ export declare const AgentsSchema: z.ZodOptional<z.ZodObject<{
                 allowHostControl: z.ZodOptional<z.ZodBoolean>;
                 autoStart: z.ZodOptional<z.ZodBoolean>;
                 autoStartTimeoutMs: z.ZodOptional<z.ZodNumber>;
+                binds: z.ZodOptional<z.ZodArray<z.ZodString>>;
             }, z.core.$strict>>;
             prune: z.ZodOptional<z.ZodObject<{
                 idleHours: z.ZodOptional<z.ZodNumber>;
@@ -424,6 +464,7 @@ export declare const AgentsSchema: z.ZodOptional<z.ZodObject<{
                 allowFrom: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>>;
             }, z.core.$strict>>;
             exec: z.ZodOptional<z.ZodObject<{
+                approvalRunningNoticeMs: z.ZodOptional<z.ZodNumber>;
                 host: z.ZodOptional<z.ZodEnum<{
                     sandbox: "sandbox";
                     gateway: "gateway";
@@ -444,12 +485,28 @@ export declare const AgentsSchema: z.ZodOptional<z.ZodObject<{
                 safeBins: z.ZodOptional<z.ZodArray<z.ZodString>>;
                 backgroundMs: z.ZodOptional<z.ZodNumber>;
                 timeoutSec: z.ZodOptional<z.ZodNumber>;
-                approvalRunningNoticeMs: z.ZodOptional<z.ZodNumber>;
                 cleanupMs: z.ZodOptional<z.ZodNumber>;
                 notifyOnExit: z.ZodOptional<z.ZodBoolean>;
+                notifyOnExitEmptySuccess: z.ZodOptional<z.ZodBoolean>;
                 applyPatch: z.ZodOptional<z.ZodObject<{
                     enabled: z.ZodOptional<z.ZodBoolean>;
+                    workspaceOnly: z.ZodOptional<z.ZodBoolean>;
                     allowModels: z.ZodOptional<z.ZodArray<z.ZodString>>;
+                }, z.core.$strict>>;
+            }, z.core.$strict>>;
+            fs: z.ZodOptional<z.ZodObject<{
+                workspaceOnly: z.ZodOptional<z.ZodBoolean>;
+            }, z.core.$strict>>;
+            loopDetection: z.ZodOptional<z.ZodObject<{
+                enabled: z.ZodOptional<z.ZodBoolean>;
+                historySize: z.ZodOptional<z.ZodNumber>;
+                warningThreshold: z.ZodOptional<z.ZodNumber>;
+                criticalThreshold: z.ZodOptional<z.ZodNumber>;
+                globalCircuitBreakerThreshold: z.ZodOptional<z.ZodNumber>;
+                detectors: z.ZodOptional<z.ZodObject<{
+                    genericRepeat: z.ZodOptional<z.ZodBoolean>;
+                    knownPollNoProgress: z.ZodOptional<z.ZodBoolean>;
+                    pingPong: z.ZodOptional<z.ZodBoolean>;
                 }, z.core.$strict>>;
             }, z.core.$strict>>;
             sandbox: z.ZodOptional<z.ZodObject<{

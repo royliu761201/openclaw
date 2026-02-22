@@ -1,7 +1,7 @@
 {
   "meta": {
-    "lastTouchedVersion": "2026.2.13",
-    "lastTouchedAt": "2026-02-15T14:39:20.833Z"
+    "lastTouchedVersion": "2026.2.18",
+    "lastTouchedAt": "2026-02-21T07:03:42.888Z"
   },
   "agents": {
     "defaults": {
@@ -32,8 +32,10 @@
       "domain": "feishu",
       "connectionMode": "websocket",
       "dmPolicy": "open",
+      "appId": "${FEISHU_APP_ID}",
+      "appSecret": "${FEISHU_APP_SECRET}",
       "groupPolicy": "allowlist",
-      "allowFrom": ["ou_f724f6339f2b24cd1a82974683489383"]
+      "allowFrom": ["*"]
     },
     "wecom": {
       "enabled": true,
@@ -43,7 +45,12 @@
       "accounts": {
         "app": {
           "mode": "app",
-          "webhookPath": "/wecom/app"
+          "webhookPath": "/wecom/app",
+          "corpId": "${WECOM_CORP_ID}",
+          "corpSecret": "${WECOM_CORP_SECRET}",
+          "agentId": 1000003,
+          "callbackToken": "${WECOM_TOKEN}",
+          "callbackAesKey": "${WECOM_ENCODING_AES_KEY}"
         }
       }
     }
@@ -52,11 +59,14 @@
     "mode": "local",
     "auth": {
       "token": "dev-token-123"
+    },
+    "remote": {
+      "token": "dev-token-123"
     }
   },
   "plugins": {
     "load": {
-      "paths": ["/Users/roy-jd/Documents/projects/openclaw/node_modules/@marshulll/openclaw-wecom"]
+      "paths": ["/Users/roy-jd/.openclaw/extensions"]
     },
     "entries": {
       "feishu": {

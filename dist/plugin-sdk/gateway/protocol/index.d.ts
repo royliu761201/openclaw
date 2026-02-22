@@ -11,8 +11,6 @@ export declare const validateConnectParams: AjvPkg.ValidateFunction<{
         password?: string | undefined;
     } | undefined;
     role?: string | undefined;
-    scopes?: string[] | undefined;
-    caps?: string[] | undefined;
     pathEnv?: string | undefined;
     device?: {
         nonce?: string | undefined;
@@ -21,20 +19,22 @@ export declare const validateConnectParams: AjvPkg.ValidateFunction<{
         signature: string;
         signedAt: number;
     } | undefined;
+    scopes?: string[] | undefined;
+    caps?: string[] | undefined;
     locale?: string | undefined;
     userAgent?: string | undefined;
+    minProtocol: number;
+    maxProtocol: number;
     client: {
         displayName?: string | undefined;
         deviceFamily?: string | undefined;
         modelIdentifier?: string | undefined;
         instanceId?: string | undefined;
-        mode: "cli" | "node" | "test" | "webchat" | "ui" | "backend" | "probe";
-        platform: string;
+        mode: "cli" | "node" | "ui" | "test" | "webchat" | "backend" | "probe";
         version: string;
-        id: "cli" | "test" | "webchat-ui" | "openclaw-control-ui" | "webchat" | "gateway-client" | "openclaw-macos" | "openclaw-ios" | "openclaw-android" | "node-host" | "fingerprint" | "openclaw-probe";
+        platform: string;
+        id: "cli" | "test" | "webchat" | "webchat-ui" | "openclaw-control-ui" | "gateway-client" | "openclaw-macos" | "openclaw-ios" | "openclaw-android" | "node-host" | "fingerprint" | "openclaw-probe";
     };
-    minProtocol: number;
-    maxProtocol: number;
 }>;
 export declare const validateRequestFrame: AjvPkg.ValidateFunction<{
     params?: unknown;
@@ -47,8 +47,8 @@ export declare const validateResponseFrame: AjvPkg.ValidateFunction<{
         details?: unknown;
         retryAfterMs?: number | undefined;
         retryable?: boolean | undefined;
-        message: string;
         code: string;
+        message: string;
     } | undefined;
     payload?: unknown;
     type: "res";
@@ -56,8 +56,8 @@ export declare const validateResponseFrame: AjvPkg.ValidateFunction<{
     ok: boolean;
 }>;
 export declare const validateEventFrame: AjvPkg.ValidateFunction<{
-    seq?: number | undefined;
     payload?: unknown;
+    seq?: number | undefined;
     stateVersion?: {
         presence: number;
         health: number;
@@ -74,14 +74,18 @@ export declare const validateSendParams: AjvPkg.ValidateFunction<{
     idempotencyKey: any;
 }>;
 export declare const validatePollParams: AjvPkg.ValidateFunction<{
+    silent?: boolean | undefined;
     channel?: string | undefined;
     accountId?: string | undefined;
+    threadId?: string | undefined;
     maxSelections?: number | undefined;
+    durationSeconds?: number | undefined;
     durationHours?: number | undefined;
-    to: string;
+    isAnonymous?: boolean | undefined;
     options: string[];
-    idempotencyKey: string;
+    to: string;
     question: string;
+    idempotencyKey: string;
 }>;
 export declare const validateAgentParams: AjvPkg.ValidateFunction<{
     message: any;
@@ -130,14 +134,14 @@ export declare const validateAgentsFilesGetParams: AjvPkg.ValidateFunction<{
 }>;
 export declare const validateAgentsFilesSetParams: AjvPkg.ValidateFunction<{
     name: string;
-    content: string;
     agentId: string;
+    content: string;
 }>;
 export declare const validateNodePairRequestParams: AjvPkg.ValidateFunction<{
     silent?: boolean | undefined;
     commands?: string[] | undefined;
-    platform?: string | undefined;
     version?: string | undefined;
+    platform?: string | undefined;
     displayName?: string | undefined;
     remoteIp?: string | undefined;
     deviceFamily?: string | undefined;
@@ -175,8 +179,8 @@ export declare const validateNodeInvokeParams: AjvPkg.ValidateFunction<{
 }>;
 export declare const validateNodeInvokeResultParams: AjvPkg.ValidateFunction<{
     error?: {
-        message?: string | undefined;
         code?: string | undefined;
+        message?: string | undefined;
     } | undefined;
     payload?: unknown;
     payloadJSON?: string | undefined;
@@ -191,10 +195,10 @@ export declare const validateNodeEventParams: AjvPkg.ValidateFunction<{
 }>;
 export declare const validateSessionsListParams: AjvPkg.ValidateFunction<{
     search?: string | undefined;
-    label?: string | undefined;
     agentId?: string | undefined;
-    limit?: number | undefined;
+    label?: string | undefined;
     spawnedBy?: string | undefined;
+    limit?: number | undefined;
     activeMinutes?: number | undefined;
     includeGlobal?: boolean | undefined;
     includeUnknown?: boolean | undefined;
@@ -207,9 +211,9 @@ export declare const validateSessionsPreviewParams: AjvPkg.ValidateFunction<{
     keys: string[];
 }>;
 export declare const validateSessionsResolveParams: AjvPkg.ValidateFunction<{
+    agentId?: string | undefined;
     key?: string | undefined;
     label?: string | undefined;
-    agentId?: string | undefined;
     sessionId?: string | undefined;
     spawnedBy?: string | undefined;
     includeGlobal?: boolean | undefined;
@@ -218,21 +222,23 @@ export declare const validateSessionsResolveParams: AjvPkg.ValidateFunction<{
 export declare const validateSessionsPatchParams: AjvPkg.ValidateFunction<{
     label?: string | null | undefined;
     model?: string | null | undefined;
-    spawnedBy?: string | null | undefined;
-    thinkingLevel?: string | null | undefined;
-    verboseLevel?: string | null | undefined;
-    reasoningLevel?: string | null | undefined;
-    elevatedLevel?: string | null | undefined;
     execHost?: string | null | undefined;
     execSecurity?: string | null | undefined;
     execAsk?: string | null | undefined;
     execNode?: string | null | undefined;
+    spawnedBy?: string | null | undefined;
+    spawnDepth?: number | null | undefined;
+    thinkingLevel?: string | null | undefined;
+    verboseLevel?: string | null | undefined;
+    reasoningLevel?: string | null | undefined;
+    elevatedLevel?: string | null | undefined;
     responseUsage?: "off" | "full" | "on" | "tokens" | null | undefined;
     groupActivation?: "always" | "mention" | null | undefined;
     sendPolicy?: "allow" | "deny" | null | undefined;
     key: string;
 }>;
 export declare const validateSessionsResetParams: AjvPkg.ValidateFunction<{
+    reason?: "new" | "reset" | undefined;
     key: string;
 }>;
 export declare const validateSessionsDeleteParams: AjvPkg.ValidateFunction<{
@@ -313,10 +319,10 @@ export declare const validateSkillsInstallParams: AjvPkg.ValidateFunction<{
     installId: string;
 }>;
 export declare const validateSkillsUpdateParams: AjvPkg.ValidateFunction<{
-    enabled?: boolean | undefined;
     env?: {
         [x: string]: string;
     } | undefined;
+    enabled?: boolean | undefined;
     apiKey?: string | undefined;
     skillKey: string;
 }>;
@@ -325,31 +331,28 @@ export declare const validateCronListParams: AjvPkg.ValidateFunction<{
 }>;
 export declare const validateCronStatusParams: AjvPkg.ValidateFunction<{}>;
 export declare const validateCronAddParams: AjvPkg.ValidateFunction<{
-    enabled?: boolean | undefined;
     agentId?: string | null | undefined;
+    enabled?: boolean | undefined;
+    sessionKey?: string | null | undefined;
     description?: string | undefined;
     deleteAfterRun?: boolean | undefined;
     delivery?: {
         channel?: string | undefined;
         to?: string | undefined;
         bestEffort?: boolean | undefined;
-        mode: "none" | "announce";
+        mode: "none";
+    } | {
+        channel?: string | undefined;
+        to?: string | undefined;
+        bestEffort?: boolean | undefined;
+        mode: "announce";
+    } | {
+        channel?: string | undefined;
+        bestEffort?: boolean | undefined;
+        mode: "webhook";
+        to: string;
     } | undefined;
     name: string;
-    schedule: {
-        at: string;
-        kind: "at";
-    } | {
-        anchorMs?: number | undefined;
-        kind: "every";
-        everyMs: number;
-    } | {
-        tz?: string | undefined;
-        kind: "cron";
-        expr: string;
-    };
-    sessionTarget: "main" | "isolated";
-    wakeMode: "now" | "next-heartbeat";
     payload: {
         text: string;
         kind: "systemEvent";
@@ -362,25 +365,56 @@ export declare const validateCronAddParams: AjvPkg.ValidateFunction<{
         deliver?: boolean | undefined;
         allowUnsafeExternalContent?: boolean | undefined;
         bestEffortDeliver?: boolean | undefined;
-        message: string;
+        message: unknown;
         kind: "agentTurn";
     };
+    schedule: {
+        at: string;
+        kind: "at";
+    } | {
+        anchorMs?: number | undefined;
+        kind: "every";
+        everyMs: number;
+    } | {
+        tz?: string | undefined;
+        staggerMs?: number | undefined;
+        kind: "cron";
+        expr: string;
+    };
+    sessionTarget: "main" | "isolated";
+    wakeMode: "now" | "next-heartbeat";
 }>;
 export declare const validateCronUpdateParams: AjvPkg.ValidateFunction<{
     id: string;
     patch: {
-        enabled?: boolean | undefined;
         name?: string | undefined;
         agentId?: string | null | undefined;
+        enabled?: boolean | undefined;
         state?: {
             lastError?: string | undefined;
             nextRunAtMs?: number | undefined;
             runningAtMs?: number | undefined;
             lastRunAtMs?: number | undefined;
-            lastStatus?: "error" | "ok" | "skipped" | undefined;
+            lastStatus?: "error" | "skipped" | "ok" | undefined;
             lastDurationMs?: number | undefined;
             consecutiveErrors?: number | undefined;
         } | undefined;
+        payload?: {
+            channel?: string | undefined;
+            thinking?: string | undefined;
+            model?: string | undefined;
+            timeoutSeconds?: number | undefined;
+            to?: string | undefined;
+            deliver?: boolean | undefined;
+            allowUnsafeExternalContent?: boolean | undefined;
+            bestEffortDeliver?: boolean | undefined;
+            message: unknown;
+            kind: "agentTurn";
+        } | {
+            text?: string | undefined;
+            kind: "systemEvent";
+        } | undefined;
+        sessionKey?: string | null | undefined;
         description?: string | undefined;
         deleteAfterRun?: boolean | undefined;
         schedule?: {
@@ -392,47 +426,49 @@ export declare const validateCronUpdateParams: AjvPkg.ValidateFunction<{
             everyMs: number;
         } | {
             tz?: string | undefined;
+            staggerMs?: number | undefined;
             kind: "cron";
             expr: string;
         } | undefined;
         sessionTarget?: "main" | "isolated" | undefined;
         wakeMode?: "now" | "next-heartbeat" | undefined;
-        payload?: {
-            text?: string | undefined;
-            kind: "systemEvent";
-        } | {
-            channel?: string | undefined;
-            thinking?: string | undefined;
-            message?: string | undefined;
-            model?: string | undefined;
-            timeoutSeconds?: number | undefined;
-            to?: string | undefined;
-            deliver?: boolean | undefined;
-            allowUnsafeExternalContent?: boolean | undefined;
-            bestEffortDeliver?: boolean | undefined;
-            kind: "agentTurn";
-        } | undefined;
         delivery?: {
             channel?: string | undefined;
-            mode?: "none" | "announce" | undefined;
+            mode?: "none" | "announce" | "webhook" | undefined;
             to?: string | undefined;
             bestEffort?: boolean | undefined;
         } | undefined;
     };
 } | {
     patch: {
-        enabled?: boolean | undefined;
         name?: string | undefined;
         agentId?: string | null | undefined;
+        enabled?: boolean | undefined;
         state?: {
             lastError?: string | undefined;
             nextRunAtMs?: number | undefined;
             runningAtMs?: number | undefined;
             lastRunAtMs?: number | undefined;
-            lastStatus?: "error" | "ok" | "skipped" | undefined;
+            lastStatus?: "error" | "skipped" | "ok" | undefined;
             lastDurationMs?: number | undefined;
             consecutiveErrors?: number | undefined;
         } | undefined;
+        payload?: {
+            channel?: string | undefined;
+            thinking?: string | undefined;
+            model?: string | undefined;
+            timeoutSeconds?: number | undefined;
+            to?: string | undefined;
+            deliver?: boolean | undefined;
+            allowUnsafeExternalContent?: boolean | undefined;
+            bestEffortDeliver?: boolean | undefined;
+            message: unknown;
+            kind: "agentTurn";
+        } | {
+            text?: string | undefined;
+            kind: "systemEvent";
+        } | undefined;
+        sessionKey?: string | null | undefined;
         description?: string | undefined;
         deleteAfterRun?: boolean | undefined;
         schedule?: {
@@ -444,29 +480,15 @@ export declare const validateCronUpdateParams: AjvPkg.ValidateFunction<{
             everyMs: number;
         } | {
             tz?: string | undefined;
+            staggerMs?: number | undefined;
             kind: "cron";
             expr: string;
         } | undefined;
         sessionTarget?: "main" | "isolated" | undefined;
         wakeMode?: "now" | "next-heartbeat" | undefined;
-        payload?: {
-            text?: string | undefined;
-            kind: "systemEvent";
-        } | {
-            channel?: string | undefined;
-            thinking?: string | undefined;
-            message?: string | undefined;
-            model?: string | undefined;
-            timeoutSeconds?: number | undefined;
-            to?: string | undefined;
-            deliver?: boolean | undefined;
-            allowUnsafeExternalContent?: boolean | undefined;
-            bestEffortDeliver?: boolean | undefined;
-            kind: "agentTurn";
-        } | undefined;
         delivery?: {
             channel?: string | undefined;
-            mode?: "none" | "announce" | undefined;
+            mode?: "none" | "announce" | "webhook" | undefined;
             to?: string | undefined;
             bestEffort?: boolean | undefined;
         } | undefined;
@@ -501,12 +523,12 @@ export declare const validateDevicePairRejectParams: AjvPkg.ValidateFunction<{
 }>;
 export declare const validateDeviceTokenRotateParams: AjvPkg.ValidateFunction<{
     scopes?: string[] | undefined;
-    deviceId: string;
     role: string;
+    deviceId: string;
 }>;
 export declare const validateDeviceTokenRevokeParams: AjvPkg.ValidateFunction<{
-    deviceId: string;
     role: string;
+    deviceId: string;
 }>;
 export declare const validateExecApprovalsGetParams: AjvPkg.ValidateFunction<{}>;
 export declare const validateExecApprovalsSetParams: AjvPkg.ValidateFunction<{
@@ -515,12 +537,6 @@ export declare const validateExecApprovalsSetParams: AjvPkg.ValidateFunction<{
         socket?: {
             path?: string | undefined;
             token?: string | undefined;
-        } | undefined;
-        defaults?: {
-            ask?: string | undefined;
-            security?: string | undefined;
-            askFallback?: string | undefined;
-            autoAllowSkills?: boolean | undefined;
         } | undefined;
         agents?: {
             [x: string]: {
@@ -537,19 +553,26 @@ export declare const validateExecApprovalsSetParams: AjvPkg.ValidateFunction<{
                 autoAllowSkills?: boolean | undefined;
             };
         } | undefined;
+        defaults?: {
+            ask?: string | undefined;
+            security?: string | undefined;
+            askFallback?: string | undefined;
+            autoAllowSkills?: boolean | undefined;
+        } | undefined;
         version: 1;
     };
 }>;
 export declare const validateExecApprovalRequestParams: AjvPkg.ValidateFunction<{
-    ask?: string | null | undefined;
+    agentId?: string | null | undefined;
     timeoutMs?: number | undefined;
     cwd?: string | null | undefined;
-    agentId?: string | null | undefined;
-    id?: string | undefined;
-    host?: string | null | undefined;
+    ask?: string | null | undefined;
     security?: string | null | undefined;
+    id?: string | undefined;
     resolvedPath?: string | null | undefined;
+    host?: string | null | undefined;
     sessionKey?: string | null | undefined;
+    twoPhase?: boolean | undefined;
     command: string;
 }>;
 export declare const validateExecApprovalResolveParams: AjvPkg.ValidateFunction<{
@@ -566,12 +589,6 @@ export declare const validateExecApprovalsNodeSetParams: AjvPkg.ValidateFunction
             path?: string | undefined;
             token?: string | undefined;
         } | undefined;
-        defaults?: {
-            ask?: string | undefined;
-            security?: string | undefined;
-            askFallback?: string | undefined;
-            autoAllowSkills?: boolean | undefined;
-        } | undefined;
         agents?: {
             [x: string]: {
                 allowlist?: {
@@ -586,6 +603,12 @@ export declare const validateExecApprovalsNodeSetParams: AjvPkg.ValidateFunction
                 askFallback?: string | undefined;
                 autoAllowSkills?: boolean | undefined;
             };
+        } | undefined;
+        defaults?: {
+            ask?: string | undefined;
+            security?: string | undefined;
+            askFallback?: string | undefined;
+            autoAllowSkills?: boolean | undefined;
         } | undefined;
         version: 1;
     };

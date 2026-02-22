@@ -8,5 +8,11 @@ export declare function limitHistoryTurns(messages: AgentMessage[], limit: numbe
 /**
  * Extract provider + user ID from a session key and look up dmHistoryLimit.
  * Supports per-DM overrides and provider defaults.
+ * For channel/group sessions, uses historyLimit from provider config.
  */
-export declare function getDmHistoryLimitFromSessionKey(sessionKey: string | undefined, config: OpenClawConfig | undefined): number | undefined;
+export declare function getHistoryLimitFromSessionKey(sessionKey: string | undefined, config: OpenClawConfig | undefined): number | undefined;
+/**
+ * @deprecated Use getHistoryLimitFromSessionKey instead.
+ * Alias for backward compatibility.
+ */
+export declare const getDmHistoryLimitFromSessionKey: typeof getHistoryLimitFromSessionKey;

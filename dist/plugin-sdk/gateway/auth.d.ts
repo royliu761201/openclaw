@@ -1,17 +1,18 @@
 import type { IncomingMessage } from "node:http";
-import type { GatewayAuthConfig, GatewayTailscaleMode } from "../config/config.js";
+import type { GatewayAuthConfig, GatewayTailscaleMode, GatewayTrustedProxyConfig } from "../config/config.js";
 import { type TailscaleWhoisIdentity } from "../infra/tailscale.js";
 import { type AuthRateLimiter } from "./auth-rate-limit.js";
-export type ResolvedGatewayAuthMode = "token" | "password";
+export type ResolvedGatewayAuthMode = "none" | "token" | "password" | "trusted-proxy";
 export type ResolvedGatewayAuth = {
     mode: ResolvedGatewayAuthMode;
     token?: string;
     password?: string;
     allowTailscale: boolean;
+    trustedProxy?: GatewayTrustedProxyConfig;
 };
 export type GatewayAuthResult = {
     ok: boolean;
-    method?: "token" | "password" | "tailscale" | "device-token";
+    method?: "none" | "token" | "password" | "tailscale" | "device-token" | "trusted-proxy";
     user?: string;
     reason?: string;
     /** Present when the request was blocked by the rate limiter. */

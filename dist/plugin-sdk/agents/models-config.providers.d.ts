@@ -20,6 +20,7 @@ export declare function normalizeProviders(params: {
 }): ModelsConfig["providers"];
 export declare function buildXiaomiProvider(): ProviderConfig;
 export declare function buildQianfanProvider(): ProviderConfig;
+export declare function buildNvidiaProvider(): ProviderConfig;
 export declare function resolveImplicitProviders(params: {
     agentDir: string;
     explicitProviders?: Record<string, ProviderConfig> | null;

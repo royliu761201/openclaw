@@ -1,6 +1,8 @@
 import type { ReplyPayload } from "../auto-reply/types.js";
 import type { OpenClawConfig } from "../config/config.js";
 import type { TtsAutoMode, TtsMode, TtsProvider, TtsModelOverrideConfig } from "../config/types.tts.js";
+import { isValidOpenAIModel, isValidOpenAIVoice, isValidVoiceId, parseTtsDirectives, summarizeText } from "./tts-core.js";
+export { OPENAI_TTS_MODELS, OPENAI_TTS_VOICES } from "./tts-core.js";
 export type ResolvedTtsConfig = {
     auto: TtsAutoMode;
     mode: TtsMode;
@@ -46,7 +48,7 @@ export type ResolvedTtsConfig = {
     maxTextLength: number;
     timeoutMs: number;
 };
-type ResolvedTtsModelOverrides = {
+export type ResolvedTtsModelOverrides = {
     enabled: boolean;
     allowText: boolean;
     allowProvider: boolean;
@@ -56,7 +58,7 @@ type ResolvedTtsModelOverrides = {
     allowNormalization: boolean;
     allowSeed: boolean;
 };
-type TtsDirectiveOverrides = {
+export type TtsDirectiveOverrides = {
     ttsText?: string;
     provider?: TtsProvider;
     openai?: {
@@ -72,7 +74,7 @@ type TtsDirectiveOverrides = {
         voiceSettings?: Partial<ResolvedTtsConfig["elevenlabs"]["voiceSettings"]>;
     };
 };
-type TtsDirectiveParseResult = {
+export type TtsDirectiveParseResult = {
     cleanedText: string;
     ttsText?: string;
     hasDirective: boolean;
@@ -143,26 +145,6 @@ export declare function resolveTtsApiKey(config: ResolvedTtsConfig, provider: Tt
 export declare const TTS_PROVIDERS: readonly ["openai", "elevenlabs", "edge"];
 export declare function resolveTtsProviderOrder(primary: TtsProvider): TtsProvider[];
 export declare function isTtsProviderConfigured(config: ResolvedTtsConfig, provider: TtsProvider): boolean;
-declare function isValidVoiceId(voiceId: string): boolean;
-declare function parseTtsDirectives(text: string, policy: ResolvedTtsModelOverrides): TtsDirectiveParseResult;
-export declare const OPENAI_TTS_MODELS: readonly ["gpt-4o-mini-tts", "tts-1", "tts-1-hd"];
-export declare const OPENAI_TTS_VOICES: readonly ["alloy", "ash", "ballad", "cedar", "coral", "echo", "fable", "juniper", "marin", "onyx", "nova", "sage", "shimmer", "verse"];
-type OpenAiTtsVoice = (typeof OPENAI_TTS_VOICES)[number];
-declare function isValidOpenAIModel(model: string): boolean;
-declare function isValidOpenAIVoice(voice: string): voice is OpenAiTtsVoice;
-type SummarizeResult = {
-    summary: string;
-    latencyMs: number;
-    inputLength: number;
-    outputLength: number;
-};
-declare function summarizeText(params: {
-    text: string;
-    targetLength: number;
-    cfg: OpenClawConfig;
-    config: ResolvedTtsConfig;
-    timeoutMs: number;
-}): Promise<SummarizeResult>;
 export declare function textToSpeech(params: {
     text: string;
     cfg: OpenClawConfig;
@@ -195,4 +177,3 @@ export declare const _test: {
     resolveOutputFormat: typeof resolveOutputFormat;
     resolveEdgeOutputFormat: typeof resolveEdgeOutputFormat;
 };
-export {};

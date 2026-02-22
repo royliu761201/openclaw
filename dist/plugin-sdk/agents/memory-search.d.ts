@@ -56,6 +56,14 @@ export type ResolvedMemorySearchConfig = {
             vectorWeight: number;
             textWeight: number;
             candidateMultiplier: number;
+            mmr: {
+                enabled: boolean;
+                lambda: number;
+            };
+            temporalDecay: {
+                enabled: boolean;
+                halfLifeDays: number;
+            };
         };
     };
     cache: {

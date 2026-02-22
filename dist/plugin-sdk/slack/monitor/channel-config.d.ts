@@ -11,6 +11,16 @@ export type SlackChannelConfigResolved = {
     matchKey?: string;
     matchSource?: ChannelMatchSource;
 };
+export type SlackChannelConfigEntry = {
+    enabled?: boolean;
+    allow?: boolean;
+    requireMention?: boolean;
+    allowBots?: boolean;
+    users?: Array<string | number>;
+    skills?: string[];
+    systemPrompt?: string;
+};
+export type SlackChannelConfigEntries = Record<string, SlackChannelConfigEntry>;
 export declare function shouldEmitSlackReactionNotification(params: {
     mode: SlackReactionNotificationMode | undefined;
     botId?: string | null;
@@ -26,15 +36,7 @@ export declare function resolveSlackChannelLabel(params: {
 export declare function resolveSlackChannelConfig(params: {
     channelId: string;
     channelName?: string;
-    channels?: Record<string, {
-        enabled?: boolean;
-        allow?: boolean;
-        requireMention?: boolean;
-        allowBots?: boolean;
-        users?: Array<string | number>;
-        skills?: string[];
-        systemPrompt?: string;
-    }>;
+    channels?: SlackChannelConfigEntries;
     defaultRequireMention?: boolean;
 }): SlackChannelConfigResolved | null;
 export type { SlackMessageEvent };

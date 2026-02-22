@@ -23,6 +23,7 @@ export type PluginManifestRegistry = {
     plugins: PluginManifestRecord[];
     diagnostics: PluginDiagnostic[];
 };
+export declare function clearPluginManifestRegistryCache(): void;
 export declare function loadPluginManifestRegistry(params: {
     config?: OpenClawConfig;
     workspaceDir?: string;

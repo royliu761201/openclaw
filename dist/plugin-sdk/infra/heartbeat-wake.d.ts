@@ -10,6 +10,8 @@ export type HeartbeatRunResult = {
 };
 export type HeartbeatWakeHandler = (opts: {
     reason?: string;
+    agentId?: string;
+    sessionKey?: string;
 }) => Promise<HeartbeatRunResult>;
 /**
  * Register (or clear) the heartbeat wake handler.
@@ -21,6 +23,8 @@ export declare function setHeartbeatWakeHandler(next: HeartbeatWakeHandler | nul
 export declare function requestHeartbeatNow(opts?: {
     reason?: string;
     coalesceMs?: number;
+    agentId?: string;
+    sessionKey?: string;
 }): void;
 export declare function hasHeartbeatWakeHandler(): boolean;
 export declare function hasPendingHeartbeatWake(): boolean;

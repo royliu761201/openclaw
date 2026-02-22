@@ -47,6 +47,11 @@ declare function resolveGrokApiKey(grok?: GrokConfig): string | undefined;
 declare function resolveGrokModel(grok?: GrokConfig): string;
 declare function resolveGrokInlineCitations(grok?: GrokConfig): boolean;
 declare function normalizeFreshness(value: string | undefined): string | undefined;
+/**
+ * Map normalized freshness values (pd/pw/pm/py) to Perplexity's
+ * search_recency_filter values (day/week/month/year).
+ */
+declare function freshnessToPerplexityRecency(freshness: string | undefined): string | undefined;
 export declare function createWebSearchTool(options?: {
     config?: OpenClawConfig;
     sandboxed?: boolean;
@@ -57,6 +62,7 @@ export declare const __testing: {
     readonly isDirectPerplexityBaseUrl: typeof isDirectPerplexityBaseUrl;
     readonly resolvePerplexityRequestModel: typeof resolvePerplexityRequestModel;
     readonly normalizeFreshness: typeof normalizeFreshness;
+    readonly freshnessToPerplexityRecency: typeof freshnessToPerplexityRecency;
     readonly resolveGrokApiKey: typeof resolveGrokApiKey;
     readonly resolveGrokModel: typeof resolveGrokModel;
     readonly resolveGrokInlineCitations: typeof resolveGrokInlineCitations;

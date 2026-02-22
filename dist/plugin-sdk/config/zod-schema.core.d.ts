@@ -1,15 +1,22 @@
 import { z } from "zod";
-export declare const ModelApiSchema: z.ZodUnion<readonly [z.ZodLiteral<"openai-completions">, z.ZodLiteral<"openai-responses">, z.ZodLiteral<"anthropic-messages">, z.ZodLiteral<"google-generative-ai">, z.ZodLiteral<"github-copilot">, z.ZodLiteral<"bedrock-converse-stream">]>;
+export declare const ModelApiSchema: z.ZodUnion<readonly [z.ZodLiteral<"openai-completions">, z.ZodLiteral<"openai-responses">, z.ZodLiteral<"anthropic-messages">, z.ZodLiteral<"google-generative-ai">, z.ZodLiteral<"github-copilot">, z.ZodLiteral<"bedrock-converse-stream">, z.ZodLiteral<"ollama">]>;
 export declare const ModelCompatSchema: z.ZodOptional<z.ZodObject<{
     supportsStore: z.ZodOptional<z.ZodBoolean>;
     supportsDeveloperRole: z.ZodOptional<z.ZodBoolean>;
     supportsReasoningEffort: z.ZodOptional<z.ZodBoolean>;
+    supportsUsageInStreaming: z.ZodOptional<z.ZodBoolean>;
+    supportsStrictMode: z.ZodOptional<z.ZodBoolean>;
     maxTokensField: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"max_completion_tokens">, z.ZodLiteral<"max_tokens">]>>;
+    thinkingFormat: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"openai">, z.ZodLiteral<"zai">, z.ZodLiteral<"qwen">]>>;
+    requiresToolResultName: z.ZodOptional<z.ZodBoolean>;
+    requiresAssistantAfterToolResult: z.ZodOptional<z.ZodBoolean>;
+    requiresThinkingAsText: z.ZodOptional<z.ZodBoolean>;
+    requiresMistralToolIds: z.ZodOptional<z.ZodBoolean>;
 }, z.core.$strict>>;
 export declare const ModelDefinitionSchema: z.ZodObject<{
     id: z.ZodString;
     name: z.ZodString;
-    api: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"openai-completions">, z.ZodLiteral<"openai-responses">, z.ZodLiteral<"anthropic-messages">, z.ZodLiteral<"google-generative-ai">, z.ZodLiteral<"github-copilot">, z.ZodLiteral<"bedrock-converse-stream">]>>;
+    api: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"openai-completions">, z.ZodLiteral<"openai-responses">, z.ZodLiteral<"anthropic-messages">, z.ZodLiteral<"google-generative-ai">, z.ZodLiteral<"github-copilot">, z.ZodLiteral<"bedrock-converse-stream">, z.ZodLiteral<"ollama">]>>;
     reasoning: z.ZodOptional<z.ZodBoolean>;
     input: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodLiteral<"text">, z.ZodLiteral<"image">]>>>;
     cost: z.ZodOptional<z.ZodObject<{
@@ -25,20 +32,27 @@ export declare const ModelDefinitionSchema: z.ZodObject<{
         supportsStore: z.ZodOptional<z.ZodBoolean>;
         supportsDeveloperRole: z.ZodOptional<z.ZodBoolean>;
         supportsReasoningEffort: z.ZodOptional<z.ZodBoolean>;
+        supportsUsageInStreaming: z.ZodOptional<z.ZodBoolean>;
+        supportsStrictMode: z.ZodOptional<z.ZodBoolean>;
         maxTokensField: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"max_completion_tokens">, z.ZodLiteral<"max_tokens">]>>;
+        thinkingFormat: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"openai">, z.ZodLiteral<"zai">, z.ZodLiteral<"qwen">]>>;
+        requiresToolResultName: z.ZodOptional<z.ZodBoolean>;
+        requiresAssistantAfterToolResult: z.ZodOptional<z.ZodBoolean>;
+        requiresThinkingAsText: z.ZodOptional<z.ZodBoolean>;
+        requiresMistralToolIds: z.ZodOptional<z.ZodBoolean>;
     }, z.core.$strict>>;
 }, z.core.$strict>;
 export declare const ModelProviderSchema: z.ZodObject<{
     baseUrl: z.ZodString;
     apiKey: z.ZodOptional<z.ZodString>;
     auth: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"api-key">, z.ZodLiteral<"aws-sdk">, z.ZodLiteral<"oauth">, z.ZodLiteral<"token">]>>;
-    api: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"openai-completions">, z.ZodLiteral<"openai-responses">, z.ZodLiteral<"anthropic-messages">, z.ZodLiteral<"google-generative-ai">, z.ZodLiteral<"github-copilot">, z.ZodLiteral<"bedrock-converse-stream">]>>;
+    api: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"openai-completions">, z.ZodLiteral<"openai-responses">, z.ZodLiteral<"anthropic-messages">, z.ZodLiteral<"google-generative-ai">, z.ZodLiteral<"github-copilot">, z.ZodLiteral<"bedrock-converse-stream">, z.ZodLiteral<"ollama">]>>;
     headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
     authHeader: z.ZodOptional<z.ZodBoolean>;
     models: z.ZodArray<z.ZodObject<{
         id: z.ZodString;
         name: z.ZodString;
-        api: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"openai-completions">, z.ZodLiteral<"openai-responses">, z.ZodLiteral<"anthropic-messages">, z.ZodLiteral<"google-generative-ai">, z.ZodLiteral<"github-copilot">, z.ZodLiteral<"bedrock-converse-stream">]>>;
+        api: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"openai-completions">, z.ZodLiteral<"openai-responses">, z.ZodLiteral<"anthropic-messages">, z.ZodLiteral<"google-generative-ai">, z.ZodLiteral<"github-copilot">, z.ZodLiteral<"bedrock-converse-stream">, z.ZodLiteral<"ollama">]>>;
         reasoning: z.ZodOptional<z.ZodBoolean>;
         input: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodLiteral<"text">, z.ZodLiteral<"image">]>>>;
         cost: z.ZodOptional<z.ZodObject<{
@@ -54,7 +68,14 @@ export declare const ModelProviderSchema: z.ZodObject<{
             supportsStore: z.ZodOptional<z.ZodBoolean>;
             supportsDeveloperRole: z.ZodOptional<z.ZodBoolean>;
             supportsReasoningEffort: z.ZodOptional<z.ZodBoolean>;
+            supportsUsageInStreaming: z.ZodOptional<z.ZodBoolean>;
+            supportsStrictMode: z.ZodOptional<z.ZodBoolean>;
             maxTokensField: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"max_completion_tokens">, z.ZodLiteral<"max_tokens">]>>;
+            thinkingFormat: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"openai">, z.ZodLiteral<"zai">, z.ZodLiteral<"qwen">]>>;
+            requiresToolResultName: z.ZodOptional<z.ZodBoolean>;
+            requiresAssistantAfterToolResult: z.ZodOptional<z.ZodBoolean>;
+            requiresThinkingAsText: z.ZodOptional<z.ZodBoolean>;
+            requiresMistralToolIds: z.ZodOptional<z.ZodBoolean>;
         }, z.core.$strict>>;
     }, z.core.$strict>>;
 }, z.core.$strict>;
@@ -72,13 +93,13 @@ export declare const ModelsConfigSchema: z.ZodOptional<z.ZodObject<{
         baseUrl: z.ZodString;
         apiKey: z.ZodOptional<z.ZodString>;
         auth: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"api-key">, z.ZodLiteral<"aws-sdk">, z.ZodLiteral<"oauth">, z.ZodLiteral<"token">]>>;
-        api: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"openai-completions">, z.ZodLiteral<"openai-responses">, z.ZodLiteral<"anthropic-messages">, z.ZodLiteral<"google-generative-ai">, z.ZodLiteral<"github-copilot">, z.ZodLiteral<"bedrock-converse-stream">]>>;
+        api: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"openai-completions">, z.ZodLiteral<"openai-responses">, z.ZodLiteral<"anthropic-messages">, z.ZodLiteral<"google-generative-ai">, z.ZodLiteral<"github-copilot">, z.ZodLiteral<"bedrock-converse-stream">, z.ZodLiteral<"ollama">]>>;
         headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
         authHeader: z.ZodOptional<z.ZodBoolean>;
         models: z.ZodArray<z.ZodObject<{
             id: z.ZodString;
             name: z.ZodString;
-            api: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"openai-completions">, z.ZodLiteral<"openai-responses">, z.ZodLiteral<"anthropic-messages">, z.ZodLiteral<"google-generative-ai">, z.ZodLiteral<"github-copilot">, z.ZodLiteral<"bedrock-converse-stream">]>>;
+            api: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"openai-completions">, z.ZodLiteral<"openai-responses">, z.ZodLiteral<"anthropic-messages">, z.ZodLiteral<"google-generative-ai">, z.ZodLiteral<"github-copilot">, z.ZodLiteral<"bedrock-converse-stream">, z.ZodLiteral<"ollama">]>>;
             reasoning: z.ZodOptional<z.ZodBoolean>;
             input: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodLiteral<"text">, z.ZodLiteral<"image">]>>>;
             cost: z.ZodOptional<z.ZodObject<{
@@ -94,7 +115,14 @@ export declare const ModelsConfigSchema: z.ZodOptional<z.ZodObject<{
                 supportsStore: z.ZodOptional<z.ZodBoolean>;
                 supportsDeveloperRole: z.ZodOptional<z.ZodBoolean>;
                 supportsReasoningEffort: z.ZodOptional<z.ZodBoolean>;
+                supportsUsageInStreaming: z.ZodOptional<z.ZodBoolean>;
+                supportsStrictMode: z.ZodOptional<z.ZodBoolean>;
                 maxTokensField: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"max_completion_tokens">, z.ZodLiteral<"max_tokens">]>>;
+                thinkingFormat: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"openai">, z.ZodLiteral<"zai">, z.ZodLiteral<"qwen">]>>;
+                requiresToolResultName: z.ZodOptional<z.ZodBoolean>;
+                requiresAssistantAfterToolResult: z.ZodOptional<z.ZodBoolean>;
+                requiresThinkingAsText: z.ZodOptional<z.ZodBoolean>;
+                requiresMistralToolIds: z.ZodOptional<z.ZodBoolean>;
             }, z.core.$strict>>;
         }, z.core.$strict>>;
     }, z.core.$strict>>>;
@@ -146,14 +174,14 @@ export declare const BlockStreamingChunkSchema: z.ZodObject<{
 }, z.core.$strict>;
 export declare const MarkdownTableModeSchema: z.ZodEnum<{
     off: "off";
-    bullets: "bullets";
     code: "code";
+    bullets: "bullets";
 }>;
 export declare const MarkdownConfigSchema: z.ZodOptional<z.ZodObject<{
     tables: z.ZodOptional<z.ZodEnum<{
         off: "off";
-        bullets: "bullets";
         code: "code";
+        bullets: "bullets";
     }>>;
 }, z.core.$strict>>;
 export declare const TtsProviderSchema: z.ZodEnum<{
@@ -267,6 +295,22 @@ export declare const CliBackendSchema: z.ZodObject<{
     imageArg: z.ZodOptional<z.ZodString>;
     imageMode: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"repeat">, z.ZodLiteral<"list">]>>;
     serialize: z.ZodOptional<z.ZodBoolean>;
+    reliability: z.ZodOptional<z.ZodObject<{
+        watchdog: z.ZodOptional<z.ZodObject<{
+            fresh: z.ZodOptional<z.ZodObject<{
+                noOutputTimeoutMs: z.ZodOptional<z.ZodNumber>;
+                noOutputTimeoutRatio: z.ZodOptional<z.ZodNumber>;
+                minMs: z.ZodOptional<z.ZodNumber>;
+                maxMs: z.ZodOptional<z.ZodNumber>;
+            }, z.core.$strict>>;
+            resume: z.ZodOptional<z.ZodObject<{
+                noOutputTimeoutMs: z.ZodOptional<z.ZodNumber>;
+                noOutputTimeoutRatio: z.ZodOptional<z.ZodNumber>;
+                minMs: z.ZodOptional<z.ZodNumber>;
+                maxMs: z.ZodOptional<z.ZodNumber>;
+            }, z.core.$strict>>;
+        }, z.core.$strict>>;
+    }, z.core.$strict>>;
 }, z.core.$strict>;
 export declare const normalizeAllowFrom: (values?: Array<string | number>) => string[];
 export declare const requireOpenAllowFrom: (params: {
@@ -336,6 +380,7 @@ export declare const MediaUnderstandingScopeSchema: z.ZodOptional<z.ZodObject<{
             channel: z.ZodOptional<z.ZodString>;
             chatType: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"direct">, z.ZodLiteral<"group">, z.ZodLiteral<"channel">, z.ZodLiteral<"dm">]>>;
             keyPrefix: z.ZodOptional<z.ZodString>;
+            rawKeyPrefix: z.ZodOptional<z.ZodString>;
         }, z.core.$strict>>;
     }, z.core.$strict>>>;
 }, z.core.$strict>>;
@@ -378,6 +423,7 @@ export declare const ToolsMediaUnderstandingSchema: z.ZodOptional<z.ZodObject<{
                 channel: z.ZodOptional<z.ZodString>;
                 chatType: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"direct">, z.ZodLiteral<"group">, z.ZodLiteral<"channel">, z.ZodLiteral<"dm">]>>;
                 keyPrefix: z.ZodOptional<z.ZodString>;
+                rawKeyPrefix: z.ZodOptional<z.ZodString>;
             }, z.core.$strict>>;
         }, z.core.$strict>>>;
     }, z.core.$strict>>;
@@ -458,6 +504,7 @@ export declare const ToolsMediaSchema: z.ZodOptional<z.ZodObject<{
                     channel: z.ZodOptional<z.ZodString>;
                     chatType: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"direct">, z.ZodLiteral<"group">, z.ZodLiteral<"channel">, z.ZodLiteral<"dm">]>>;
                     keyPrefix: z.ZodOptional<z.ZodString>;
+                    rawKeyPrefix: z.ZodOptional<z.ZodString>;
                 }, z.core.$strict>>;
             }, z.core.$strict>>>;
         }, z.core.$strict>>;
@@ -513,6 +560,7 @@ export declare const ToolsMediaSchema: z.ZodOptional<z.ZodObject<{
                     channel: z.ZodOptional<z.ZodString>;
                     chatType: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"direct">, z.ZodLiteral<"group">, z.ZodLiteral<"channel">, z.ZodLiteral<"dm">]>>;
                     keyPrefix: z.ZodOptional<z.ZodString>;
+                    rawKeyPrefix: z.ZodOptional<z.ZodString>;
                 }, z.core.$strict>>;
             }, z.core.$strict>>>;
         }, z.core.$strict>>;
@@ -568,6 +616,7 @@ export declare const ToolsMediaSchema: z.ZodOptional<z.ZodObject<{
                     channel: z.ZodOptional<z.ZodString>;
                     chatType: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"direct">, z.ZodLiteral<"group">, z.ZodLiteral<"channel">, z.ZodLiteral<"dm">]>>;
                     keyPrefix: z.ZodOptional<z.ZodString>;
+                    rawKeyPrefix: z.ZodOptional<z.ZodString>;
                 }, z.core.$strict>>;
             }, z.core.$strict>>>;
         }, z.core.$strict>>;
@@ -630,6 +679,7 @@ export declare const ToolsLinksSchema: z.ZodOptional<z.ZodObject<{
                 channel: z.ZodOptional<z.ZodString>;
                 chatType: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"direct">, z.ZodLiteral<"group">, z.ZodLiteral<"channel">, z.ZodLiteral<"dm">]>>;
                 keyPrefix: z.ZodOptional<z.ZodString>;
+                rawKeyPrefix: z.ZodOptional<z.ZodString>;
             }, z.core.$strict>>;
         }, z.core.$strict>>>;
     }, z.core.$strict>>;

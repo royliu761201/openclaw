@@ -1,4 +1,4 @@
-import type { CronJobCreate, CronJobPatch } from "./types.js";
+import type { CronJob, CronJobCreate, CronJobPatch } from "./types.js";
 import { type CronServiceDeps } from "./service/state.js";
 export type { CronEvent, CronServiceDeps } from "./service/state.js";
 export declare class CronService {
@@ -14,9 +14,9 @@ export declare class CronService {
     }>;
     list(opts?: {
         includeDisabled?: boolean;
-    }): Promise<import("./types.js").CronJob[]>;
-    add(input: CronJobCreate): Promise<import("./types.js").CronJob>;
-    update(id: string, patch: CronJobPatch): Promise<import("./types.js").CronJob>;
+    }): Promise<CronJob[]>;
+    add(input: CronJobCreate): Promise<CronJob>;
+    update(id: string, patch: CronJobPatch): Promise<CronJob>;
     remove(id: string): Promise<{
         readonly ok: false;
         readonly removed: false;
@@ -37,6 +37,7 @@ export declare class CronService {
         readonly ran: true;
         reason?: undefined;
     }>;
+    getJob(id: string): CronJob | undefined;
     wake(opts: {
         mode: "now" | "next-heartbeat";
         text: string;

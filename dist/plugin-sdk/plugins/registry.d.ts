@@ -103,6 +103,7 @@ export type PluginRegistryParams = {
     coreGatewayHandlers?: GatewayRequestHandlers;
     runtime: PluginRuntime;
 };
+export declare function createEmptyPluginRegistry(): PluginRegistry;
 export declare function createPluginRegistry(registryParams: PluginRegistryParams): {
     registry: PluginRegistry;
     createApi: (record: PluginRecord, params: {

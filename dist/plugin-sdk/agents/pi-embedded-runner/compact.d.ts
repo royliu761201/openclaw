@@ -6,6 +6,7 @@ import { type enqueueCommand } from "../../process/command-queue.js";
 import { type SkillSnapshot } from "../skills.js";
 export type CompactEmbeddedPiSessionParams = {
     sessionId: string;
+    runId?: string;
     sessionKey?: string;
     messageChannel?: string;
     messageProvider?: string;
@@ -32,6 +33,10 @@ export type CompactEmbeddedPiSessionParams = {
     reasoningLevel?: ReasoningLevel;
     bashElevated?: ExecElevatedDefaults;
     customInstructions?: string;
+    trigger?: "overflow" | "manual";
+    diagId?: string;
+    attempt?: number;
+    maxAttempts?: number;
     lane?: string;
     enqueue?: typeof enqueueCommand;
     extraSystemPrompt?: string;

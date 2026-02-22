@@ -41,6 +41,10 @@ export declare function resolveMaintenanceConfig(): ResolvedSessionMaintenanceCo
  */
 export declare function pruneStaleEntries(store: Record<string, SessionEntry>, overrideMaxAgeMs?: number, opts?: {
     log?: boolean;
+    onPruned?: (params: {
+        key: string;
+        entry: SessionEntry;
+    }) => void;
 }): number;
 export declare function getActiveSessionMaintenanceWarning(params: {
     store: Record<string, SessionEntry>;

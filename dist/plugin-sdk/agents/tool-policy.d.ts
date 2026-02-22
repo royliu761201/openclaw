@@ -36,4 +36,7 @@ export declare function expandPluginGroups(list: string[] | undefined, groups: P
 export declare function expandPolicyWithPluginGroups(policy: ToolPolicyLike | undefined, groups: PluginToolGroups): ToolPolicyLike | undefined;
 export declare function stripPluginOnlyAllowlist(policy: ToolPolicyLike | undefined, groups: PluginToolGroups, coreTools: Set<string>): AllowlistResolution;
 export declare function resolveToolProfilePolicy(profile?: string): ToolProfilePolicy | undefined;
+export declare function mergeAlsoAllowPolicy<TPolicy extends {
+    allow?: string[];
+}>(policy: TPolicy | undefined, alsoAllow?: string[]): TPolicy | undefined;
 export {};

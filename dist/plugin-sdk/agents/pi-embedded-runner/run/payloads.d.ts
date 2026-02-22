@@ -6,21 +6,25 @@ type ToolMetaEntry = {
     toolName: string;
     meta?: string;
 };
+type LastToolError = {
+    toolName: string;
+    meta?: string;
+    error?: string;
+    mutatingAction?: boolean;
+    actionFingerprint?: string;
+};
 export declare function buildEmbeddedRunPayloads(params: {
     assistantTexts: string[];
     toolMetas: ToolMetaEntry[];
     lastAssistant: AssistantMessage | undefined;
-    lastToolError?: {
-        toolName: string;
-        meta?: string;
-        error?: string;
-    };
+    lastToolError?: LastToolError;
     config?: OpenClawConfig;
     sessionKey: string;
     provider?: string;
     verboseLevel?: VerboseLevel;
     reasoningLevel?: ReasoningLevel;
     toolResultFormat?: ToolResultFormat;
+    suppressToolErrorWarnings?: boolean;
     inlineToolResultsAllowed: boolean;
 }): Array<{
     text?: string;

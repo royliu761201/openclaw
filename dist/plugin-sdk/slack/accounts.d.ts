@@ -22,8 +22,8 @@ export type ResolvedSlackAccount = {
     dm?: SlackAccountConfig["dm"];
     channels?: SlackAccountConfig["channels"];
 };
-export declare function listSlackAccountIds(cfg: OpenClawConfig): string[];
-export declare function resolveDefaultSlackAccountId(cfg: OpenClawConfig): string;
+export declare const listSlackAccountIds: (cfg: OpenClawConfig) => string[];
+export declare const resolveDefaultSlackAccountId: (cfg: OpenClawConfig) => string;
 export declare function resolveSlackAccount(params: {
     cfg: OpenClawConfig;
     accountId?: string | null;

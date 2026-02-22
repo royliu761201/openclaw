@@ -16,6 +16,7 @@ export declare function buildReplyPayloads(params: {
     currentMessageId?: string;
     messageProvider?: string;
     messagingToolSentTexts?: string[];
+    messagingToolSentMediaUrls?: string[];
     messagingToolSentTargets?: Parameters<typeof shouldSuppressMessagingToolReplies>[0]["messagingToolSentTargets"];
     originatingTo?: string;
     accountId?: string;

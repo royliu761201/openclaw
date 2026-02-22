@@ -8,3 +8,8 @@ export declare function formatAllowlistMatchMeta(match?: {
     matchKey?: string;
     matchSource?: string;
 } | null): string;
+export declare function resolveAllowlistMatchSimple(params: {
+    allowFrom: Array<string | number>;
+    senderId: string;
+    senderName?: string | null;
+}): AllowlistMatch<"wildcard" | "id" | "name">;

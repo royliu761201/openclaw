@@ -1,4 +1,4 @@
-import type { WebClient } from "@slack/web-api";
+import type { Block, KnownBlock, WebClient } from "@slack/web-api";
 export type SlackActionClientOpts = {
     accountId?: string;
     token?: string;
@@ -34,8 +34,11 @@ export declare function listSlackReactions(channelId: string, messageId: string,
 export declare function sendSlackMessage(to: string, content: string, opts?: SlackActionClientOpts & {
     mediaUrl?: string;
     threadTs?: string;
+    blocks?: (Block | KnownBlock)[];
 }): Promise<import("./send.js").SlackSendResult>;
-export declare function editSlackMessage(channelId: string, messageId: string, content: string, opts?: SlackActionClientOpts): Promise<void>;
+export declare function editSlackMessage(channelId: string, messageId: string, content: string, opts?: SlackActionClientOpts & {
+    blocks?: (Block | KnownBlock)[];
+}): Promise<void>;
 export declare function deleteSlackMessage(channelId: string, messageId: string, opts?: SlackActionClientOpts): Promise<void>;
 export declare function readSlackMessages(channelId: string, opts?: SlackActionClientOpts & {
     limit?: number;
@@ -46,8 +49,8 @@ export declare function readSlackMessages(channelId: string, opts?: SlackActionC
     messages: SlackMessageSummary[];
     hasMore: boolean;
 }>;
-export declare function getSlackMemberInfo(userId: string, opts?: SlackActionClientOpts): Promise<import("node_modules/@slack/web-api/dist/index.js").UsersInfoResponse>;
-export declare function listSlackEmojis(opts?: SlackActionClientOpts): Promise<import("node_modules/@slack/web-api/dist/index.js").EmojiListResponse>;
+export declare function getSlackMemberInfo(userId: string, opts?: SlackActionClientOpts): Promise<import("@slack/web-api").UsersInfoResponse>;
+export declare function listSlackEmojis(opts?: SlackActionClientOpts): Promise<import("@slack/web-api").EmojiListResponse>;
 export declare function pinSlackMessage(channelId: string, messageId: string, opts?: SlackActionClientOpts): Promise<void>;
 export declare function unpinSlackMessage(channelId: string, messageId: string, opts?: SlackActionClientOpts): Promise<void>;
 export declare function listSlackPins(channelId: string, opts?: SlackActionClientOpts): Promise<SlackPin[]>;

@@ -5,6 +5,7 @@
  * and can be called from anywhere in the codebase.
  */
 import type { PluginRegistry } from "./registry.js";
+import type { PluginHookGatewayContext, PluginHookGatewayStopEvent } from "./types.js";
 import { type HookRunner } from "./hooks.js";
 /**
  * Initialize the global hook runner with a plugin registry.
@@ -25,6 +26,11 @@ export declare function getGlobalPluginRegistry(): PluginRegistry | null;
  * Check if any hooks are registered for a given hook name.
  */
 export declare function hasGlobalHooks(hookName: Parameters<HookRunner["hasHooks"]>[0]): boolean;
+export declare function runGlobalGatewayStopSafely(params: {
+    event: PluginHookGatewayStopEvent;
+    ctx: PluginHookGatewayContext;
+    onError?: (err: unknown) => void;
+}): Promise<void>;
 /**
  * Reset the global hook runner (for testing).
  */

@@ -8,3 +8,4 @@ export declare function fetchWithTimeoutGuarded(url: string, init: RequestInit, 
     pinDns?: boolean;
 }): Promise<GuardedFetchResult>;
 export declare function readErrorResponse(res: Response): Promise<string | undefined>;
+export declare function assertOkOrThrowHttpError(res: Response, label: string): Promise<void>;

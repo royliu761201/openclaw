@@ -4,6 +4,7 @@ export type SignalSendOpts = {
     account?: string;
     accountId?: string;
     mediaUrl?: string;
+    mediaLocalRoots?: readonly string[];
     maxBytes?: number;
     timeoutMs?: number;
     textMode?: "markdown" | "plain";

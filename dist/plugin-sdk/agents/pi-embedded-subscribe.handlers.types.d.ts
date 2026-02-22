@@ -15,6 +15,13 @@ export type ToolErrorSummary = {
     toolName: string;
     meta?: string;
     error?: string;
+    mutatingAction?: boolean;
+    actionFingerprint?: string;
+};
+export type ToolCallSummary = {
+    meta?: string;
+    mutatingAction: boolean;
+    actionFingerprint?: string;
 };
 export type EmbeddedPiSubscribeState = {
     assistantTexts: string[];
@@ -22,7 +29,7 @@ export type EmbeddedPiSubscribeState = {
         toolName?: string;
         meta?: string;
     }>;
-    toolMetaById: Map<string, string | undefined>;
+    toolMetaById: Map<string, ToolCallSummary>;
     toolSummaryById: Set<string>;
     lastToolError?: ToolErrorSummary;
     blockReplyBreak: "text_end" | "message_end";
@@ -57,12 +64,18 @@ export type EmbeddedPiSubscribeState = {
     compactionInFlight: boolean;
     pendingCompactionRetry: number;
     compactionRetryResolve?: () => void;
+    compactionRetryReject?: (reason?: unknown) => void;
     compactionRetryPromise: Promise<void> | null;
+    unsubscribed: boolean;
     messagingToolSentTexts: string[];
     messagingToolSentTextsNormalized: string[];
     messagingToolSentTargets: MessagingToolSend[];
+    messagingToolSentMediaUrls: string[];
     pendingMessagingTexts: Map<string, string>;
     pendingMessagingTargets: Map<string, MessagingToolSend>;
+    successfulCronAdds: number;
+    pendingMessagingMediaUrls: Map<string, string[]>;
+    lastAssistant?: AgentMessage;
 };
 export type EmbeddedPiSubscribeContext = {
     params: SubscribeEmbeddedPiSessionParams;
@@ -71,6 +84,7 @@ export type EmbeddedPiSubscribeContext = {
     blockChunking?: BlockReplyChunking;
     blockChunker: EmbeddedBlockChunker | null;
     hookRunner?: HookRunner;
+    noteLastAssistant: (msg: AgentMessage) => void;
     shouldEmitToolResult: () => boolean;
     shouldEmitToolOutput: () => boolean;
     emitToolSummary: (toolName?: string, meta?: string) => void;
@@ -105,6 +119,25 @@ export type EmbeddedPiSubscribeContext = {
     incrementCompactionCount: () => void;
     getUsageTotals: () => NormalizedUsage | undefined;
     getCompactionCount: () => number;
+};
+/**
+ * Minimal context type for tool execution handlers. Allows
+ * tests provide only the fields they exercise
+ * without needing the full `EmbeddedPiSubscribeContext`.
+ */
+export type ToolHandlerParams = Pick<SubscribeEmbeddedPiSessionParams, "runId" | "onBlockReplyFlush" | "onAgentEvent" | "onToolResult">;
+export type ToolHandlerState = Pick<EmbeddedPiSubscribeState, "toolMetaById" | "toolMetas" | "toolSummaryById" | "lastToolError" | "pendingMessagingTargets" | "pendingMessagingTexts" | "pendingMessagingMediaUrls" | "messagingToolSentTexts" | "messagingToolSentTextsNormalized" | "messagingToolSentMediaUrls" | "messagingToolSentTargets" | "successfulCronAdds">;
+export type ToolHandlerContext = {
+    params: ToolHandlerParams;
+    state: ToolHandlerState;
+    log: EmbeddedSubscribeLogger;
+    hookRunner?: HookRunner;
+    flushBlockReplyBuffer: () => void;
+    shouldEmitToolResult: () => boolean;
+    shouldEmitToolOutput: () => boolean;
+    emitToolSummary: (toolName?: string, meta?: string) => void;
+    emitToolOutput: (toolName?: string, meta?: string, output?: string) => void;
+    trimMessagingToolSent: () => void;
 };
 export type EmbeddedPiSubscribeEvent = AgentEvent | {
     type: string;

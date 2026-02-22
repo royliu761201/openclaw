@@ -12,6 +12,7 @@ export declare function deliverReplies(params: {
     token: string;
     runtime: RuntimeEnv;
     bot: Bot;
+    mediaLocalRoots?: readonly string[];
     replyToMode: ReplyToMode;
     textLimit: number;
     thread?: TelegramThreadSpec | null;

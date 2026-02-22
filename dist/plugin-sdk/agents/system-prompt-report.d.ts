@@ -11,6 +11,7 @@ export declare function buildSystemPromptReport(params: {
     model?: string;
     workspaceDir?: string;
     bootstrapMaxChars: number;
+    bootstrapTotalMaxChars?: number;
     sandbox?: SessionSystemPromptReport["sandbox"];
     systemPrompt: string;
     bootstrapFiles: WorkspaceBootstrapFile[];

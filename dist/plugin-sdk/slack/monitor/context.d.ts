@@ -4,6 +4,7 @@ import type { OpenClawConfig, SlackReactionNotificationMode } from "../../config
 import type { DmPolicy, GroupPolicy } from "../../config/types.js";
 import type { RuntimeEnv } from "../../runtime.js";
 import type { SlackMessageEvent } from "../types.js";
+import type { SlackChannelConfigEntries } from "./channel-config.js";
 import { type SessionScope } from "../../config/sessions.js";
 import { getChildLogger } from "../../logging.js";
 export declare function inferSlackChannelType(channelId?: string | null): SlackMessageEvent["channel_type"] | undefined;
@@ -27,15 +28,7 @@ export type SlackMonitorContext = {
     groupDmEnabled: boolean;
     groupDmChannels: string[];
     defaultRequireMention: boolean;
-    channelsConfig?: Record<string, {
-        enabled?: boolean;
-        allow?: boolean;
-        requireMention?: boolean;
-        allowBots?: boolean;
-        users?: Array<string | number>;
-        skills?: string[];
-        systemPrompt?: string;
-    }>;
+    channelsConfig?: SlackChannelConfigEntries;
     groupPolicy: GroupPolicy;
     useAccessGroups: boolean;
     reactionMode: SlackReactionNotificationMode;

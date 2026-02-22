@@ -1,5 +1,6 @@
 import { z } from "zod";
 export declare const OpenClawSchema: z.ZodObject<{
+    $schema: z.ZodOptional<z.ZodString>;
     meta: z.ZodOptional<z.ZodObject<{
         lastTouchedVersion: z.ZodOptional<z.ZodString>;
         lastTouchedAt: z.ZodOptional<z.ZodString>;
@@ -102,13 +103,13 @@ export declare const OpenClawSchema: z.ZodObject<{
             baseUrl: z.ZodString;
             apiKey: z.ZodOptional<z.ZodString>;
             auth: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"api-key">, z.ZodLiteral<"aws-sdk">, z.ZodLiteral<"oauth">, z.ZodLiteral<"token">]>>;
-            api: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"openai-completions">, z.ZodLiteral<"openai-responses">, z.ZodLiteral<"anthropic-messages">, z.ZodLiteral<"google-generative-ai">, z.ZodLiteral<"github-copilot">, z.ZodLiteral<"bedrock-converse-stream">]>>;
+            api: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"openai-completions">, z.ZodLiteral<"openai-responses">, z.ZodLiteral<"anthropic-messages">, z.ZodLiteral<"google-generative-ai">, z.ZodLiteral<"github-copilot">, z.ZodLiteral<"bedrock-converse-stream">, z.ZodLiteral<"ollama">]>>;
             headers: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodString>>;
             authHeader: z.ZodOptional<z.ZodBoolean>;
             models: z.ZodArray<z.ZodObject<{
                 id: z.ZodString;
                 name: z.ZodString;
-                api: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"openai-completions">, z.ZodLiteral<"openai-responses">, z.ZodLiteral<"anthropic-messages">, z.ZodLiteral<"google-generative-ai">, z.ZodLiteral<"github-copilot">, z.ZodLiteral<"bedrock-converse-stream">]>>;
+                api: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"openai-completions">, z.ZodLiteral<"openai-responses">, z.ZodLiteral<"anthropic-messages">, z.ZodLiteral<"google-generative-ai">, z.ZodLiteral<"github-copilot">, z.ZodLiteral<"bedrock-converse-stream">, z.ZodLiteral<"ollama">]>>;
                 reasoning: z.ZodOptional<z.ZodBoolean>;
                 input: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodLiteral<"text">, z.ZodLiteral<"image">]>>>;
                 cost: z.ZodOptional<z.ZodObject<{
@@ -124,7 +125,14 @@ export declare const OpenClawSchema: z.ZodObject<{
                     supportsStore: z.ZodOptional<z.ZodBoolean>;
                     supportsDeveloperRole: z.ZodOptional<z.ZodBoolean>;
                     supportsReasoningEffort: z.ZodOptional<z.ZodBoolean>;
+                    supportsUsageInStreaming: z.ZodOptional<z.ZodBoolean>;
+                    supportsStrictMode: z.ZodOptional<z.ZodBoolean>;
                     maxTokensField: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"max_completion_tokens">, z.ZodLiteral<"max_tokens">]>>;
+                    thinkingFormat: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"openai">, z.ZodLiteral<"zai">, z.ZodLiteral<"qwen">]>>;
+                    requiresToolResultName: z.ZodOptional<z.ZodBoolean>;
+                    requiresAssistantAfterToolResult: z.ZodOptional<z.ZodBoolean>;
+                    requiresThinkingAsText: z.ZodOptional<z.ZodBoolean>;
+                    requiresMistralToolIds: z.ZodOptional<z.ZodBoolean>;
                 }, z.core.$strict>>;
             }, z.core.$strict>>;
         }, z.core.$strict>>>;
@@ -162,6 +170,7 @@ export declare const OpenClawSchema: z.ZodObject<{
             repoRoot: z.ZodOptional<z.ZodString>;
             skipBootstrap: z.ZodOptional<z.ZodBoolean>;
             bootstrapMaxChars: z.ZodOptional<z.ZodNumber>;
+            bootstrapTotalMaxChars: z.ZodOptional<z.ZodNumber>;
             userTimezone: z.ZodOptional<z.ZodString>;
             timeFormat: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"auto">, z.ZodLiteral<"12">, z.ZodLiteral<"24">]>>;
             envelopeTimezone: z.ZodOptional<z.ZodString>;
@@ -190,6 +199,22 @@ export declare const OpenClawSchema: z.ZodObject<{
                 imageArg: z.ZodOptional<z.ZodString>;
                 imageMode: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"repeat">, z.ZodLiteral<"list">]>>;
                 serialize: z.ZodOptional<z.ZodBoolean>;
+                reliability: z.ZodOptional<z.ZodObject<{
+                    watchdog: z.ZodOptional<z.ZodObject<{
+                        fresh: z.ZodOptional<z.ZodObject<{
+                            noOutputTimeoutMs: z.ZodOptional<z.ZodNumber>;
+                            noOutputTimeoutRatio: z.ZodOptional<z.ZodNumber>;
+                            minMs: z.ZodOptional<z.ZodNumber>;
+                            maxMs: z.ZodOptional<z.ZodNumber>;
+                        }, z.core.$strict>>;
+                        resume: z.ZodOptional<z.ZodObject<{
+                            noOutputTimeoutMs: z.ZodOptional<z.ZodNumber>;
+                            noOutputTimeoutRatio: z.ZodOptional<z.ZodNumber>;
+                            minMs: z.ZodOptional<z.ZodNumber>;
+                            maxMs: z.ZodOptional<z.ZodNumber>;
+                        }, z.core.$strict>>;
+                    }, z.core.$strict>>;
+                }, z.core.$strict>>;
             }, z.core.$strict>>>;
             memorySearch: z.ZodOptional<z.ZodObject<{
                 enabled: z.ZodOptional<z.ZodBoolean>;
@@ -248,6 +273,14 @@ export declare const OpenClawSchema: z.ZodObject<{
                         vectorWeight: z.ZodOptional<z.ZodNumber>;
                         textWeight: z.ZodOptional<z.ZodNumber>;
                         candidateMultiplier: z.ZodOptional<z.ZodNumber>;
+                        mmr: z.ZodOptional<z.ZodObject<{
+                            enabled: z.ZodOptional<z.ZodBoolean>;
+                            lambda: z.ZodOptional<z.ZodNumber>;
+                        }, z.core.$strict>>;
+                        temporalDecay: z.ZodOptional<z.ZodObject<{
+                            enabled: z.ZodOptional<z.ZodBoolean>;
+                            halfLifeDays: z.ZodOptional<z.ZodNumber>;
+                        }, z.core.$strict>>;
                     }, z.core.$strict>>;
                 }, z.core.$strict>>;
                 cache: z.ZodOptional<z.ZodObject<{
@@ -309,6 +342,7 @@ export declare const OpenClawSchema: z.ZodObject<{
             }, z.core.$strict>>;
             timeoutSeconds: z.ZodOptional<z.ZodNumber>;
             mediaMaxMb: z.ZodOptional<z.ZodNumber>;
+            imageMaxDimensionPx: z.ZodOptional<z.ZodNumber>;
             typingIntervalSeconds: z.ZodOptional<z.ZodNumber>;
             typingMode: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"never">, z.ZodLiteral<"instant">, z.ZodLiteral<"thinking">, z.ZodLiteral<"message">]>>;
             heartbeat: z.ZodOptional<z.ZodObject<{
@@ -326,10 +360,13 @@ export declare const OpenClawSchema: z.ZodObject<{
                 accountId: z.ZodOptional<z.ZodString>;
                 prompt: z.ZodOptional<z.ZodString>;
                 ackMaxChars: z.ZodOptional<z.ZodNumber>;
+                suppressToolErrorWarnings: z.ZodOptional<z.ZodBoolean>;
             }, z.core.$strict>>;
             maxConcurrent: z.ZodOptional<z.ZodNumber>;
             subagents: z.ZodOptional<z.ZodObject<{
                 maxConcurrent: z.ZodOptional<z.ZodNumber>;
+                maxSpawnDepth: z.ZodOptional<z.ZodNumber>;
+                maxChildrenPerAgent: z.ZodOptional<z.ZodNumber>;
                 archiveAfterMinutes: z.ZodOptional<z.ZodNumber>;
                 model: z.ZodOptional<z.ZodUnion<readonly [z.ZodString, z.ZodObject<{
                     primary: z.ZodOptional<z.ZodString>;
@@ -381,6 +418,7 @@ export declare const OpenClawSchema: z.ZodObject<{
                     allowHostControl: z.ZodOptional<z.ZodBoolean>;
                     autoStart: z.ZodOptional<z.ZodBoolean>;
                     autoStartTimeoutMs: z.ZodOptional<z.ZodNumber>;
+                    binds: z.ZodOptional<z.ZodArray<z.ZodString>>;
                 }, z.core.$strict>>;
                 prune: z.ZodOptional<z.ZodObject<{
                     idleHours: z.ZodOptional<z.ZodNumber>;
@@ -456,6 +494,14 @@ export declare const OpenClawSchema: z.ZodObject<{
                         vectorWeight: z.ZodOptional<z.ZodNumber>;
                         textWeight: z.ZodOptional<z.ZodNumber>;
                         candidateMultiplier: z.ZodOptional<z.ZodNumber>;
+                        mmr: z.ZodOptional<z.ZodObject<{
+                            enabled: z.ZodOptional<z.ZodBoolean>;
+                            lambda: z.ZodOptional<z.ZodNumber>;
+                        }, z.core.$strict>>;
+                        temporalDecay: z.ZodOptional<z.ZodObject<{
+                            enabled: z.ZodOptional<z.ZodBoolean>;
+                            halfLifeDays: z.ZodOptional<z.ZodNumber>;
+                        }, z.core.$strict>>;
                     }, z.core.$strict>>;
                 }, z.core.$strict>>;
                 cache: z.ZodOptional<z.ZodObject<{
@@ -483,6 +529,7 @@ export declare const OpenClawSchema: z.ZodObject<{
                 accountId: z.ZodOptional<z.ZodString>;
                 prompt: z.ZodOptional<z.ZodString>;
                 ackMaxChars: z.ZodOptional<z.ZodNumber>;
+                suppressToolErrorWarnings: z.ZodOptional<z.ZodBoolean>;
             }, z.core.$strict>>;
             identity: z.ZodOptional<z.ZodObject<{
                 name: z.ZodOptional<z.ZodString>;
@@ -546,6 +593,7 @@ export declare const OpenClawSchema: z.ZodObject<{
                     allowHostControl: z.ZodOptional<z.ZodBoolean>;
                     autoStart: z.ZodOptional<z.ZodBoolean>;
                     autoStartTimeoutMs: z.ZodOptional<z.ZodNumber>;
+                    binds: z.ZodOptional<z.ZodArray<z.ZodString>>;
                 }, z.core.$strict>>;
                 prune: z.ZodOptional<z.ZodObject<{
                     idleHours: z.ZodOptional<z.ZodNumber>;
@@ -568,6 +616,7 @@ export declare const OpenClawSchema: z.ZodObject<{
                     allowFrom: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>>;
                 }, z.core.$strict>>;
                 exec: z.ZodOptional<z.ZodObject<{
+                    approvalRunningNoticeMs: z.ZodOptional<z.ZodNumber>;
                     host: z.ZodOptional<z.ZodEnum<{
                         sandbox: "sandbox";
                         gateway: "gateway";
@@ -588,12 +637,28 @@ export declare const OpenClawSchema: z.ZodObject<{
                     safeBins: z.ZodOptional<z.ZodArray<z.ZodString>>;
                     backgroundMs: z.ZodOptional<z.ZodNumber>;
                     timeoutSec: z.ZodOptional<z.ZodNumber>;
-                    approvalRunningNoticeMs: z.ZodOptional<z.ZodNumber>;
                     cleanupMs: z.ZodOptional<z.ZodNumber>;
                     notifyOnExit: z.ZodOptional<z.ZodBoolean>;
+                    notifyOnExitEmptySuccess: z.ZodOptional<z.ZodBoolean>;
                     applyPatch: z.ZodOptional<z.ZodObject<{
                         enabled: z.ZodOptional<z.ZodBoolean>;
+                        workspaceOnly: z.ZodOptional<z.ZodBoolean>;
                         allowModels: z.ZodOptional<z.ZodArray<z.ZodString>>;
+                    }, z.core.$strict>>;
+                }, z.core.$strict>>;
+                fs: z.ZodOptional<z.ZodObject<{
+                    workspaceOnly: z.ZodOptional<z.ZodBoolean>;
+                }, z.core.$strict>>;
+                loopDetection: z.ZodOptional<z.ZodObject<{
+                    enabled: z.ZodOptional<z.ZodBoolean>;
+                    historySize: z.ZodOptional<z.ZodNumber>;
+                    warningThreshold: z.ZodOptional<z.ZodNumber>;
+                    criticalThreshold: z.ZodOptional<z.ZodNumber>;
+                    globalCircuitBreakerThreshold: z.ZodOptional<z.ZodNumber>;
+                    detectors: z.ZodOptional<z.ZodObject<{
+                        genericRepeat: z.ZodOptional<z.ZodBoolean>;
+                        knownPollNoProgress: z.ZodOptional<z.ZodBoolean>;
+                        pingPong: z.ZodOptional<z.ZodBoolean>;
                     }, z.core.$strict>>;
                 }, z.core.$strict>>;
                 sandbox: z.ZodOptional<z.ZodObject<{
@@ -681,6 +746,7 @@ export declare const OpenClawSchema: z.ZodObject<{
                             channel: z.ZodOptional<z.ZodString>;
                             chatType: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"direct">, z.ZodLiteral<"group">, z.ZodLiteral<"channel">, z.ZodLiteral<"dm">]>>;
                             keyPrefix: z.ZodOptional<z.ZodString>;
+                            rawKeyPrefix: z.ZodOptional<z.ZodString>;
                         }, z.core.$strict>>;
                     }, z.core.$strict>>>;
                 }, z.core.$strict>>;
@@ -736,6 +802,7 @@ export declare const OpenClawSchema: z.ZodObject<{
                             channel: z.ZodOptional<z.ZodString>;
                             chatType: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"direct">, z.ZodLiteral<"group">, z.ZodLiteral<"channel">, z.ZodLiteral<"dm">]>>;
                             keyPrefix: z.ZodOptional<z.ZodString>;
+                            rawKeyPrefix: z.ZodOptional<z.ZodString>;
                         }, z.core.$strict>>;
                     }, z.core.$strict>>>;
                 }, z.core.$strict>>;
@@ -791,6 +858,7 @@ export declare const OpenClawSchema: z.ZodObject<{
                             channel: z.ZodOptional<z.ZodString>;
                             chatType: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"direct">, z.ZodLiteral<"group">, z.ZodLiteral<"channel">, z.ZodLiteral<"dm">]>>;
                             keyPrefix: z.ZodOptional<z.ZodString>;
+                            rawKeyPrefix: z.ZodOptional<z.ZodString>;
                         }, z.core.$strict>>;
                     }, z.core.$strict>>>;
                 }, z.core.$strict>>;
@@ -847,6 +915,7 @@ export declare const OpenClawSchema: z.ZodObject<{
                         channel: z.ZodOptional<z.ZodString>;
                         chatType: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"direct">, z.ZodLiteral<"group">, z.ZodLiteral<"channel">, z.ZodLiteral<"dm">]>>;
                         keyPrefix: z.ZodOptional<z.ZodString>;
+                        rawKeyPrefix: z.ZodOptional<z.ZodString>;
                     }, z.core.$strict>>;
                 }, z.core.$strict>>>;
             }, z.core.$strict>>;
@@ -858,6 +927,26 @@ export declare const OpenClawSchema: z.ZodObject<{
                 args: z.ZodOptional<z.ZodArray<z.ZodString>>;
                 timeoutSeconds: z.ZodOptional<z.ZodNumber>;
             }, z.core.$strict>>>;
+        }, z.core.$strict>>;
+        sessions: z.ZodOptional<z.ZodObject<{
+            visibility: z.ZodOptional<z.ZodEnum<{
+                all: "all";
+                self: "self";
+                tree: "tree";
+                agent: "agent";
+            }>>;
+        }, z.core.$strict>>;
+        loopDetection: z.ZodOptional<z.ZodObject<{
+            enabled: z.ZodOptional<z.ZodBoolean>;
+            historySize: z.ZodOptional<z.ZodNumber>;
+            warningThreshold: z.ZodOptional<z.ZodNumber>;
+            criticalThreshold: z.ZodOptional<z.ZodNumber>;
+            globalCircuitBreakerThreshold: z.ZodOptional<z.ZodNumber>;
+            detectors: z.ZodOptional<z.ZodObject<{
+                genericRepeat: z.ZodOptional<z.ZodBoolean>;
+                knownPollNoProgress: z.ZodOptional<z.ZodBoolean>;
+                pingPong: z.ZodOptional<z.ZodBoolean>;
+            }, z.core.$strict>>;
         }, z.core.$strict>>;
         message: z.ZodOptional<z.ZodObject<{
             allowCrossContextSend: z.ZodOptional<z.ZodBoolean>;
@@ -905,10 +994,15 @@ export declare const OpenClawSchema: z.ZodObject<{
             timeoutSec: z.ZodOptional<z.ZodNumber>;
             cleanupMs: z.ZodOptional<z.ZodNumber>;
             notifyOnExit: z.ZodOptional<z.ZodBoolean>;
+            notifyOnExitEmptySuccess: z.ZodOptional<z.ZodBoolean>;
             applyPatch: z.ZodOptional<z.ZodObject<{
                 enabled: z.ZodOptional<z.ZodBoolean>;
+                workspaceOnly: z.ZodOptional<z.ZodBoolean>;
                 allowModels: z.ZodOptional<z.ZodArray<z.ZodString>>;
             }, z.core.$strict>>;
+        }, z.core.$strict>>;
+        fs: z.ZodOptional<z.ZodObject<{
+            workspaceOnly: z.ZodOptional<z.ZodBoolean>;
         }, z.core.$strict>>;
         subagents: z.ZodOptional<z.ZodObject<{
             tools: z.ZodOptional<z.ZodObject<{
@@ -992,6 +1086,7 @@ export declare const OpenClawSchema: z.ZodObject<{
             "group-all": "group-all";
         }>>;
         removeAckAfterReply: z.ZodOptional<z.ZodBoolean>;
+        suppressToolErrors: z.ZodOptional<z.ZodBoolean>;
         tts: z.ZodOptional<z.ZodObject<{
             auto: z.ZodOptional<z.ZodEnum<{
                 off: "off";
@@ -1131,7 +1226,7 @@ export declare const OpenClawSchema: z.ZodObject<{
         typingIntervalSeconds: z.ZodOptional<z.ZodNumber>;
         typingMode: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"never">, z.ZodLiteral<"instant">, z.ZodLiteral<"thinking">, z.ZodLiteral<"message">]>>;
         mainKey: z.ZodOptional<z.ZodString>;
-        sendPolicy: z.ZodOptional<z.ZodObject<{
+        sendPolicy: z.ZodOptional<z.ZodOptional<z.ZodObject<{
             default: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"allow">, z.ZodLiteral<"deny">]>>;
             rules: z.ZodOptional<z.ZodArray<z.ZodObject<{
                 action: z.ZodUnion<readonly [z.ZodLiteral<"allow">, z.ZodLiteral<"deny">]>;
@@ -1139,16 +1234,17 @@ export declare const OpenClawSchema: z.ZodObject<{
                     channel: z.ZodOptional<z.ZodString>;
                     chatType: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"direct">, z.ZodLiteral<"group">, z.ZodLiteral<"channel">, z.ZodLiteral<"dm">]>>;
                     keyPrefix: z.ZodOptional<z.ZodString>;
+                    rawKeyPrefix: z.ZodOptional<z.ZodString>;
                 }, z.core.$strict>>;
             }, z.core.$strict>>>;
-        }, z.core.$strict>>;
+        }, z.core.$strict>>>;
         agentToAgent: z.ZodOptional<z.ZodObject<{
             maxPingPongTurns: z.ZodOptional<z.ZodNumber>;
         }, z.core.$strict>>;
         maintenance: z.ZodOptional<z.ZodObject<{
             mode: z.ZodOptional<z.ZodEnum<{
-                enforce: "enforce";
                 warn: "warn";
+                enforce: "enforce";
             }>>;
             pruneAfter: z.ZodOptional<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>;
             pruneDays: z.ZodOptional<z.ZodNumber>;
@@ -1160,6 +1256,8 @@ export declare const OpenClawSchema: z.ZodObject<{
         enabled: z.ZodOptional<z.ZodBoolean>;
         store: z.ZodOptional<z.ZodString>;
         maxConcurrentRuns: z.ZodOptional<z.ZodNumber>;
+        webhook: z.ZodOptional<z.ZodString>;
+        webhookToken: z.ZodOptional<z.ZodString>;
         sessionRetention: z.ZodOptional<z.ZodUnion<readonly [z.ZodString, z.ZodLiteral<false>]>>;
     }, z.core.$strict>>;
     hooks: z.ZodOptional<z.ZodObject<{
@@ -1272,22 +1370,89 @@ export declare const OpenClawSchema: z.ZodObject<{
             }, z.core.$strict>>;
         }, z.core.$strict>>;
         whatsapp: z.ZodOptional<z.ZodObject<{
+            capabilities: z.ZodOptional<z.ZodArray<z.ZodString>>;
+            markdown: z.ZodOptional<z.ZodObject<{
+                tables: z.ZodOptional<z.ZodEnum<{
+                    off: "off";
+                    code: "code";
+                    bullets: "bullets";
+                }>>;
+            }, z.core.$strict>>;
+            configWrites: z.ZodOptional<z.ZodBoolean>;
+            sendReadReceipts: z.ZodOptional<z.ZodBoolean>;
+            messagePrefix: z.ZodOptional<z.ZodString>;
+            responsePrefix: z.ZodOptional<z.ZodString>;
+            dmPolicy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+                open: "open";
+                disabled: "disabled";
+                allowlist: "allowlist";
+                pairing: "pairing";
+            }>>>;
+            selfChatMode: z.ZodOptional<z.ZodBoolean>;
+            allowFrom: z.ZodOptional<z.ZodArray<z.ZodString>>;
+            groupAllowFrom: z.ZodOptional<z.ZodArray<z.ZodString>>;
+            groupPolicy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+                open: "open";
+                disabled: "disabled";
+                allowlist: "allowlist";
+            }>>>;
+            historyLimit: z.ZodOptional<z.ZodNumber>;
+            dmHistoryLimit: z.ZodOptional<z.ZodNumber>;
+            dms: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodOptional<z.ZodObject<{
+                historyLimit: z.ZodOptional<z.ZodNumber>;
+            }, z.core.$strict>>>>;
+            textChunkLimit: z.ZodOptional<z.ZodNumber>;
+            chunkMode: z.ZodOptional<z.ZodEnum<{
+                length: "length";
+                newline: "newline";
+            }>>;
+            blockStreaming: z.ZodOptional<z.ZodBoolean>;
+            blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
+                minChars: z.ZodOptional<z.ZodNumber>;
+                maxChars: z.ZodOptional<z.ZodNumber>;
+                idleMs: z.ZodOptional<z.ZodNumber>;
+            }, z.core.$strict>>;
+            groups: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodOptional<z.ZodObject<{
+                requireMention: z.ZodOptional<z.ZodBoolean>;
+                tools: z.ZodOptional<z.ZodObject<{
+                    allow: z.ZodOptional<z.ZodArray<z.ZodString>>;
+                    alsoAllow: z.ZodOptional<z.ZodArray<z.ZodString>>;
+                    deny: z.ZodOptional<z.ZodArray<z.ZodString>>;
+                }, z.core.$strict>>;
+                toolsBySender: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodOptional<z.ZodObject<{
+                    allow: z.ZodOptional<z.ZodArray<z.ZodString>>;
+                    alsoAllow: z.ZodOptional<z.ZodArray<z.ZodString>>;
+                    deny: z.ZodOptional<z.ZodArray<z.ZodString>>;
+                }, z.core.$strict>>>>;
+            }, z.core.$strict>>>>;
+            ackReaction: z.ZodOptional<z.ZodObject<{
+                emoji: z.ZodOptional<z.ZodString>;
+                direct: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+                group: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+                    never: "never";
+                    always: "always";
+                    mentions: "mentions";
+                }>>>;
+            }, z.core.$strict>>;
+            debounceMs: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+            heartbeat: z.ZodOptional<z.ZodObject<{
+                showOk: z.ZodOptional<z.ZodBoolean>;
+                showAlerts: z.ZodOptional<z.ZodBoolean>;
+                useIndicator: z.ZodOptional<z.ZodBoolean>;
+            }, z.core.$strict>>;
             accounts: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodOptional<z.ZodObject<{
-                name: z.ZodOptional<z.ZodString>;
                 capabilities: z.ZodOptional<z.ZodArray<z.ZodString>>;
                 markdown: z.ZodOptional<z.ZodObject<{
                     tables: z.ZodOptional<z.ZodEnum<{
                         off: "off";
-                        bullets: "bullets";
                         code: "code";
+                        bullets: "bullets";
                     }>>;
                 }, z.core.$strict>>;
                 configWrites: z.ZodOptional<z.ZodBoolean>;
-                enabled: z.ZodOptional<z.ZodBoolean>;
                 sendReadReceipts: z.ZodOptional<z.ZodBoolean>;
                 messagePrefix: z.ZodOptional<z.ZodString>;
                 responsePrefix: z.ZodOptional<z.ZodString>;
-                authDir: z.ZodOptional<z.ZodString>;
                 dmPolicy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
                     open: "open";
                     disabled: "disabled";
@@ -1309,10 +1474,9 @@ export declare const OpenClawSchema: z.ZodObject<{
                 }, z.core.$strict>>>>;
                 textChunkLimit: z.ZodOptional<z.ZodNumber>;
                 chunkMode: z.ZodOptional<z.ZodEnum<{
-                    newline: "newline";
                     length: "length";
+                    newline: "newline";
                 }>>;
-                mediaMaxMb: z.ZodOptional<z.ZodNumber>;
                 blockStreaming: z.ZodOptional<z.ZodBoolean>;
                 blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
                     minChars: z.ZodOptional<z.ZodNumber>;
@@ -1347,91 +1511,25 @@ export declare const OpenClawSchema: z.ZodObject<{
                     showAlerts: z.ZodOptional<z.ZodBoolean>;
                     useIndicator: z.ZodOptional<z.ZodBoolean>;
                 }, z.core.$strict>>;
+                name: z.ZodOptional<z.ZodString>;
+                enabled: z.ZodOptional<z.ZodBoolean>;
+                authDir: z.ZodOptional<z.ZodString>;
+                mediaMaxMb: z.ZodOptional<z.ZodNumber>;
             }, z.core.$strict>>>>;
-            capabilities: z.ZodOptional<z.ZodArray<z.ZodString>>;
-            markdown: z.ZodOptional<z.ZodObject<{
-                tables: z.ZodOptional<z.ZodEnum<{
-                    off: "off";
-                    bullets: "bullets";
-                    code: "code";
-                }>>;
-            }, z.core.$strict>>;
-            configWrites: z.ZodOptional<z.ZodBoolean>;
-            sendReadReceipts: z.ZodOptional<z.ZodBoolean>;
-            dmPolicy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
-                open: "open";
-                disabled: "disabled";
-                allowlist: "allowlist";
-                pairing: "pairing";
-            }>>>;
-            messagePrefix: z.ZodOptional<z.ZodString>;
-            responsePrefix: z.ZodOptional<z.ZodString>;
-            selfChatMode: z.ZodOptional<z.ZodBoolean>;
-            allowFrom: z.ZodOptional<z.ZodArray<z.ZodString>>;
-            groupAllowFrom: z.ZodOptional<z.ZodArray<z.ZodString>>;
-            groupPolicy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
-                open: "open";
-                disabled: "disabled";
-                allowlist: "allowlist";
-            }>>>;
-            historyLimit: z.ZodOptional<z.ZodNumber>;
-            dmHistoryLimit: z.ZodOptional<z.ZodNumber>;
-            dms: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodOptional<z.ZodObject<{
-                historyLimit: z.ZodOptional<z.ZodNumber>;
-            }, z.core.$strict>>>>;
-            textChunkLimit: z.ZodOptional<z.ZodNumber>;
-            chunkMode: z.ZodOptional<z.ZodEnum<{
-                newline: "newline";
-                length: "length";
-            }>>;
             mediaMaxMb: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
-            blockStreaming: z.ZodOptional<z.ZodBoolean>;
-            blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
-                minChars: z.ZodOptional<z.ZodNumber>;
-                maxChars: z.ZodOptional<z.ZodNumber>;
-                idleMs: z.ZodOptional<z.ZodNumber>;
-            }, z.core.$strict>>;
             actions: z.ZodOptional<z.ZodObject<{
                 reactions: z.ZodOptional<z.ZodBoolean>;
                 sendMessage: z.ZodOptional<z.ZodBoolean>;
                 polls: z.ZodOptional<z.ZodBoolean>;
-            }, z.core.$strict>>;
-            groups: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodOptional<z.ZodObject<{
-                requireMention: z.ZodOptional<z.ZodBoolean>;
-                tools: z.ZodOptional<z.ZodObject<{
-                    allow: z.ZodOptional<z.ZodArray<z.ZodString>>;
-                    alsoAllow: z.ZodOptional<z.ZodArray<z.ZodString>>;
-                    deny: z.ZodOptional<z.ZodArray<z.ZodString>>;
-                }, z.core.$strict>>;
-                toolsBySender: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodOptional<z.ZodObject<{
-                    allow: z.ZodOptional<z.ZodArray<z.ZodString>>;
-                    alsoAllow: z.ZodOptional<z.ZodArray<z.ZodString>>;
-                    deny: z.ZodOptional<z.ZodArray<z.ZodString>>;
-                }, z.core.$strict>>>>;
-            }, z.core.$strict>>>>;
-            ackReaction: z.ZodOptional<z.ZodObject<{
-                emoji: z.ZodOptional<z.ZodString>;
-                direct: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
-                group: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
-                    never: "never";
-                    always: "always";
-                    mentions: "mentions";
-                }>>>;
-            }, z.core.$strict>>;
-            debounceMs: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
-            heartbeat: z.ZodOptional<z.ZodObject<{
-                showOk: z.ZodOptional<z.ZodBoolean>;
-                showAlerts: z.ZodOptional<z.ZodBoolean>;
-                useIndicator: z.ZodOptional<z.ZodBoolean>;
             }, z.core.$strict>>;
         }, z.core.$strict>>;
         telegram: z.ZodOptional<z.ZodObject<{
             name: z.ZodOptional<z.ZodString>;
             capabilities: z.ZodOptional<z.ZodUnion<readonly [z.ZodArray<z.ZodString>, z.ZodObject<{
                 inlineButtons: z.ZodOptional<z.ZodEnum<{
+                    off: "off";
                     group: "group";
                     dm: "dm";
-                    off: "off";
                     all: "all";
                     allowlist: "allowlist";
                 }>>;
@@ -1439,8 +1537,8 @@ export declare const OpenClawSchema: z.ZodObject<{
             markdown: z.ZodOptional<z.ZodObject<{
                 tables: z.ZodOptional<z.ZodEnum<{
                     off: "off";
-                    bullets: "bullets";
                     code: "code";
+                    bullets: "bullets";
                 }>>;
             }, z.core.$strict>>;
             enabled: z.ZodOptional<z.ZodBoolean>;
@@ -1510,8 +1608,8 @@ export declare const OpenClawSchema: z.ZodObject<{
             }, z.core.$strict>>>>;
             textChunkLimit: z.ZodOptional<z.ZodNumber>;
             chunkMode: z.ZodOptional<z.ZodEnum<{
-                newline: "newline";
                 length: "length";
+                newline: "newline";
             }>>;
             blockStreaming: z.ZodOptional<z.ZodBoolean>;
             draftChunk: z.ZodOptional<z.ZodObject<{
@@ -1569,13 +1667,14 @@ export declare const OpenClawSchema: z.ZodObject<{
             }, z.core.$strict>>;
             linkPreview: z.ZodOptional<z.ZodBoolean>;
             responsePrefix: z.ZodOptional<z.ZodString>;
+            ackReaction: z.ZodOptional<z.ZodString>;
             accounts: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodOptional<z.ZodObject<{
                 name: z.ZodOptional<z.ZodString>;
                 capabilities: z.ZodOptional<z.ZodUnion<readonly [z.ZodArray<z.ZodString>, z.ZodObject<{
                     inlineButtons: z.ZodOptional<z.ZodEnum<{
+                        off: "off";
                         group: "group";
                         dm: "dm";
-                        off: "off";
                         all: "all";
                         allowlist: "allowlist";
                     }>>;
@@ -1583,8 +1682,8 @@ export declare const OpenClawSchema: z.ZodObject<{
                 markdown: z.ZodOptional<z.ZodObject<{
                     tables: z.ZodOptional<z.ZodEnum<{
                         off: "off";
-                        bullets: "bullets";
                         code: "code";
+                        bullets: "bullets";
                     }>>;
                 }, z.core.$strict>>;
                 enabled: z.ZodOptional<z.ZodBoolean>;
@@ -1654,8 +1753,8 @@ export declare const OpenClawSchema: z.ZodObject<{
                 }, z.core.$strict>>>>;
                 textChunkLimit: z.ZodOptional<z.ZodNumber>;
                 chunkMode: z.ZodOptional<z.ZodEnum<{
-                    newline: "newline";
                     length: "length";
+                    newline: "newline";
                 }>>;
                 blockStreaming: z.ZodOptional<z.ZodBoolean>;
                 draftChunk: z.ZodOptional<z.ZodObject<{
@@ -1713,6 +1812,7 @@ export declare const OpenClawSchema: z.ZodObject<{
                 }, z.core.$strict>>;
                 linkPreview: z.ZodOptional<z.ZodBoolean>;
                 responsePrefix: z.ZodOptional<z.ZodString>;
+                ackReaction: z.ZodOptional<z.ZodString>;
             }, z.core.$strict>>>>;
         }, z.core.$strict>>;
         discord: z.ZodOptional<z.ZodObject<{
@@ -1721,8 +1821,8 @@ export declare const OpenClawSchema: z.ZodObject<{
             markdown: z.ZodOptional<z.ZodObject<{
                 tables: z.ZodOptional<z.ZodEnum<{
                     off: "off";
-                    bullets: "bullets";
                     code: "code";
+                    bullets: "bullets";
                 }>>;
             }, z.core.$strict>>;
             enabled: z.ZodOptional<z.ZodBoolean>;
@@ -1732,6 +1832,7 @@ export declare const OpenClawSchema: z.ZodObject<{
             }, z.core.$strict>>;
             configWrites: z.ZodOptional<z.ZodBoolean>;
             token: z.ZodOptional<z.ZodString>;
+            proxy: z.ZodOptional<z.ZodString>;
             allowBots: z.ZodOptional<z.ZodBoolean>;
             groupPolicy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
                 open: "open";
@@ -1745,8 +1846,8 @@ export declare const OpenClawSchema: z.ZodObject<{
             }, z.core.$strict>>>>;
             textChunkLimit: z.ZodOptional<z.ZodNumber>;
             chunkMode: z.ZodOptional<z.ZodEnum<{
-                newline: "newline";
                 length: "length";
+                newline: "newline";
             }>>;
             blockStreaming: z.ZodOptional<z.ZodBoolean>;
             blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
@@ -1784,17 +1885,24 @@ export declare const OpenClawSchema: z.ZodObject<{
                 presence: z.ZodOptional<z.ZodBoolean>;
             }, z.core.$strict>>;
             replyToMode: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"off">, z.ZodLiteral<"first">, z.ZodLiteral<"all">]>>;
+            dmPolicy: z.ZodOptional<z.ZodEnum<{
+                open: "open";
+                disabled: "disabled";
+                allowlist: "allowlist";
+                pairing: "pairing";
+            }>>;
+            allowFrom: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]> & z.ZodType<string, string | number, z.core.$ZodTypeInternals<string, string | number>>>>;
             dm: z.ZodOptional<z.ZodObject<{
                 enabled: z.ZodOptional<z.ZodBoolean>;
-                policy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+                policy: z.ZodOptional<z.ZodEnum<{
                     open: "open";
                     disabled: "disabled";
                     allowlist: "allowlist";
                     pairing: "pairing";
-                }>>>;
-                allowFrom: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
+                }>>;
+                allowFrom: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]> & z.ZodType<string, string | number, z.core.$ZodTypeInternals<string, string | number>>>>;
                 groupEnabled: z.ZodOptional<z.ZodBoolean>;
-                groupChannels: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
+                groupChannels: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]> & z.ZodType<string, string | number, z.core.$ZodTypeInternals<string, string | number>>>>;
             }, z.core.$strict>>;
             guilds: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodOptional<z.ZodObject<{
                 slug: z.ZodOptional<z.ZodString>;
@@ -1815,8 +1923,8 @@ export declare const OpenClawSchema: z.ZodObject<{
                     allowlist: "allowlist";
                     own: "own";
                 }>>;
-                users: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
-                roles: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
+                users: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]> & z.ZodType<string, string | number, z.core.$ZodTypeInternals<string, string | number>>>>;
+                roles: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]> & z.ZodType<string, string | number, z.core.$ZodTypeInternals<string, string | number>>>>;
                 channels: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodOptional<z.ZodObject<{
                     allow: z.ZodOptional<z.ZodBoolean>;
                     requireMention: z.ZodOptional<z.ZodBoolean>;
@@ -1832,8 +1940,8 @@ export declare const OpenClawSchema: z.ZodObject<{
                     }, z.core.$strict>>>>;
                     skills: z.ZodOptional<z.ZodArray<z.ZodString>>;
                     enabled: z.ZodOptional<z.ZodBoolean>;
-                    users: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
-                    roles: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
+                    users: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]> & z.ZodType<string, string | number, z.core.$ZodTypeInternals<string, string | number>>>>;
+                    roles: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]> & z.ZodType<string, string | number, z.core.$ZodTypeInternals<string, string | number>>>>;
                     systemPrompt: z.ZodOptional<z.ZodString>;
                     includeThreadStarter: z.ZodOptional<z.ZodBoolean>;
                     autoThread: z.ZodOptional<z.ZodBoolean>;
@@ -1846,10 +1954,20 @@ export declare const OpenClawSchema: z.ZodObject<{
             }, z.core.$strict>>;
             execApprovals: z.ZodOptional<z.ZodObject<{
                 enabled: z.ZodOptional<z.ZodBoolean>;
-                approvers: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
+                approvers: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]> & z.ZodType<string, string | number, z.core.$ZodTypeInternals<string, string | number>>>>;
                 agentFilter: z.ZodOptional<z.ZodArray<z.ZodString>>;
                 sessionFilter: z.ZodOptional<z.ZodArray<z.ZodString>>;
                 cleanupAfterResolve: z.ZodOptional<z.ZodBoolean>;
+                target: z.ZodOptional<z.ZodEnum<{
+                    channel: "channel";
+                    dm: "dm";
+                    both: "both";
+                }>>;
+            }, z.core.$strict>>;
+            ui: z.ZodOptional<z.ZodObject<{
+                components: z.ZodOptional<z.ZodObject<{
+                    accentColor: z.ZodOptional<z.ZodString>;
+                }, z.core.$strict>>;
             }, z.core.$strict>>;
             intents: z.ZodOptional<z.ZodObject<{
                 presence: z.ZodOptional<z.ZodBoolean>;
@@ -1860,14 +1978,24 @@ export declare const OpenClawSchema: z.ZodObject<{
                 token: z.ZodOptional<z.ZodString>;
             }, z.core.$strict>>;
             responsePrefix: z.ZodOptional<z.ZodString>;
+            ackReaction: z.ZodOptional<z.ZodString>;
+            activity: z.ZodOptional<z.ZodString>;
+            status: z.ZodOptional<z.ZodEnum<{
+                idle: "idle";
+                online: "online";
+                dnd: "dnd";
+                invisible: "invisible";
+            }>>;
+            activityType: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<0>, z.ZodLiteral<1>, z.ZodLiteral<2>, z.ZodLiteral<3>, z.ZodLiteral<4>, z.ZodLiteral<5>]>>;
+            activityUrl: z.ZodOptional<z.ZodString>;
             accounts: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodOptional<z.ZodObject<{
                 name: z.ZodOptional<z.ZodString>;
                 capabilities: z.ZodOptional<z.ZodArray<z.ZodString>>;
                 markdown: z.ZodOptional<z.ZodObject<{
                     tables: z.ZodOptional<z.ZodEnum<{
                         off: "off";
-                        bullets: "bullets";
                         code: "code";
+                        bullets: "bullets";
                     }>>;
                 }, z.core.$strict>>;
                 enabled: z.ZodOptional<z.ZodBoolean>;
@@ -1877,6 +2005,7 @@ export declare const OpenClawSchema: z.ZodObject<{
                 }, z.core.$strict>>;
                 configWrites: z.ZodOptional<z.ZodBoolean>;
                 token: z.ZodOptional<z.ZodString>;
+                proxy: z.ZodOptional<z.ZodString>;
                 allowBots: z.ZodOptional<z.ZodBoolean>;
                 groupPolicy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
                     open: "open";
@@ -1890,8 +2019,8 @@ export declare const OpenClawSchema: z.ZodObject<{
                 }, z.core.$strict>>>>;
                 textChunkLimit: z.ZodOptional<z.ZodNumber>;
                 chunkMode: z.ZodOptional<z.ZodEnum<{
-                    newline: "newline";
                     length: "length";
+                    newline: "newline";
                 }>>;
                 blockStreaming: z.ZodOptional<z.ZodBoolean>;
                 blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
@@ -1929,17 +2058,24 @@ export declare const OpenClawSchema: z.ZodObject<{
                     presence: z.ZodOptional<z.ZodBoolean>;
                 }, z.core.$strict>>;
                 replyToMode: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"off">, z.ZodLiteral<"first">, z.ZodLiteral<"all">]>>;
+                dmPolicy: z.ZodOptional<z.ZodEnum<{
+                    open: "open";
+                    disabled: "disabled";
+                    allowlist: "allowlist";
+                    pairing: "pairing";
+                }>>;
+                allowFrom: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]> & z.ZodType<string, string | number, z.core.$ZodTypeInternals<string, string | number>>>>;
                 dm: z.ZodOptional<z.ZodObject<{
                     enabled: z.ZodOptional<z.ZodBoolean>;
-                    policy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+                    policy: z.ZodOptional<z.ZodEnum<{
                         open: "open";
                         disabled: "disabled";
                         allowlist: "allowlist";
                         pairing: "pairing";
-                    }>>>;
-                    allowFrom: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
+                    }>>;
+                    allowFrom: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]> & z.ZodType<string, string | number, z.core.$ZodTypeInternals<string, string | number>>>>;
                     groupEnabled: z.ZodOptional<z.ZodBoolean>;
-                    groupChannels: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
+                    groupChannels: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]> & z.ZodType<string, string | number, z.core.$ZodTypeInternals<string, string | number>>>>;
                 }, z.core.$strict>>;
                 guilds: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodOptional<z.ZodObject<{
                     slug: z.ZodOptional<z.ZodString>;
@@ -1960,8 +2096,8 @@ export declare const OpenClawSchema: z.ZodObject<{
                         allowlist: "allowlist";
                         own: "own";
                     }>>;
-                    users: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
-                    roles: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
+                    users: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]> & z.ZodType<string, string | number, z.core.$ZodTypeInternals<string, string | number>>>>;
+                    roles: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]> & z.ZodType<string, string | number, z.core.$ZodTypeInternals<string, string | number>>>>;
                     channels: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodOptional<z.ZodObject<{
                         allow: z.ZodOptional<z.ZodBoolean>;
                         requireMention: z.ZodOptional<z.ZodBoolean>;
@@ -1977,8 +2113,8 @@ export declare const OpenClawSchema: z.ZodObject<{
                         }, z.core.$strict>>>>;
                         skills: z.ZodOptional<z.ZodArray<z.ZodString>>;
                         enabled: z.ZodOptional<z.ZodBoolean>;
-                        users: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
-                        roles: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
+                        users: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]> & z.ZodType<string, string | number, z.core.$ZodTypeInternals<string, string | number>>>>;
+                        roles: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]> & z.ZodType<string, string | number, z.core.$ZodTypeInternals<string, string | number>>>>;
                         systemPrompt: z.ZodOptional<z.ZodString>;
                         includeThreadStarter: z.ZodOptional<z.ZodBoolean>;
                         autoThread: z.ZodOptional<z.ZodBoolean>;
@@ -1991,10 +2127,20 @@ export declare const OpenClawSchema: z.ZodObject<{
                 }, z.core.$strict>>;
                 execApprovals: z.ZodOptional<z.ZodObject<{
                     enabled: z.ZodOptional<z.ZodBoolean>;
-                    approvers: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
+                    approvers: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]> & z.ZodType<string, string | number, z.core.$ZodTypeInternals<string, string | number>>>>;
                     agentFilter: z.ZodOptional<z.ZodArray<z.ZodString>>;
                     sessionFilter: z.ZodOptional<z.ZodArray<z.ZodString>>;
                     cleanupAfterResolve: z.ZodOptional<z.ZodBoolean>;
+                    target: z.ZodOptional<z.ZodEnum<{
+                        channel: "channel";
+                        dm: "dm";
+                        both: "both";
+                    }>>;
+                }, z.core.$strict>>;
+                ui: z.ZodOptional<z.ZodObject<{
+                    components: z.ZodOptional<z.ZodObject<{
+                        accentColor: z.ZodOptional<z.ZodString>;
+                    }, z.core.$strict>>;
                 }, z.core.$strict>>;
                 intents: z.ZodOptional<z.ZodObject<{
                     presence: z.ZodOptional<z.ZodBoolean>;
@@ -2005,6 +2151,16 @@ export declare const OpenClawSchema: z.ZodObject<{
                     token: z.ZodOptional<z.ZodString>;
                 }, z.core.$strict>>;
                 responsePrefix: z.ZodOptional<z.ZodString>;
+                ackReaction: z.ZodOptional<z.ZodString>;
+                activity: z.ZodOptional<z.ZodString>;
+                status: z.ZodOptional<z.ZodEnum<{
+                    idle: "idle";
+                    online: "online";
+                    dnd: "dnd";
+                    invisible: "invisible";
+                }>>;
+                activityType: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<0>, z.ZodLiteral<1>, z.ZodLiteral<2>, z.ZodLiteral<3>, z.ZodLiteral<4>, z.ZodLiteral<5>]>>;
+                activityUrl: z.ZodOptional<z.ZodString>;
             }, z.core.$strict>>>>;
         }, z.core.$strict>>;
         irc: z.ZodOptional<z.ZodObject<{
@@ -2013,8 +2169,8 @@ export declare const OpenClawSchema: z.ZodObject<{
             markdown: z.ZodOptional<z.ZodObject<{
                 tables: z.ZodOptional<z.ZodEnum<{
                     off: "off";
-                    bullets: "bullets";
                     code: "code";
+                    bullets: "bullets";
                 }>>;
             }, z.core.$strict>>;
             enabled: z.ZodOptional<z.ZodBoolean>;
@@ -2074,8 +2230,8 @@ export declare const OpenClawSchema: z.ZodObject<{
             }, z.core.$strict>>>>;
             textChunkLimit: z.ZodOptional<z.ZodNumber>;
             chunkMode: z.ZodOptional<z.ZodEnum<{
-                newline: "newline";
                 length: "length";
+                newline: "newline";
             }>>;
             blockStreaming: z.ZodOptional<z.ZodBoolean>;
             blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
@@ -2096,8 +2252,8 @@ export declare const OpenClawSchema: z.ZodObject<{
                 markdown: z.ZodOptional<z.ZodObject<{
                     tables: z.ZodOptional<z.ZodEnum<{
                         off: "off";
-                        bullets: "bullets";
                         code: "code";
+                        bullets: "bullets";
                     }>>;
                 }, z.core.$strict>>;
                 enabled: z.ZodOptional<z.ZodBoolean>;
@@ -2157,8 +2313,8 @@ export declare const OpenClawSchema: z.ZodObject<{
                 }, z.core.$strict>>>>;
                 textChunkLimit: z.ZodOptional<z.ZodNumber>;
                 chunkMode: z.ZodOptional<z.ZodEnum<{
-                    newline: "newline";
                     length: "length";
+                    newline: "newline";
                 }>>;
                 blockStreaming: z.ZodOptional<z.ZodBoolean>;
                 blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
@@ -2212,8 +2368,8 @@ export declare const OpenClawSchema: z.ZodObject<{
             }, z.core.$strict>>>>;
             textChunkLimit: z.ZodOptional<z.ZodNumber>;
             chunkMode: z.ZodOptional<z.ZodEnum<{
-                newline: "newline";
                 length: "length";
+                newline: "newline";
             }>>;
             blockStreaming: z.ZodOptional<z.ZodBoolean>;
             blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
@@ -2221,6 +2377,11 @@ export declare const OpenClawSchema: z.ZodObject<{
                 maxChars: z.ZodOptional<z.ZodNumber>;
                 idleMs: z.ZodOptional<z.ZodNumber>;
             }, z.core.$strict>>;
+            streamMode: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+                replace: "replace";
+                status_final: "status_final";
+                append: "append";
+            }>>>;
             mediaMaxMb: z.ZodOptional<z.ZodNumber>;
             replyToMode: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"off">, z.ZodLiteral<"first">, z.ZodLiteral<"all">]>>;
             actions: z.ZodOptional<z.ZodObject<{
@@ -2279,8 +2440,8 @@ export declare const OpenClawSchema: z.ZodObject<{
                 }, z.core.$strict>>>>;
                 textChunkLimit: z.ZodOptional<z.ZodNumber>;
                 chunkMode: z.ZodOptional<z.ZodEnum<{
-                    newline: "newline";
                     length: "length";
+                    newline: "newline";
                 }>>;
                 blockStreaming: z.ZodOptional<z.ZodBoolean>;
                 blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
@@ -2288,6 +2449,11 @@ export declare const OpenClawSchema: z.ZodObject<{
                     maxChars: z.ZodOptional<z.ZodNumber>;
                     idleMs: z.ZodOptional<z.ZodNumber>;
                 }, z.core.$strict>>;
+                streamMode: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+                    replace: "replace";
+                    status_final: "status_final";
+                    append: "append";
+                }>>>;
                 mediaMaxMb: z.ZodOptional<z.ZodNumber>;
                 replyToMode: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"off">, z.ZodLiteral<"first">, z.ZodLiteral<"all">]>>;
                 actions: z.ZodOptional<z.ZodObject<{
@@ -2318,8 +2484,8 @@ export declare const OpenClawSchema: z.ZodObject<{
             markdown: z.ZodOptional<z.ZodObject<{
                 tables: z.ZodOptional<z.ZodEnum<{
                     off: "off";
-                    bullets: "bullets";
                     code: "code";
+                    bullets: "bullets";
                 }>>;
             }, z.core.$strict>>;
             enabled: z.ZodOptional<z.ZodBoolean>;
@@ -2346,8 +2512,8 @@ export declare const OpenClawSchema: z.ZodObject<{
             }, z.core.$strict>>>>;
             textChunkLimit: z.ZodOptional<z.ZodNumber>;
             chunkMode: z.ZodOptional<z.ZodEnum<{
-                newline: "newline";
                 length: "length";
+                newline: "newline";
             }>>;
             blockStreaming: z.ZodOptional<z.ZodBoolean>;
             blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
@@ -2355,6 +2521,7 @@ export declare const OpenClawSchema: z.ZodObject<{
                 maxChars: z.ZodOptional<z.ZodNumber>;
                 idleMs: z.ZodOptional<z.ZodNumber>;
             }, z.core.$strict>>;
+            streaming: z.ZodOptional<z.ZodBoolean>;
             mediaMaxMb: z.ZodOptional<z.ZodNumber>;
             reactionNotifications: z.ZodOptional<z.ZodEnum<{
                 off: "off";
@@ -2393,14 +2560,21 @@ export declare const OpenClawSchema: z.ZodObject<{
                 sessionPrefix: z.ZodOptional<z.ZodString>;
                 ephemeral: z.ZodOptional<z.ZodBoolean>;
             }, z.core.$strict>>;
+            dmPolicy: z.ZodOptional<z.ZodEnum<{
+                open: "open";
+                disabled: "disabled";
+                allowlist: "allowlist";
+                pairing: "pairing";
+            }>>;
+            allowFrom: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
             dm: z.ZodOptional<z.ZodObject<{
                 enabled: z.ZodOptional<z.ZodBoolean>;
-                policy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+                policy: z.ZodOptional<z.ZodEnum<{
                     open: "open";
                     disabled: "disabled";
                     allowlist: "allowlist";
                     pairing: "pairing";
-                }>>>;
+                }>>;
                 allowFrom: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
                 groupEnabled: z.ZodOptional<z.ZodBoolean>;
                 groupChannels: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
@@ -2431,6 +2605,7 @@ export declare const OpenClawSchema: z.ZodObject<{
                 useIndicator: z.ZodOptional<z.ZodBoolean>;
             }, z.core.$strict>>;
             responsePrefix: z.ZodOptional<z.ZodString>;
+            ackReaction: z.ZodOptional<z.ZodString>;
             mode: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
                 socket: "socket";
                 http: "http";
@@ -2449,8 +2624,8 @@ export declare const OpenClawSchema: z.ZodObject<{
                 markdown: z.ZodOptional<z.ZodObject<{
                     tables: z.ZodOptional<z.ZodEnum<{
                         off: "off";
-                        bullets: "bullets";
                         code: "code";
+                        bullets: "bullets";
                     }>>;
                 }, z.core.$strict>>;
                 enabled: z.ZodOptional<z.ZodBoolean>;
@@ -2477,8 +2652,8 @@ export declare const OpenClawSchema: z.ZodObject<{
                 }, z.core.$strict>>>>;
                 textChunkLimit: z.ZodOptional<z.ZodNumber>;
                 chunkMode: z.ZodOptional<z.ZodEnum<{
-                    newline: "newline";
                     length: "length";
+                    newline: "newline";
                 }>>;
                 blockStreaming: z.ZodOptional<z.ZodBoolean>;
                 blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
@@ -2486,6 +2661,7 @@ export declare const OpenClawSchema: z.ZodObject<{
                     maxChars: z.ZodOptional<z.ZodNumber>;
                     idleMs: z.ZodOptional<z.ZodNumber>;
                 }, z.core.$strict>>;
+                streaming: z.ZodOptional<z.ZodBoolean>;
                 mediaMaxMb: z.ZodOptional<z.ZodNumber>;
                 reactionNotifications: z.ZodOptional<z.ZodEnum<{
                     off: "off";
@@ -2524,14 +2700,21 @@ export declare const OpenClawSchema: z.ZodObject<{
                     sessionPrefix: z.ZodOptional<z.ZodString>;
                     ephemeral: z.ZodOptional<z.ZodBoolean>;
                 }, z.core.$strict>>;
+                dmPolicy: z.ZodOptional<z.ZodEnum<{
+                    open: "open";
+                    disabled: "disabled";
+                    allowlist: "allowlist";
+                    pairing: "pairing";
+                }>>;
+                allowFrom: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
                 dm: z.ZodOptional<z.ZodObject<{
                     enabled: z.ZodOptional<z.ZodBoolean>;
-                    policy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+                    policy: z.ZodOptional<z.ZodEnum<{
                         open: "open";
                         disabled: "disabled";
                         allowlist: "allowlist";
                         pairing: "pairing";
-                    }>>>;
+                    }>>;
                     allowFrom: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
                     groupEnabled: z.ZodOptional<z.ZodBoolean>;
                     groupChannels: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
@@ -2562,6 +2745,7 @@ export declare const OpenClawSchema: z.ZodObject<{
                     useIndicator: z.ZodOptional<z.ZodBoolean>;
                 }, z.core.$strict>>;
                 responsePrefix: z.ZodOptional<z.ZodString>;
+                ackReaction: z.ZodOptional<z.ZodString>;
             }, z.core.$strict>>>>;
         }, z.core.$strict>>;
         signal: z.ZodOptional<z.ZodObject<{
@@ -2570,8 +2754,8 @@ export declare const OpenClawSchema: z.ZodObject<{
             markdown: z.ZodOptional<z.ZodObject<{
                 tables: z.ZodOptional<z.ZodEnum<{
                     off: "off";
-                    bullets: "bullets";
                     code: "code";
+                    bullets: "bullets";
                 }>>;
             }, z.core.$strict>>;
             enabled: z.ZodOptional<z.ZodBoolean>;
@@ -2607,8 +2791,8 @@ export declare const OpenClawSchema: z.ZodObject<{
             }, z.core.$strict>>>>;
             textChunkLimit: z.ZodOptional<z.ZodNumber>;
             chunkMode: z.ZodOptional<z.ZodEnum<{
-                newline: "newline";
                 length: "length";
+                newline: "newline";
             }>>;
             blockStreaming: z.ZodOptional<z.ZodBoolean>;
             blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
@@ -2645,8 +2829,8 @@ export declare const OpenClawSchema: z.ZodObject<{
                 markdown: z.ZodOptional<z.ZodObject<{
                     tables: z.ZodOptional<z.ZodEnum<{
                         off: "off";
-                        bullets: "bullets";
                         code: "code";
+                        bullets: "bullets";
                     }>>;
                 }, z.core.$strict>>;
                 enabled: z.ZodOptional<z.ZodBoolean>;
@@ -2682,8 +2866,8 @@ export declare const OpenClawSchema: z.ZodObject<{
                 }, z.core.$strict>>>>;
                 textChunkLimit: z.ZodOptional<z.ZodNumber>;
                 chunkMode: z.ZodOptional<z.ZodEnum<{
-                    newline: "newline";
                     length: "length";
+                    newline: "newline";
                 }>>;
                 blockStreaming: z.ZodOptional<z.ZodBoolean>;
                 blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
@@ -2722,8 +2906,8 @@ export declare const OpenClawSchema: z.ZodObject<{
             markdown: z.ZodOptional<z.ZodObject<{
                 tables: z.ZodOptional<z.ZodEnum<{
                     off: "off";
-                    bullets: "bullets";
                     code: "code";
+                    bullets: "bullets";
                 }>>;
             }, z.core.$strict>>;
             enabled: z.ZodOptional<z.ZodBoolean>;
@@ -2755,8 +2939,8 @@ export declare const OpenClawSchema: z.ZodObject<{
             mediaMaxMb: z.ZodOptional<z.ZodNumber>;
             textChunkLimit: z.ZodOptional<z.ZodNumber>;
             chunkMode: z.ZodOptional<z.ZodEnum<{
-                newline: "newline";
                 length: "length";
+                newline: "newline";
             }>>;
             blockStreaming: z.ZodOptional<z.ZodBoolean>;
             blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
@@ -2789,8 +2973,8 @@ export declare const OpenClawSchema: z.ZodObject<{
                 markdown: z.ZodOptional<z.ZodObject<{
                     tables: z.ZodOptional<z.ZodEnum<{
                         off: "off";
-                        bullets: "bullets";
                         code: "code";
+                        bullets: "bullets";
                     }>>;
                 }, z.core.$strict>>;
                 enabled: z.ZodOptional<z.ZodBoolean>;
@@ -2822,8 +3006,8 @@ export declare const OpenClawSchema: z.ZodObject<{
                 mediaMaxMb: z.ZodOptional<z.ZodNumber>;
                 textChunkLimit: z.ZodOptional<z.ZodNumber>;
                 chunkMode: z.ZodOptional<z.ZodEnum<{
-                    newline: "newline";
                     length: "length";
+                    newline: "newline";
                 }>>;
                 blockStreaming: z.ZodOptional<z.ZodBoolean>;
                 blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
@@ -2858,8 +3042,8 @@ export declare const OpenClawSchema: z.ZodObject<{
             markdown: z.ZodOptional<z.ZodObject<{
                 tables: z.ZodOptional<z.ZodEnum<{
                     off: "off";
-                    bullets: "bullets";
                     code: "code";
+                    bullets: "bullets";
                 }>>;
             }, z.core.$strict>>;
             configWrites: z.ZodOptional<z.ZodBoolean>;
@@ -2887,10 +3071,11 @@ export declare const OpenClawSchema: z.ZodObject<{
             }, z.core.$strict>>>>;
             textChunkLimit: z.ZodOptional<z.ZodNumber>;
             chunkMode: z.ZodOptional<z.ZodEnum<{
-                newline: "newline";
                 length: "length";
+                newline: "newline";
             }>>;
             mediaMaxMb: z.ZodOptional<z.ZodNumber>;
+            mediaLocalRoots: z.ZodOptional<z.ZodArray<z.ZodString>>;
             sendReadReceipts: z.ZodOptional<z.ZodBoolean>;
             blockStreaming: z.ZodOptional<z.ZodBoolean>;
             blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
@@ -2923,8 +3108,8 @@ export declare const OpenClawSchema: z.ZodObject<{
                 markdown: z.ZodOptional<z.ZodObject<{
                     tables: z.ZodOptional<z.ZodEnum<{
                         off: "off";
-                        bullets: "bullets";
                         code: "code";
+                        bullets: "bullets";
                     }>>;
                 }, z.core.$strict>>;
                 configWrites: z.ZodOptional<z.ZodBoolean>;
@@ -2952,10 +3137,11 @@ export declare const OpenClawSchema: z.ZodObject<{
                 }, z.core.$strict>>>>;
                 textChunkLimit: z.ZodOptional<z.ZodNumber>;
                 chunkMode: z.ZodOptional<z.ZodEnum<{
-                    newline: "newline";
                     length: "length";
+                    newline: "newline";
                 }>>;
                 mediaMaxMb: z.ZodOptional<z.ZodNumber>;
+                mediaLocalRoots: z.ZodOptional<z.ZodArray<z.ZodString>>;
                 sendReadReceipts: z.ZodOptional<z.ZodBoolean>;
                 blockStreaming: z.ZodOptional<z.ZodBoolean>;
                 blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
@@ -3003,8 +3189,8 @@ export declare const OpenClawSchema: z.ZodObject<{
             markdown: z.ZodOptional<z.ZodObject<{
                 tables: z.ZodOptional<z.ZodEnum<{
                     off: "off";
-                    bullets: "bullets";
                     code: "code";
+                    bullets: "bullets";
                 }>>;
             }, z.core.$strict>>;
             configWrites: z.ZodOptional<z.ZodBoolean>;
@@ -3030,8 +3216,8 @@ export declare const OpenClawSchema: z.ZodObject<{
             }>>>;
             textChunkLimit: z.ZodOptional<z.ZodNumber>;
             chunkMode: z.ZodOptional<z.ZodEnum<{
-                newline: "newline";
                 length: "length";
+                newline: "newline";
             }>>;
             blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
                 minChars: z.ZodOptional<z.ZodNumber>;
@@ -3133,16 +3319,28 @@ export declare const OpenClawSchema: z.ZodObject<{
             dangerouslyDisableDeviceAuth: z.ZodOptional<z.ZodBoolean>;
         }, z.core.$strict>>;
         auth: z.ZodOptional<z.ZodObject<{
-            mode: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"token">, z.ZodLiteral<"password">]>>;
+            mode: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"token">, z.ZodLiteral<"password">, z.ZodLiteral<"trusted-proxy">]>>;
             token: z.ZodOptional<z.ZodString>;
             password: z.ZodOptional<z.ZodString>;
             allowTailscale: z.ZodOptional<z.ZodBoolean>;
+            rateLimit: z.ZodOptional<z.ZodObject<{
+                maxAttempts: z.ZodOptional<z.ZodNumber>;
+                windowMs: z.ZodOptional<z.ZodNumber>;
+                lockoutMs: z.ZodOptional<z.ZodNumber>;
+                exemptLoopback: z.ZodOptional<z.ZodBoolean>;
+            }, z.core.$strict>>;
+            trustedProxy: z.ZodOptional<z.ZodObject<{
+                userHeader: z.ZodString;
+                requiredHeaders: z.ZodOptional<z.ZodArray<z.ZodString>>;
+                allowUsers: z.ZodOptional<z.ZodArray<z.ZodString>>;
+            }, z.core.$strict>>;
         }, z.core.$strict>>;
         trustedProxies: z.ZodOptional<z.ZodArray<z.ZodString>>;
         tools: z.ZodOptional<z.ZodObject<{
             deny: z.ZodOptional<z.ZodArray<z.ZodString>>;
             allow: z.ZodOptional<z.ZodArray<z.ZodString>>;
         }, z.core.$strict>>;
+        channelHealthCheckMinutes: z.ZodOptional<z.ZodNumber>;
         tailscale: z.ZodOptional<z.ZodObject<{
             mode: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"off">, z.ZodLiteral<"serve">, z.ZodLiteral<"funnel">]>>;
             resetOnExit: z.ZodOptional<z.ZodBoolean>;
@@ -3243,7 +3441,7 @@ export declare const OpenClawSchema: z.ZodObject<{
                 maxInjectedChars: z.ZodOptional<z.ZodNumber>;
                 timeoutMs: z.ZodOptional<z.ZodNumber>;
             }, z.core.$strict>>;
-            scope: z.ZodOptional<z.ZodObject<{
+            scope: z.ZodOptional<z.ZodOptional<z.ZodObject<{
                 default: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"allow">, z.ZodLiteral<"deny">]>>;
                 rules: z.ZodOptional<z.ZodArray<z.ZodObject<{
                     action: z.ZodUnion<readonly [z.ZodLiteral<"allow">, z.ZodLiteral<"deny">]>;
@@ -3251,9 +3449,10 @@ export declare const OpenClawSchema: z.ZodObject<{
                         channel: z.ZodOptional<z.ZodString>;
                         chatType: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"direct">, z.ZodLiteral<"group">, z.ZodLiteral<"channel">, z.ZodLiteral<"dm">]>>;
                         keyPrefix: z.ZodOptional<z.ZodString>;
+                        rawKeyPrefix: z.ZodOptional<z.ZodString>;
                     }, z.core.$strict>>;
                 }, z.core.$strict>>>;
-            }, z.core.$strict>>;
+            }, z.core.$strict>>>;
         }, z.core.$strict>>;
     }, z.core.$strict>>;
     skills: z.ZodOptional<z.ZodObject<{
@@ -3266,6 +3465,13 @@ export declare const OpenClawSchema: z.ZodObject<{
         install: z.ZodOptional<z.ZodObject<{
             preferBrew: z.ZodOptional<z.ZodBoolean>;
             nodeManager: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"npm">, z.ZodLiteral<"pnpm">, z.ZodLiteral<"yarn">, z.ZodLiteral<"bun">]>>;
+        }, z.core.$strict>>;
+        limits: z.ZodOptional<z.ZodObject<{
+            maxCandidatesPerRoot: z.ZodOptional<z.ZodNumber>;
+            maxSkillsLoadedPerSource: z.ZodOptional<z.ZodNumber>;
+            maxSkillsInPrompt: z.ZodOptional<z.ZodNumber>;
+            maxSkillsPromptChars: z.ZodOptional<z.ZodNumber>;
+            maxSkillFileBytes: z.ZodOptional<z.ZodNumber>;
         }, z.core.$strict>>;
         entries: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodObject<{
             enabled: z.ZodOptional<z.ZodBoolean>;

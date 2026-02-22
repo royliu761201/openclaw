@@ -24,6 +24,19 @@ export type InputFileLimits = {
     timeoutMs: number;
     pdf: InputPdfLimits;
 };
+export type InputFileLimitsConfig = {
+    allowUrl?: boolean;
+    allowedMimes?: string[];
+    maxBytes?: number;
+    maxChars?: number;
+    maxRedirects?: number;
+    timeoutMs?: number;
+    pdf?: {
+        maxPages?: number;
+        maxPixels?: number;
+        minTextChars?: number;
+    };
+};
 export type InputImageLimits = {
     allowUrl: boolean;
     urlAllowlist?: string[];
@@ -66,6 +79,7 @@ export declare function parseContentType(value: string | undefined): {
     charset?: string;
 };
 export declare function normalizeMimeList(values: string[] | undefined, fallback: string[]): Set<string>;
+export declare function resolveInputFileLimits(config?: InputFileLimitsConfig): InputFileLimits;
 export declare function fetchWithGuard(params: {
     url: string;
     maxBytes: number;

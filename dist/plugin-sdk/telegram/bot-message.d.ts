@@ -12,7 +12,6 @@ type TelegramMessageProcessorDeps = Omit<BuildTelegramMessageContextParams, "pri
     streamMode: TelegramStreamMode;
     textLimit: number;
     opts: Pick<TelegramBotOptions, "token">;
-    resolveBotTopicsEnabled: (ctx: TelegramContext) => boolean | Promise<boolean>;
 };
 export declare const createTelegramMessageProcessor: (deps: TelegramMessageProcessorDeps) => (primaryCtx: TelegramContext, allMedia: TelegramMediaRef[], storeAllowFrom: string[], options?: {
     messageIdOverride?: string;

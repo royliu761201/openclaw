@@ -3,6 +3,8 @@
  * Prefers common interface names (en0, eth0) then falls back to any external IPv4.
  */
 export declare function pickPrimaryLanIPv4(): string | undefined;
+export declare function normalizeHostHeader(hostHeader?: string): string;
+export declare function resolveHostName(hostHeader?: string): string;
 export declare function isLoopbackAddress(ip: string | undefined): boolean;
 /**
  * Returns true if the IP belongs to a private or loopback network range.

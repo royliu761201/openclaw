@@ -1,18 +1,18 @@
 import type { CronConfig } from "../../config/types.cron.js";
 import type { HeartbeatRunResult } from "../../infra/heartbeat-wake.js";
-import type { CronJob, CronJobCreate, CronJobPatch, CronStoreFile } from "../types.js";
+import type { CronJob, CronJobCreate, CronJobPatch, CronRunOutcome, CronRunStatus, CronRunTelemetry, CronStoreFile } from "../types.js";
 export type CronEvent = {
     jobId: string;
     action: "added" | "updated" | "removed" | "started" | "finished";
     runAtMs?: number;
     durationMs?: number;
-    status?: "ok" | "error" | "skipped";
+    status?: CronRunStatus;
     error?: string;
     summary?: string;
     sessionId?: string;
     sessionKey?: string;
     nextRunAtMs?: number;
-};
+} & CronRunTelemetry;
 export type Logger = {
     debug: (obj: unknown, msg?: string) => void;
     info: (obj: unknown, msg?: string) => void;
@@ -34,26 +34,41 @@ export type CronServiceDeps = {
     sessionStorePath?: string;
     enqueueSystemEvent: (text: string, opts?: {
         agentId?: string;
+        sessionKey?: string;
+        contextKey?: string;
     }) => void;
     requestHeartbeatNow: (opts?: {
         reason?: string;
+        agentId?: string;
+        sessionKey?: string;
     }) => void;
     runHeartbeatOnce?: (opts?: {
         reason?: string;
         agentId?: string;
+        sessionKey?: string;
     }) => Promise<HeartbeatRunResult>;
+    /**
+     * WakeMode=now: max time to wait for runHeartbeatOnce to stop returning
+     * { status:"skipped", reason:"requests-in-flight" } before falling back to
+     * requestHeartbeatNow.
+     */
+    wakeNowHeartbeatBusyMaxWaitMs?: number;
+    /** WakeMode=now: delay between runHeartbeatOnce retries while busy. */
+    wakeNowHeartbeatBusyRetryDelayMs?: number;
     runIsolatedAgentJob: (params: {
         job: CronJob;
         message: string;
     }) => Promise<{
-        status: "ok" | "error" | "skipped";
         summary?: string;
         /** Last non-empty agent text output (not truncated). */
         outputText?: string;
-        error?: string;
-        sessionId?: string;
-        sessionKey?: string;
-    }>;
+        /**
+         * `true` when the isolated run already delivered its output to the target
+         * channel (including matching messaging-tool sends). See:
+         * https://github.com/openclaw/openclaw/issues/15692
+         */
+        delivered?: boolean;
+    } & CronRunOutcome & CronRunTelemetry>;
     onEvent?: (evt: CronEvent) => void;
 };
 export type CronServiceDepsInternal = Omit<CronServiceDeps, "nowMs"> & {

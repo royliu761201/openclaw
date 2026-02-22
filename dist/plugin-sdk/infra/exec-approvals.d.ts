@@ -1,6 +1,29 @@
+export * from "./exec-approvals-analysis.js";
+export * from "./exec-approvals-allowlist.js";
 export type ExecHost = "sandbox" | "gateway" | "node";
 export type ExecSecurity = "deny" | "allowlist" | "full";
 export type ExecAsk = "off" | "on-miss" | "always";
+export type ExecApprovalRequest = {
+    id: string;
+    request: {
+        command: string;
+        cwd?: string | null;
+        host?: string | null;
+        security?: string | null;
+        ask?: string | null;
+        agentId?: string | null;
+        resolvedPath?: string | null;
+        sessionKey?: string | null;
+    };
+    createdAtMs: number;
+    expiresAtMs: number;
+};
+export type ExecApprovalResolved = {
+    id: string;
+    decision: ExecApprovalDecision;
+    resolvedBy?: string | null;
+    ts: number;
+};
 export type ExecApprovalsDefaults = {
     security?: ExecSecurity;
     ask?: ExecAsk;
@@ -42,10 +65,14 @@ export type ExecApprovalsResolved = {
     allowlist: ExecAllowlistEntry[];
     file: ExecApprovalsFile;
 };
-export declare const DEFAULT_SAFE_BINS: string[];
+export declare const DEFAULT_EXEC_APPROVAL_TIMEOUT_MS = 120000;
 export declare function resolveExecApprovalsPath(): string;
 export declare function resolveExecApprovalsSocketPath(): string;
 export declare function normalizeExecApprovals(file: ExecApprovalsFile): ExecApprovalsFile;
+export declare function mergeExecApprovalsSocketDefaults(params: {
+    normalized: ExecApprovalsFile;
+    current?: ExecApprovalsFile;
+}): ExecApprovalsFile;
 export declare function readExecApprovalsSnapshot(): ExecApprovalsSnapshot;
 export declare function loadExecApprovals(): ExecApprovalsFile;
 export declare function saveExecApprovals(file: ExecApprovalsFile): void;
@@ -65,76 +92,6 @@ export declare function resolveExecApprovalsFromFile(params: {
     socketPath?: string;
     token?: string;
 }): ExecApprovalsResolved;
-type CommandResolution = {
-    rawExecutable: string;
-    resolvedPath?: string;
-    executableName: string;
-};
-export declare function resolveCommandResolution(command: string, cwd?: string, env?: NodeJS.ProcessEnv): CommandResolution | null;
-export declare function resolveCommandResolutionFromArgv(argv: string[], cwd?: string, env?: NodeJS.ProcessEnv): CommandResolution | null;
-export declare function matchAllowlist(entries: ExecAllowlistEntry[], resolution: CommandResolution | null): ExecAllowlistEntry | null;
-export type ExecCommandSegment = {
-    raw: string;
-    argv: string[];
-    resolution: CommandResolution | null;
-};
-export type ExecCommandAnalysis = {
-    ok: boolean;
-    reason?: string;
-    segments: ExecCommandSegment[];
-    chains?: ExecCommandSegment[][];
-};
-export declare function analyzeShellCommand(params: {
-    command: string;
-    cwd?: string;
-    env?: NodeJS.ProcessEnv;
-    platform?: string | null;
-}): ExecCommandAnalysis;
-export declare function analyzeArgvCommand(params: {
-    argv: string[];
-    cwd?: string;
-    env?: NodeJS.ProcessEnv;
-}): ExecCommandAnalysis;
-export declare function normalizeSafeBins(entries?: string[]): Set<string>;
-export declare function resolveSafeBins(entries?: string[] | null): Set<string>;
-export declare function isSafeBinUsage(params: {
-    argv: string[];
-    resolution: CommandResolution | null;
-    safeBins: Set<string>;
-    cwd?: string;
-    fileExists?: (filePath: string) => boolean;
-}): boolean;
-export type ExecAllowlistEvaluation = {
-    allowlistSatisfied: boolean;
-    allowlistMatches: ExecAllowlistEntry[];
-};
-export declare function evaluateExecAllowlist(params: {
-    analysis: ExecCommandAnalysis;
-    allowlist: ExecAllowlistEntry[];
-    safeBins: Set<string>;
-    cwd?: string;
-    skillBins?: Set<string>;
-    autoAllowSkills?: boolean;
-}): ExecAllowlistEvaluation;
-export type ExecAllowlistAnalysis = {
-    analysisOk: boolean;
-    allowlistSatisfied: boolean;
-    allowlistMatches: ExecAllowlistEntry[];
-    segments: ExecCommandSegment[];
-};
-/**
- * Evaluates allowlist for shell commands (including &&, ||, ;) and returns analysis metadata.
- */
-export declare function evaluateShellAllowlist(params: {
-    command: string;
-    allowlist: ExecAllowlistEntry[];
-    safeBins: Set<string>;
-    cwd?: string;
-    env?: NodeJS.ProcessEnv;
-    skillBins?: Set<string>;
-    autoAllowSkills?: boolean;
-    platform?: string | null;
-}): ExecAllowlistAnalysis;
 export declare function requiresExecApproval(params: {
     ask: ExecAsk;
     security: ExecSecurity;
@@ -152,4 +109,3 @@ export declare function requestExecApprovalViaSocket(params: {
     request: Record<string, unknown>;
     timeoutMs?: number;
 }): Promise<ExecApprovalDecision | null>;
-export {};

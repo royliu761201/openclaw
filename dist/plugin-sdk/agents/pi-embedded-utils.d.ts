@@ -1,4 +1,6 @@
+import type { AgentMessage } from "@mariozechner/pi-agent-core";
 import type { AssistantMessage } from "@mariozechner/pi-ai";
+export declare function isAssistantMessage(msg: AgentMessage | undefined): msg is AssistantMessage;
 /**
  * Strip malformed Minimax tool invocations that leak into text content.
  * Minimax sometimes embeds tool calls as XML in text blocks instead of

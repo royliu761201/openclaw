@@ -34,6 +34,7 @@ export type SandboxBrowserConfig = {
     allowHostControl: boolean;
     autoStart: boolean;
     autoStartTimeoutMs: number;
+    binds?: string[];
 };
 export type SandboxPruneConfig = {
     idleHours: number;

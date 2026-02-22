@@ -1,32 +1,6 @@
 import type { AgentTool } from "@mariozechner/pi-agent-core";
 import type { BashSandboxConfig } from "./bash-tools.shared.js";
 import { type ExecAsk, type ExecHost, type ExecSecurity } from "../infra/exec-approvals.js";
-type PtyExitEvent = {
-    exitCode: number;
-    signal?: number;
-};
-type PtyListener<T> = (event: T) => void;
-type PtyHandle = {
-    pid: number;
-    write: (data: string | Buffer) => void;
-    onData: (listener: PtyListener<string>) => void;
-    onExit: (listener: PtyListener<PtyExitEvent>) => void;
-};
-type PtySpawn = (file: string, args: string[] | string, options: {
-    name?: string;
-    cols?: number;
-    rows?: number;
-    cwd?: string;
-    env?: Record<string, string>;
-}) => PtyHandle;
-type PtyModule = {
-    spawn?: PtySpawn;
-    default?: {
-        spawn?: PtySpawn;
-    };
-};
-type PtyModuleLoader = () => Promise<PtyModule>;
-export declare function setPtyModuleLoaderForTests(loader?: PtyModuleLoader): void;
 export type ExecToolDefaults = {
     host?: ExecHost;
     security?: ExecSecurity;
@@ -45,6 +19,7 @@ export type ExecToolDefaults = {
     sessionKey?: string;
     messageProvider?: string;
     notifyOnExit?: boolean;
+    notifyOnExitEmptySuccess?: boolean;
     cwd?: string;
 };
 export type { BashSandboxConfig } from "./bash-tools.shared.js";

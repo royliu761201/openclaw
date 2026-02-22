@@ -73,6 +73,7 @@ export declare function detectAndLoadPromptImages(params: {
     existingImages?: ImageContent[];
     historyMessages?: unknown[];
     maxBytes?: number;
+    maxDimensionPx?: number;
     sandbox?: {
         root: string;
         bridge: SandboxFsBridge;

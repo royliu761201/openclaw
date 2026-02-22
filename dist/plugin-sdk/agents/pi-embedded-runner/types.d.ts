@@ -57,7 +57,9 @@ export type EmbeddedPiRunResult = {
     meta: EmbeddedPiRunMeta;
     didSendViaMessagingTool?: boolean;
     messagingToolSentTexts?: string[];
+    messagingToolSentMediaUrls?: string[];
     messagingToolSentTargets?: MessagingToolSend[];
+    successfulCronAdds?: number;
 };
 export type EmbeddedPiCompactResult = {
     ok: boolean;
@@ -74,6 +76,7 @@ export type EmbeddedPiCompactResult = {
 export type EmbeddedSandboxInfo = {
     enabled: boolean;
     workspaceDir?: string;
+    containerWorkspaceDir?: string;
     workspaceAccess?: "none" | "ro" | "rw";
     agentWorkspaceMount?: string;
     browserBridgeUrl?: string;

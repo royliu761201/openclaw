@@ -1,4 +1,7 @@
-import type { OpenClawConfig } from "../../config/config.js";
+export type { AgentToAgentPolicy, SessionAccessAction, SessionAccessResult, SessionToolsVisibility, } from "./sessions-access.js";
+export { createAgentToAgentPolicy, createSessionVisibilityGuard, resolveEffectiveSessionToolsVisibility, resolveSandboxSessionToolsVisibility, resolveSandboxedSessionToolContext, resolveSessionToolsVisibility, } from "./sessions-access.js";
+export type { SessionReferenceResolution } from "./sessions-resolution.js";
+export { isRequesterSpawnedSessionVisible, listSpawnedSessionKeys, looksLikeSessionId, looksLikeSessionKey, resolveDisplaySessionKey, resolveInternalSessionKey, resolveMainSessionAlias, resolveSessionReference, shouldResolveSessionIdInput, } from "./sessions-resolution.js";
 export type SessionKind = "main" | "group" | "cron" | "hook" | "node" | "other";
 export type SessionListDeliveryContext = {
     channel?: string;
@@ -28,47 +31,6 @@ export type SessionListRow = {
     transcriptPath?: string;
     messages?: unknown[];
 };
-export declare function resolveMainSessionAlias(cfg: OpenClawConfig): {
-    mainKey: string;
-    alias: string;
-    scope: import("../../config/types.base.ts").SessionScope;
-};
-export declare function resolveDisplaySessionKey(params: {
-    key: string;
-    alias: string;
-    mainKey: string;
-}): string;
-export declare function resolveInternalSessionKey(params: {
-    key: string;
-    alias: string;
-    mainKey: string;
-}): string;
-export type AgentToAgentPolicy = {
-    enabled: boolean;
-    matchesAllow: (agentId: string) => boolean;
-    isAllowed: (requesterAgentId: string, targetAgentId: string) => boolean;
-};
-export declare function createAgentToAgentPolicy(cfg: OpenClawConfig): AgentToAgentPolicy;
-export declare function looksLikeSessionId(value: string): boolean;
-export declare function looksLikeSessionKey(value: string): boolean;
-export declare function shouldResolveSessionIdInput(value: string): boolean;
-export type SessionReferenceResolution = {
-    ok: true;
-    key: string;
-    displayKey: string;
-    resolvedViaSessionId: boolean;
-} | {
-    ok: false;
-    status: "error" | "forbidden";
-    error: string;
-};
-export declare function resolveSessionReference(params: {
-    sessionKey: string;
-    alias: string;
-    mainKey: string;
-    requesterInternalKey?: string;
-    restrictToSpawned: boolean;
-}): Promise<SessionReferenceResolution>;
 export declare function classifySessionKind(params: {
     key: string;
     gatewayKind?: string | null;

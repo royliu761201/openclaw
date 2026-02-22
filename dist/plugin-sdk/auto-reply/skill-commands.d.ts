@@ -1,5 +1,6 @@
 import type { OpenClawConfig } from "../config/config.js";
 import { type SkillCommandSpec } from "../agents/skills.js";
+export declare function listReservedChatSlashCommandNames(extraNames?: string[]): Set<string>;
 export declare function listSkillCommandsForWorkspace(params: {
     workspaceDir: string;
     cfg: OpenClawConfig;

@@ -7,3 +7,7 @@ export declare function writeTelegramUpdateOffset(params: {
     updateId: number;
     env?: NodeJS.ProcessEnv;
 }): Promise<void>;
+export declare function deleteTelegramUpdateOffset(params: {
+    accountId?: string;
+    env?: NodeJS.ProcessEnv;
+}): Promise<void>;
