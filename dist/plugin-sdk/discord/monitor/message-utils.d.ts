@@ -12,8 +12,13 @@ export type DiscordChannelInfo = {
     ownerId?: string;
 };
 export declare function __resetDiscordChannelInfoCacheForTest(): void;
+export declare function resolveDiscordMessageChannelId(params: {
+    message: Message;
+    eventChannelId?: string | number | null;
+}): string;
 export declare function resolveDiscordChannelInfo(client: Client, channelId: string): Promise<DiscordChannelInfo | null>;
 export declare function resolveMediaList(message: Message, maxBytes: number): Promise<DiscordMediaInfo[]>;
+export declare function resolveForwardedMediaList(message: Message, maxBytes: number): Promise<DiscordMediaInfo[]>;
 export declare function resolveDiscordMessageText(message: Message, options?: {
     fallbackText?: string;
     includeForwarded?: boolean;

@@ -1,5 +1,6 @@
 import type { AgentSession } from "@mariozechner/pi-coding-agent";
 import type { ReasoningLevel, VerboseLevel } from "../auto-reply/thinking.js";
+import type { OpenClawConfig } from "../config/types.openclaw.js";
 import type { HookRunner } from "../plugins/hooks.js";
 import type { BlockReplyChunking } from "./pi-embedded-block-chunker.js";
 export type ToolResultFormat = "markdown" | "plain";
@@ -20,6 +21,8 @@ export type SubscribeEmbeddedPiSessionParams = {
         text?: string;
         mediaUrls?: string[];
     }) => void | Promise<void>;
+    /** Called when a thinking/reasoning block ends (</think> tag processed). */
+    onReasoningEnd?: () => void | Promise<void>;
     onBlockReply?: (payload: {
         text?: string;
         mediaUrls?: string[];
@@ -42,5 +45,7 @@ export type SubscribeEmbeddedPiSessionParams = {
         data: Record<string, unknown>;
     }) => void | Promise<void>;
     enforceFinalTag?: boolean;
+    config?: OpenClawConfig;
+    sessionKey?: string;
 };
 export type { BlockReplyChunking } from "./pi-embedded-block-chunker.js";

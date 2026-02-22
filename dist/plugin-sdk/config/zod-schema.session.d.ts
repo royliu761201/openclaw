@@ -1,5 +1,5 @@
 import { z } from "zod";
-export declare const SessionSendPolicySchema: z.ZodObject<{
+export declare const SessionSendPolicySchema: z.ZodOptional<z.ZodObject<{
     default: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"allow">, z.ZodLiteral<"deny">]>>;
     rules: z.ZodOptional<z.ZodArray<z.ZodObject<{
         action: z.ZodUnion<readonly [z.ZodLiteral<"allow">, z.ZodLiteral<"deny">]>;
@@ -7,9 +7,10 @@ export declare const SessionSendPolicySchema: z.ZodObject<{
             channel: z.ZodOptional<z.ZodString>;
             chatType: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"direct">, z.ZodLiteral<"group">, z.ZodLiteral<"channel">, z.ZodLiteral<"dm">]>>;
             keyPrefix: z.ZodOptional<z.ZodString>;
+            rawKeyPrefix: z.ZodOptional<z.ZodString>;
         }, z.core.$strict>>;
     }, z.core.$strict>>>;
-}, z.core.$strict>;
+}, z.core.$strict>>;
 export declare const SessionSchema: z.ZodOptional<z.ZodObject<{
     scope: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"per-sender">, z.ZodLiteral<"global">]>>;
     dmScope: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"main">, z.ZodLiteral<"per-peer">, z.ZodLiteral<"per-channel-peer">, z.ZodLiteral<"per-account-channel-peer">]>>;
@@ -52,7 +53,7 @@ export declare const SessionSchema: z.ZodOptional<z.ZodObject<{
     typingIntervalSeconds: z.ZodOptional<z.ZodNumber>;
     typingMode: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"never">, z.ZodLiteral<"instant">, z.ZodLiteral<"thinking">, z.ZodLiteral<"message">]>>;
     mainKey: z.ZodOptional<z.ZodString>;
-    sendPolicy: z.ZodOptional<z.ZodObject<{
+    sendPolicy: z.ZodOptional<z.ZodOptional<z.ZodObject<{
         default: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"allow">, z.ZodLiteral<"deny">]>>;
         rules: z.ZodOptional<z.ZodArray<z.ZodObject<{
             action: z.ZodUnion<readonly [z.ZodLiteral<"allow">, z.ZodLiteral<"deny">]>;
@@ -60,16 +61,17 @@ export declare const SessionSchema: z.ZodOptional<z.ZodObject<{
                 channel: z.ZodOptional<z.ZodString>;
                 chatType: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"direct">, z.ZodLiteral<"group">, z.ZodLiteral<"channel">, z.ZodLiteral<"dm">]>>;
                 keyPrefix: z.ZodOptional<z.ZodString>;
+                rawKeyPrefix: z.ZodOptional<z.ZodString>;
             }, z.core.$strict>>;
         }, z.core.$strict>>>;
-    }, z.core.$strict>>;
+    }, z.core.$strict>>>;
     agentToAgent: z.ZodOptional<z.ZodObject<{
         maxPingPongTurns: z.ZodOptional<z.ZodNumber>;
     }, z.core.$strict>>;
     maintenance: z.ZodOptional<z.ZodObject<{
         mode: z.ZodOptional<z.ZodEnum<{
-            enforce: "enforce";
             warn: "warn";
+            enforce: "enforce";
         }>>;
         pruneAfter: z.ZodOptional<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>;
         pruneDays: z.ZodOptional<z.ZodNumber>;
@@ -115,6 +117,7 @@ export declare const MessagesSchema: z.ZodOptional<z.ZodObject<{
         "group-all": "group-all";
     }>>;
     removeAckAfterReply: z.ZodOptional<z.ZodBoolean>;
+    suppressToolErrors: z.ZodOptional<z.ZodBoolean>;
     tts: z.ZodOptional<z.ZodObject<{
         auto: z.ZodOptional<z.ZodEnum<{
             off: "off";

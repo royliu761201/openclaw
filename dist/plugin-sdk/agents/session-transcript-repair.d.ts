@@ -11,6 +11,7 @@ export type ToolCallInputRepairReport = {
     droppedToolCalls: number;
     droppedAssistantMessages: number;
 };
+export declare function stripToolResultDetails(messages: AgentMessage[]): AgentMessage[];
 export declare function repairToolCallInputs(messages: AgentMessage[]): ToolCallInputRepairReport;
 export declare function sanitizeToolCallInputs(messages: AgentMessage[]): AgentMessage[];
 export declare function sanitizeToolUseResultPairing(messages: AgentMessage[]): AgentMessage[];

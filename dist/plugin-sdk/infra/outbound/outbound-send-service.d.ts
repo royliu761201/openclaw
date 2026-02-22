@@ -16,6 +16,8 @@ export type OutboundSendContext = {
     cfg: OpenClawConfig;
     channel: ChannelId;
     params: Record<string, unknown>;
+    /** Active agent id for per-agent outbound media root scoping. */
+    agentId?: string;
     accountId?: string | null;
     gateway?: OutboundGatewayContext;
     toolContext?: ChannelThreadingToolContext;
@@ -28,6 +30,7 @@ export type OutboundSendContext = {
         mediaUrls?: string[];
     };
     abortSignal?: AbortSignal;
+    silent?: boolean;
 };
 export declare function executeSendAction(params: {
     ctx: OutboundSendContext;
@@ -51,7 +54,10 @@ export declare function executePollAction(params: {
     question: string;
     options: string[];
     maxSelections: number;
+    durationSeconds?: number;
     durationHours?: number;
+    threadId?: string;
+    isAnonymous?: boolean;
 }): Promise<{
     handledBy: "plugin" | "core";
     payload: unknown;

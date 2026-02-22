@@ -1,4 +1,5 @@
 import type { AgentTool, AgentToolResult } from "@mariozechner/pi-agent-core";
+import type { ImageSanitizationLimits } from "../image-sanitization.js";
 export type AnyAgentTool = AgentTool<any, unknown>;
 export type StringParamOptions = {
     required?: boolean;
@@ -47,10 +48,12 @@ export declare function imageResult(params: {
     mimeType: string;
     extraText?: string;
     details?: Record<string, unknown>;
+    imageSanitization?: ImageSanitizationLimits;
 }): Promise<AgentToolResult<unknown>>;
 export declare function imageResultFromFile(params: {
     label: string;
     path: string;
     extraText?: string;
     details?: Record<string, unknown>;
+    imageSanitization?: ImageSanitizationLimits;
 }): Promise<AgentToolResult<unknown>>;

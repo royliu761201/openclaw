@@ -1,7 +1,6 @@
-export type DiscordProbe = {
-    ok: boolean;
+import type { BaseProbeResult } from "../channels/plugins/types.js";
+export type DiscordProbe = BaseProbeResult & {
     status?: number | null;
-    error?: string | null;
     elapsedMs: number;
     bot?: {
         id?: string | null;

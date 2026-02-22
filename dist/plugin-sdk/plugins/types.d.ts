@@ -248,20 +248,63 @@ export type PluginDiagnostic = {
     pluginId?: string;
     source?: string;
 };
-export type PluginHookName = "before_agent_start" | "agent_end" | "before_compaction" | "after_compaction" | "message_received" | "message_sending" | "message_sent" | "before_tool_call" | "after_tool_call" | "tool_result_persist" | "session_start" | "session_end" | "gateway_start" | "gateway_stop";
+export type PluginHookName = "before_model_resolve" | "before_prompt_build" | "before_agent_start" | "llm_input" | "llm_output" | "agent_end" | "before_compaction" | "after_compaction" | "before_reset" | "message_received" | "message_sending" | "message_sent" | "before_tool_call" | "after_tool_call" | "tool_result_persist" | "before_message_write" | "session_start" | "session_end" | "gateway_start" | "gateway_stop";
 export type PluginHookAgentContext = {
     agentId?: string;
     sessionKey?: string;
+    sessionId?: string;
     workspaceDir?: string;
     messageProvider?: string;
 };
-export type PluginHookBeforeAgentStartEvent = {
+export type PluginHookBeforeModelResolveEvent = {
+    /** User prompt for this run. No session messages are available yet in this phase. */
     prompt: string;
-    messages?: unknown[];
 };
-export type PluginHookBeforeAgentStartResult = {
+export type PluginHookBeforeModelResolveResult = {
+    /** Override the model for this agent run. E.g. "llama3.3:8b" */
+    modelOverride?: string;
+    /** Override the provider for this agent run. E.g. "ollama" */
+    providerOverride?: string;
+};
+export type PluginHookBeforePromptBuildEvent = {
+    prompt: string;
+    /** Session messages prepared for this run. */
+    messages: unknown[];
+};
+export type PluginHookBeforePromptBuildResult = {
     systemPrompt?: string;
     prependContext?: string;
+};
+export type PluginHookBeforeAgentStartEvent = {
+    prompt: string;
+    /** Optional because legacy hook can run in pre-session phase. */
+    messages?: unknown[];
+};
+export type PluginHookBeforeAgentStartResult = PluginHookBeforePromptBuildResult & PluginHookBeforeModelResolveResult;
+export type PluginHookLlmInputEvent = {
+    runId: string;
+    sessionId: string;
+    provider: string;
+    model: string;
+    systemPrompt?: string;
+    prompt: string;
+    historyMessages: unknown[];
+    imagesCount: number;
+};
+export type PluginHookLlmOutputEvent = {
+    runId: string;
+    sessionId: string;
+    provider: string;
+    model: string;
+    assistantTexts: string[];
+    lastAssistant?: unknown;
+    usage?: {
+        input?: number;
+        output?: number;
+        cacheRead?: number;
+        cacheWrite?: number;
+        total?: number;
+    };
 };
 export type PluginHookAgentEndEvent = {
     messages: unknown[];
@@ -270,13 +313,30 @@ export type PluginHookAgentEndEvent = {
     durationMs?: number;
 };
 export type PluginHookBeforeCompactionEvent = {
+    /** Total messages in the session before any truncation or compaction */
     messageCount: number;
+    /** Messages being fed to the compaction LLM (after history-limit truncation) */
+    compactingCount?: number;
     tokenCount?: number;
+    messages?: unknown[];
+    /** Path to the session JSONL transcript. All messages are already on disk
+     *  before compaction starts, so plugins can read this file asynchronously
+     *  and process in parallel with the compaction LLM call. */
+    sessionFile?: string;
+};
+export type PluginHookBeforeResetEvent = {
+    sessionFile?: string;
+    messages?: unknown[];
+    reason?: string;
 };
 export type PluginHookAfterCompactionEvent = {
     messageCount: number;
     tokenCount?: number;
     compactedCount: number;
+    /** Path to the session JSONL transcript. All pre-compaction messages are
+     *  preserved on disk, so plugins can read and process them asynchronously
+     *  without blocking the compaction pipeline. */
+    sessionFile?: string;
 };
 export type PluginHookMessageContext = {
     channelId: string;
@@ -345,6 +405,15 @@ export type PluginHookToolResultPersistEvent = {
 export type PluginHookToolResultPersistResult = {
     message?: AgentMessage;
 };
+export type PluginHookBeforeMessageWriteEvent = {
+    message: AgentMessage;
+    sessionKey?: string;
+    agentId?: string;
+};
+export type PluginHookBeforeMessageWriteResult = {
+    block?: boolean;
+    message?: AgentMessage;
+};
 export type PluginHookSessionContext = {
     agentId?: string;
     sessionId: string;
@@ -368,16 +437,25 @@ export type PluginHookGatewayStopEvent = {
     reason?: string;
 };
 export type PluginHookHandlerMap = {
+    before_model_resolve: (event: PluginHookBeforeModelResolveEvent, ctx: PluginHookAgentContext) => Promise<PluginHookBeforeModelResolveResult | void> | PluginHookBeforeModelResolveResult | void;
+    before_prompt_build: (event: PluginHookBeforePromptBuildEvent, ctx: PluginHookAgentContext) => Promise<PluginHookBeforePromptBuildResult | void> | PluginHookBeforePromptBuildResult | void;
     before_agent_start: (event: PluginHookBeforeAgentStartEvent, ctx: PluginHookAgentContext) => Promise<PluginHookBeforeAgentStartResult | void> | PluginHookBeforeAgentStartResult | void;
+    llm_input: (event: PluginHookLlmInputEvent, ctx: PluginHookAgentContext) => Promise<void> | void;
+    llm_output: (event: PluginHookLlmOutputEvent, ctx: PluginHookAgentContext) => Promise<void> | void;
     agent_end: (event: PluginHookAgentEndEvent, ctx: PluginHookAgentContext) => Promise<void> | void;
     before_compaction: (event: PluginHookBeforeCompactionEvent, ctx: PluginHookAgentContext) => Promise<void> | void;
     after_compaction: (event: PluginHookAfterCompactionEvent, ctx: PluginHookAgentContext) => Promise<void> | void;
+    before_reset: (event: PluginHookBeforeResetEvent, ctx: PluginHookAgentContext) => Promise<void> | void;
     message_received: (event: PluginHookMessageReceivedEvent, ctx: PluginHookMessageContext) => Promise<void> | void;
     message_sending: (event: PluginHookMessageSendingEvent, ctx: PluginHookMessageContext) => Promise<PluginHookMessageSendingResult | void> | PluginHookMessageSendingResult | void;
     message_sent: (event: PluginHookMessageSentEvent, ctx: PluginHookMessageContext) => Promise<void> | void;
     before_tool_call: (event: PluginHookBeforeToolCallEvent, ctx: PluginHookToolContext) => Promise<PluginHookBeforeToolCallResult | void> | PluginHookBeforeToolCallResult | void;
     after_tool_call: (event: PluginHookAfterToolCallEvent, ctx: PluginHookToolContext) => Promise<void> | void;
     tool_result_persist: (event: PluginHookToolResultPersistEvent, ctx: PluginHookToolResultPersistContext) => PluginHookToolResultPersistResult | void;
+    before_message_write: (event: PluginHookBeforeMessageWriteEvent, ctx: {
+        agentId?: string;
+        sessionKey?: string;
+    }) => PluginHookBeforeMessageWriteResult | void;
     session_start: (event: PluginHookSessionStartEvent, ctx: PluginHookSessionContext) => Promise<void> | void;
     session_end: (event: PluginHookSessionEndEvent, ctx: PluginHookSessionContext) => Promise<void> | void;
     gateway_start: (event: PluginHookGatewayStartEvent, ctx: PluginHookGatewayContext) => Promise<void> | void;

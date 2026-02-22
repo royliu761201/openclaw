@@ -16,6 +16,7 @@ export declare function execDocker(args: string[], opts?: ExecDockerOptions): Pr
     stderr: string;
     code: number;
 }>;
+export declare function readDockerContainerLabel(containerName: string, label: string): Promise<string | null>;
 export declare function readDockerPort(containerName: string, port: number): Promise<number | null>;
 export declare function ensureDockerImage(image: string): Promise<void>;
 export declare function dockerContainerState(name: string): Promise<{

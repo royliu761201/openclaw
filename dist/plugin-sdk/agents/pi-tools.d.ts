@@ -1,10 +1,15 @@
 import type { OpenClawConfig } from "../config/config.js";
+import type { ToolLoopDetectionConfig } from "../config/types.tools.js";
 import type { ModelAuthMode } from "./model-auth.js";
 import type { AnyAgentTool } from "./pi-tools.types.js";
 import type { SandboxContext } from "./sandbox.js";
 import { type ExecToolDefaults, type ProcessToolDefaults } from "./bash-tools.js";
 import { assertRequiredParams, normalizeToolParams, patchToolSchemaForClaudeCompatibility, wrapToolParamNormalization } from "./pi-tools.read.js";
 import { cleanToolSchemaForGemini } from "./pi-tools.schema.js";
+export declare function resolveToolLoopDetectionConfig(params: {
+    cfg?: OpenClawConfig;
+    agentId?: string;
+}): ToolLoopDetectionConfig | undefined;
 export declare const __testing: {
     readonly cleanToolSchemaForGemini: typeof cleanToolSchemaForGemini;
     readonly normalizeToolParams: typeof normalizeToolParams;
@@ -31,6 +36,8 @@ export declare function createOpenClawCodingTools(options?: {
     modelProvider?: string;
     /** Model id for the current provider (used for model-specific tool gating). */
     modelId?: string;
+    /** Model context window in tokens (used to scale read-tool output budget). */
+    modelContextWindowTokens?: number;
     /**
      * Auth mode for the current provider. We only need this for Anthropic OAuth
      * tool-name blocking quirks.

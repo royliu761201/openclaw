@@ -3,6 +3,8 @@ import { type GatewayClientMode, type GatewayClientName } from "../utils/message
 import { type EventFrame, type HelloOk } from "./protocol/index.js";
 export type GatewayClientOptions = {
     url?: string;
+    connectDelayMs?: number;
+    tickWatchMinIntervalMs?: number;
     token?: string;
     password?: string;
     instanceId?: string;

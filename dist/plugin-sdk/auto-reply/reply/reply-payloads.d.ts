@@ -14,6 +14,10 @@ export declare function filterMessagingToolDuplicates(params: {
     payloads: ReplyPayload[];
     sentTexts: string[];
 }): ReplyPayload[];
+export declare function filterMessagingToolMediaDuplicates(params: {
+    payloads: ReplyPayload[];
+    sentMediaUrls: string[];
+}): ReplyPayload[];
 export declare function shouldSuppressMessagingToolReplies(params: {
     messageProvider?: string;
     messagingToolSentTargets?: MessagingToolSend[];

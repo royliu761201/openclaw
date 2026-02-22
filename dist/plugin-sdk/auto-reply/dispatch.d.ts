@@ -4,6 +4,11 @@ import type { FinalizedMsgContext, MsgContext } from "./templating.js";
 import type { GetReplyOptions } from "./types.js";
 import { type ReplyDispatcher, type ReplyDispatcherOptions, type ReplyDispatcherWithTypingOptions } from "./reply/reply-dispatcher.js";
 export type DispatchInboundResult = DispatchFromConfigResult;
+export declare function withReplyDispatcher<T>(params: {
+    dispatcher: ReplyDispatcher;
+    run: () => Promise<T>;
+    onSettled?: () => void | Promise<void>;
+}): Promise<T>;
 export declare function dispatchInboundMessage(params: {
     ctx: MsgContext | FinalizedMsgContext;
     cfg: OpenClawConfig;

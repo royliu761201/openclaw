@@ -12,11 +12,15 @@ export type EmbeddingProvider = {
     embedQuery: (text: string) => Promise<number[]>;
     embedBatch: (texts: string[]) => Promise<number[][]>;
 };
+export type EmbeddingProviderId = "openai" | "local" | "gemini" | "voyage";
+export type EmbeddingProviderRequest = EmbeddingProviderId | "auto";
+export type EmbeddingProviderFallback = EmbeddingProviderId | "none";
 export type EmbeddingProviderResult = {
-    provider: EmbeddingProvider;
-    requestedProvider: "openai" | "local" | "gemini" | "voyage" | "auto";
-    fallbackFrom?: "openai" | "local" | "gemini" | "voyage";
+    provider: EmbeddingProvider | null;
+    requestedProvider: EmbeddingProviderRequest;
+    fallbackFrom?: EmbeddingProviderId;
     fallbackReason?: string;
+    providerUnavailableReason?: string;
     openAi?: OpenAiEmbeddingClient;
     gemini?: GeminiEmbeddingClient;
     voyage?: VoyageEmbeddingClient;
@@ -24,17 +28,18 @@ export type EmbeddingProviderResult = {
 export type EmbeddingProviderOptions = {
     config: OpenClawConfig;
     agentDir?: string;
-    provider: "openai" | "local" | "gemini" | "voyage" | "auto";
+    provider: EmbeddingProviderRequest;
     remote?: {
         baseUrl?: string;
         apiKey?: string;
         headers?: Record<string, string>;
     };
     model: string;
-    fallback: "openai" | "gemini" | "local" | "voyage" | "none";
+    fallback: EmbeddingProviderFallback;
     local?: {
         modelPath?: string;
         modelCacheDir?: string;
     };
 };
+export declare const DEFAULT_LOCAL_MODEL = "hf:ggml-org/embeddinggemma-300m-qat-q8_0-GGUF/embeddinggemma-300m-qat-Q8_0.gguf";
 export declare function createEmbeddingProvider(options: EmbeddingProviderOptions): Promise<EmbeddingProviderResult>;

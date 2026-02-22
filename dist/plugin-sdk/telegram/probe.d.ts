@@ -1,7 +1,6 @@
-export type TelegramProbe = {
-    ok: boolean;
+import type { BaseProbeResult } from "../channels/plugins/types.js";
+export type TelegramProbe = BaseProbeResult & {
     status?: number | null;
-    error?: string | null;
     elapsedMs: number;
     bot?: {
         id?: number | null;

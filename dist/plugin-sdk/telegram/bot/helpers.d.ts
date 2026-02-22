@@ -1,10 +1,31 @@
 import type { Chat, Message } from "@grammyjs/types";
+import type { TelegramGroupConfig, TelegramTopicConfig } from "../../config/types.js";
 import type { TelegramStreamMode } from "./types.js";
 import { type NormalizedLocation } from "../../channels/location.js";
+import { type NormalizedAllowFrom } from "../bot-access.js";
 export type TelegramThreadSpec = {
     id?: number;
     scope: "dm" | "forum" | "none";
 };
+export declare function resolveTelegramGroupAllowFromContext(params: {
+    chatId: string | number;
+    accountId?: string;
+    isForum?: boolean;
+    messageThreadId?: number | null;
+    groupAllowFrom?: Array<string | number>;
+    resolveTelegramGroupConfig: (chatId: string | number, messageThreadId?: number) => {
+        groupConfig?: TelegramGroupConfig;
+        topicConfig?: TelegramTopicConfig;
+    };
+}): Promise<{
+    resolvedThreadId?: number;
+    storeAllowFrom: string[];
+    groupConfig?: TelegramGroupConfig;
+    topicConfig?: TelegramTopicConfig;
+    groupAllowOverride?: Array<string | number>;
+    effectiveGroupAllow: NormalizedAllowFrom;
+    hasGroupAllowOverride: boolean;
+}>;
 /**
  * Resolve the thread ID for Telegram forum topics.
  * For non-forum groups, returns undefined even if messageThreadId is present
@@ -22,8 +43,17 @@ export declare function resolveTelegramThreadSpec(params: {
 }): TelegramThreadSpec;
 /**
  * Build thread params for Telegram API calls (messages, media).
+ *
+ * IMPORTANT: Thread IDs behave differently based on chat type:
+ * - DMs (private chats): Include message_thread_id when present (DM topics)
+ * - Forum topics: Skip thread_id=1 (General topic), include others
+ * - Regular groups: Thread IDs are ignored by Telegram
+ *
  * General forum topic (id=1) must be treated like a regular supergroup send:
  * Telegram rejects sendMessage/sendMedia with message_thread_id=1 ("thread not found").
+ *
+ * @param thread - Thread specification with ID and scope
+ * @returns API params object or undefined if thread_id should be omitted
  */
 export declare function buildTelegramThreadParams(thread?: TelegramThreadSpec | null): {
     message_thread_id: number;
@@ -56,6 +86,7 @@ export declare function buildTelegramParentPeer(params: {
     id: string;
 } | undefined;
 export declare function buildSenderName(msg: Message): string | undefined;
+export declare function resolveTelegramMediaPlaceholder(msg: Pick<Message, "photo" | "video" | "video_note" | "audio" | "voice" | "document" | "sticker"> | undefined | null): string | undefined;
 export declare function buildSenderLabel(msg: Message, senderId?: number | string): string;
 export declare function buildGroupLabel(msg: Message, chatId: number | string, messageThreadId?: number): string;
 export declare function hasBotMention(msg: Message, botUsername: string): boolean;

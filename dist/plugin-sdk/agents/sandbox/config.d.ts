@@ -1,5 +1,9 @@
 import type { OpenClawConfig } from "../../config/config.js";
 import type { SandboxBrowserConfig, SandboxConfig, SandboxDockerConfig, SandboxPruneConfig, SandboxScope } from "./types.js";
+export declare function resolveSandboxBrowserDockerCreateConfig(params: {
+    docker: SandboxDockerConfig;
+    browser: SandboxBrowserConfig;
+}): SandboxDockerConfig;
 export declare function resolveSandboxScope(params: {
     scope?: SandboxScope;
     perSession?: boolean;

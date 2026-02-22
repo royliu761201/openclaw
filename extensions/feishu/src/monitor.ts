@@ -1,16 +1,16 @@
-import * as Lark from "@larksuiteoapi/node-sdk";
 import * as http from "http";
+import * as Lark from "@larksuiteoapi/node-sdk";
 import {
   type ClawdbotConfig,
   type RuntimeEnv,
   type HistoryEntry,
   installRequestBodyLimitGuard,
 } from "openclaw/plugin-sdk";
-import type { ResolvedFeishuAccount } from "./types.js";
 import { resolveFeishuAccount, listEnabledFeishuAccounts } from "./accounts.js";
 import { handleFeishuMessage, type FeishuMessageEvent, type FeishuBotAddedEvent } from "./bot.js";
 import { createFeishuWSClient, createEventDispatcher } from "./client.js";
 import { probeFeishu } from "./probe.js";
+import type { ResolvedFeishuAccount } from "./types.js";
 
 export type MonitorFeishuOpts = {
   config?: ClawdbotConfig;
@@ -40,7 +40,7 @@ async function fetchBotOpenId(account: ResolvedFeishuAccount): Promise<string | 
  * When fireAndForget is true (webhook mode), message handling is not awaited
  * to avoid blocking the HTTP response (Lark requires <3s response).
  */
-function registerEventHandlers(
+export function registerEventHandlers(
   eventDispatcher: Lark.EventDispatcher,
   context: {
     cfg: ClawdbotConfig;
@@ -58,6 +58,9 @@ function registerEventHandlers(
     "im.message.receive_v1": async (data) => {
       try {
         const event = data as unknown as FeishuMessageEvent;
+        log(
+          `feishu[${accountId}]: raw event received: type=${event.message.message_type}, content=${event.message.content.substring(0, 200)}`,
+        );
         const promise = handleFeishuMessage({
           cfg,
           event,

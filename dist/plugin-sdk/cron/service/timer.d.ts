@@ -2,7 +2,9 @@ import type { CronJob } from "../types.js";
 import type { CronEvent, CronServiceState } from "./state.js";
 export declare function armTimer(state: CronServiceState): void;
 export declare function onTimer(state: CronServiceState): Promise<void>;
-export declare function runMissedJobs(state: CronServiceState): Promise<void>;
+export declare function runMissedJobs(state: CronServiceState, opts?: {
+    skipJobIds?: ReadonlySet<string>;
+}): Promise<void>;
 export declare function runDueJobs(state: CronServiceState): Promise<void>;
 /**
  * Execute a job. This version is used by the `run` command and other

@@ -1,9 +1,4 @@
-export type DeviceAuthEntry = {
-    token: string;
-    role: string;
-    scopes: string[];
-    updatedAtMs: number;
-};
+import { type DeviceAuthEntry } from "../shared/device-auth.js";
 export declare function loadDeviceAuthToken(params: {
     deviceId: string;
     role: string;

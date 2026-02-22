@@ -1,11 +1,13 @@
 import type { OpenClawConfig } from "../config/config.js";
 import type { MemoryEmbeddingProbeResult, MemoryProviderStatus, MemorySearchManager, MemorySearchResult, MemorySyncProgressUpdate } from "./types.js";
 import type { ResolvedMemoryBackendConfig } from "./backend-config.js";
+type QmdManagerMode = "full" | "status";
 export declare class QmdMemoryManager implements MemorySearchManager {
     static create(params: {
         cfg: OpenClawConfig;
         agentId: string;
         resolved: ResolvedMemoryBackendConfig;
+        mode?: QmdManagerMode;
     }): Promise<QmdMemoryManager | null>;
     private readonly cfg;
     private readonly agentId;
@@ -21,6 +23,8 @@ export declare class QmdMemoryManager implements MemorySearchManager {
     private readonly collectionRoots;
     private readonly sources;
     private readonly docPathCache;
+    private readonly exportedSessionState;
+    private readonly maxQmdOutputChars;
     private readonly sessionExporter;
     private updateTimer;
     private pendingUpdate;
@@ -30,10 +34,21 @@ export declare class QmdMemoryManager implements MemorySearchManager {
     private db;
     private lastUpdateAt;
     private lastEmbedAt;
+    private attemptedNullByteCollectionRepair;
     private constructor();
     private initialize;
     private bootstrapCollections;
     private ensureCollections;
+    private ensureCollectionPath;
+    private isDirectoryGlobPattern;
+    private isCollectionAlreadyExistsError;
+    private isCollectionMissingError;
+    private addCollection;
+    private removeCollection;
+    private shouldRebindCollection;
+    private pathsMatch;
+    private shouldRepairNullByteCollectionError;
+    private tryRepairNullByteCollections;
     search(query: string, opts?: {
         maxResults?: number;
         minScore?: number;
@@ -68,18 +83,17 @@ export declare class QmdMemoryManager implements MemorySearchManager {
      */
     private symlinkSharedModels;
     private runQmd;
+    private readPartialText;
     private ensureDb;
     private exportSessions;
     private renderSessionMarkdown;
     private pickSessionCollectionName;
+    private sanitizeCollectionNameSegment;
     private resolveDocLocation;
     private extractSnippetLines;
     private readCounts;
-    private isScopeAllowed;
     private logScopeDenied;
-    private deriveChannelFromKey;
-    private deriveChatTypeFromKey;
-    private normalizeSessionKey;
+    private isScopeAllowed;
     private toDocLocation;
     private buildSearchPath;
     private isInsideWorkspace;
@@ -92,6 +106,9 @@ export declare class QmdMemoryManager implements MemorySearchManager {
     private isUnsupportedQmdOptionError;
     private createQmdBusyError;
     private waitForPendingUpdateBeforeSearch;
+    private runQueryAcrossCollections;
+    private listManagedCollectionNames;
     private buildCollectionFilterArgs;
     private buildSearchArgs;
 }
+export {};

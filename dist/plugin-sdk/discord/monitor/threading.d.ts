@@ -28,6 +28,7 @@ export declare function resolveDiscordThreadChannel(params: {
     isGuildMessage: boolean;
     message: DiscordMessageEvent["message"];
     channelInfo: import("./message-utils.js").DiscordChannelInfo | null;
+    messageChannelId?: string;
 }): DiscordThreadChannel | null;
 export declare function resolveDiscordThreadParentInfo(params: {
     client: Client;
@@ -73,9 +74,11 @@ export type DiscordAutoThreadReplyPlan = DiscordReplyDeliveryPlan & {
 export declare function resolveDiscordAutoThreadReplyPlan(params: {
     client: Client;
     message: DiscordMessageEvent["message"];
+    messageChannelId?: string;
     isGuildMessage: boolean;
     channelConfig?: DiscordChannelConfigResolved | null;
     threadChannel?: DiscordThreadChannel | null;
+    channelType?: ChannelType;
     baseText: string;
     combinedBody: string;
     replyToMode: ReplyToMode;
@@ -85,9 +88,11 @@ export declare function resolveDiscordAutoThreadReplyPlan(params: {
 export declare function maybeCreateDiscordAutoThread(params: {
     client: Client;
     message: DiscordMessageEvent["message"];
+    messageChannelId?: string;
     isGuildMessage: boolean;
     channelConfig?: DiscordChannelConfigResolved | null;
     threadChannel?: DiscordThreadChannel | null;
+    channelType?: ChannelType;
     baseText: string;
     combinedBody: string;
 }): Promise<string | undefined>;

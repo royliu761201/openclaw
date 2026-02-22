@@ -12,6 +12,7 @@ export declare function startBrowserBridgeServer(params: {
     host?: string;
     port?: number;
     authToken?: string;
+    authPassword?: string;
     onEnsureAttachTarget?: (profile: ProfileContext["profile"]) => Promise<void>;
 }): Promise<BrowserBridge>;
 export declare function stopBrowserBridgeServer(server: Server): Promise<void>;

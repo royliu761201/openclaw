@@ -6,7 +6,7 @@
  */
 import type { WorkspaceBootstrapFile } from "../agents/workspace.js";
 import type { OpenClawConfig } from "../config/config.js";
-export type InternalHookEventType = "command" | "session" | "agent" | "gateway";
+export type InternalHookEventType = "command" | "session" | "agent" | "gateway" | "message";
 export type AgentBootstrapHookContext = {
     workspaceDir: string;
     bootstrapFiles: WorkspaceBootstrapFile[];
@@ -19,6 +19,52 @@ export type AgentBootstrapHookEvent = InternalHookEvent & {
     type: "agent";
     action: "bootstrap";
     context: AgentBootstrapHookContext;
+};
+export type MessageReceivedHookContext = {
+    /** Sender identifier (e.g., phone number, user ID) */
+    from: string;
+    /** Message content */
+    content: string;
+    /** Unix timestamp when the message was received */
+    timestamp?: number;
+    /** Channel identifier (e.g., "telegram", "whatsapp") */
+    channelId: string;
+    /** Provider account ID for multi-account setups */
+    accountId?: string;
+    /** Conversation/chat ID */
+    conversationId?: string;
+    /** Message ID from the provider */
+    messageId?: string;
+    /** Additional provider-specific metadata */
+    metadata?: Record<string, unknown>;
+};
+export type MessageReceivedHookEvent = InternalHookEvent & {
+    type: "message";
+    action: "received";
+    context: MessageReceivedHookContext;
+};
+export type MessageSentHookContext = {
+    /** Recipient identifier */
+    to: string;
+    /** Message content */
+    content: string;
+    /** Whether the message was sent successfully */
+    success: boolean;
+    /** Error message if sending failed */
+    error?: string;
+    /** Channel identifier (e.g., "telegram", "whatsapp") */
+    channelId: string;
+    /** Provider account ID for multi-account setups */
+    accountId?: string;
+    /** Conversation/chat ID */
+    conversationId?: string;
+    /** Message ID returned by the provider */
+    messageId?: string;
+};
+export type MessageSentHookEvent = InternalHookEvent & {
+    type: "message";
+    action: "sent";
+    context: MessageSentHookContext;
 };
 export interface InternalHookEvent {
     /** The type of event (command, session, agent, gateway, etc.) */
@@ -93,3 +139,5 @@ export declare function triggerInternalHook(event: InternalHookEvent): Promise<v
  */
 export declare function createInternalHookEvent(type: InternalHookEventType, action: string, sessionKey: string, context?: Record<string, unknown>): InternalHookEvent;
 export declare function isAgentBootstrapEvent(event: InternalHookEvent): event is AgentBootstrapHookEvent;
+export declare function isMessageReceivedEvent(event: InternalHookEvent): event is MessageReceivedHookEvent;
+export declare function isMessageSentEvent(event: InternalHookEvent): event is MessageSentHookEvent;

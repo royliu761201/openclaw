@@ -135,6 +135,13 @@ export declare const SYNTHETIC_MODEL_CATALOG: readonly [{
     readonly contextWindow: 198000;
     readonly maxTokens: 128000;
 }, {
+    readonly id: "hf:zai-org/GLM-5";
+    readonly name: "GLM-5";
+    readonly reasoning: true;
+    readonly input: readonly ["text", "image"];
+    readonly contextWindow: 256000;
+    readonly maxTokens: 128000;
+}, {
     readonly id: "hf:deepseek-ai/DeepSeek-V3";
     readonly name: "DeepSeek V3";
     readonly reasoning: false;

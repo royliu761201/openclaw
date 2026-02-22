@@ -57,7 +57,6 @@ apps/macos/.build/**
 apps/ios/*.xcfilelist
 
 # Security
-secrets.json
 *.key
 *.pem
 id_ed25519*

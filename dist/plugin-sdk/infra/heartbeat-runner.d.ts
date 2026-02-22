@@ -3,8 +3,9 @@ import type { OpenClawConfig } from "../config/config.js";
 import type { AgentDefaultsConfig } from "../config/types.agent-defaults.js";
 import type { OutboundSendDeps } from "./outbound/deliver.js";
 import { type RuntimeEnv } from "../runtime.js";
+import { isCronSystemEvent } from "./heartbeat-events-filter.js";
 import { type HeartbeatRunResult } from "./heartbeat-wake.js";
-type HeartbeatDeps = OutboundSendDeps & ChannelHeartbeatDeps & {
+export type HeartbeatDeps = OutboundSendDeps & ChannelHeartbeatDeps & {
     runtime?: RuntimeEnv;
     getQueueSize?: (lane?: string) => number;
     nowMs?: () => number;
@@ -20,7 +21,7 @@ export type HeartbeatSummary = {
     model?: string;
     ackMaxChars: number;
 };
-export declare function isCronSystemEvent(evt: string): boolean;
+export { isCronSystemEvent };
 export type HeartbeatRunner = {
     stop: () => void;
     updateConfig: (cfg: OpenClawConfig) => void;
@@ -32,6 +33,7 @@ export declare function resolveHeartbeatPrompt(cfg: OpenClawConfig, heartbeat?: 
 export declare function runHeartbeatOnce(opts: {
     cfg?: OpenClawConfig;
     agentId?: string;
+    sessionKey?: string;
     heartbeat?: HeartbeatConfig;
     reason?: string;
     deps?: HeartbeatDeps;
@@ -42,4 +44,3 @@ export declare function startHeartbeatRunner(opts: {
     abortSignal?: AbortSignal;
     runOnce?: typeof runHeartbeatOnce;
 }): HeartbeatRunner;
-export {};

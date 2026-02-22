@@ -11,17 +11,20 @@ type WebMediaOptions = {
     maxBytes?: number;
     optimizeImages?: boolean;
     ssrfPolicy?: SsrFPolicy;
-    /** Allowed root directories for local path reads. "any" skips the check (caller already validated). */
-    localRoots?: string[] | "any";
+    /** Allowed root directories for local path reads. "any" is deprecated; prefer sandboxValidated + readFile. */
+    localRoots?: readonly string[] | "any";
+    /** Caller already validated the local path (sandbox/other guards); requires readFile override. */
+    sandboxValidated?: boolean;
     readFile?: (filePath: string) => Promise<Buffer>;
 };
+export declare function getDefaultLocalRoots(): readonly string[];
 export declare function loadWebMedia(mediaUrl: string, maxBytesOrOptions?: number | WebMediaOptions, options?: {
     ssrfPolicy?: SsrFPolicy;
-    localRoots?: string[] | "any";
+    localRoots?: readonly string[] | "any";
 }): Promise<WebMediaResult>;
 export declare function loadWebMediaRaw(mediaUrl: string, maxBytesOrOptions?: number | WebMediaOptions, options?: {
     ssrfPolicy?: SsrFPolicy;
-    localRoots?: string[] | "any";
+    localRoots?: readonly string[] | "any";
 }): Promise<WebMediaResult>;
 export declare function optimizeImageToJpeg(buffer: Buffer, maxBytes: number, opts?: {
     contentType?: string;

@@ -32,6 +32,8 @@
       "domain": "feishu",
       "connectionMode": "websocket",
       "dmPolicy": "open",
+      "appId": "${FEISHU_APP_ID}",
+      "appSecret": "${FEISHU_APP_SECRET}",
       "groupPolicy": "allowlist",
       "allowFrom": ["*"]
     },
@@ -40,12 +42,17 @@
       "mode": "app",
       "defaultAccount": "app",
       "allowFrom": ["*"],
-      "corpId": "${WECOM_CORPID}",
-      "corpSecret": "${WECOM_SECRET}",
-      "agentId": 1000003,
-      "webhookPath": "/wecom",
-      "token": "${WECOM_TOKEN}",
-      "encodingAESKey": "${WECOM_ENCODING_AES_KEY}"
+      "accounts": {
+        "app": {
+          "mode": "app",
+          "webhookPath": "/wecom/app",
+          "corpId": "${WECOM_CORP_ID}",
+          "corpSecret": "${WECOM_CORP_SECRET}",
+          "agentId": 1000003,
+          "callbackToken": "${WECOM_TOKEN}",
+          "callbackAesKey": "${WECOM_ENCODING_AES_KEY}"
+        }
+      }
     }
   },
   "gateway": {

@@ -15,6 +15,7 @@ export type ResolvedBrowserConfig = {
     attachOnly: boolean;
     defaultProfile: string;
     profiles: Record<string, BrowserProfileConfig>;
+    extraArgs: string[];
 };
 export type ResolvedBrowserProfile = {
     name: string;

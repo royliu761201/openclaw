@@ -1,7 +1,3 @@
-export declare function isTelegramVoiceCompatible(opts: {
-    contentType?: string | null;
-    fileName?: string | null;
-}): boolean;
 export declare function resolveTelegramVoiceDecision(opts: {
     wantsVoice: boolean;
     contentType?: string | null;

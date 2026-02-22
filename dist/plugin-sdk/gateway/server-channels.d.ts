@@ -19,6 +19,8 @@ export type ChannelManager = {
     startChannel: (channel: ChannelId, accountId?: string) => Promise<void>;
     stopChannel: (channel: ChannelId, accountId?: string) => Promise<void>;
     markChannelLoggedOut: (channelId: ChannelId, cleared: boolean, accountId?: string) => void;
+    isManuallyStopped: (channelId: ChannelId, accountId: string) => boolean;
+    resetRestartAttempts: (channelId: ChannelId, accountId: string) => void;
 };
 export declare function createChannelManager(opts: ChannelManagerOptions): ChannelManager;
 export {};

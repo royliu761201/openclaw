@@ -33,5 +33,10 @@ export declare function resolveAgentConfig(cfg: OpenClawConfig, agentId: string)
 export declare function resolveAgentSkillsFilter(cfg: OpenClawConfig, agentId: string): string[] | undefined;
 export declare function resolveAgentModelPrimary(cfg: OpenClawConfig, agentId: string): string | undefined;
 export declare function resolveAgentModelFallbacksOverride(cfg: OpenClawConfig, agentId: string): string[] | undefined;
+export declare function resolveEffectiveModelFallbacks(params: {
+    cfg: OpenClawConfig;
+    agentId: string;
+    hasSessionModelOverride: boolean;
+}): string[] | undefined;
 export declare function resolveAgentWorkspaceDir(cfg: OpenClawConfig, agentId: string): string;
 export declare function resolveAgentDir(cfg: OpenClawConfig, agentId: string): string;

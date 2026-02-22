@@ -5,6 +5,7 @@ import { type ChunkMode } from "../../auto-reply/chunk.js";
 export declare function deliverWebReply(params: {
     replyResult: ReplyPayload;
     msg: WebInboundMsg;
+    mediaLocalRoots?: readonly string[];
     maxMediaBytes: number;
     textLimit: number;
     chunkMode?: ChunkMode;

@@ -21,10 +21,10 @@ export type ResolvedWhatsAppAccount = {
     groups?: WhatsAppAccountConfig["groups"];
     debounceMs?: number;
 };
+export declare const listWhatsAppAccountIds: (cfg: OpenClawConfig) => string[];
+export declare const resolveDefaultWhatsAppAccountId: (cfg: OpenClawConfig) => string;
 export declare function listWhatsAppAuthDirs(cfg: OpenClawConfig): string[];
 export declare function hasAnyWhatsAppAuth(cfg: OpenClawConfig): boolean;
-export declare function listWhatsAppAccountIds(cfg: OpenClawConfig): string[];
-export declare function resolveDefaultWhatsAppAccountId(cfg: OpenClawConfig): string;
 export declare function resolveWhatsAppAuthDir(params: {
     cfg: OpenClawConfig;
     accountId: string;

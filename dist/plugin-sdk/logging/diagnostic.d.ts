@@ -1,9 +1,5 @@
+import { type SessionRef, type SessionStateValue } from "./diagnostic-session-state.js";
 declare const diag: import("./subsystem.js").SubsystemLogger;
-type SessionStateValue = "idle" | "processing" | "waiting";
-type SessionRef = {
-    sessionId?: string;
-    sessionKey?: string;
-};
 export declare function logWebhookReceived(params: {
     channel: string;
     updateType?: string;
@@ -52,7 +48,18 @@ export declare function logRunAttempt(params: SessionRef & {
     runId: string;
     attempt: number;
 }): void;
+export declare function logToolLoopAction(params: SessionRef & {
+    toolName: string;
+    level: "warning" | "critical";
+    action: "warn" | "block";
+    detector: "generic_repeat" | "known_poll_no_progress" | "global_circuit_breaker" | "ping_pong";
+    count: number;
+    message: string;
+    pairedToolName?: string;
+}): void;
 export declare function logActiveRuns(): void;
 export declare function startDiagnosticHeartbeat(): void;
 export declare function stopDiagnosticHeartbeat(): void;
+export declare function getDiagnosticSessionStateCountForTest(): number;
+export declare function resetDiagnosticStateForTest(): void;
 export { diag as diagnosticLogger };

@@ -5,6 +5,10 @@ export declare function buildSubagentSystemPrompt(params: {
     childSessionKey: string;
     label?: string;
     task?: string;
+    /** Depth of the child being spawned (1 = sub-agent, 2 = sub-sub-agent). */
+    childDepth?: number;
+    /** Config value: max allowed spawn depth. */
+    maxSpawnDepth?: number;
 }): string;
 export type SubagentRunOutcome = {
     status: "ok" | "error" | "timeout" | "unknown";
@@ -27,4 +31,5 @@ export declare function runSubagentAnnounceFlow(params: {
     label?: string;
     outcome?: SubagentRunOutcome;
     announceType?: SubagentAnnounceType;
+    expectsCompletionMessage?: boolean;
 }): Promise<boolean>;

@@ -27,6 +27,7 @@ type ImageSandboxConfig = {
 export declare function createImageTool(options?: {
     config?: OpenClawConfig;
     agentDir?: string;
+    workspaceDir?: string;
     sandbox?: ImageSandboxConfig;
     /** If true, the model has native vision capability and images in the prompt are auto-injected */
     modelHasVision?: boolean;

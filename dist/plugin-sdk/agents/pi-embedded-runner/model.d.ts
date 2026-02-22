@@ -1,6 +1,7 @@
 import type { Api, Model } from "@mariozechner/pi-ai";
 import type { OpenClawConfig } from "../../config/config.js";
 import type { ModelDefinitionConfig } from "../../config/types.js";
+import { buildModelAliasLines } from "../model-alias-lines.js";
 import { type AuthStorage, type ModelRegistry } from "../pi-model-discovery.js";
 type InlineModelEntry = ModelDefinitionConfig & {
     provider: string;
@@ -11,12 +12,11 @@ type InlineProviderConfig = {
     api?: ModelDefinitionConfig["api"];
     models?: ModelDefinitionConfig[];
 };
+export { buildModelAliasLines };
 export declare function buildInlineProviderModels(providers: Record<string, InlineProviderConfig>): InlineModelEntry[];
-export declare function buildModelAliasLines(cfg?: OpenClawConfig): string[];
 export declare function resolveModel(provider: string, modelId: string, agentDir?: string, cfg?: OpenClawConfig): {
     model?: Model<Api>;
     error?: string;
     authStorage: AuthStorage;
     modelRegistry: ModelRegistry;
 };
-export {};

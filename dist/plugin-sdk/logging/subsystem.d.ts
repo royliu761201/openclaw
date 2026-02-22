@@ -1,6 +1,8 @@
 import { type RuntimeEnv } from "../runtime.js";
+import { type LogLevel } from "./levels.js";
 export type SubsystemLogger = {
     subsystem: string;
+    isEnabled: (level: LogLevel, target?: "any" | "console" | "file") => boolean;
     trace: (message: string, meta?: Record<string, unknown>) => void;
     debug: (message: string, meta?: Record<string, unknown>) => void;
     info: (message: string, meta?: Record<string, unknown>) => void;

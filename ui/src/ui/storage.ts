@@ -1,7 +1,7 @@
 const KEY = "openclaw.control.settings.v1";
 
-import type { ThemeMode } from "./theme.ts";
 import { isSupportedLocale } from "../i18n/index.ts";
+import type { ThemeMode } from "./theme.ts";
 
 export type UiSettings = {
   gatewayUrl: string;
@@ -20,6 +20,9 @@ export type UiSettings = {
 export function loadSettings(): UiSettings {
   const defaultUrl = (() => {
     const proto = location.protocol === "https:" ? "wss" : "ws";
+    if (location.port === "5173") {
+      return `${proto}://${location.hostname}:18789`;
+    }
     return `${proto}://${location.host}`;
   })();
 
@@ -42,12 +45,23 @@ export function loadSettings(): UiSettings {
       return defaults;
     }
     const parsed = JSON.parse(raw) as Partial<UiSettings>;
+    let savedUrl = parsed.gatewayUrl?.trim();
+    if (savedUrl && location.port === "5173" && savedUrl.endsWith(":5173")) {
+      // Auto-migrate from Vite dev port to actual gateway port
+      savedUrl = savedUrl.replace(":5173", ":18789");
+    }
+
+    let defaultToken = defaults.token;
+    if (location.port === "5173") {
+      defaultToken = "dev-token-123";
+    }
+
     return {
-      gatewayUrl:
-        typeof parsed.gatewayUrl === "string" && parsed.gatewayUrl.trim()
-          ? parsed.gatewayUrl.trim()
-          : defaults.gatewayUrl,
-      token: typeof parsed.token === "string" ? parsed.token : defaults.token,
+      gatewayUrl: savedUrl || defaults.gatewayUrl,
+      token:
+        typeof parsed.token === "string" && parsed.token.trim() !== ""
+          ? parsed.token
+          : defaultToken,
       sessionKey:
         typeof parsed.sessionKey === "string" && parsed.sessionKey.trim()
           ? parsed.sessionKey.trim()

@@ -1,20 +1,17 @@
 import { z } from "zod";
 export declare const WhatsAppAccountSchema: z.ZodObject<{
-    name: z.ZodOptional<z.ZodString>;
     capabilities: z.ZodOptional<z.ZodArray<z.ZodString>>;
     markdown: z.ZodOptional<z.ZodObject<{
         tables: z.ZodOptional<z.ZodEnum<{
             off: "off";
-            bullets: "bullets";
             code: "code";
+            bullets: "bullets";
         }>>;
     }, z.core.$strict>>;
     configWrites: z.ZodOptional<z.ZodBoolean>;
-    enabled: z.ZodOptional<z.ZodBoolean>;
     sendReadReceipts: z.ZodOptional<z.ZodBoolean>;
     messagePrefix: z.ZodOptional<z.ZodString>;
     responsePrefix: z.ZodOptional<z.ZodString>;
-    authDir: z.ZodOptional<z.ZodString>;
     dmPolicy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
         open: "open";
         disabled: "disabled";
@@ -36,10 +33,9 @@ export declare const WhatsAppAccountSchema: z.ZodObject<{
     }, z.core.$strict>>>>;
     textChunkLimit: z.ZodOptional<z.ZodNumber>;
     chunkMode: z.ZodOptional<z.ZodEnum<{
-        newline: "newline";
         length: "length";
+        newline: "newline";
     }>>;
-    mediaMaxMb: z.ZodOptional<z.ZodNumber>;
     blockStreaming: z.ZodOptional<z.ZodBoolean>;
     blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
         minChars: z.ZodOptional<z.ZodNumber>;
@@ -74,24 +70,95 @@ export declare const WhatsAppAccountSchema: z.ZodObject<{
         showAlerts: z.ZodOptional<z.ZodBoolean>;
         useIndicator: z.ZodOptional<z.ZodBoolean>;
     }, z.core.$strict>>;
+    name: z.ZodOptional<z.ZodString>;
+    enabled: z.ZodOptional<z.ZodBoolean>;
+    authDir: z.ZodOptional<z.ZodString>;
+    mediaMaxMb: z.ZodOptional<z.ZodNumber>;
 }, z.core.$strict>;
 export declare const WhatsAppConfigSchema: z.ZodObject<{
+    capabilities: z.ZodOptional<z.ZodArray<z.ZodString>>;
+    markdown: z.ZodOptional<z.ZodObject<{
+        tables: z.ZodOptional<z.ZodEnum<{
+            off: "off";
+            code: "code";
+            bullets: "bullets";
+        }>>;
+    }, z.core.$strict>>;
+    configWrites: z.ZodOptional<z.ZodBoolean>;
+    sendReadReceipts: z.ZodOptional<z.ZodBoolean>;
+    messagePrefix: z.ZodOptional<z.ZodString>;
+    responsePrefix: z.ZodOptional<z.ZodString>;
+    dmPolicy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+        open: "open";
+        disabled: "disabled";
+        allowlist: "allowlist";
+        pairing: "pairing";
+    }>>>;
+    selfChatMode: z.ZodOptional<z.ZodBoolean>;
+    allowFrom: z.ZodOptional<z.ZodArray<z.ZodString>>;
+    groupAllowFrom: z.ZodOptional<z.ZodArray<z.ZodString>>;
+    groupPolicy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+        open: "open";
+        disabled: "disabled";
+        allowlist: "allowlist";
+    }>>>;
+    historyLimit: z.ZodOptional<z.ZodNumber>;
+    dmHistoryLimit: z.ZodOptional<z.ZodNumber>;
+    dms: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodOptional<z.ZodObject<{
+        historyLimit: z.ZodOptional<z.ZodNumber>;
+    }, z.core.$strict>>>>;
+    textChunkLimit: z.ZodOptional<z.ZodNumber>;
+    chunkMode: z.ZodOptional<z.ZodEnum<{
+        length: "length";
+        newline: "newline";
+    }>>;
+    blockStreaming: z.ZodOptional<z.ZodBoolean>;
+    blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
+        minChars: z.ZodOptional<z.ZodNumber>;
+        maxChars: z.ZodOptional<z.ZodNumber>;
+        idleMs: z.ZodOptional<z.ZodNumber>;
+    }, z.core.$strict>>;
+    groups: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodOptional<z.ZodObject<{
+        requireMention: z.ZodOptional<z.ZodBoolean>;
+        tools: z.ZodOptional<z.ZodObject<{
+            allow: z.ZodOptional<z.ZodArray<z.ZodString>>;
+            alsoAllow: z.ZodOptional<z.ZodArray<z.ZodString>>;
+            deny: z.ZodOptional<z.ZodArray<z.ZodString>>;
+        }, z.core.$strict>>;
+        toolsBySender: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodOptional<z.ZodObject<{
+            allow: z.ZodOptional<z.ZodArray<z.ZodString>>;
+            alsoAllow: z.ZodOptional<z.ZodArray<z.ZodString>>;
+            deny: z.ZodOptional<z.ZodArray<z.ZodString>>;
+        }, z.core.$strict>>>>;
+    }, z.core.$strict>>>>;
+    ackReaction: z.ZodOptional<z.ZodObject<{
+        emoji: z.ZodOptional<z.ZodString>;
+        direct: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
+        group: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+            never: "never";
+            always: "always";
+            mentions: "mentions";
+        }>>>;
+    }, z.core.$strict>>;
+    debounceMs: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
+    heartbeat: z.ZodOptional<z.ZodObject<{
+        showOk: z.ZodOptional<z.ZodBoolean>;
+        showAlerts: z.ZodOptional<z.ZodBoolean>;
+        useIndicator: z.ZodOptional<z.ZodBoolean>;
+    }, z.core.$strict>>;
     accounts: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodOptional<z.ZodObject<{
-        name: z.ZodOptional<z.ZodString>;
         capabilities: z.ZodOptional<z.ZodArray<z.ZodString>>;
         markdown: z.ZodOptional<z.ZodObject<{
             tables: z.ZodOptional<z.ZodEnum<{
                 off: "off";
-                bullets: "bullets";
                 code: "code";
+                bullets: "bullets";
             }>>;
         }, z.core.$strict>>;
         configWrites: z.ZodOptional<z.ZodBoolean>;
-        enabled: z.ZodOptional<z.ZodBoolean>;
         sendReadReceipts: z.ZodOptional<z.ZodBoolean>;
         messagePrefix: z.ZodOptional<z.ZodString>;
         responsePrefix: z.ZodOptional<z.ZodString>;
-        authDir: z.ZodOptional<z.ZodString>;
         dmPolicy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
             open: "open";
             disabled: "disabled";
@@ -113,10 +180,9 @@ export declare const WhatsAppConfigSchema: z.ZodObject<{
         }, z.core.$strict>>>>;
         textChunkLimit: z.ZodOptional<z.ZodNumber>;
         chunkMode: z.ZodOptional<z.ZodEnum<{
-            newline: "newline";
             length: "length";
+            newline: "newline";
         }>>;
-        mediaMaxMb: z.ZodOptional<z.ZodNumber>;
         blockStreaming: z.ZodOptional<z.ZodBoolean>;
         blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
             minChars: z.ZodOptional<z.ZodNumber>;
@@ -151,81 +217,15 @@ export declare const WhatsAppConfigSchema: z.ZodObject<{
             showAlerts: z.ZodOptional<z.ZodBoolean>;
             useIndicator: z.ZodOptional<z.ZodBoolean>;
         }, z.core.$strict>>;
+        name: z.ZodOptional<z.ZodString>;
+        enabled: z.ZodOptional<z.ZodBoolean>;
+        authDir: z.ZodOptional<z.ZodString>;
+        mediaMaxMb: z.ZodOptional<z.ZodNumber>;
     }, z.core.$strict>>>>;
-    capabilities: z.ZodOptional<z.ZodArray<z.ZodString>>;
-    markdown: z.ZodOptional<z.ZodObject<{
-        tables: z.ZodOptional<z.ZodEnum<{
-            off: "off";
-            bullets: "bullets";
-            code: "code";
-        }>>;
-    }, z.core.$strict>>;
-    configWrites: z.ZodOptional<z.ZodBoolean>;
-    sendReadReceipts: z.ZodOptional<z.ZodBoolean>;
-    dmPolicy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
-        open: "open";
-        disabled: "disabled";
-        allowlist: "allowlist";
-        pairing: "pairing";
-    }>>>;
-    messagePrefix: z.ZodOptional<z.ZodString>;
-    responsePrefix: z.ZodOptional<z.ZodString>;
-    selfChatMode: z.ZodOptional<z.ZodBoolean>;
-    allowFrom: z.ZodOptional<z.ZodArray<z.ZodString>>;
-    groupAllowFrom: z.ZodOptional<z.ZodArray<z.ZodString>>;
-    groupPolicy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
-        open: "open";
-        disabled: "disabled";
-        allowlist: "allowlist";
-    }>>>;
-    historyLimit: z.ZodOptional<z.ZodNumber>;
-    dmHistoryLimit: z.ZodOptional<z.ZodNumber>;
-    dms: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodOptional<z.ZodObject<{
-        historyLimit: z.ZodOptional<z.ZodNumber>;
-    }, z.core.$strict>>>>;
-    textChunkLimit: z.ZodOptional<z.ZodNumber>;
-    chunkMode: z.ZodOptional<z.ZodEnum<{
-        newline: "newline";
-        length: "length";
-    }>>;
     mediaMaxMb: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
-    blockStreaming: z.ZodOptional<z.ZodBoolean>;
-    blockStreamingCoalesce: z.ZodOptional<z.ZodObject<{
-        minChars: z.ZodOptional<z.ZodNumber>;
-        maxChars: z.ZodOptional<z.ZodNumber>;
-        idleMs: z.ZodOptional<z.ZodNumber>;
-    }, z.core.$strict>>;
     actions: z.ZodOptional<z.ZodObject<{
         reactions: z.ZodOptional<z.ZodBoolean>;
         sendMessage: z.ZodOptional<z.ZodBoolean>;
         polls: z.ZodOptional<z.ZodBoolean>;
-    }, z.core.$strict>>;
-    groups: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodOptional<z.ZodObject<{
-        requireMention: z.ZodOptional<z.ZodBoolean>;
-        tools: z.ZodOptional<z.ZodObject<{
-            allow: z.ZodOptional<z.ZodArray<z.ZodString>>;
-            alsoAllow: z.ZodOptional<z.ZodArray<z.ZodString>>;
-            deny: z.ZodOptional<z.ZodArray<z.ZodString>>;
-        }, z.core.$strict>>;
-        toolsBySender: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodOptional<z.ZodObject<{
-            allow: z.ZodOptional<z.ZodArray<z.ZodString>>;
-            alsoAllow: z.ZodOptional<z.ZodArray<z.ZodString>>;
-            deny: z.ZodOptional<z.ZodArray<z.ZodString>>;
-        }, z.core.$strict>>>>;
-    }, z.core.$strict>>>>;
-    ackReaction: z.ZodOptional<z.ZodObject<{
-        emoji: z.ZodOptional<z.ZodString>;
-        direct: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
-        group: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
-            never: "never";
-            always: "always";
-            mentions: "mentions";
-        }>>>;
-    }, z.core.$strict>>;
-    debounceMs: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
-    heartbeat: z.ZodOptional<z.ZodObject<{
-        showOk: z.ZodOptional<z.ZodBoolean>;
-        showAlerts: z.ZodOptional<z.ZodBoolean>;
-        useIndicator: z.ZodOptional<z.ZodBoolean>;
     }, z.core.$strict>>;
 }, z.core.$strict>;

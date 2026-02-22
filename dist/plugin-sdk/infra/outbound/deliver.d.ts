@@ -5,6 +5,7 @@ import type { sendMessageIMessage } from "../../imessage/send.js";
 import type { sendMessageSlack } from "../../slack/send.js";
 import type { sendMessageTelegram } from "../../telegram/send.js";
 import type { sendMessageWhatsApp } from "../../web/outbound.js";
+import type { OutboundIdentity } from "./identity.js";
 import type { NormalizedOutboundPayload } from "./payloads.js";
 import type { OutboundChannel } from "./targets.js";
 import { sendMessageSignal } from "../../signal/send.js";
@@ -46,7 +47,7 @@ export type OutboundDeliveryResult = {
     pollId?: string;
     meta?: Record<string, unknown>;
 };
-export declare function deliverOutboundPayloads(params: {
+type DeliverOutboundPayloadsCoreParams = {
     cfg: OpenClawConfig;
     channel: Exclude<OutboundChannel, "none">;
     to: string;
@@ -54,16 +55,25 @@ export declare function deliverOutboundPayloads(params: {
     payloads: ReplyPayload[];
     replyToId?: string | null;
     threadId?: string | number | null;
+    identity?: OutboundIdentity;
     deps?: OutboundSendDeps;
     gifPlayback?: boolean;
     abortSignal?: AbortSignal;
     bestEffort?: boolean;
     onError?: (err: unknown, payload: NormalizedOutboundPayload) => void;
     onPayload?: (payload: NormalizedOutboundPayload) => void;
+    /** Active agent id for media local-root scoping. */
+    agentId?: string;
     mirror?: {
         sessionKey: string;
         agentId?: string;
         text?: string;
         mediaUrls?: string[];
     };
-}): Promise<OutboundDeliveryResult[]>;
+    silent?: boolean;
+};
+type DeliverOutboundPayloadsParams = DeliverOutboundPayloadsCoreParams & {
+    /** @internal Skip write-ahead queue (used by crash-recovery to avoid re-enqueueing). */
+    skipQueue?: boolean;
+};
+export declare function deliverOutboundPayloads(params: DeliverOutboundPayloadsParams): Promise<OutboundDeliveryResult[]>;

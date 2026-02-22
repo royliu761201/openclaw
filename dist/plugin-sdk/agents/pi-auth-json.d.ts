@@ -1,12 +1,12 @@
 /**
- * pi-coding-agent's ModelRegistry/AuthStorage expects OAuth credentials in auth.json.
+ * pi-coding-agent's ModelRegistry/AuthStorage expects credentials in auth.json.
  *
- * OpenClaw stores OAuth credentials in auth-profiles.json instead. This helper
- * bridges a subset of credentials into agentDir/auth.json so pi-coding-agent can
- * (a) consider the provider authenticated and (b) include built-in models in its
+ * OpenClaw stores credentials in auth-profiles.json instead. This helper
+ * bridges all credentials into agentDir/auth.json so pi-coding-agent can
+ * (a) consider providers authenticated and (b) include built-in models in its
  * registry/catalog output.
  *
- * Currently used for openai-codex.
+ * Syncs all credential types: api_key, token (as api_key), and oauth.
  */
 export declare function ensurePiAuthJsonFromAuthProfiles(agentDir: string): Promise<{
     wrote: boolean;

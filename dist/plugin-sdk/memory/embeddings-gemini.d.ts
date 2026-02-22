@@ -4,6 +4,7 @@ export type GeminiEmbeddingClient = {
     headers: Record<string, string>;
     model: string;
     modelPath: string;
+    apiKeys: string[];
 };
 export declare const DEFAULT_GEMINI_EMBEDDING_MODEL = "gemini-embedding-001";
 export declare function createGeminiEmbeddingProvider(options: EmbeddingProviderOptions): Promise<{

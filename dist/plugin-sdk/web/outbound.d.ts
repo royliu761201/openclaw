@@ -2,6 +2,7 @@ import { type PollInput } from "../polls.js";
 export declare function sendMessageWhatsApp(to: string, body: string, options: {
     verbose: boolean;
     mediaUrl?: string;
+    mediaLocalRoots?: readonly string[];
     gifPlayback?: boolean;
     accountId?: string;
 }): Promise<{

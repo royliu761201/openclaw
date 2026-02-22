@@ -5,6 +5,14 @@ type Logger = ReturnType<typeof import("../../logging/subsystem.js").createSubsy
 export type DiscordMessageEvent = Parameters<MessageCreateListener["handle"]>[0];
 export type DiscordMessageHandler = (data: DiscordMessageEvent, client: Client) => Promise<void>;
 type DiscordReactionEvent = Parameters<MessageReactionAddListener["handle"]>[0];
+type DiscordReactionListenerParams = {
+    cfg: LoadedConfig;
+    accountId: string;
+    runtime: RuntimeEnv;
+    botUserId?: string;
+    guildEntries?: Record<string, import("./allow-list.js").DiscordGuildEntryResolved>;
+    logger: Logger;
+};
 export declare function registerDiscordListener(listeners: Array<object>, listener: object): boolean;
 export declare class DiscordMessageListener extends MessageCreateListener {
     private handler;
@@ -14,26 +22,12 @@ export declare class DiscordMessageListener extends MessageCreateListener {
 }
 export declare class DiscordReactionListener extends MessageReactionAddListener {
     private params;
-    constructor(params: {
-        cfg: LoadedConfig;
-        accountId: string;
-        runtime: RuntimeEnv;
-        botUserId?: string;
-        guildEntries?: Record<string, import("./allow-list.js").DiscordGuildEntryResolved>;
-        logger: Logger;
-    });
+    constructor(params: DiscordReactionListenerParams);
     handle(data: DiscordReactionEvent, client: Client): Promise<void>;
 }
 export declare class DiscordReactionRemoveListener extends MessageReactionRemoveListener {
     private params;
-    constructor(params: {
-        cfg: LoadedConfig;
-        accountId: string;
-        runtime: RuntimeEnv;
-        botUserId?: string;
-        guildEntries?: Record<string, import("./allow-list.js").DiscordGuildEntryResolved>;
-        logger: Logger;
-    });
+    constructor(params: DiscordReactionListenerParams);
     handle(data: DiscordReactionEvent, client: Client): Promise<void>;
 }
 type PresenceUpdateEvent = Parameters<PresenceUpdateListener["handle"]>[0];

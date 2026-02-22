@@ -1,10 +1,10 @@
+import type { sendMessageWhatsApp } from "../channels/web/index.js";
+import type { sendMessageDiscord } from "../discord/send.js";
+import type { sendMessageIMessage } from "../imessage/send.js";
 import type { OutboundSendDeps } from "../infra/outbound/deliver.js";
-import { logWebSelfId, sendMessageWhatsApp } from "../channels/web/index.js";
-import { sendMessageDiscord } from "../discord/send.js";
-import { sendMessageIMessage } from "../imessage/send.js";
-import { sendMessageSignal } from "../signal/send.js";
-import { sendMessageSlack } from "../slack/send.js";
-import { sendMessageTelegram } from "../telegram/send.js";
+import type { sendMessageSignal } from "../signal/send.js";
+import type { sendMessageSlack } from "../slack/send.js";
+import type { sendMessageTelegram } from "../telegram/send.js";
 export type CliDeps = {
     sendMessageWhatsApp: typeof sendMessageWhatsApp;
     sendMessageTelegram: typeof sendMessageTelegram;
@@ -15,4 +15,4 @@ export type CliDeps = {
 };
 export declare function createDefaultDeps(): CliDeps;
 export declare function createOutboundSendDeps(deps: CliDeps): OutboundSendDeps;
-export { logWebSelfId };
+export { logWebSelfId } from "../web/auth-store.js";

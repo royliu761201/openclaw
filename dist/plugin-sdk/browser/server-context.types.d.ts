@@ -75,4 +75,5 @@ export type ProfileStatus = {
 export type ContextOptions = {
     getState: () => BrowserServerState | null;
     onEnsureAttachTarget?: (profile: ResolvedBrowserProfile) => Promise<void>;
+    refreshConfigFromDisk?: boolean;
 };

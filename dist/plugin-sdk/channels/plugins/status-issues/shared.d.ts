@@ -9,3 +9,8 @@ export declare function appendMatchMetadata(message: string, params: {
     matchKey?: unknown;
     matchSource?: unknown;
 }): string;
+export declare function resolveEnabledConfiguredAccountId(account: {
+    accountId?: unknown;
+    enabled?: unknown;
+    configured?: unknown;
+}): string | null;

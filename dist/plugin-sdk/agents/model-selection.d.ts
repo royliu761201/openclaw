@@ -14,8 +14,12 @@ export type ModelAliasIndex = {
 };
 export declare function modelKey(provider: string, model: string): string;
 export declare function normalizeProviderId(provider: string): string;
+export declare function findNormalizedProviderValue<T>(entries: Record<string, T> | undefined, provider: string): T | undefined;
+export declare function findNormalizedProviderKey(entries: Record<string, unknown> | undefined, provider: string): string | undefined;
 export declare function isCliProvider(provider: string, cfg?: OpenClawConfig): boolean;
+export declare function normalizeModelRef(provider: string, model: string): ModelRef;
 export declare function parseModelRef(raw: string, defaultProvider: string): ModelRef | null;
+export declare function normalizeModelSelection(value: unknown): string | undefined;
 export declare function resolveAllowlistModelKey(raw: string, defaultProvider: string): string | null;
 export declare function buildConfiguredAllowlistKeys(params: {
     cfg: OpenClawConfig | undefined;
@@ -42,6 +46,15 @@ export declare function resolveDefaultModelForAgent(params: {
     cfg: OpenClawConfig;
     agentId?: string;
 }): ModelRef;
+export declare function resolveSubagentConfiguredModelSelection(params: {
+    cfg: OpenClawConfig;
+    agentId: string;
+}): string | undefined;
+export declare function resolveSubagentSpawnModelSelection(params: {
+    cfg: OpenClawConfig;
+    agentId: string;
+    modelOverride?: unknown;
+}): string;
 export declare function buildAllowedModelSet(params: {
     cfg: OpenClawConfig;
     catalog: ModelCatalogEntry[];

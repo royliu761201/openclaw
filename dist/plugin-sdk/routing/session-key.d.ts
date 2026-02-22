@@ -1,5 +1,5 @@
 import type { ChatType } from "../channels/chat-type.js";
-export { isAcpSessionKey, isSubagentSessionKey, parseAgentSessionKey, type ParsedAgentSessionKey, } from "../sessions/session-key-utils.js";
+export { getSubagentDepth, isCronSessionKey, isAcpSessionKey, isSubagentSessionKey, parseAgentSessionKey, type ParsedAgentSessionKey, } from "../sessions/session-key-utils.js";
 export declare const DEFAULT_AGENT_ID = "main";
 export declare const DEFAULT_MAIN_KEY = "main";
 export declare const DEFAULT_ACCOUNT_ID = "default";

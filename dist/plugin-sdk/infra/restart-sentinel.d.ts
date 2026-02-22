@@ -20,7 +20,7 @@ export type RestartSentinelStats = {
     durationMs?: number | null;
 };
 export type RestartSentinelPayload = {
-    kind: "config-apply" | "update" | "restart";
+    kind: "config-apply" | "config-patch" | "update" | "restart";
     status: "ok" | "error" | "skipped";
     ts: number;
     sessionKey?: string;
