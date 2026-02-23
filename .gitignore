@@ -129,3 +129,5 @@ apps/ios/LocalSigning.xcconfig
 # Archive
 _archive/
 node_modules
+
+workspace/
