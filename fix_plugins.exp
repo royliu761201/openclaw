@@ -1,0 +1,6 @@
+#!/usr/bin/expect -f
+set timeout 10
+spawn pnpm openclaw --profile dev doctor --fix
+expect "Update OpenClaw from git before running doctor?"
+send "n\r"
+expect eof

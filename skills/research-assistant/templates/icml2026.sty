@@ -1,0 +1,41 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{icml2026}[2026/01/01 ICML 2026 Shared Style]
+
+% 1. Page Layout (US Letter, Standard Conference Margins)
+\RequirePackage{geometry}
+\geometry{letterpaper, left=0.75in, right=0.75in, top=0.75in, bottom=1in}
+
+% 2. Two Column Mode
+% We force two column mode unless 'onecolumn' option is passed (not implemented here for simplicity)
+\AtBeginDocument{\twocolumn}
+
+% 3. Typography
+\RequirePackage{times}      % Times New Roman-like font
+\RequirePackage{helvet}     % Helvetica for sans-serif
+\RequirePackage{courier}    % Courier for code
+\RequirePackage{algorithm}
+\RequirePackage{algorithmic}
+\RequirePackage{natbib}     % Ensure natbib is loaded
+
+% 4. Title Formatting
+\RequirePackage{titlesec}
+\titleformat{\section}{\large\bfseries}{\thesection}{1em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{1em}{}
+
+% 5. Abstract Formatting
+\renewenvironment{abstract}{
+  \centerline{\Large \bf Abstract}
+  \vspace{0.5ex}
+  \begin{quote}
+  \small
+}{
+  \end{quote}
+  \vspace{1em}
+}
+
+% 6. Mock ICML Commands to prevent errors if user tries to use them
+\newcommand{\icmltitle}[1]{\title{#1}}
+\newcommand{\icmlauthor}[1]{\author{#1}}
+
+% 7. Caption Styling
+\RequirePackage[font=small,labelfont=bf]{caption}

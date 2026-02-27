@@ -1,0 +1,14 @@
+{
+  "id": "username/researchbot-testkerneldata",
+  "title": "researchbot-test_kernel_data",
+  "code_file": "notebook.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_internet": "true",
+  "enable_internet": "true",
+  "dataset_sources": ["user/data-slug", "user/other-slug"],
+  "competition_sources": [],
+  "kernel_sources": []
+}

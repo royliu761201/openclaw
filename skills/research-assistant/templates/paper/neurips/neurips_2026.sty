@@ -1,0 +1,22 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{neurips_2026}[2026/01/23 NeurIPS 2026 paper style]
+
+\RequirePackage{geometry}
+\geometry{
+  hmargin=1.5in,
+  vmargin=1.5in
+}
+\RequirePackage{titlesec}
+\RequirePackage{fancyhdr}
+\RequirePackage[numbers, compress]{natbib}
+
+% Simple styling to mimic NeurIPS
+\renewcommand{\baselinestretch}{1.0}
+\parindent 12pt
+\parskip 3pt plus 1pt minus 1pt
+
+\newcommand{\neuripsfinal}{
+  \geometry{hmargin=1.0in, vmargin=1.0in}
+}
+\DeclareOption{final}{\neuripsfinal}
+\ProcessOptions\relax

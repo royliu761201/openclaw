@@ -1,0 +1,21 @@
+# Dataset Registry
+# Format:
+#   key: 
+#     source: url | kaggle | gdrive
+#     path: <url_or_slug>
+#     desc: Optional description
+
+cifar10:
+  source: url
+  path: https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz
+  desc: CIFAR-10 Dataset
+
+mnist:
+  source: url
+  path: http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz
+  desc: MNIST Handwritten Digits
+
+# Example GDrive
+# my_drive_data:
+#   source: gdrive
+#   path: https://drive.google.com/uc?id=XYZ

@@ -1,0 +1,53 @@
+\documentclass{article}
+\usepackage{arxiv}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{natbib}
+\usepackage{doi}
+\usepackage{xcolor}
+
+% Import unified macros
+\input{macros}
+
+\title{\OurTitle}
+\author{
+  \OurAuthor \\
+  AI4S Autonomous Scientist \\
+  \texttt{research-bot@ai4s.org}
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\input{sections/00_abstract}
+\end{abstract}
+
+\keywords{\OurKeywords}
+
+\section{Introduction}
+\input{sections/01_introduction}
+
+\section{Related Work}
+\input{sections/02_related_work}
+
+\section{Methodology}
+\input{sections/03_methodology}
+
+\section{Experiments}
+\input{sections/04_experiments}
+
+\section{Conclusion}
+\input{sections/05_conclusion}
+
+\bibliographystyle{unsrtnat}
+\bibliography{references}
+
+\end{document}

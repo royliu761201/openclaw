@@ -14,16 +14,8 @@ def run_applescript(script):
         raise Exception(f"AppleScript error: {err.decode('utf-8').strip()}")
     return out.decode('utf-8').strip()
 
-def main():
-    vpn_url = os.environ.get("VPN_URL")
-    vpn_account = os.environ.get("VPN_ACCOUNT")
-    vpn_password = os.environ.get("VPN_PASSWORD")
-
-    if not all([vpn_url, vpn_account, vpn_password]):
-        print("❌ Missing VPN credentials.")
-        sys.exit(1)
-
-    print("🛡️ Bootstrapping EasyConnect macOS daemon...")
+def login_sequence(url, account, password):
+    print(f"🛡️ Bootstrapping EasyConnect macOS daemon...")
     try:
         subprocess.run(["open", "-a", "EasyConnect"], check=False)
         time.sleep(3)
@@ -33,45 +25,49 @@ def main():
     print(f"🧹 Launching Native System Safari to bypass Sangfor Kernel Routing Blocks...")
     
     applescript_open = f'''
-    tell application "Safari"
-        activate
-        set fullTarget to "{vpn_url}"
-        
-        if (count of windows) = 0 then
-            make new document with properties {{URL:fullTarget}}
-        else
-            -- V4: User explicitly requested to just pin/recycle a fixed tab
-            -- We just ruthlessly assume "Tab 1 of Window 1" is the designated VPN tab
-            set targetTab to tab 1 of front window
+    with timeout of 10 seconds
+        tell application "Safari"
+            activate
+            set fullTarget to "{url}"
             
-            -- Optional optimization: Only refresh if it's not already on the portal.
-            set currentUrl to URL of targetTab as string
-            if currentUrl does not contain "210.42.72.77" then
+            if (count of windows) = 0 then
+                make new document with properties {{URL:fullTarget}}
+            else
+                set targetTab to tab 1 of front window
                 set URL of targetTab to fullTarget
+                set current tab of front window to targetTab
             end if
-            set current tab of front window to targetTab
-        end if
-    end tell
+        end tell
+    end timeout
     '''
     try:
         run_applescript(applescript_open)
     except Exception as e:
         print(f"❌ Failed to open Safari: {e}")
-        sys.exit(1)
+        # Final attempt: force kill and restart
+        subprocess.run(["killall", "Safari"], check=False)
+        time.sleep(2)
+        subprocess.run(["open", "-a", "Safari"], check=False)
+        return False
 
     print("⏳ Waiting for Sangfor Avalon.js to load in Safari...")
-    time.sleep(5)
+    time.sleep(8)
     
     js_payload = f'''
     (function() {{
         try {{
             let account = document.querySelector('input[type="text"][tabindex="1"]');
             let pwd = document.querySelector('input[type="password"][tabindex="2"], #loginPwd');
-            if (!account || !pwd) return "FORM_NOT_FOUND";
+            if (!account || !pwd) {{
+                let relogBtn = Array.from(document.querySelectorAll('button, span, div, a')).find(el => el.textContent && el.textContent.includes('重新登录'));
+                if (relogBtn) {{
+                    relogBtn.click();
+                    return "JS_ERROR:CLICKED_RELOGIN";
+                }}
+                return "FORM_NOT_FOUND";
+            }}
             
-            // Bypass Avalon.js Reactivity
             let nativeSet = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
-            
             let triggerEvents = (el) => {{
                 el.dispatchEvent(new Event('focus', {{bubbles: true}}));
                 el.dispatchEvent(new Event('input', {{bubbles: true}}));
@@ -79,10 +75,10 @@ def main():
                 el.dispatchEvent(new Event('blur', {{bubbles: true}}));
             }};
             
-            nativeSet.call(account, '{vpn_account}');
+            nativeSet.call(account, '{account}');
             triggerEvents(account);
             
-            nativeSet.call(pwd, '{vpn_password}');
+            nativeSet.call(pwd, '{password}');
             triggerEvents(pwd);
             
             let icon = document.querySelector('i.iconfont');
@@ -108,34 +104,31 @@ def main():
     
     js_payload_escaped = js_payload.replace('"', '\\"')
     applescript_inject = f'''
-    tell application "Safari"
-        set js_result to do JavaScript "{js_payload_escaped}" in document 1
-        return js_result
-    end tell
+    with timeout of 15 seconds
+        tell application "Safari"
+            set js_result to do JavaScript "{js_payload_escaped}" in document 1
+            return js_result
+        end tell
+    end timeout
     '''
     
-    print("💻 Polling for login form and injecting credentials natively...")
-    login_success = False
+    login_injected = False
     for attempt in range(15): 
         try:
             result = run_applescript(applescript_inject)
             if "SUCCESS" in result:
-                print("✅ Credentials injected and login clicked successfully!")
-                login_success = True
+                login_injected = True
                 break
-            elif "JS_ERROR" in result:
-                print(f"⚠️ JavaScript Error: {result}")
         except Exception as e:
-            if "AppleEvent" in str(e) or "JavaScript" in str(e):
-                print("🚨 CRITICAL ERROR: Safari is blocking AppleScript JavaScript.")
-                sys.exit(1)
+            print(f"⚠️ JS Injection error: {e}")
+            pass
         time.sleep(2)
             
-    if not login_success:
-        print("❌ Failed to find login form after 40 seconds. Check if Safari loaded the page correctly.")
+    if not login_injected:
+        return False
         
-    print("⏳ Waiting 15 seconds for dashboard to load and ECAgent to negotiate routing...")
-    time.sleep(15)
+    print("⏳ Waiting for tunnel negotiation...")
+    time.sleep(20)
     
     js_tunnel = '''
     (function() {
@@ -147,14 +140,9 @@ def main():
                     return "CLICKED_EASYCONNECT";
                 }
             }
-            let first = document.querySelector('.resource-item, .app-item');
-            if (first) {
-                first.click();
-                return "CLICKED_FALLBACK";
-            }
             return "NO_RESOURCE_FOUND";
         } catch (err) {
-            return "JS_ERROR:" + err.toString();
+            return "JS_ERROR";
         }
     })();
     '''
@@ -166,35 +154,66 @@ def main():
     end tell
     '''
     
-    tunnel_success = False
-    for attempt in range(15):
-        try:
-            tunnel_result = run_applescript(applescript_tunnel)
-            if "CLICKED" in tunnel_result:
-                print(f"✅ Tunnel Trigger executed: {tunnel_result}")
-                tunnel_success = True
-                break
-        except Exception as e:
-            pass
-        time.sleep(2)
+    try:
+        run_applescript(applescript_tunnel)
+    except:
+        pass
 
-    print("🎉 VPN sequence complete! Hiding Safari from view...")
+    time.sleep(10)
     try:
         run_applescript('tell application "System Events" to set visible of process "Safari" to false')
     except:
         pass
+    return True
 
-    print("💓 Injecting HTTP Keep-Alive Daemon...")
-    session = requests.Session()
-    session.verify = False
+def check_connectivity():
+    # Attempt to ping the internal GPU machine or a known internal resource
+    try:
+        # 10.190.30.220 is a key internal target from secrets.json
+        subprocess.run(["ping", "-c", "2", "-W", "2", "10.190.30.220"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return True
+    except:
+        return False
+
+def main():
+    from dotenv import load_dotenv
+    # Standard OpenClaw secrets path
+    env_path = os.path.expanduser("~/.openclaw_secrets/.env")
+    load_dotenv(env_path)
+    
+    vpn_url = os.environ.get("VPN_URL")
+    vpn_account = os.environ.get("VPN_ACCOUNT")
+    vpn_password = os.environ.get("VPN_PASSWORD")
+    vpn_backup_account = os.environ.get("VPN_BACKUP_ACCOUNT")
+    vpn_backup_password = os.environ.get("VPN_BACKUP_PASSWORD")
+
+    if not all([vpn_url, vpn_account, vpn_password]):
+        print("❌ Missing primary VPN credentials.")
+        sys.exit(1)
+
+    print("🚀 Starting 24/7 VPN Watchdog...")
     
     while True:
+        if not check_connectivity():
+            print(f"⚠️ Connectivity lost. Attempting primary login ({vpn_account})...")
+            if not login_sequence(vpn_url, vpn_account, vpn_password):
+                if vpn_backup_account and vpn_backup_password:
+                    print(f"🔄 Primary failed. Attempting backup login ({vpn_backup_account})...")
+                    login_sequence(vpn_url, vpn_backup_account, vpn_backup_password)
+            
+            # Wait for route propagation
+            time.sleep(30)
+            if check_connectivity():
+                print("✅ VPN Connected and connectivity confirmed.")
+            else:
+                print("❌ Connectivity check failed after login attempt.")
+        else:
+            print("💓 Connectivity OK.", flush=True)
+            
         time.sleep(300)
-        try:
-            session.head("https://210.42.72.77", verify=False, timeout=5)
-            print("💓 Pulse Sent.", flush=True)
-        except Exception:
-            pass
+
+if __name__ == "__main__":
+    main()
 
 if __name__ == "__main__":
     main()

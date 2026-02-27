@@ -1,0 +1,78 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[UTF8, fontset=mac]{ctex}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{fancyhdr}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{hyperref}
+
+% Geometry Setup
+\geometry{left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+
+% Header/Footer
+\pagestyle{fancy}
+\fancyhf{}
+\chead{国家自然科学基金重大研究计划申请书（2026版）}
+\cfoot{\thepage}
+
+% Hyperref Setup
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    citecolor=blue,
+}
+
+\title{\textbf{可解释、可通用的下一代人工智能方法}\\重大研究计划项目申请书}
+\author{申请人：[姓名] \\ 依托单位：[单位名称]}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+在此处撰写摘要（限400字）。重点阐述项目的科学意义、研究内容、创新点及预期成果。
+\end{abstract}
+\newpage
+
+\setcounter{page}{1}
+
+% Part 1
+\section*{（一）重点阐述内容（建议不超过5000字）}
+
+\subsection*{1．本项目的研究内容、项目开展的必要性及与重大研究计划总体科学目标的关系}
+\input{sections/01_content_necessity}
+
+\subsection*{2．本项目拟解决的关键科学问题、拟采取的研究方案及可行性分析}
+\input{sections/02_problem_scheme}
+
+\subsection*{3．年度研究计划及预期研究成果}
+\input{sections/03_plan_outcome}
+
+% Part 2
+\section*{（二）研究基础与工作条件}
+
+\subsection*{1．研究基础}
+\input{sections/04_research_basis}
+
+\subsection*{2．正在承担的与本项目相关的科研项目情况}
+\input{sections/05_ongoing_projects}
+
+\subsection*{3．完成国家自然科学基金项目情况}
+\input{sections/06_finished_projects}
+
+% Part 3
+\section*{（三）其他需要说明的情况}
+\input{sections/07_other_info}
+
+\newpage
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}
