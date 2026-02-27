@@ -1,0 +1,12 @@
+#!/usr/bin/expect -f
+set timeout 10
+spawn pnpm openclaw --profile dev config
+expect "Where will the Gateway run?"
+send "\r"
+expect "Token"
+send "\r"
+expect "Port"
+send "\r"
+expect "Proceed to Channel configuration?"
+send "y\r"
+expect eof

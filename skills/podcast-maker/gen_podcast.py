@@ -67,7 +67,7 @@ def main():
         stdin, stdout, stderr = ssh.exec_command(check_cmd)
         if not stdout.read():
             print("Remote API is not running. Starting FastTTS Server via Conda...")
-            start_cmd = "source /jhdx0003008/miniconda3/etc/profile.d/conda.sh && conda activate chattts && nohup python /jhdx0003008/openclaw/skills/ChatTTS/app.py > /dev/null 2>&1 &"
+            start_cmd = "source ~/miniconda3/etc/profile.d/conda.sh && conda activate chattts && cd /jhdx0003008/openclaw/skills/ChatTTS && export HTTP_PROXY= HTTPS_PROXY= ALL_PROXY= http_proxy= https_proxy= all_proxy= && nohup python app.py > api.log 2>&1 &"
             ssh.exec_command(start_cmd)
             # Give it time to load the 3GB Torch model into VRAM
             print("Waiting 15 seconds for ChatTTS models to load into GPU VRAM...")
@@ -78,12 +78,12 @@ def main():
         # SSH tunnel is tricky inline, so we'll just execute a curl command on the remote server 
         # and pipe the binary audio back. This avoids port-forwarding threading complexities.
         
-        json_str = json.dumps(payload).replace("'", "'\"'\"'") # Escape for bash single quotes
+        json_str = json.dumps({"dialogue": payload}).replace("'", "'\"'\"'") # Escape for bash single quotes
         
         print("Submitting script to remote ChatTTS API via curl...")
         
-        # We send the request locally on the remote box via curl, and capture the binary output to stdout
-        curl_cmd = f"curl -s -X POST http://127.0.0.1:8000/synthesize -H 'Content-Type: application/json' -d '{json_str}' --output /tmp/tts_out.ogg"
+        # We send the request locally on the remote box via curl, bypassing any rogue environment proxies
+        curl_cmd = f"export http_proxy= https_proxy= all_proxy= HTTP_PROXY= HTTPS_PROXY= ALL_PROXY= && curl -sSf -X POST http://127.0.0.1:8000/synthesize -H 'Content-Type: application/json' -d '{json_str}' --output /tmp/tts_out.wav"
         
         stdin, stdout, stderr = ssh.exec_command(curl_cmd)
         
@@ -98,7 +98,7 @@ def main():
         # Download the file via SFTP
         sftp = ssh.open_sftp()
         print(f"Downloading finished audio to {args.output}...")
-        sftp.get("/tmp/tts_out.ogg", args.output)
+        sftp.get("/tmp/tts_out.wav", args.output)
         sftp.close()
         
         print(f"Podcast successfully generated and saved to: {args.output}")

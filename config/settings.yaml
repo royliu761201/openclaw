@@ -1,0 +1,20 @@
+# ResearchBot Global Configuration
+
+agent:
+  name: "ResearchBot"
+  model_tier: "gemini-2.0-flash-exp" # Default tier
+
+paths:
+  data_root: "data"
+  shared_vault: "research_vault/library/datasets"
+  remote_root: "/tmp/data"
+
+kaggle:
+  kernel_prefix: "researchbot"
+  
+ssh:
+  default_user: "ubuntu"
+  
+logging:
+  level: "INFO"
+  file: "research_bot.log"

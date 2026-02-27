@@ -1,0 +1,4 @@
+[
+  {"speaker": "host", "text": "Welcome to the OpenClaw podcast testing suite."},
+  {"speaker": "guest", "text": "It is fantastic to finally hear the local text to speech processing directly from the remote GPU."}
+]

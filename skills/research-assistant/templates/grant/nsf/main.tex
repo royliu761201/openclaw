@@ -1,0 +1,61 @@
+\documentclass{article}
+\usepackage{ctex}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\geometry{a4paper, scale=0.8}
+
+\title{<<TITLE>>}
+\author{Principal Investigator: AI4S ResearchBot}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+% 1. Project Summary (Standalone Page)
+\section*{Project Summary}
+\input{sections/00_summary}
+\newpage
+
+\tableofcontents
+\newpage
+
+% 2. Project Description (15 Pages Limit)
+\section{Part 1: Research Background & Significance}
+\noindent \textbf{Strategic Goal:} This project aligns with national priorities in Artificial Intelligence...
+\input{sections/Background}
+
+\section{Part 2: Research Content & Targets}
+\input{sections/Content}
+
+\section{Part 3: Methodology & Technical Roadmap}
+\begin{figure}[h]
+    \centering
+    % Placeholder for generated flowcart
+    \includegraphics[width=0.9\textwidth]{figs/technical_roadmap.png}
+    \caption{Technical Roadmap}
+\end{figure}
+\input{sections/Methodology}
+
+\section{Part 4: Research Foundation}
+\begin{figure}[h]
+    \centering
+    % Placeholder for prelim results
+    \includegraphics[width=0.8\textwidth]{figs/prelim_results.png}
+    \caption{Preliminary Verification Results}
+\end{figure}
+\input{sections/Foundation}
+
+\section{Broader Impacts}
+\input{sections/09_practical_application}
+
+% 3. Budget
+\section{Part 5: Budget Plan}
+\input{sections/budget}
+
+\bibliographystyle{plain}
+\bibliography{refs}
+
+\end{document}
