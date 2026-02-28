@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "description": "Life Assistant node configuration for Mac 03"
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "google/gemini-3-flash-preview"
+      },
+      "skipBootstrap": true,
+      "skills": ["life-assistant"],
+      "compaction": {
+        "mode": "safeguard"
+      }
+    }
+  },
+  "tools": {
+    "web": {
+      "search": {
+        "enabled": true,
+        "provider": "tavily"
+      }
+    }
+  },
+  "channels": {
+    "feishu": {
+      "enabled": true,
+      "domain": "feishu",
+      "connectionMode": "websocket",
+      "dmPolicy": "open",
+      "groupPolicy": "allowlist",
+      "allowFrom": ["*"],
+      "accounts": {
+        "life": {
+          "appId": "cli_a9282309fdf85bb6",
+          "appSecret": "S9OykUWPbszEZv3rOdwCdhOMFkQghC2t"
+        }
+      }
+    }
+  },
+  "gateway": {
+    "enabled": false
+  },
+  "plugins": {
+    "entries": {
+      "feishu": {
+        "enabled": true
+      }
+    }
+  }
+}
