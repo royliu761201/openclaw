@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "description": "Wealth Assistant node configuration for Mac 03"
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "google/gemini-3-flash-preview"
+      },
+      "skipBootstrap": true,
+      "skills": ["wealth-assistant"],
+      "compaction": {
+        "mode": "safeguard"
+      }
+    }
+  },
+  "tools": {
+    "web": {
+      "search": {
+        "enabled": true,
+        "provider": "tavily"
+      }
+    }
+  },
+  "channels": {
+    "feishu": {
+      "enabled": true,
+      "domain": "feishu",
+      "connectionMode": "websocket",
+      "dmPolicy": "open",
+      "groupPolicy": "allowlist",
+      "allowFrom": ["*"],
+      "accounts": {
+        "wealth": {
+          "appId": "cli_a92822d596e35bd3",
+          "appSecret": "YgiRciSfF3Sl2mQAulMuhVLgBEEAcyF"
+        }
+      }
+    }
+  },
+  "gateway": {
+    "enabled": false
+  },
+  "plugins": {
+    "entries": {
+      "feishu": {
+        "enabled": true
+      }
+    }
+  }
+}
