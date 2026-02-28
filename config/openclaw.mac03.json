@@ -1,0 +1,80 @@
+{
+  "meta": {
+    "description": "Multi-Agent Node Configuration for Mac 03 (I/O & Stable Gateway)"
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "google/gemini-3-flash-preview"
+      },
+      "skipBootstrap": true,
+      "compaction": {
+        "mode": "safeguard"
+      }
+    },
+    "list": [
+      {
+        "id": "agent-wealth",
+        "skills": ["wealth-assistant"]
+      },
+      {
+        "id": "agent-life",
+        "skills": ["life-assistant"]
+      }
+    ]
+  },
+  "bindings": [
+    {
+      "agentId": "agent-wealth",
+      "match": {
+        "channel": "feishu",
+        "accountId": "wealth"
+      }
+    },
+    {
+      "agentId": "agent-life",
+      "match": {
+        "channel": "feishu",
+        "accountId": "life"
+      }
+    }
+  ],
+  "tools": {
+    "web": {
+      "search": {
+        "enabled": true,
+        "provider": "tavily"
+      }
+    }
+  },
+  "channels": {
+    "feishu": {
+      "enabled": true,
+      "domain": "feishu",
+      "connectionMode": "websocket",
+      "dmPolicy": "open",
+      "groupPolicy": "allowlist",
+      "allowFrom": ["*"],
+      "accounts": {
+        "wealth": {
+          "appId": "cli_a92822d596e35bd3",
+          "appSecret": "YgiRciSfF3Sl2mQAulMuhVLgBEEAcyF"
+        },
+        "life": {
+          "appId": "cli_a9282309fdf85bb6",
+          "appSecret": "S9OykUWPbszEZv3rOdwCdhOMFkQghC2t"
+        }
+      }
+    }
+  },
+  "gateway": {
+    "enabled": false
+  },
+  "plugins": {
+    "entries": {
+      "feishu": {
+        "enabled": true
+      }
+    }
+  }
+}
