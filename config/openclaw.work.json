@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "description": "Work Assistant node configuration for Mac 02"
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "google/gemini-3-flash-preview"
+      },
+      "skipBootstrap": true,
+      "skills": ["work-assistant"],
+      "compaction": {
+        "mode": "safeguard"
+      }
+    }
+  },
+  "tools": {
+    "web": {
+      "search": {
+        "enabled": true,
+        "provider": "tavily"
+      }
+    }
+  },
+  "channels": {
+    "feishu": {
+      "enabled": true,
+      "domain": "feishu",
+      "connectionMode": "websocket",
+      "dmPolicy": "open",
+      "groupPolicy": "allowlist",
+      "allowFrom": ["*"],
+      "accounts": {
+        "work": {
+          "appId": "cli_a9282264a3389bc4",
+          "appSecret": "UVIF9RU3pwSklF7MIltryfsNnKUZ7Oys"
+        }
+      }
+    }
+  },
+  "gateway": {
+    "enabled": false
+  },
+  "plugins": {
+    "entries": {
+      "feishu": {
+        "enabled": true
+      }
+    }
+  }
+}
