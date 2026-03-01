@@ -2,15 +2,13 @@
 import argparse
 import subprocess
 import os
-import shutil
 import sys
-import datetime
+import re
 
-SKILL_NAME = "latex"
-SKILL_VERSION = "0.2.0"
+SKILL_NAME = "robust-latex"
+SKILL_VERSION = "1.0.0"
 
 def run_command(cmd, work_dir, timeout=300):
-    """Run a subprocess command with timeout and error capture."""
     try:
         result = subprocess.run(
             cmd,
@@ -30,22 +28,37 @@ def run_command(cmd, work_dir, timeout=300):
         print(f"Error executing command {' '.join(cmd)}: {e}")
         return None
 
-def check_for_errors(stdout):
-    """Parse LaTeX stdout for critical errors."""
-    errors = []
-    lines = stdout.splitlines()
-    for line in lines:
-        if line.startswith('! '):
-            errors.append(line)
-        elif line.startswith('l.'): # Line number context
-            errors.append(line)
-    return errors
+def detect_engine(file_path):
+    """Automatically detect whether to use pdflatex or xelatex based on document content."""
+    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+        content = f.read()
+        
+    if re.search(r'\\usepackage(\[.*?\])?\{xeCJK\}', content) or \
+       re.search(r'\\documentclass(\[.*?\])?\{ctexart\}', content) or \
+       re.search(r'\\documentclass(\[.*?\])?\{ctexrep\}', content):
+        return "xelatex"
+    return "pdflatex"
 
-def perform_compile(file_path, timeout=300):
-    """
-    Compile a .tex file to PDF using pdflatex -> bibtex -> pdflatex -> pdflatex.
-    No automatic cleanup here to allow inspection of logs if needed.
-    """
+def audit_log_files(log_path):
+    """Deep scan of the LaTeX .log file for silent failures like Missing Characters."""
+    if not os.path.exists(log_path):
+        return ["Log file not found, compilation might have crashed completely."]
+        
+    critical_errors = []
+    with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
+        for line in f:
+            if "Missing character:" in line:
+                critical_errors.append(line.strip())
+            elif "! LaTeX Error:" in line:
+                critical_errors.append(line.strip())
+            elif "Fatal error" in line:
+                critical_errors.append(line.strip())
+            elif "! Critical" in line:
+                critical_errors.append(line.strip())
+                
+    return critical_errors
+
+def perform_compile(file_path, timeout=300, engine=None):
     file_path = os.path.abspath(file_path)
     if not os.path.exists(file_path):
         print(f"Error: File not found: {file_path}")
@@ -55,29 +68,25 @@ def perform_compile(file_path, timeout=300):
     basename = os.path.basename(file_path)
     base_no_ext = os.path.splitext(basename)[0]
     
-    # Define commands
-    pdflatex_cmd = [
-        "pdflatex",
+    if not engine:
+        engine = detect_engine(file_path)
+        
+    print(f"[{SKILL_NAME}] Compiling document: {basename}")
+    print(f"[{SKILL_NAME}] Auto-detected Engine: {engine}")
+    
+    latex_cmd = [
+        engine,
         "-interaction=nonstopmode",
+        "-halt-on-error",
         f"-output-directory={work_dir}",
         basename 
     ]
-    
-    bibtex_cmd = [
-        "bibtex",
-        base_no_ext
-    ]
+    bibtex_cmd = ["bibtex", base_no_ext]
 
-    print(f"Drafting LaTeX document: {basename}")
-    print(f"Working directory: {work_dir}")
-    print(f"Timeout: {timeout}s")
-
-    # Pass 1: pdflatex (Generate .aux)
-    print(">> Pass 1/4: pdflatex (Structure)")
-    res1 = run_command(pdflatex_cmd, work_dir, timeout)
+    print(">> Pass 1: Syntax & Hierarchy")
+    res1 = run_command(latex_cmd, work_dir, timeout)
     if not res1: return False
     
-    # Check if BibTeX is needed
     aux_file = os.path.join(work_dir, f"{base_no_ext}.aux")
     needs_bibtex = False
     if os.path.exists(aux_file):
@@ -85,118 +94,47 @@ def perform_compile(file_path, timeout=300):
             content = f.read()
             if "\\bibdata" in content or "\\bibstyle" in content:
                 needs_bibtex = True
-    
-    # Pass 2: bibtex (if needed)
+                
     if needs_bibtex:
-        print(">> Pass 2/4: bibtex (Bibliography)")
-        res_bib = run_command(bibtex_cmd, work_dir, timeout)
-        if not res_bib: 
-            print("Warning: BibTeX failed, but continuing...")
-        elif res_bib.returncode != 0:
-            print("Warning: BibTeX returned non-zero exit code.")
-            # print("\n".join(res_bib.stdout.splitlines()[-10:]))
-    else:
-        print(">> Pass 2/4: Skipping bibtex (no bibliography found).")
+        print(">> Pass 2: Bibliography Resolving")
+        run_command(bibtex_cmd, work_dir, timeout)
+        print(">> Pass 3: Cross-Ref Linking")
+        run_command(latex_cmd, work_dir, timeout)
 
-    # Pass 3: pdflatex (Link citations)
-    print(">> Pass 3/4: pdflatex (Linking)")
-    res3 = run_command(pdflatex_cmd, work_dir, timeout)
-    if not res3: return False
+    print(">> Pass 4: Final Document Generation")
+    res_final = run_command(latex_cmd, work_dir, timeout)
+    if not res_final: return False
 
-    # Pass 4: pdflatex (Finalize refs)
-    print(">> Pass 4/4: pdflatex (Final)")
-    res4 = run_command(pdflatex_cmd, work_dir, timeout)
-    if not res4: return False
-
-    # Final Check
-    if res4.returncode == 0:
-        pdf_file = os.path.join(work_dir, f"{base_no_ext}.pdf")
-        if os.path.exists(pdf_file):
-            print(f"✅ SUCCESS: PDF generated at {pdf_file}")
-            
-            # Check for unresolved references in final log
-            log_file = os.path.join(work_dir, f"{base_no_ext}.log")
-            if os.path.exists(log_file):
-                with open(log_file, 'r', errors='ignore') as f:
-                    log_content = f.read()
-                    if "undefined reference" in log_content or "undefined citation" in log_content: 
-                        print("⚠️ WARNING: There are lingering undefined references or citations.")
-            return True
-        else:
-            print("❌ Error: Exit code 0, but PDF not found.")
-            return False
-    else:
-        print("❌ COMPILATION FAILED!")
-        errors = check_for_errors(res4.stdout)
-        if errors:
-            print("\nCritical Errors:")
-            for err in errors:
-                print(err)
-        else:
-            print("\nLast 20 lines of output:")
-            print("\n".join(res4.stdout.splitlines()[-20:]))
+    # QUALITY INSPECTION (The Master Gate)
+    log_file = os.path.join(work_dir, f"{base_no_ext}.log")
+    pdf_file = os.path.join(work_dir, f"{base_no_ext}.pdf")
+    
+    print(f"[{SKILL_NAME}] Initiating deep log audit on {base_no_ext}.log...")
+    fatal_flaws = audit_log_files(log_file)
+    
+    if fatal_flaws:
+        print(f"❌ COMPILATION REJECTED: {len(fatal_flaws)} critical flaws found in the log.")
+        for flaw in fatal_flaws:
+            print(f"   -> {flaw}")
+        print("\nAgent Action Required: Address the missing fonts/dependencies and recompile.")
         return False
 
-def perform_clean(file_path):
-    """Remove auxiliary files generated by LaTeX."""
-    file_path = os.path.abspath(file_path)
-    work_dir = os.path.dirname(file_path)
-    basename = os.path.basename(file_path)
-    base_no_ext = os.path.splitext(basename)[0]
-    
-    extensions = ['.aux', '.log', '.out', '.bbl', '.blg', '.toc', '.lof', '.lot', '.nav', '.snm', '.vrb']
-    removed_count = 0
-    
-    print(f"Cleaning auxiliary files for {basename}...")
-    for ext in extensions:
-        file_to_remove = os.path.join(work_dir, base_no_ext + ext)
-        if os.path.exists(file_to_remove):
-            try:
-                os.remove(file_to_remove)
-                removed_count += 1
-            except OSError:
-                pass
-    print(f"Cleaned {removed_count} files.")
+    if res_final.returncode != 0 or not os.path.exists(pdf_file):
+        print("❌ COMPILATION FAILED: Compiler returned non-zero or PDF is missing.")
+        return False
+        
+    print(f"✅ SUCCESS: PDF generated at {pdf_file} with PERFECT zero-error log validation.")
     return True
 
-def handle_compile(args):
-    # If clean is requested (default), we only clean if success.
-    # If explicit --clean, we might want to force it?
-    # Logic: compile -> if success, clean.
-    success = perform_compile(args.file, args.timeout)
-    if success and args.clean:
-        perform_clean(args.file)
-    sys.exit(0 if success else 1)
-
-def handle_clean(args):
-    perform_clean(args.file)
-    sys.exit(0)
-
 def main():
-    parser = argparse.ArgumentParser(
-        description=f"OpenClaw Latex CLI Tool v{SKILL_VERSION}",
-        formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    subparsers = parser.add_subparsers(dest="command", required=True)
-
-    # Subcommand: compile
-    parser_compile = subparsers.add_parser("compile", help="Compile .tex to PDF")
-    parser_compile.add_argument("file", help="Path to the .tex file")
-    parser_compile.add_argument("--clean", action="store_true", default=True, help="Clean aux files after build (default: True)")
-    parser_compile.add_argument("--no-clean", action="store_false", dest="clean", help="Keep aux files")
-    parser_compile.add_argument("--timeout", type=int, default=300, help="Compilation timeout in seconds")
-    parser_compile.set_defaults(func=handle_compile)
-
-    # Subcommand: clean
-    parser_clean = subparsers.add_parser("clean", help="Clean auxiliary files")
-    parser_clean.add_argument("file", help="Path to the .tex file (to identify base name)")
-    parser_clean.set_defaults(func=handle_clean)
+    parser = argparse.ArgumentParser(description=f"OpenClaw Robust LaTeX Agent Target v{SKILL_VERSION}")
+    parser.add_argument("file", help="Path to the .tex main file")
+    parser.add_argument("--engine", help="Force engine (pdflatex, xelatex)", default=None)
+    parser.add_argument("--timeout", type=int, default=300, help="Timeout in seconds")
 
     args = parser.parse_args()
-    if hasattr(args, 'func'):
-        args.func(args)
-    else:
-        parser.print_help()
+    success = perform_compile(args.file, args.timeout, args.engine)
+    sys.exit(0 if success else 1)
 
 if __name__ == "__main__":
     main()

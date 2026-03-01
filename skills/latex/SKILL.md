@@ -1,45 +1,38 @@
 ---
-name: latex
-emoji: 📄
-description: Compile LaTeX documents to PDF with BibTeX support in a single command.
-metadata: { "openclaw": { "requires": { "bins": ["pdflatex", "bibtex", "python3"] } } }
+name: robust-latex
+description: Bulletproof LaTeX compilation skill with zero-error log scanning, engine auto-detection, and sandbox character drop prevention.
 ---
 
-# LaTeX Tool
+# Robust LaTeX Compilation
 
-A specialized CLI capability for compiling academic papers.
+## Overview
 
-It handles the complex `pdflatex -> bibtex -> pdflatex -> pdflatex` multi-pass compilation cycle automatically, ensuring all cross-references and citations are resolved.
+The `robust-latex` skill completely supersedes all previous fragmented legacy LaTeX tools (such as `latex_compiler.py`, `latex_injector.py`, and custom shell scripts). It is the **single source of truth** for all OpenClaw agents, including ResearchBot and MyAI, when compiling `.tex` documents to PDF.
 
-## Tools
+## Core Mandates
 
-### `compile`
+Agents handling LaTeX tasks **must** adhere strictly to the following execution contract:
 
-Compile a .tex file to PDF using a multi-pass strategy (pdflatex -> bibtex -> pdflatex -> pdflatex).
+1.  **Do not use native OS commands directly.** Never invoke `pdflatex` or `xelatex` using raw terminal commands. The target host machine might be missing critical font databases (e.g., Fandol on Mac 03) or have restrictive sudo rules.
+2.  **Always use the `latex_tool.py` wrapper.**
+    The tool handles engine selection (`pdflatex` vs `xelatex`), sequential `bibtex` passes, and crucially, an aggressive deep-scan of the generated `.log` file to catch silent `Missing character` drops that the native compiler ignores.
 
-- **file** (string, required): Path to the .tex file.
-- **clean** (boolean, optional): Clean aux files after build (default: True).
-- **timeout** (integer, optional): Compilation timeout in seconds (default: 300).
+## Execution Contract
 
-**Usage**:
+To compile a project:
 
-```bash
-skills/latex/scripts/latex_tool.py compile workspace/paper/main.tex
+```sh
+python /Users/roy-jd/Documents/projects/openclaw/skills/latex/scripts/latex_tool.py <path_to_main.tex>
 ```
 
-### `clean`
+### Interpretation of Results
 
-Manually clean up auxiliary files (`.aux`, `.log`, etc.) without compiling.
+- **Success (Exit Code 0):** The PDF is securely generated, and the log is confirmed 100% clean. The agent may freely return the resulting PDF to the user and mark the task as complete.
+- **Failure (Exit Code 1):** The terminal output will specify exactly why the compilation was rejected.
+  - If the rejection involves `Missing character:`, the agent **must** immediately investigate the required fonts or inject offline bundled dependencies before attempting another compilation. Never ignore these warnings.
+  - If the rejection involves `! LaTeX Error`, the agent must parse the exact error and modify the `.tex` syntax accordingly.
 
-- **file** (string, required): Path to the .tex file (to identify base name).
+## Internal Architecture
 
-**Usage**:
-
-```bash
-skills/latex/scripts/latex_tool.py clean workspace/paper/main.tex
-```
-
-## Troubleshooting
-
-- **PDF not found**: If the command succeeds but no PDF is found, check if `pdflatex` output directory settings are correct (the script handles this automatically).
-- **Undefined References**: The script will warn you if references are still undefined after 3 passes. Check your `.bib` file or keys.
+- **Engine Auto-Detection:** The script reads the target `.tex` file header. If macros like `xeCJK` or `ctexart` are present, it dynamically switches to the `xelatex` pipeline to handle CJK and massive font sets.
+- **The Master Gate:** The tool will refuse to exit cleanly if it detects _any_ silent character drops in `main.log`, forcibly escalating silent LaTeX failures into hard CI/CD blockers.
