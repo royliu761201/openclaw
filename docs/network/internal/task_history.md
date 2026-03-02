@@ -1,0 +1,23 @@
+# Windows Machine Persistence Setup
+
+- [x] Planning and Verification of Current State <!-- id: 0 -->
+- [x] Ensure OpenSSH Persistence <!-- id: 1 -->
+- [x] Ensure Tailscale Persistence <!-- id: 2 -->
+- [x] Configure Power Settings for 24/7 Operation <!-- id: 3 -->
+- [x] Extreme 24/7 Hardening & Cold Reboot Verification <!-- id: 18 -->
+- [x] Final Verification and Walkthrough (Reboot Troubleshooting) <!-- id: 4 -->
+- [x] Disable Auto-Update Reboots & Power Hardening <!-- id: 5 -->
+- [x] Hardening SSH Authorization & Firewall Persistence <!-- id: 6 -->
+- [x] Diagnose Network Routing & Campus Network Optimization <!-- id: 7 -->
+- [x] Configure Direct GPU Access (Note: Routing issue detected) <!-- id: 8 -->
+- [x] Setup Passwordless SSH from 02/03 to 06 <!-- id: 9 -->
+- [x] Restore International Internet Access (Exit Node) <!-- id: 12 -->
+- [x] Execute Split Tunneling & Firewall Fix (Roy-06) <!-- id: 13 -->
+- [x] Purify Roy-02 SSH & Setup Roy-06 ProxyJump <!-- id: 14 -->
+- [x] Final Acceptance Test (WeChat, GPU, YouTube) <!-- id: 15 -->
+- [x] Roy-03 VPN Dependency Memo Added <!-- id: 16 -->
+- [x] Hardware 06 for 24/7 Persistence <!-- id: 17 -->
+- [x] Fix Auto-Logon Credentials <!-- id: 19 -->
+- [x] Implement Auto-Lock & Screen Off <!-- id: 20 -->
+- [x] Global GPU Access Verification (01, 02, 03, 05) <!-- id: 21 -->
+- [x] Final Reflection & Workspace Git Commit <!-- id: 22 -->
