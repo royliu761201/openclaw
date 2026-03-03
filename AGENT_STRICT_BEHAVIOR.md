@@ -43,5 +43,9 @@
 - **规范**：
   - **存储逻辑**：必须遵循“硬存软链”原则。数据物理下沉至 `/jxdxxxx/openclaw_data`，`/root` 仅限符号链接。
   - **数据集管理**：必须遵循“三层五段制”命名（如 `hf_llama3_v1`）。
-  - **实验闭环**：每个 `03_output` 必须结构化包含 `logs/`, `checkpoints/`, `visuals/`, `metrics.json` 及 `run_info.yaml` (包含 Git ID 和 Dataset ID)。
-  - **下载加速**：数据集下载强制调用 `aria2c` 16 并发模式，严禁使用单线程 `curl`。
+  - **硬性宪章**: 所有科研 Agent 必须强制遵守 [RESEARCH_COMMANDMENTS.md](file:///Users/roy-jd/Documents/projects/openclaw/docs/standards/RESEARCH_COMMANDMENTS.md)。
+- **零冗余存储**: 严禁在 `/root` 下存放 GB 级文件，实验产出必须通过 `research-core` 下沉至物理盘。
+- **强制溯源**: 所有实验结果必须配有 `run_info.yaml`，否则审计无效，物理数据将被强制清洗。
+- **24h 自愈**: 长耗时任务必须配套 `watchdog.sh`，严禁静默卡死 5 分钟以上。
+- **实验闭环**：每个 `03_output` 必须结构化包含 `logs/`, `checkpoints/`, `visuals/`, `metrics.json` 及 `run_info.yaml` (包含 Git ID 和 Dataset ID)。
+- **下载加速**：数据集下载强制调用 `aria2c` 16 并发模式，严禁使用单线程 `curl`。
