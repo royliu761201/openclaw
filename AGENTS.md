@@ -141,7 +141,20 @@
 
 - Rebrand/migration issues or legacy config/service warnings: run `openclaw doctor` (see `docs/gateway/doctor.md`).
 
-## Agent-Specific Notes
+# OpenClaw Agent Registry & Collaboration Protocol
+
+## 🚀 科研团队自动化准则 (Research Ops Standard)
+
+所有参与科研项目（Frenet, Pesso, CaLaM 等）的 Agent 必须使用 `research-core` 统一工具链：
+
+1. **开工即 init**：`bash scripts/research-core.sh init <project>`
+2. **运行即 trace**：启动脚本必须包含 `bash scripts/research-core.sh trace <exp_id> <data_id>`
+3. **收工即 sync**：任务结束后必须执行 `bash scripts/research-core.sh vault-sync <project>`
+4. **铁律遵循**：必须对齐 `AGENT_STRICT_BEHAVIOR.md` 和 `24h_automated_work_manifesto.md`。
+
+---
+
+## 💂 存量 Agent 列表
 
 - Vocabulary: "makeup" = "mac app".
 - Never edit `node_modules` (global/Homebrew/npm/git installs too). Updates overwrite. Skill notes go in `tools.md` or `AGENTS.md`.
