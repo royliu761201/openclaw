@@ -6,12 +6,12 @@
 
 ## 👥 1. 角色矩阵与职责边界 (Role Matrix)
 
-| 角色                     | 关键职责                                   | 核心交付物                            |
-| :----------------------- | :----------------------------------------- | :------------------------------------ |
-| **Architect (总架构师)** | 全局规划、方案评审、跨节点资源调度         | `implementation_plan.md`, `task.md`   |
-| **Dev (功能开发者)**     | 核心技能编写、API 逻辑封装、代码优化       | `scripts/*.py`, `SKILL.md`            |
-| **Ops (运维先锋)**       | 隧道维护、模型下载、备份链路、硬件巡检     | `robust_tunnel.sh`, `backup_logs`     |
-| **QA (质量卫士)**        | 暴力测试、UAT 自动化、性能标定 (Benchmark) | `walkthrough.md`, `test_results.json` |
+| 角色                              | 关键职责                                   | 核心交付物                            |
+| :-------------------------------- | :----------------------------------------- | :------------------------------------ |
+| **Egg Assistant (蛋蛋-老板助理)** | 全局规划、方案评审、跨节点资源调度         | `implementation_plan.md`, `task.md`   |
+| **Dev (功能开发者)**              | 核心技能编写、API 逻辑封装、代码优化       | `scripts/*.py`, `SKILL.md`            |
+| **Ops (运维先锋)**                | 隧道维护、模型下载、备份链路、硬件巡检     | `robust_tunnel.sh`, `backup_logs`     |
+| **QA (质量卫士)**                 | 暴力测试、UAT 自动化、性能标定 (Benchmark) | `walkthrough.md`, `test_results.json` |
 
 ---
 
