@@ -1,0 +1,57 @@
+\documentclass{article}
+
+% ICML 2026 Style
+\usepackage{icml2026}
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+
+% Algorithm support
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\input{macros}
+
+\begin{document}
+
+\twocolumn[
+\icmltitle{<<TITLE>>}
+
+% It is OKAY to include author information, even for blind
+% submissions: the style file will automatically ensure that authors
+% do not appear in the paper for the double-blind review process.
+\icmlsetsymbol{equal}{*}
+
+\begin{icmlauthorlist}
+\icmlauthor{Anonymous Author}{equal,app}
+\end{icmlauthorlist}
+
+\icmlaffiliation{app}{Department of Computer Science, University of Example, Location, Country}
+
+\icmlcorrespondingauthor{Anonymous Author}{email@domain.com}
+
+% You may provide any keywords that you
+% find helpful for describing your paper; these are used to facilitate
+% the review process.
+\icmlkeywords{Machine Learning, ICML, AI for Science}
+
+\vskip 0.3in
+]
+
+% this must go after the closing bracket ] following \twocolumn[ ...
+% This command actually prints the author list (or anonymous notice)
+\printAffiliationsAndNotice{}  % leave blank if no need to mention equal contribution
+% \printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
+
+% Inputs will be injected here by Architect
+<<INPUTS>>
+
+\bibliographystyle{icml2026}
+\bibliography{refs}
+
+\end{document}
