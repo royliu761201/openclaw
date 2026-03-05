@@ -8,6 +8,45 @@ from scp import SCPClient
 load_dotenv()
 
 def get_client():
+
+def resilient_connect(client, port, user, pkey, pwd, max_retries=3):
+    # Single Primary Jump Path Resilience Logic
+    primary_host = os.environ.get("SSH_HOST")
+    
+    for attempt in range(1, max_retries + 1):
+        try:
+            client.connect(primary_host, port=port, username=user, pkey=pkey, password=pwd, timeout=8)
+            return True
+        except Exception as e:
+            print(f"⚠️ [Attempt {attempt}/{max_retries}] Tunnel to [{primary_host}] shuddered: {e}")
+            if attempt < max_retries:
+                import time
+                time.sleep(3)  # Cooldown before reconnection
+            else:
+                print(f"❌ Critical failure: Cannot penetrate [{primary_host}] after {max_retries} attempts.")
+                return False
+def fallback_connect(client, port, user, pkey, pwd):
+    # HA ProxyJump Fallback Logic
+    primary_host = os.environ.get("SSH_HOST")
+    backup_host = os.environ.get("SSH_BACKUP_HOST") # Node 03 Fallback
+    
+    # Try primary
+    try:
+        # print(f"HA Router: Dialing Primary 🚀 [{primary_host}]")
+        client.connect(primary_host, port=port, username=user, pkey=pkey, password=pwd, timeout=5)
+        return True
+    except Exception as e:
+        print(f"⚠️ Primary tunnel [{primary_host}] collapsed: {e}")
+        if backup_host:
+            print(f"🔄 Activating Fallback Router (Apollo Protocol) ➔ [{backup_host}]")
+            try:
+                client.connect(backup_host, port=port, username=user, pkey=pkey, password=pwd, timeout=8)
+                print("✅ Fallback tunnel established!")
+                return True
+            except Exception as backup_e:
+                print(f"❌ Fallback tunnel also failed: {backup_e}")
+                return False
+        return False
     host = os.environ.get("SSH_HOST")
     user = os.environ.get("SSH_USER")
     key_path = os.environ.get("SSH_KEY")
