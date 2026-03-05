@@ -21,6 +21,16 @@ SSH_PASS=password             # Optional (Fallback)
 SSH_PORT=22                   # Optional (Default: 22)
 ```
 
+> [!WARNING]
+> **Anti-Hallucination Law (Paramiko Limitations)**
+>
+> 1. `ssh_tool.py` is built on `paramiko` and **DOES NOT READ `~/.ssh/config` dynamically**.
+> 2. You **CANNOT** use human aliases like `roy-02`. You **MUST** query `tailscale ip -4` and use absolute Tailscale IPs (e.g., `100.90.140.62`).
+> 3. The local `.env` file often pollutes `SSH_PORT` (e.g., to GPU server 30305). You **MUST** explicitly override `--env SSH_PORT=22` inline to bypass this pollution.
+>
+> **Explicit Invocation Master Strategy:**
+> `SSH_HOST=100.90.140.62 SSH_USER=roy-002 SSH_PORT=22 python3 ssh_tool.py exec ...`
+
 ## Tools
 
 ### `ssh_exec`
