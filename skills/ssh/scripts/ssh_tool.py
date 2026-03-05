@@ -7,8 +7,6 @@ from scp import SCPClient
 
 load_dotenv()
 
-def get_client():
-
 def resilient_connect(client, port, user, pkey, pwd, max_retries=3):
     # Single Primary Jump Path Resilience Logic
     primary_host = os.environ.get("SSH_HOST")
@@ -47,6 +45,8 @@ def fallback_connect(client, port, user, pkey, pwd):
                 print(f"❌ Fallback tunnel also failed: {backup_e}")
                 return False
         return False
+
+def get_client():
     host = os.environ.get("SSH_HOST")
     user = os.environ.get("SSH_USER")
     key_path = os.environ.get("SSH_KEY")
