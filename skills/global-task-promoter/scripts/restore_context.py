@@ -36,24 +36,7 @@ def find_latest_task_board():
     if latest_file:
         print(f"✅ FOUND_LATEST_TASK_BOARD: {latest_file}")
         
-        # [NEW] Dynamically scan and print available OpenClaw skills to stdout
-        try:
-            skills_dir = os.path.join(os.path.expanduser("~"), "Documents", "projects", "openclaw", "skills")
-            print("\n================== 🚀 蛋蛋可用原生兵器谱 (OpenClaw Skills) ==================")
-            for skill_name in os.listdir(skills_dir):
-                skill_path = os.path.join(skills_dir, skill_name, "SKILL.md")
-                if os.path.isfile(skill_path):
-                    description = "[No description]"
-                    with open(skill_path, "r", encoding="utf-8") as f:
-                        lines = f.readlines()
-                        for i, line in enumerate(lines[:10]):
-                            if line.startswith("description:"):
-                                description = line.replace("description:", "").strip(" '\"")
-                                break
-                    print(f"- [{skill_name}]: {description}  (PATH: {skill_path})")
-            print("================================================================================\n")
-        except Exception as e:
-            print(f"⚠️ WARNING: Failed to scan dynamic skills: {e}")
+
 
         print(">> INSTRUCTION: Agent MUST now use `view_file` on the task board path above to recover its context.")
     else:
