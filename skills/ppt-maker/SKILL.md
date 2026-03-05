@@ -18,7 +18,7 @@ This skill allows you (OpenClaw) to physically generate `.pptx` PowerPoint files
 
 When a user asks you to "create a PPT", "make a presentation", or "edit the previous slides":
 
-1. **State Persistence**: If this is a new PPT, you MUST first write the presentation structure to a physical JSON file in the user's workspace (e.g., `/Users/roy-jd/Documents/projects/openclaw/workspace/defense_state.json`) using file editing tools. If the user asks for a partial edit, you MUST read this JSON file, modify only the requested parts (e.g., using `replace_file_content`), and save it.
+1. **State Persistence**: If this is a new PPT, you MUST first write the presentation structure to a physical JSON file in the user's workspace (e.g., `~/Documents/projects/openclaw/workspace/defense_state.json`) using file editing tools. If the user asks for a partial edit, you MUST read this JSON file, modify only the requested parts (e.g., using `replace_file_content`), and save it.
 
 2. **JSON Format**: The JSON must be an object with `"title"` and an array of `"pages"`.
 
@@ -47,7 +47,7 @@ When a user asks you to "create a PPT", "make a presentation", or "edit the prev
 3. **Execute the Generator**: Use the `run_command` tool to execute `gen_ppt.py`. Use the `--input` flag passing the state file you just created or edited.
 
 ```bash
-python skills/ppt-maker/gen_ppt.py --input "/Users/roy-jd/Documents/projects/openclaw/workspace/defense_state.json" --output "/Users/roy-jd/Documents/projects/openclaw/workspace/defense.pptx"
+python skills/ppt-maker/gen_ppt.py --input "~/Documents/projects/openclaw/workspace/defense_state.json" --output "~/Documents/projects/openclaw/workspace/defense.pptx"
 ```
 
 4. **Return the File**: Tell the user the absolute path of the generated `.pptx` file. If it was an edit, explicitly state exactly which pages/points were successfully modified.
