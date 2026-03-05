@@ -1,0 +1,1 @@
+../../workspace/docs/system_core/GEMINI_L1_CONSTITUTION.md
