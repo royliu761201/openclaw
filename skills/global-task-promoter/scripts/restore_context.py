@@ -11,9 +11,12 @@ def find_latest_task_board():
     # 废弃低效且极度耗时的全盘递归 glob (**/*)。
     # 改为定点扫描合法会话层，避免在大量日志产生严重的 IO 阻塞（即非常慢的原因）
     home_dir = os.path.expanduser("~")
+    workspace_dir = os.environ.get("WORKSPACE_DIR", os.path.join(home_dir, "Documents", "workspace"))
     search_paths = [
-        os.path.join(home_dir, "Documents/workspace/docs/system_core/node02_sessions/*/task.md"),
-        os.path.join(home_dir, ".gemini/antigravity/brain/*/task.md")
+        # 1. 优先扫描当前 Antigravity 会话的默认存储核心区
+        os.path.join(home_dir, ".gemini/antigravity/brain/*/task.md"),
+        # 2. 备选扫描 SSoT 沉淀的各节点会话备份池（灵活适配当前 Node）
+        os.path.join(workspace_dir, "docs/system_core/node*_sessions/*/task.md")
     ]
     
     latest_file = None
