@@ -46,12 +46,14 @@ def fallback_connect(client, port, user, pkey, pwd):
                 return False
         return False
 
-def get_client():
-    host = os.environ.get("SSH_HOST")
-    user = os.environ.get("SSH_USER")
-    key_path = os.environ.get("SSH_KEY")
-    password = os.environ.get("SSH_PASS")
-    port = int(os.environ.get("SSH_PORT", 22))
+from typing import Optional
+
+def get_client(host: Optional[str] = None, user: Optional[str] = None, port: Optional[int] = None, key_path: Optional[str] = None, password: Optional[str] = None) -> Optional[paramiko.SSHClient]:
+    host = host or os.environ.get("SSH_HOST")
+    user = user or os.environ.get("SSH_USER")
+    key_path = key_path or os.environ.get("SSH_KEY")
+    password = password or os.environ.get("SSH_PASS")
+    port = port if port is not None else int(os.environ.get("SSH_PORT", 22))
     
     # print(f"DEBUG: User={user} Host={host} Key={key_path} PassLen={len(password) if password else 0}")
     
@@ -61,10 +63,36 @@ def get_client():
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     
+    # Load SSH Config for ProxyCommand (e.g., Jump Host)
+    sock = None
+    try:
+        conf = paramiko.SSHConfig()
+        conf_path = os.path.expanduser("~/.ssh/config")
+        if os.path.exists(conf_path):
+            with open(conf_path) as f:
+                conf.parse(f)
+        hconf = conf.lookup(host)
+        if 'proxycommand' in hconf:
+            sock = paramiko.ProxyCommand(hconf['proxycommand'])
+        if 'hostname' in hconf:
+            host = hconf['hostname']
+        if 'user' in hconf and not os.environ.get("SSH_USER"):
+            user = hconf['user']
+        if 'identityfile' in hconf and not key_path:
+            key_path = os.path.expanduser(hconf['identityfile'][0])
+        
+        # If the host was found in config, prioritize its port or fallback to 22 (ignoring environment ghosts)
+        if 'port' in hconf:
+            port = int(hconf['port'])
+        else:
+            port = 22
+    except Exception as e:
+        print(f"DEBUG: ProxyCommand parse failed: {e}")
+
     # helper to try connection
     def try_connect(pkey=None, pwd=None):
         try:
-            client.connect(host, port=port, username=user, pkey=pkey, password=pwd, timeout=10)
+            client.connect(host, port=port, username=user, pkey=pkey, password=pwd, timeout=15, sock=sock)
             return True
         except paramiko.AuthenticationException:
             # print(f"Auth Failed (pkey={bool(pkey)}, pwd={bool(pwd)}): {e}")
@@ -105,20 +133,28 @@ def get_client():
     # 2. Try Password
     if password:
         if try_connect(pwd=password): return client
+        
+    # 3. Try Default Agent / Default Keys (If no explicit method was presented or previous auth failed)
+    print("Trying default SSH-Agent or default keys...")
+    if try_connect(pkey=None, pwd=None): return client
     
     print("All authentication methods failed.")
     return None
 
 def get_env_prefix():
     # Gather env vars to inject
+    is_windows = os.environ.get("SSH_IS_WINDOWS", "0") == "1"
     keys = ["WANDB_API_KEY", "HF_TOKEN"]
     exports = []
+    
+    if is_windows:
+        return "" # Disable env injection for Windows explicitly
+
     for k in keys:
         v = os.environ.get(k)
         if v:
             exports.append(f"export {k}='{v}'")
     
-    if not exports: return ""
     if not exports: return ""
     return " ".join(exports) + ";"
 
@@ -152,13 +188,13 @@ def exec_command(args):
         # nohup cmd > nohup.out 2>&1 & echo $!
         nohup_cmd = f"nohup sh -c '{full_cmd}' > nohup.out 2>&1 & echo $!"
         stdin, stdout, stderr = client.exec_command(nohup_cmd)
-        pid = stdout.read().decode().strip()
+        pid = stdout.read().decode('utf-8', errors='replace').strip()
         print(f"Started in background. PID: {pid}")
     else:
         print(f"Executing: {cmd}")
         stdin, stdout, stderr = client.exec_command(full_cmd)
-        out = stdout.read().decode().strip()
-        err = stderr.read().decode().strip()
+        out = stdout.read().decode('utf-8', errors='replace').strip()
+        err = stderr.read().decode('utf-8', errors='replace').strip()
         if out: print(out)
         if err: print(f"Stderr: {err}")
     
@@ -391,13 +427,32 @@ def conda_manager(args):
                    print(stdout.channel.recv(1024).decode(), end="")
             
             print(stdout.read().decode(), end="")
-            err = stderr.read().decode().strip()
-            if err: print(f"\nSTDERR: {err}")
-    
     client.close()
 
 def main():
+    import sys
+    import os
+    argv, new_argv, i = sys.argv[1:], [], 0
+    while i < len(argv):
+        arg = argv[i]
+        if arg in ('--host', '-H'):
+            i += 1
+            if i < len(argv): os.environ['SSH_HOST'] = argv[i]
+        elif arg.startswith('--host='):
+            os.environ['SSH_HOST'] = arg.split('=', 1)[1]
+        elif arg in ('--user', '-U'):
+            i += 1
+            if i < len(argv): os.environ['SSH_USER'] = argv[i]
+        elif arg.startswith('--user='):
+            os.environ['SSH_USER'] = arg.split('=', 1)[1]
+        else:
+            new_argv.append(arg)
+        i += 1
+    sys.argv = [sys.argv[0]] + new_argv
+
     parser = argparse.ArgumentParser(description="OpenClaw SSH Tool")
+    parser.add_argument("--host", "-H", help="Target SSH host (can be placed anywhere)", default=argparse.SUPPRESS)
+    parser.add_argument("--user", "-U", help="Target SSH user (can be placed anywhere)", default=argparse.SUPPRESS)
     subparsers = parser.add_subparsers(dest="action")
     
     e_parser = subparsers.add_parser("exec")
