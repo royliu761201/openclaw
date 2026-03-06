@@ -88,6 +88,7 @@ exp_*.py
 
 # Runtime Workspaces
 .lanes/
+lanes/
 
 # Large Binary Artifacts
 *.pt

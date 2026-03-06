@@ -165,13 +165,48 @@ def exec_command(args):
     full_cmd = f"{env_prefix} {real_cmd}"
     
     if detach:
-        # Run offline with nohup
         print(f"Executing (Detached): {cmd}")
-        # nohup cmd > nohup.out 2>&1 & echo $!
-        nohup_cmd = f"nohup sh -c '{full_cmd}' > nohup.out 2>&1 & echo $!"
+        # Probe OS to choose detachment payload
+        _, probe_out, _ = client.exec_command("cmd.exe /c echo %OS%")
+        os_env = probe_out.read().decode().strip()
+        is_windows = "Windows_NT" in os_env
+        
+        if is_windows:
+            import base64
+            print("Remote OS detected as Windows. Using Python DETACHED_PROCESS via Base64.")
+            
+            # Windows cmd.exe does not understand single quotes for strings.
+            windows_cmd = full_cmd.replace("'", '"')
+            
+            # Construct a pure python script to run the job detached from the Windows SSH Job Object
+            py_script = f"""
+import subprocess
+import os
+import traceback
+
+try:
+    log_file = os.path.expanduser('~\\\\nohup_openclaw.out')
+    # Build a command string that is NOT wrapped in single quotes (which cmd.exe rejects)
+    cmd_str = \"\"\"{windows_cmd}\"\"\"
+    full_cmd = cmd_str + ' >> "' + log_file + '" 2>&1'
+
+    # 0x08000008 = DETACHED_PROCESS | CREATE_NO_WINDOW
+    subprocess.Popen(full_cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, creationflags=0x08000008)
+    with open(os.path.expanduser('~\\\\openclaw_success.txt'), 'w') as f:
+        f.write('Success: ' + full_cmd)
+except Exception as e:
+    with open(os.path.expanduser('~\\\\openclaw_error.txt'), 'w') as f:
+        traceback.print_exc(file=f)
+"""
+            # Base64 encode the script to avoid ANY SSH/cmd.exe quoting issues
+            encoded_py = base64.b64encode(py_script.encode('utf-8')).decode('utf-8')
+            nohup_cmd = f"python -c \"import base64; exec(base64.b64decode('{encoded_py}').decode('utf-8'))\""
+        else:
+            nohup_cmd = f"nohup sh -c '{full_cmd}' > nohup.out 2>&1 & echo $!"
+            
         stdin, stdout, stderr = client.exec_command(nohup_cmd)
         pid = stdout.read().decode('utf-8', errors='replace').strip()
-        print(f"Started in background. PID: {pid}")
+        print(f"Started in background. Detach output: {pid}")
     else:
         print(f"Executing: {cmd}")
         stdin, stdout, stderr = client.exec_command(full_cmd)
