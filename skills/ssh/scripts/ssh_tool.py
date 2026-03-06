@@ -1,64 +1,16 @@
 #!/usr/bin/env python3
 import argparse
 import os
-from dotenv import load_dotenv
 import paramiko
 from scp import SCPClient
 
-load_dotenv()
-
-def resilient_connect(client, port, user, pkey, pwd, max_retries=3):
-    # Single Primary Jump Path Resilience Logic
-    primary_host = os.environ.get("SSH_HOST")
-    
-    for attempt in range(1, max_retries + 1):
-        try:
-            client.connect(primary_host, port=port, username=user, pkey=pkey, password=pwd, timeout=8)
-            return True
-        except Exception as e:
-            print(f"⚠️ [Attempt {attempt}/{max_retries}] Tunnel to [{primary_host}] shuddered: {e}")
-            if attempt < max_retries:
-                import time
-                time.sleep(3)  # Cooldown before reconnection
-            else:
-                print(f"❌ Critical failure: Cannot penetrate [{primary_host}] after {max_retries} attempts.")
-                return False
-def fallback_connect(client, port, user, pkey, pwd):
-    # HA ProxyJump Fallback Logic
-    primary_host = os.environ.get("SSH_HOST")
-    backup_host = os.environ.get("SSH_BACKUP_HOST") # Node 03 Fallback
-    
-    # Try primary
-    try:
-        # print(f"HA Router: Dialing Primary 🚀 [{primary_host}]")
-        client.connect(primary_host, port=port, username=user, pkey=pkey, password=pwd, timeout=5)
-        return True
-    except Exception as e:
-        print(f"⚠️ Primary tunnel [{primary_host}] collapsed: {e}")
-        if backup_host:
-            print(f"🔄 Activating Fallback Router (Apollo Protocol) ➔ [{backup_host}]")
-            try:
-                client.connect(backup_host, port=port, username=user, pkey=pkey, password=pwd, timeout=8)
-                print("✅ Fallback tunnel established!")
-                return True
-            except Exception as backup_e:
-                print(f"❌ Fallback tunnel also failed: {backup_e}")
-                return False
-        return False
 
 from typing import Optional
 
-def get_client(host: Optional[str] = None, user: Optional[str] = None, port: Optional[int] = None, key_path: Optional[str] = None, password: Optional[str] = None) -> Optional[paramiko.SSHClient]:
-    host = host or os.environ.get("SSH_HOST")
-    user = user or os.environ.get("SSH_USER")
-    key_path = key_path or os.environ.get("SSH_KEY")
-    password = password or os.environ.get("SSH_PASS")
-    port = port if port is not None else int(os.environ.get("SSH_PORT", 22))
-    
-    # print(f"DEBUG: User={user} Host={host} Key={key_path} PassLen={len(password) if password else 0}")
-    
-    if not host or not user:
-        raise ValueError("SSH_HOST and SSH_USER must be set in .env")
+def get_client(host: str, user: Optional[str] = None, port: Optional[int] = None, key_path: Optional[str] = None, password: Optional[str] = None) -> Optional[paramiko.SSHClient]:
+    if not host:
+        raise ValueError("--host must be provided")
+    port = port if port is not None else 22
 
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -76,8 +28,11 @@ def get_client(host: Optional[str] = None, user: Optional[str] = None, port: Opt
             sock = paramiko.ProxyCommand(hconf['proxycommand'])
         if 'hostname' in hconf:
             host = hconf['hostname']
-        if 'user' in hconf and not os.environ.get("SSH_USER"):
+        if 'user' in hconf and not user:
             user = hconf['user']
+        if not user:
+            import getpass
+            user = getpass.getuser()
         if 'identityfile' in hconf and not key_path:
             key_path = os.path.expanduser(hconf['identityfile'][0])
         
@@ -92,6 +47,7 @@ def get_client(host: Optional[str] = None, user: Optional[str] = None, port: Opt
     # helper to try connection
     def try_connect(pkey=None, pwd=None):
         try:
+            print(f"DEBUG: Executing connect -> host={host}, port={port}, username={user}, pkey_type={type(pkey).__name__}")
             client.connect(host, port=port, username=user, pkey=pkey, password=pwd, timeout=15, sock=sock)
             return True
         except paramiko.AuthenticationException:
@@ -133,26 +89,46 @@ def get_client(host: Optional[str] = None, user: Optional[str] = None, port: Opt
     # 2. Try Password
     if password:
         if try_connect(pwd=password): return client
-        
-    # 3. Try Default Agent / Default Keys (If no explicit method was presented or previous auth failed)
+       
+    # 3. Explicitly Try Default Keys (Overcoming Paramiko's poor auto-discovery)
+    if not key_path:
+        default_keys = [os.path.expanduser("~/.ssh/id_ed25519"), os.path.expanduser("~/.ssh/id_rsa")]
+        print(f"DEBUG: Explicitly trying keys: {default_keys}")
+        for dk in default_keys:
+            if os.path.isfile(dk):
+                k = None
+                import traceback
+                try: 
+                    k = paramiko.Ed25519Key.from_private_key_file(dk)
+                    print(f"DEBUG: Successfully loaded Ed25519 from {dk}")
+                except Exception as e1:
+                    try: 
+                        k = paramiko.RSAKey.from_private_key_file(dk)
+                        print(f"DEBUG: Successfully loaded RSA from {dk}")
+                    except Exception as e2: 
+                        print(f"DEBUG: Failed to load {dk} as Ed25519 or RSA. e1={e1}, e2={e2}")
+                if k:
+                    res = try_connect(pkey=k)
+                    print(f"DEBUG: try_connect(pkey='{dk}') returned: {res}")
+                    if res: return client
+
+    # 4. Try Default Agent / Default Keys (If no explicit method was presented or previous auth failed)
     print("Trying default SSH-Agent or default keys...")
     if try_connect(pkey=None, pwd=None): return client
     
     print("All authentication methods failed.")
     return None
 
-def get_env_prefix():
-    # Gather env vars to inject
-    is_windows = os.environ.get("SSH_IS_WINDOWS", "0") == "1"
-    keys = ["WANDB_API_KEY", "HF_TOKEN"]
+def get_env_prefix(args):
+    # Gather env vars explicitly passed via --env
+    env_vars = getattr(args, 'env', None)
+    if not env_vars:
+        return ""
+        
     exports = []
-    
-    if is_windows:
-        return "" # Disable env injection for Windows explicitly
-
-    for k in keys:
-        v = os.environ.get(k)
-        if v:
+    for e in env_vars:
+        if "=" in e:
+            k, v = e.split("=", 1)
             exports.append(f"export {k}='{v}'")
     
     if not exports: return ""
@@ -166,14 +142,20 @@ def get_conda_prefix(env_name):
     return f"{CONDA_BIN} run -n {env_name} --no-capture-output "
 
 def exec_command(args):
-    client = get_client()
+    client = get_client(
+        host=getattr(args, 'host', None),
+        user=getattr(args, 'user', None),
+        port=getattr(args, 'port', None),
+        key_path=getattr(args, 'key', None),
+        password=getattr(args, 'password', None)
+    )
     if not client: return
 
     cmd = args.command
     detach = args.detach
     conda_env = args.conda_env
     
-    env_prefix = get_env_prefix()
+    env_prefix = get_env_prefix(args)
     
     # If conda_env is set, wrap the command
     real_cmd = cmd
@@ -203,7 +185,13 @@ def exec_command(args):
     client.close()
 
 def upload_file(args):
-    client = get_client()
+    client = get_client(
+        host=getattr(args, 'host', None),
+        user=getattr(args, 'user', None),
+        port=getattr(args, 'port', None),
+        key_path=getattr(args, 'key', None),
+        password=getattr(args, 'password', None)
+    )
     if not client: return
     
     sftp = client.open_sftp()
@@ -241,7 +229,13 @@ def upload_file(args):
     client.close()
 
 def write_file(args):
-    client = get_client()
+    client = get_client(
+        host=getattr(args, 'host', None),
+        user=getattr(args, 'user', None),
+        port=getattr(args, 'port', None),
+        key_path=getattr(args, 'key', None),
+        password=getattr(args, 'password', None)
+    )
     if not client: return
     
     sftp = client.open_sftp()
@@ -257,7 +251,13 @@ def write_file(args):
     client.close()
 
 def download_file(args):
-    client = get_client()
+    client = get_client(
+        host=getattr(args, 'host', None),
+        user=getattr(args, 'user', None),
+        port=getattr(args, 'port', None),
+        key_path=getattr(args, 'key', None),
+        password=getattr(args, 'password', None)
+    )
     if not client: return
     
     print(f"Downloading {args.remote} -> {args.local}")
@@ -268,7 +268,13 @@ def download_file(args):
     print("Download complete.")
 
 def run_project(args):
-    client = get_client()
+    client = get_client(
+        host=getattr(args, 'host', None),
+        user=getattr(args, 'user', None),
+        port=getattr(args, 'port', None),
+        key_path=getattr(args, 'key', None),
+        password=getattr(args, 'password', None)
+    )
     if not client: return
     
     local_dir = args.local_dir
@@ -298,7 +304,7 @@ def run_project(args):
         
         setup_cmd = f"unzip -o {remote_zip} -d {remote_project_dir}"
         
-        env_prefix = get_env_prefix()
+        env_prefix = get_env_prefix(args)
         
         # Prepare python command
         py_cmd = f"python {entry_point}"
@@ -330,7 +336,13 @@ def run_project(args):
     client.close()
 
 def gpu_status(args):
-    client = get_client()
+    client = get_client(
+        host=getattr(args, 'host', None),
+        user=getattr(args, 'user', None),
+        port=getattr(args, 'port', None),
+        key_path=getattr(args, 'key', None),
+        password=getattr(args, 'password', None)
+    )
     if not client: return
     
     print("Checking GPU Status...")
@@ -345,7 +357,13 @@ def gpu_status(args):
     client.close()
 
 def conda_manager(args):
-    client = get_client()
+    client = get_client(
+        host=getattr(args, 'host', None),
+        user=getattr(args, 'user', None),
+        port=getattr(args, 'port', None),
+        key_path=getattr(args, 'key', None),
+        password=getattr(args, 'password', None)
+    )
     if not client: return
 
     sub = args.subcommand
@@ -430,29 +448,13 @@ def conda_manager(args):
     client.close()
 
 def main():
-    import sys
-    import os
-    argv, new_argv, i = sys.argv[1:], [], 0
-    while i < len(argv):
-        arg = argv[i]
-        if arg in ('--host', '-H'):
-            i += 1
-            if i < len(argv): os.environ['SSH_HOST'] = argv[i]
-        elif arg.startswith('--host='):
-            os.environ['SSH_HOST'] = arg.split('=', 1)[1]
-        elif arg in ('--user', '-U'):
-            i += 1
-            if i < len(argv): os.environ['SSH_USER'] = argv[i]
-        elif arg.startswith('--user='):
-            os.environ['SSH_USER'] = arg.split('=', 1)[1]
-        else:
-            new_argv.append(arg)
-        i += 1
-    sys.argv = [sys.argv[0]] + new_argv
-
     parser = argparse.ArgumentParser(description="OpenClaw SSH Tool")
-    parser.add_argument("--host", "-H", help="Target SSH host (can be placed anywhere)", default=argparse.SUPPRESS)
-    parser.add_argument("--user", "-U", help="Target SSH user (can be placed anywhere)", default=argparse.SUPPRESS)
+    parser.add_argument("--host", "-H", help="Target SSH host", required=True)
+    parser.add_argument("--user", "-U", help="Target SSH user (optional)")
+    parser.add_argument("--port", "-p", type=int, help="Target SSH port (optional)")
+    parser.add_argument("--key", "-i", help="SSH Private Key path (optional)")
+    parser.add_argument("--password", "-P", help="SSH Password (optional)")
+    parser.add_argument("--env", "-e", action="append", help="Environment variables to set remote (e.g. KEY=VAL)")
     subparsers = parser.add_subparsers(dest="action")
     
     e_parser = subparsers.add_parser("exec")
