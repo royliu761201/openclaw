@@ -33,6 +33,19 @@ Aligned with the **NSFC Major Research Plan (2026)**:
 - **PhysDiff**: Energy-Conserving Quantization (Hamiltonian Preservation) for Physics Models.
 - **Extension Radar**: RLPF (PDE Reward), Neural Operator Composition, Multi-Agent Arbitrage.
 
+### 2.2 Rigid LLM Radar Guardrails (The PURE-T Filter)
+To prevent LLM hallucination during daily arXiv sweeps, the following constraints are absolute:
+1.  **[Negative Constraints (Ignore)]**: 
+    - Pure Computer Vision (CV) generation lacking physical laws.
+    - LLM alignment/chatbots lacking Mathematical/Algorithmic reasoning.
+    - Standard Time-Series prediction lacking PDE/Operator formulations.
+2.  **[Tech Stack Anchors (Require)]**: 
+    - Methodologies must align with scalable GPU training (PyTorch, JAX, Triton, CUDA, FlashAttention). 
+    - Reject purely theoretical papers without computational feasibility.
+3.  **[Metric Thresholds (Alert)]**:
+    - "Breakthrough" means explicit claims of $O(N)$ or $O(N \log N)$ complexity reduction.
+    - "Physics-Informed" must show definitive conservation bounds (Hamiltonian/Energy/Mass), not just soft penalty losses (MSE).
+
 ## 3. Representative Achievements (Open Science & Preprints)
 *The following AI4S breakthroughs are currently maintained as high-quality preprints to accelerate scientific dissemination:*
 
