@@ -24,6 +24,21 @@ ACADEMIC_SEARCH_PATH = os.path.expanduser("~/Documents/projects/openclaw/skills/
 TAVILY_SEARCH_PATH = os.path.expanduser("~/Documents/projects/openclaw/skills/tavily-search/scripts/search.mjs")
 EXA_SEARCH_PATH = os.path.expanduser("~/Documents/projects/openclaw/skills/exa-search/scripts/exa_search.py")
 
+SEEN_INTEL_PATH = WORKSPACE_DIR / "docs" / "research_ideation" / "seen_intel.json"
+AUTHORITY_LIST_PATH = WORKSPACE_DIR / "docs" / "research_ideation" / "authoritative_targets.json"
+
+def load_seen_intel():
+    import json
+    if SEEN_INTEL_PATH.exists():
+        with open(SEEN_INTEL_PATH, "r") as f:
+            return json.load(f)
+    return {"arxiv": [], "web_urls": []}
+
+def save_seen_intel(data):
+    import json
+    with open(SEEN_INTEL_PATH, "w") as f:
+        json.dump(data, f)
+
 def run_search_arxiv(query: str, max_results: int = 5) -> str:
     try:
         result = subprocess.run(
@@ -67,6 +82,8 @@ def collect_raw_data():
     
     print(f"⛏️ Initiating Radar Raw Collection (Producer Mode) - {today_str}...")
     
+    seen_db = load_seen_intel()
+    
     raw_content = [
         f"# ⛏️ Radar Raw Data: {today_str}",
         "> **Auto-harvested by Research-Radar (Collector)**\n"
@@ -97,6 +114,10 @@ def collect_raw_data():
         raw_content.append("### 💻 3. Exa (Code & Neural Intel)")
         raw_content.append(exa_res)
         
+        # (Assuming the LLM Consumer later will handle the deduplicated IDs from the raw text, 
+        # or we just let it fetch, but since this is raw bash output, full-text deduplication is left to Brain 
+        # for semantic filtering, but we explicitly note it here).
+        
         raw_content.append("\n---\n")
         
         # 🛡️ Absolute Physical Rate Limit (Anti-Ban Armor)
@@ -104,6 +125,29 @@ def collect_raw_data():
         print("  -> [Anti-Ban] Sleeping for 15 seconds before next burst...")
         time.sleep(15)
 
+    # 4. Reference List (Authoritative Targets / 参考文献定标清单)
+    import json
+    if AUTHORITY_LIST_PATH.exists():
+        with open(AUTHORITY_LIST_PATH, "r") as f:
+            targets = json.load(f)
+            print(f"  -> [Authoritative Check] Sweeping Top Labs & Scholars...")
+            raw_content.append(f"## 🏛️ Reference Top-Tier Targets")
+            
+            combined_labs = " OR ".join(targets.get("top_institutions", []))
+            if combined_labs:
+                lab_query = f"({combined_labs}) Breakthroughs AI4S"
+                raw_content.append("### 🧪 Top Institutions Intel")
+                raw_content.append(run_search_tavily(lab_query, 3))
+                time.sleep(10)
+                
+            combined_scholars = " OR ".join(targets.get("top_scholars", []))
+            if combined_scholars:
+                scholar_query = f"({combined_scholars}) New publications AI4S Nature Science"
+                raw_content.append("### 🎓 Top Scholars Intel")
+                raw_content.append(run_search_tavily(scholar_query, 3))
+                time.sleep(10)
+
+    save_seen_intel(seen_db)
     with open(raw_path, "w") as f:
         f.write("\n".join(raw_content))
     
