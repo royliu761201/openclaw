@@ -50,7 +50,7 @@ def process_results_with_llm(raw_data: str) -> str:
     
     prompt = f"""
 You are the Cognitive Alignment Engine for Dr. Xiaohua Liu's Research Radar.
-Your job is to read raw academic paper results collected by edge probes and cross-examine them against the PI's research profile, active projects, and idea lists.
+Your job is to read raw academic paper results collected by edge probes and cross-examine them against the PI's research profile, active P0 projects, and the highly confidential Extension Idea Master.
 
 ### 1. PI Profile & Active P0 Projects:
 {pi_profile}
@@ -61,20 +61,22 @@ Your job is to read raw academic paper results collected by edge probes and cros
 ### 3. Captured arXiv Papers (Raw Data):
 {raw_data}
 
-### Task:
-You must strictly execute the PURE-T protocol (Trim/Filter).
-Do NOT summarize every paper. Most papers are irrelevant.
-Only report on MAX 3 papers total if and ONLY if they directly:
-- WARNING: Pose a threat (someone is publishing our Idea List).
-- SOLUTION: Offer a direct methodological solution to our active P0 projects (CaLaM, Frenet, PESSO, PhysDiff).
-- OPPORTUNITY: Strongly align as a foundation for his NSFC/Grants.
+### 🎯 THE PURE-T PROTOCOL & RESEARCH IDEATION RULES:
+You must strictly execute the Trim & Filter protocol. Most papers are superficial "paper-talk" and MUST be discarded.
+**You must ONLY select MAX 3 papers total across all data if they meet these Extreme Criteria:**
+- **[X - Threat / 已抢夺]**: Someone has published a paper identical to our Extension Idea List (e.g., S-FlashAttention, RLPF). This is a code-red IP threat.
+- **[Derived Node / 衍生点]**: The paper offers a mathematical or architectural breakthrough that directly advances our active P0 projects (CaLaM, Frenet, PESSO, PhysDiff).
+- **[Discard]**: Discard ANY paper that is purely theoretical without code, a mere review paper, or simple CV/NLP applications without PDE/physics grounding.
 
-If no papers meet this high bar, output EXACTLY: "NO_HIGH_VALUE_TARGETS".
-Otherwise, output a highly concise strategic brief in Markdown:
-For each high-value paper:
-- **Title**: ...
-- **Classification**: [Threat WARNING] / [Method SOLUTION] / [Grant OPPORTUNITY]
-- **Actionable Insight**: 1-2 sentences on exactly why this matters and what Dr. Liu should do.
+### 📝 REQUIRED OUTPUT FORMAT:
+If no papers meet this extreme bar, output EXACTLY: "NO_HIGH_VALUE_TARGETS".
+Otherwise, output a highly concise, deadly accurate strategic brief in Markdown. For EACH selected paper, you MUST provide:
+
+#### 📜 [Paper Title]
+- **Classification**: `[X - Threat]` OR `[Derived Node]`
+- **Target Project/Idea**: (Which specific P0 project or Idea # it hits)
+- **Deep Insight**: (1-2 sentences. What is the exact mathematical formulation or CUDA trick they used? Be highly technical, no vague summaries.)
+- **Micro-PoC Action Plan (AB-008 Compliance)**: (What 100 lines of code should Dr. Liu write TODAY to test this paper's claim? Give a concrete micro-experiment design, e.g., "Write a 1D Torch script to verify their discrete Laplace-Beltrami operator.")
 """
     return call_gemini(prompt)
 
