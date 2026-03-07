@@ -69,4 +69,13 @@ The decoupled radar is designed to serve as both a passive shield and an active 
   - The Radar continuously sweeps for keywords related to these unpublished ideas.
   - If a paper emerges that matches the Idea List, the Brain Node (01) flags it as a `[Threat WARNING]` in the PDCA board, prompting the PI to either accelerate publication or pivot the idea.
 
+## 🚀 V4 Future Proposals (The Ultimate Radar)
 
+Based on the PI's directive to "perfect this skill", the following radical expansions are slated for future development:
+
+1. **Lark/Slack Real-time Alerts**:
+   Integrate the OpenClaw `lark-integration` or `slack` skill. Instead of just appending to a Markdown log, if the Brain detects a Code-Red `[X - Threat]`, it will instantly fire a webhook message to the PI's phone, containing the paper abstract and the proposed Micro-PoC.
+2. **Deep-Dive PDF Retrieval (The Scholar Engine)**:
+   Currently, the Brain relies on title + abstract. In V4, if a paper triggers a `[Derived Node]`, the agent will call the `arxiv` or `huggingface` skill to download the full PDF, execute OCR/Parsing, and extract the exact mathematical equations (LaTeX) to formulate the Micro-PoC.
+3. **Automated Codebase Pre-cloning**:
+   If the radar detects an official GitHub link in a high-value paper, the Edge Node (02) will automatically execute `git clone` into a quarantine `/tmp` directory, run a quick `grep` for CUDA kernels or PDE definitions, and include snippets of the actual source code in the morning report.
