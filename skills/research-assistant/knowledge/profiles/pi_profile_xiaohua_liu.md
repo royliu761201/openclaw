@@ -26,6 +26,13 @@ Aligned with the **NSFC Major Research Plan (2026)**:
 - **Dual-Helix Optimization**: Physics-symbolic coupling for constitutive discovery.
 - **Cross-Regime Generalization**: Foundation models for multi-scale physical systems.
 
+### 2.1 Current Batch 2 P0 Offensives (PDCA Focus)
+- **CaLaM**: Topological Anomaly Self-Healing in Diffusion Models.
+- **Frenet**: Kinematic SE(3) Equivariance & 4D Hamiltonian Constraints.
+- **PESSO**: Spectral FlashAttention for Neural Operators (Fourier Domain).
+- **PhysDiff**: Energy-Conserving Quantization (Hamiltonian Preservation) for Physics Models.
+- **Extension Radar**: RLPF (PDE Reward), Neural Operator Composition, Multi-Agent Arbitrage.
+
 ## 3. Representative Achievements (Open Science & Preprints)
 *The following AI4S breakthroughs are currently maintained as high-quality preprints to accelerate scientific dissemination:*
 
