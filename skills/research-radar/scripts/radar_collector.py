@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os
 import sys
+import time
 import subprocess
 import datetime
 from pathlib import Path
@@ -51,6 +52,11 @@ def collect_raw_data():
         raw_content.append(f"## 📦 Raw Sector: {category}")
         raw_content.append(raw_results)
         raw_content.append("\n---\n")
+        
+        # 🛡️ Absolute Physical Rate Limit (Anti-Ban Armor)
+        # Protects Node 02/05 from being blacklisted by arXiv/IEEE
+        print("  -> [Anti-Ban] Sleeping for 15 seconds before next burst...")
+        time.sleep(15)
 
     with open(raw_path, "w") as f:
         f.write("\n".join(raw_content))
