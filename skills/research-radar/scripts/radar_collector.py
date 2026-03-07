@@ -27,7 +27,7 @@ EXA_SEARCH_PATH = os.path.expanduser("~/Documents/projects/openclaw/skills/exa-s
 def run_search_arxiv(query: str, max_results: int = 5) -> str:
     try:
         result = subprocess.run(
-            ["python3", ACADEMIC_SEARCH_PATH, "search", "--query", query, "--max_results", str(max_results)],
+            ["python3", ACADEMIC_SEARCH_PATH, "search", "--query", query, "--max_results", str(max_results), "--sort_by", "date"],
             capture_output=True, text=True, check=True
         )
         return result.stdout
@@ -83,15 +83,17 @@ def collect_raw_data():
         raw_content.append("### 📚 1. ArXiv (Academic)")
         raw_content.append(arxiv_res)
         
-        # 2. Tavily (Web/News)
+        # 2. Tavily (Web/News - Strictly Top Venues)
         print("     |_ Tavily...")
-        tavily_res = run_search_tavily(query + " recent developments AI", max_results=3)
+        tavily_query = query + " (Nature OR Science OR ICLR OR NeurIPS OR ICML) recent breakthroughs AI"
+        tavily_res = run_search_tavily(tavily_query, max_results=3)
         raw_content.append("### 🌐 2. Tavily (Web & Industry News)")
         raw_content.append(tavily_res)
         
-        # 3. Exa (Code/Neural)
+        # 3. Exa (Code/Neural - Strictly Top Venues)
         print("     |_ Exa...")
-        exa_res = run_search_exa(query + " github repo code", max_results=3)
+        exa_query = query + " (Nature OR Science OR ICLR OR NeurIPS OR ICML) github repo official code"
+        exa_res = run_search_exa(exa_query, max_results=3)
         raw_content.append("### 💻 3. Exa (Code & Neural Intel)")
         raw_content.append(exa_res)
         
