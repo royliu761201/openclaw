@@ -46,29 +46,33 @@ def run_search(query: str, max_results: int = 5) -> str:
     except FileNotFoundError:
         return f"*Error: academic-search script not found.*"
 
-import urllib.request
-import urllib.error
-import json
+import shlex
 
 def call_gemini(prompt: str) -> str:
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        return "Error calling Gemini: GEMINI_API_KEY environment variable is not set."
-    
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-preview-02-05:generateContent?key={api_key}"
-    headers = {'Content-Type': 'application/json'}
-    data = json.dumps({
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.2}
-    }).encode('utf-8')
-    
+    # Route C: Zero-Outbound SSH Proxy to Node 01 (The Brain)
+    # The edge node (02/03/05) does not process data locally nor contact Google.
+    # It pipes the raw text via SSH directly into Node 01's OpenClaw agent.
     try:
-        req = urllib.request.Request(url, data=data, headers=headers)
-        with urllib.request.urlopen(req) as response:
-            result = json.loads(response.read().decode())
-            return result['candidates'][0]['content']['parts'][0]['text']
+        # We use 'gemini' CLI on Node 01 since it is guaranteed to have the API key and environment.
+        # Ensure we quote the prompt safely for Bash execution over SSH.
+        safe_prompt = shlex.quote(prompt)
+        
+        # Execute on Node 01 using the default gemini skill.
+        # Using zsh -lc to ensure paths/aliases for Node 01's gems/openclaw are loaded.
+        ssh_cmd = f"ssh 01 \"/bin/zsh -lc 'gemini --model gemini-2.0-flash-lite-preview-02-05 {safe_prompt}'\""
+        
+        result = subprocess.run(
+            ssh_cmd, 
+            shell=True, 
+            capture_output=True, 
+            text=True, 
+            check=True
+        )
+        return result.stdout
+    except subprocess.CalledProcessError as e:
+        return f"Error routing to Node 01 Brain via SSH. Output: {e.stderr}"
     except Exception as e:
-        return f"Error calling Gemini via REST API: {str(e)}"
+        return f"Error executing SSH pipeline: {str(e)}"
 
 def process_results_with_llm(category: str, raw_results: str) -> str:
     if "*Error" in raw_results or len(raw_results.strip()) < 50:
