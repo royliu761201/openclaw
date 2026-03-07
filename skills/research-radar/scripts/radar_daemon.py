@@ -46,17 +46,29 @@ def run_search(query: str, max_results: int = 5) -> str:
     except FileNotFoundError:
         return f"*Error: academic-search script not found.*"
 
+import urllib.request
+import urllib.error
+import json
+
 def call_gemini(prompt: str) -> str:
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        return "Error calling Gemini: GEMINI_API_KEY environment variable is not set."
+    
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}"
+    headers = {'Content-Type': 'application/json'}
+    data = json.dumps({
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"temperature": 0.2}
+    }).encode('utf-8')
+    
     try:
-        result = subprocess.run(
-            ["gemini", prompt],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        return result.stdout
-    except subprocess.CalledProcessError as e:
-        return f"Error calling Gemini: {e.stderr}"
+        req = urllib.request.Request(url, data=data, headers=headers)
+        with urllib.request.urlopen(req) as response:
+            result = json.loads(response.read().decode())
+            return result['candidates'][0]['content']['parts'][0]['text']
+    except Exception as e:
+        return f"Error calling Gemini via REST API: {str(e)}"
 
 def process_results_with_llm(category: str, raw_results: str) -> str:
     if "*Error" in raw_results or len(raw_results.strip()) < 50:
