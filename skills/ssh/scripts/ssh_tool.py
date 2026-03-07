@@ -175,30 +175,26 @@ def exec_command(args):
             import base64
             print("Remote OS detected as Windows. Using Python DETACHED_PROCESS via Base64.")
             
-            # Windows cmd.exe does not understand single quotes for strings.
-            windows_cmd = full_cmd.replace("'", '"')
-            
-            # Construct a pure python script to run the job detached from the Windows SSH Job Object
-            py_script = f"""
-import subprocess
+            # The bulletproof Windows detachment strategy using WMI (Win32_Process)
+            # 1. Drop a .bat file to avoid Cmd/PowerShell quote parsing limits.
+            # 2. Use WMI process call create to spawn the .bat entirely outside the SSH Job Object tree.
+            py_script = f'''
 import os
-import traceback
+import base64
 
-try:
-    log_file = os.path.expanduser('~\\\\nohup_openclaw.out')
-    # Build a command string that is NOT wrapped in single quotes (which cmd.exe rejects)
-    cmd_str = \"\"\"{windows_cmd}\"\"\"
-    full_cmd = cmd_str + ' >> "' + log_file + '" 2>&1'
+bat_path = os.path.expanduser('~\\\\openclaw_task.bat')
+log_path = os.path.expanduser('~\\\\nohup_openclaw.out')
 
-    # 0x08000008 = DETACHED_PROCESS | CREATE_NO_WINDOW
-    subprocess.Popen(full_cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, creationflags=0x08000008)
-    with open(os.path.expanduser('~\\\\openclaw_success.txt'), 'w') as f:
-        f.write('Success: ' + full_cmd)
-except Exception as e:
-    with open(os.path.expanduser('~\\\\openclaw_error.txt'), 'w') as f:
-        traceback.print_exc(file=f)
-"""
-            # Base64 encode the script to avoid ANY SSH/cmd.exe quoting issues
+# Windows cmd.exe does not drop single quotes during evaluation, which breaks curl.
+# Transmute bash-style single quotes into standard double quotes for correct CMD evaluation.
+windows_cmd = {repr(full_cmd.replace("'", '"').replace('python ', 'python -u '))}
+with open(bat_path, 'w', encoding='utf-8') as f:
+    f.write("@echo off\\ncd /d %USERPROFILE%\\necho PATH IS %PATH% > C:\\\\Users\\\\roy-005\\\\bat_path_env.log\\n" + windows_cmd + " >> \\"" + log_path + "\\" 2>&1\\necho EXIT CODE %ERRORLEVEL% >> C:\\\\Users\\\\roy-005\\\\bat_debug.log\\n")
+
+# Use WMI to spawn the process completely detached from the SSH session tree
+os.system(f'wmic process call create "cmd.exe /c {{bat_path}}" > NUL 2>&1')
+'''
+            # Base64 encode the Python script to avoid ANY SSH/cmd.exe quoting issues
             encoded_py = base64.b64encode(py_script.encode('utf-8')).decode('utf-8')
             nohup_cmd = f"python -c \"import base64; exec(base64.b64decode('{encoded_py}').decode('utf-8'))\""
         else:

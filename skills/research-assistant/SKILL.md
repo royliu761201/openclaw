@@ -50,14 +50,20 @@ This skill defines the **Standard Operating Procedures (SOPs)** for high-level s
 
 
 ## 4. Remote Infrastructure Standards (Context)
-**CRITICAL**: All experimental code MUST be designed to run on the **Remote Server** (`L20 Cluster`).
--   **Root Workspace**: `/root/research_bot`
--   **Data Storage**: `/root/research_bot/data`
--   **Results Output**: `/root/research_bot/results/[project_name]`
--   **Model Weights**: `/root/research_bot/models` (or project-specific `data` folders)
+**CRITICAL**: All experimental code MUST be designed to run from the canonical **Git SSoT Workspace** on the active node (e.g., `~/workspace/projects_core/[project_name]`).
+
+-   **Code Location**: `~/workspace/projects_core/[project_name]`
+-   **Data Storage (Linked)**: Heavy datasets MUST be symlinked from the node's cold storage (e.g., `/Volumes/.../data_vault/datasets/`). Never download them directly into the Git repository!
+-   **Model Weights (Linked)**: Pre-trained weights MUST be symlinked from the node's Model Vault (e.g., `/Volumes/.../data_vault/models/`).
 -   **Network Mirrors** (Pre-Configured):
     -   **Pip**: `https://pypi.tuna.tsinghua.edu.cn/simple`
     -   **HuggingFace**: `HF_ENDPOINT=https://hf-mirror.com` (Models download here automatically)
+
+### L1 Constitution Check (Scientific Integrity)
+Before executing:
+1.  **Hardware-Task Matching Law**: Check the GPU topology. Do not run LLMs or massive FP32 physics simulators on CPU nodes or weak Kaggle P100s.
+2.  **Defensive Degradation**: If the environment is completely broken, fallback to a PoC Kaggle kernel or local M1 run. Delivering the "Report" (Check) is more important than compiling the code.
+3.  **Baseline Purity**: Never secretly downgrade FP32 baselines to FP16 just to fit in memory. Explicitly label it as `DEGRADED_MOCK_RESULTS` if forced to.
 
 ### Active Conda Environments
 Select the correct environment for the task:
@@ -70,8 +76,8 @@ Select the correct environment for the task:
 | **`cogd`** | Geometric | `torch-geometric`, `diffusion` |
 
 ### Code Generation Rules
-1.  **Paths**: Always use absolute paths starting with `/root/research_bot`.
-2.  **No GUI**: Use `matplotlib.use('Agg')` for plotting; save `.png` to `results/`.
+1.  **Paths**: Always use relative paths from the project root (e.g., `./data/`, `./results/`) or robust absolute paths starting with `~/workspace/projects_core/`.
+2.  **No GUI**: Use `matplotlib.use('Agg')` for plotting; save `.png` to local `results/` folders.
 3.  **Logging**: Write logs to local files or stdout (captured by runner); do not use interactive progress bars (`tqdm` ok but monitor overhead).
 
 ### W&B Environment Standard (Explicit Isolation)
@@ -94,47 +100,28 @@ unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
 Never use `export WANDB_MODE=offline` as the default anymore; explicit credentials via `.env` are the standard.
 
 ### Project Structure Standard (Layout)
-All projects MUST follow this directory structure:
+All projects MUST strictly follow the `03_RESEARCH_PROJECT_LAW.md` standard. The internal structure should be:
 ```text
-/root/research_bot/projects/[project_name]/
-├── code/               # Python Source Code
-│   ├── src/            # Reusable Modules
-│   ├── main.py         # Entry Point
-│   └── config.yaml     # Hyperparameters
-├── paper/              # LaTeX Source
-│   ├── main.tex
-│   └── figures/
-├── scripts/            # Shell Runners
-│   └── run_exp.sh
-└── results/            # Output (Synced Down)
-    └── [exp_id]/
+~/workspace/projects_core/[project_name]/
+├── docs/               # Tactical Documents (req.md, run_instructions.md)
+├── configs/            # YAML/JSON configs
+├── src/                # Core Python Source Code
+├── scripts/            # Launchers (run_exp.sh, train.sh)
+├── tests/              # Unit Tests
+└── results/            # Outputs (Make sure this is in .gitignore!)
 ```
 
 
+### Remote Data & Model Standard (Heavy Asset Visa)
+To prevent disk bloat (Anti-Bloat Law) and ensure reuse, strictly adhere to this constraint:
 
-### Remote Data & Model Standard (Shared Resources)
-To prevent disk bloat and ensure reuse, strictly adhere to this shared layout:
-
-1.  **Model Zoo** (`/root/research_bot/models/`):
+1.  **Model Zoo** (Node-specific `data_vault`):
     -   **Purpose**: Shared pre-trained weights (HuggingFace, ResNet, etc.).
-    -   **Usage**: ALL projects must symlink here. Do NOT download weights to project folders.
-    -   **Structure**:
-        ```text
-        /root/research_bot/models/
-        ├── bert-base-uncased/
-        ├── resnet50.pth
-        └── sam2_hiera_large.pt
-        ```
+    -   **Usage**: ALL projects must symlink here (`ln -s`). Do NOT download weights into the Git-tracked `projects_core` folders!
 
-2.  **Data Lake** (`/root/research_bot/data/`):
+2.  **Data Lake** (Node-specific `data_vault`):
     -   **Purpose**: Heavy datasets (ImageNet, TubeTK, MIMIC-IV).
-    -   **Usage**: Store actual data here; projects link to it via `ln -s`.
-    -   **Structure**:
-        ```text
-        /root/research_bot/data/
-        ├── [project_name]/    # Dedicated folder per project
-        └── shared/            # Common datasets (e.g., ImageNet)
-        ```
+    -   **Usage**: Store actual data in the un-versioned vault; projects link to it.
 
 ### Track 1: Virtual Cell (Nobel Track)
 
@@ -157,9 +144,10 @@ To prevent disk bloat and ensure reuse, strictly adhere to this shared layout:
 ## 6. Execution Protocol
 
 To perform these tasks, the agent should:
-1.  **Create Workspace**: `mkdir -p workspace/[project_name]`
-2.  **Generate Content**: Use `gemini` with the specific venue prompt.
-3.  **Compile**: Use `latex compile workspace/[project_name]/main.tex`.
+1.  **Review PDCA Board**: Read `workspace/docs/projects_pdca/[project]_PDCA.md` to understand current goals.
+2.  **Create/Enter Workspace**: Navigate to `~/workspace/projects_core/[project_name]`.
+3.  **Generate Content**: Use `gemini` with the specific venue prompt.
+4.  **Compile**: Use `latex compile ./docs/paper/main.tex` (or whatever the path is via the robust `latex` skill).
 4.  **Verify**: If compile fails, use `gemini` to fix the LaTeX error log.
 5.  **Commit**: Use `github` or `git` to save progress.
 

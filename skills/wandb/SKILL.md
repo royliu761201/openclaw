@@ -8,6 +8,10 @@ metadata: { "openclaw": { "requires": { "bins": ["python3"] }, "install": [ { "i
 
 Log metrics and manage runs on WandB.
 
+## Disallowing Global Telemetry Bloat
+> **[L1 Constitution Block - Anti-Bloat Law]**: W&B naturally defaults to writing `./wandb/` folders in the current working directory, which often bloats the SSoT Git repo with thousands of telemetry files.
+> You MUST explicitly set the environment variable `WANDB_DIR` to route output to a Git-ignored `results/` or `outputs/` folder before launching python training scripts (e.g., `WANDB_DIR=./results/wandb python main.py`).
+
 ## Tools
 
 ### `wandb_log`

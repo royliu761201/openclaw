@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+import sys
+import os
+import subprocess
+from pathlib import Path
+
+def main():
+    if len(sys.argv) < 2 or sys.argv[1] in ("-h", "--help"):
+        print("🐙 OpenClaw CLI (v1.1)")
+        print("Usage: oc <skill_name> [args...]")
+        print("\nCore Skills:")
+        print("  oc ssh <args...>               - Remote SSH Execution & Sync")
+        print("  oc archive-session             - Trigger global session archive")
+        print("  oc proxy-downloader <args...>  - Safe proxy downloads")
+        print("  oc global-task-promoter        - Restore SSoT Context")
+        print("\nAll other skills in /skills directory are dynamically resolved.")
+        print("Example: oc kaggle kernel_push workspace/physdiff")
+        sys.exit(1 if len(sys.argv) < 2 else 0)
+
+    if sys.argv[1] in ("-v", "--version"):
+        print("🐙 OpenClaw CLI v1.1.0")
+        sys.exit(0)
+
+    skill_name = sys.argv[1]
+    args = sys.argv[2:]
+
+    openclaw_dir = Path(__file__).resolve().parent.parent
+    skill_dir = openclaw_dir / "skills" / skill_name
+    scripts_dir = skill_dir / "scripts"
+
+    if not skill_dir.exists():
+        print(f"❌ Error: Skill '{skill_name}' not found natively in {openclaw_dir}/skills")
+        sys.exit(1)
+
+    target_script = None
+
+    # Hardcoded known entrypoints for core skills
+    KNOWN_ENTRYPOINTS = {
+        "ssh": "scripts/ssh_tool.py",
+        "archive-session": "scripts/archive.py",
+        "proxy-downloader": "scripts/proxy_downloader.py",
+        "global-task-promoter": "scripts/restore_context.py"
+    }
+
+    if skill_name in KNOWN_ENTRYPOINTS:
+        target_script = skill_dir / KNOWN_ENTRYPOINTS[skill_name]
+    elif scripts_dir.exists():
+        # Try to guess
+        py_files = list(scripts_dir.glob("*.py"))
+        sh_files = list(scripts_dir.glob("*.sh"))
+        all_scripts = py_files + sh_files
+        
+        if len(all_scripts) == 1:
+            target_script = all_scripts[0]
+        else:
+            # Fallback to look for a script containing the skill name
+            skill_name_normalized = skill_name.replace("-", "_")
+            for script in all_scripts:
+                if skill_name_normalized in script.name or skill_name in script.name or "main" in script.name:
+                    target_script = script
+                    break
+            
+            if not target_script and len(all_scripts) > 0:
+                target_script = all_scripts[0] # Just pick the first as last resort
+
+    if not target_script or not target_script.exists():
+        print(f"❌ Error: Could not automatically resolve execution script for '{skill_name}'")
+        sys.exit(1)
+
+    interpreter = []
+    if target_script.suffix == ".py":
+        interpreter = ["python3"]
+    elif target_script.suffix == ".sh":
+        interpreter = ["bash"]
+    
+    cmd = interpreter + [str(target_script)] + args
+    print(f"🚀 [OpenClaw CLI] Dispatching to: {' '.join(cmd)}")
+    sys.exit(subprocess.call(cmd))
+
+if __name__ == "__main__":
+    main()

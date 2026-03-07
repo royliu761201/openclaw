@@ -13,6 +13,7 @@ Usage:
     python ontology.py validate
 """
 
+from __future__ import annotations
 import argparse
 import json
 import uuid

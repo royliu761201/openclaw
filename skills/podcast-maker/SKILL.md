@@ -28,11 +28,11 @@ When the user asks you to "make a podcast", "generate an audio overview", or "cr
 3. **Format as JSON**: Format your script into a strict JSON file containing the dialogue.
    - Each turn must have a `"speaker"` (either `"host"` or `"guest"`) and the spoken `"text"`.
    - Ensure the text uses natural punctuation (commas, question marks) to help the TTS engine pause correctly.
-4. **Save the JSON**: Save the JSON to a physical file in the workspace (e.g., `~/Documents/projects/openclaw/workspace/podcast_script.json`).
+4. **Save the JSON**: Save the JSON to a physical file in the workspace (e.g., `~/workspace/docs/sprint_assets/podcast_script.json`).
 5. **Execute the Generator**: Use the `run_command` tool to execute `gen_podcast.py`, passing the input script and output path.
 
 ```bash
-python skills/podcast-maker/gen_podcast.py --input ~/Documents/projects/openclaw/workspace/podcast_script.json --output ~/Documents/projects/openclaw/workspace/podcast.ogg
+python skills/podcast-maker/gen_podcast.py --input ~/workspace/docs/sprint_assets/podcast_script.json --output ~/workspace/docs/sprint_assets/podcast.ogg
 ```
 
 6. **Return the Audio**: Tell the user the absolute path to the generated `.ogg` or `.mp3` file so Feishu can send it as an audio message.

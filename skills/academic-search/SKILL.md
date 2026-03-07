@@ -8,6 +8,9 @@ metadata: { "openclaw": { "emoji": "📚", "requires": { "bins": ["python3"] } }
 
 Tools for searching academic papers from ArXiv.
 
+## Anti-Hallucination Clause
+> **[L1 Constitution Block]**: Agents are STRICTLY FORBIDDEN from attempting to write custom Python `requests` or `BeautifulSoup` scrapers targeting arXiv. You MUST use this `academic-search` tool natively. Writing ad-hoc scrapers for standard academic repositories violates the PURE Response Protocol (Unify & Trim).
+
 ## Tools
 
 ### `search_papers`

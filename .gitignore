@@ -95,6 +95,7 @@ lanes/
 *.pth
 *.ckpt
 *.pdf
+*.safetensors
 
 # Local untracked files
 .local/

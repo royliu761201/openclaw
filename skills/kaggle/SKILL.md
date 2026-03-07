@@ -22,13 +22,12 @@ The script requires Kaggle authentication credentials. You can provide these in 
 2.  **Kaggle CLI Config**:
     Place your `kaggle.json` key file in `~/.kaggle/kaggle.json`.
 
-## Remote Standards (L20 Cluster)
+## Remote Standards (Heavy Asset Visa Enforcement)
 
-**CRITICAL**: When running on the remote server (`research-bot`), adhere to these paths:
-
-1.  **Data Download**: ALWAYS download datasets to `/root/research_bot/data/kaggle/[dataset_name]`.
-    - Do NOT download to the project folder. Use `ln -s` to link it.
-2.  **Kernels**: Run kernels that output to `/root/research_bot/results/kaggle`.
+> **[L1 Constitution Block]**: Kaggle datasets are often massive archives.
+> 1.  **Asset Routing**: ALWAYS download datasets to the node's untracked cold storage or `data_vault/` (e.g., `/Volumes/[DiskName]/data_vault/datasets/[dataset_name]`).
+> 2.  **No Direct Git Tracking**: Do NOT download datasets directly into `~/workspace/projects_core/` folders. Create the project folder and use `ln -s` to symlink the dataset into a `data/` subdirectory.
+> 3.  **Output Logs**: Ensure Kaggle kernel output logs are directed cleanly into the project's `results/` folder (which should be in `.gitignore`).
 
 ## Tools
 
