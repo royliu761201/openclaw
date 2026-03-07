@@ -19,20 +19,44 @@ RADAR_KEYWORDS = {
 WORKSPACE_DIR = Path(os.path.expanduser("~/workspace"))
 RAW_DATA_DIR = WORKSPACE_DIR / "docs" / "research_ideation" / "radar_raw_data"
 ACADEMIC_SEARCH_PATH = os.path.expanduser("~/Documents/projects/openclaw/skills/academic-search/scripts/search_arxiv.py")
+TAVILY_SEARCH_PATH = os.path.expanduser("~/Documents/projects/openclaw/skills/tavily-search/scripts/search.mjs")
+EXA_SEARCH_PATH = os.path.expanduser("~/Documents/projects/openclaw/skills/exa-search/scripts/exa_search.py")
 
-def run_search(query: str, max_results: int = 5) -> str:
+def run_search_arxiv(query: str, max_results: int = 5) -> str:
     try:
         result = subprocess.run(
             ["python3", ACADEMIC_SEARCH_PATH, "search", "--query", query, "--max_results", str(max_results)],
-            capture_output=True,
-            text=True,
-            check=True
+            capture_output=True, text=True, check=True
         )
         return result.stdout
-    except subprocess.CalledProcessError as e:
-        return f"*Error retrieving results for this query.*"
+    except subprocess.CalledProcessError:
+        return f"*Error retrieving ArXiv results.*"
     except FileNotFoundError:
         return f"*Error: academic-search script not found.*"
+
+def run_search_tavily(query: str, max_results: int = 3) -> str:
+    try:
+        result = subprocess.run(
+            ["node", TAVILY_SEARCH_PATH, query, "-n", str(max_results)],
+            capture_output=True, text=True, check=True
+        )
+        return result.stdout
+    except subprocess.CalledProcessError:
+        return f"*Error retrieving Tavily (Web) results.*"
+    except FileNotFoundError:
+        return f"*Error: tavily-search script not found.*"
+
+def run_search_exa(query: str, max_results: int = 3) -> str:
+    try:
+        result = subprocess.run(
+            ["python3", EXA_SEARCH_PATH, "web", query, "--num", str(max_results)],
+            capture_output=True, text=True, check=True
+        )
+        return result.stdout
+    except subprocess.CalledProcessError:
+        return f"*Error retrieving Exa (Neural) results.*"
+    except FileNotFoundError:
+        return f"*Error: exa-search script not found.*"
 
 def collect_raw_data():
     RAW_DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -47,10 +71,28 @@ def collect_raw_data():
     ]
     
     for category, query in RADAR_KEYWORDS.items():
-        print(f"  -> Scraping raw arXiv abstracts for: {category}")
-        raw_results = run_search(query, max_results=5)
+        print(f"  -> [Tri-Engine] Scraping raw data for: {category}")
+        
         raw_content.append(f"## 📦 Raw Sector: {category}")
-        raw_content.append(raw_results)
+        
+        # 1. ArXiv (Academic)
+        print("     |_ arXiv...")
+        arxiv_res = run_search_arxiv(query, max_results=5)
+        raw_content.append("### 📚 1. ArXiv (Academic)")
+        raw_content.append(arxiv_res)
+        
+        # 2. Tavily (Web/News)
+        print("     |_ Tavily...")
+        tavily_res = run_search_tavily(query + " recent developments AI", max_results=3)
+        raw_content.append("### 🌐 2. Tavily (Web & Industry News)")
+        raw_content.append(tavily_res)
+        
+        # 3. Exa (Code/Neural)
+        print("     |_ Exa...")
+        exa_res = run_search_exa(query + " github repo code", max_results=3)
+        raw_content.append("### 💻 3. Exa (Code & Neural Intel)")
+        raw_content.append(exa_res)
+        
         raw_content.append("\n---\n")
         
         # 🛡️ Absolute Physical Rate Limit (Anti-Ban Armor)
