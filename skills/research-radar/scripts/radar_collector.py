@@ -83,16 +83,16 @@ def collect_raw_data():
         raw_content.append("### 📚 1. ArXiv (Academic)")
         raw_content.append(arxiv_res)
         
-        # 2. Tavily (Web/News - Strictly Top Venues)
+        # 2. Tavily (Web/News - Strictly Top Venues & CAS Q1/Q2)
         print("     |_ Tavily...")
-        tavily_query = query + " (Nature OR Science OR ICLR OR NeurIPS OR ICML) recent breakthroughs AI"
+        tavily_query = query + " (Nature OR Science OR ICLR OR NeurIPS OR ICML OR CVPR OR ICCV OR KDD OR Q1 OR Q2) recent breakthroughs AI"
         tavily_res = run_search_tavily(tavily_query, max_results=3)
         raw_content.append("### 🌐 2. Tavily (Web & Industry News)")
         raw_content.append(tavily_res)
         
-        # 3. Exa (Code/Neural - Strictly Top Venues)
+        # 3. Exa (Code/Neural - Strictly Top Venues & CAS Q1/Q2)
         print("     |_ Exa...")
-        exa_query = query + " (Nature OR Science OR ICLR OR NeurIPS OR ICML) github repo official code"
+        exa_query = query + " (Nature OR Science OR ICLR OR NeurIPS OR ICML OR CVPR OR ICCV OR KDD OR Q1) github repo official code"
         exa_res = run_search_exa(exa_query, max_results=3)
         raw_content.append("### 💻 3. Exa (Code & Neural Intel)")
         raw_content.append(exa_res)
