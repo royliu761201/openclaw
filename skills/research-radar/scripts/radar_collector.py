@@ -7,13 +7,15 @@ import datetime
 from pathlib import Path
 
 RADAR_KEYWORDS = {
-    "CaLaM": "Topological Data Analysis OR Topological Analysis",
-    "Frenet": "SE(3) Equivariance OR Hamiltonian Neural Networks",
-    "PESSO": "Spectral FlashAttention OR Neural Operator",
-    "PhysDiff": "Energy-Conserving Quantization OR Physics-Informed",
-    "RLPF": "Reinforcement Learning Fluid OR PDE RL Reward",
+    "CaLaM": "Topological Data Analysis OR Manifold-constrained generation",
+    "Frenet": "SE(3) Equivariance OR 4D Hamiltonian constraints",
+    "PESSO": "Spectral FlashAttention OR Fourier Neural Operator",
+    "PhysDiff": "Energy-Conserving Quantization OR Hamiltonian Preservation",
+    "RLPF": "Reinforcement Learning PDE OR Physics-Informed Reward Model",
     "Composition": "Neural Operator Composition OR Zero-shot Multiphysics",
-    "MultiAgent": "Multi-Agent Math Reasoning OR LLM Arbitrage"
+    "MultiAgent": "Multi-Agent Math Reasoning OR LLM Arbitrage",
+    "CausalAdaptation": "Precision-Weighted Causal Adaptation OR Causal AI Control",
+    "LieGroupGames": "Lie-Group manifold multi-agent OR Differential games AI"
 }
 
 WORKSPACE_DIR = Path(os.path.expanduser("~/workspace"))
