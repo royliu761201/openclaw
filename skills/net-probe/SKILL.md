@@ -51,3 +51,16 @@ echo $? # 如果是 0 即连通，255 即阻断
 
 - **绝对禁止盲人摸象**: 如果 `net-probe` 探测目标端口返回 `Exit 1`（Unreachable），**立刻中止**任何针对该端口的代码部署或大文件传输行为。你必须先转回网络排障模式（如检查 `nc` 状态，检查跳板机）。
 - **禁止造轮子**: 不要为了测个端口去写 `import socket` 的 python 脚本。强制调用本技能提供的 `probe.sh`。
+
+### 3. 全网格上帝视角仪表盘 (Cluster Network Dashboard)
+在决定是否拉取大模型、是否下放训练任务前，直接呼叫仪表盘获取全网的真实外网带宽和过墙拓扑：
+```bash
+python3 /Users/roy-jd/Documents/projects/openclaw/skills/workspace/scripts/cluster_net_dashboard.py
+```
+*此工具将并发盲测全系节点对 Google/HF/Aliyun 的出站能力。*
+
+### 4. GPU 算力高塔巡检 (GPU Forge Status Board)
+部署深度学习任务前，不要盲测，秒级启动 GPU 仪表盘获取实时利用率与显存：
+```bash
+python3 /Users/roy-jd/Documents/projects/openclaw/skills/workspace/scripts/gpu_status_board.py
+```
