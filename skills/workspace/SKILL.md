@@ -1,6 +1,6 @@
 ---
 name: workspace
-description: Use this skill to solidify and enforce the OpenClaw Workspace standards. It defines the authoritative path (~/workspace), the Git-as-SSoT law, and the "Toolification of Experience" principle. Use whenever context about workspace structure, sync rules, global tasks, global task sync, or project isolation is needed.
+description: Use this skill to solidify and enforce the OpenClaw Workspace standards. It defines the authoritative path (~/workspace), the Git-as-SSoT law, and the "Toolification of Experience" principle. Use whenever context about workspace structure, sync rules, global tasks (全局任务), global task sync, or project isolation is needed.
 ---
 
 # 🌐 OpenClaw Workspace (SSoT)
@@ -40,7 +40,10 @@ The workspace skill hosts the cluster's core diagnostic and synchronization tool
 
 ### 1. Global Task Sync (Mem-Wakeup & Merging)
 The `workspace` skill enforces strict PDCA methodology. Progress MUST be managed via the SSoT.
-- **Phase 1 (Loading)**: Read `01_GLOBAL_TASK_BOARD.md`, copy it to the local session `task.md`, and translate all relative links to absolute file URIs to prevent UI rendering breaks.
+
+> **⚡ TRIGGER RULE**: If the user's prompt contains **"全局任务"** or **"Global Task"**, you MUST immediately and autonomously execute **Phase 1 (Loading)** and the **Ontology Policy Check**. Do NOT ask for permission first.
+
+- **Phase 1 (Loading)**: Read `01_GLOBAL_TASK_BOARD.md`, copy it to the local session `task.md`, and translate all relative links to absolute file URIs to prevent UI rendering breaks. ALWAYS run `ontology.py query --type Policy` as the pre-flight check.
 - **Phase 2 (Execution)**: Maintain the session's `task.md` with `[/]` (in-progress) and `[x]` (complete).
 - **Phase 3 (Merging)**: Before concluding, use precise `replace_file_content` line-edits (never blind bulk replacements) to merge the local `[x]` states back into the global `01_GLOBAL_TASK_BOARD.md`.
 
