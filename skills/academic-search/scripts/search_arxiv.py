@@ -4,13 +4,14 @@ import json
 import arxiv
 import os
 
-def search_arxiv_papers(query, max_results=5):
+def search_arxiv_papers(query, max_results=5, sort_by="relevance"):
     try:
         client = arxiv.Client()
+        sort_criterion = arxiv.SortCriterion.SubmittedDate if sort_by.lower() == "date" else arxiv.SortCriterion.Relevance
         search = arxiv.Search(
             query=query,
             max_results=max_results,
-            sort_by=arxiv.SortCriterion.Relevance
+            sort_by=sort_criterion
         )
 
         results = []
@@ -37,14 +38,15 @@ if __name__ == "__main__":
     search_parser = subparsers.add_parser('search')
     search_parser.add_argument('--query', required=True)
     search_parser.add_argument('--max_results', type=int, default=5)
+    search_parser.add_argument('--sort_by', type=str, choices=['relevance', 'date'], default='relevance')
     
     args = parser.parse_args()
     
     if args.command == 'search':
-        search_arxiv_papers(args.query, args.max_results)
+        search_arxiv_papers(args.query, args.max_results, args.sort_by)
     else:
-        # Default behavior if query argument is present (backwards compatibility or simpler usage)
+        # Default behavior if query argument is present
         if hasattr(args, 'query') and args.query:
-             search_arxiv_papers(args.query, args.max_results)
+             search_arxiv_papers(args.query, args.max_results, getattr(args, 'sort_by', 'relevance'))
         else:
              parser.print_help()
