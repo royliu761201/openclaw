@@ -48,37 +48,53 @@ def process_results_with_llm(raw_data: str) -> str:
     pi_profile = read_file_safe(PI_PROFILE_PATH)
     idea_list = read_file_safe(IDEA_LIST_PATH)
     
-    prompt = f"""
-You are the Cognitive Alignment Engine for Dr. Xiaohua Liu's Research Radar.
-Your job is to read raw academic paper results collected by edge probes and cross-examine them against the PI's research profile, active P0 projects, and the highly confidential Extension Idea Master.
+    # --- Agent 1: The Filter (Triage) ---
+    filter_prompt = f"""
+You are the Radar Filter Agent. 
+Scan the raw data below. Discard anything that is low-quality, purely theoretical without path to code, or unrelated to our core constraints.
+OUTPUT ONLY THE TITLES AND ABSTRACTS of maximum 3 papers that are true breakthroughs (O(N) complexity reduction, absolute physical conservation) OR direct threats to our PI Profile.
+If none pass the bar, output exactly: NO_HIGH_VALUE_TARGETS.
 
-### 1. PI Profile & Active P0 Projects:
-{pi_profile}
-
-### 2. Emerging Idea List (For threat/opportunity detection):
-{idea_list}
-
-### 3. Captured arXiv Papers (Raw Data):
+[Raw Data]:
 {raw_data}
-
-### 🎯 THE PURE-T PROTOCOL & RESEARCH IDEATION RULES:
-You must strictly execute the Trim & Filter protocol. Most papers are superficial "paper-talk" and MUST be discarded.
-**You must ONLY select MAX 3 papers total across all data if they meet these Extreme Criteria:**
-- **[X - Threat / 已抢夺]**: Someone has published a paper identical to our Extension Idea List (e.g., S-FlashAttention, RLPF). This is a code-red IP threat.
-- **[Derived Node / 衍生点]**: The paper offers a mathematical or architectural breakthrough that directly advances our active P0 projects (CaLaM, Frenet, PESSO, PhysDiff).
-- **[Discard]**: Discard ANY paper that is purely theoretical without code, a mere review paper, or simple CV/NLP applications without PDE/physics grounding.
-
-### 📝 REQUIRED OUTPUT FORMAT:
-If no papers meet this extreme bar, output EXACTLY: "NO_HIGH_VALUE_TARGETS".
-Otherwise, output a highly concise, deadly accurate strategic brief in Markdown. For EACH selected paper, you MUST provide:
-
-#### 📜 [Paper Title]
-- **Classification**: `[X - Threat]` OR `[Derived Node]`
-- **Target Project/Idea**: (Which specific P0 project or Idea # it hits)
-- **Deep Insight**: (1-2 sentences. What is the exact mathematical formulation or CUDA trick they used? Be highly technical, no vague summaries.)
-- **Micro-PoC Action Plan (AB-008 Compliance)**: (What 100 lines of code should Dr. Liu write TODAY to test this paper's claim? Give a concrete micro-experiment design, e.g., "Write a 1D Torch script to verify their discrete Laplace-Beltrami operator.")
 """
-    return call_gemini(prompt)
+    filtered_intel = call_gemini(filter_prompt)
+    if "NO_HIGH_VALUE_TARGETS" in filtered_intel or not filtered_intel.strip():
+        return "NO_HIGH_VALUE_TARGETS"
+
+    # --- Agent 2: Red Team (Math Critic) ---
+    red_prompt = f"""
+You are the Red Team Math Critic.
+Analyze these high-value papers: {filtered_intel}
+Your ONLY job is to aggressively scrutinize their mathematical claims. 
+Are their Hamiltonian conservations rigorous? Is their O(N) complexity claim hiding massive constants? 
+If there's a flaw, point it out mathematically. If it's solid, propose a SymPy/PyTorch ablation script to verify their exact boundary conditions.
+Output a highly technical Red Team brief.
+"""
+    red_analysis = call_gemini(red_prompt)
+
+    # --- Agent 3: Blue Team (Code Builder) ---
+    blue_prompt = f"""
+You are the Blue Team Builder.
+Analyze these high-value papers: {filtered_intel}
+Against our PI profile: {pi_profile}
+Your ONLY job is integration. How do we steal their best operators and graft them into our CaLaM, Frenet, or PESSO pipelines TODAY?
+Output exact file modification strategies and PyTorch pseudocode for integrating their core algorithm.
+"""
+    blue_analysis = call_gemini(blue_prompt)
+
+    # --- Agent 4: The Ranger (Cross-Domain Serendipity) ---
+    ranger_prompt = f"""
+You are the Ranger.
+Analyze these high-value papers: {filtered_intel}
+Against our Idea List: {idea_list}
+Your ONLY job is cross-domain serendipity. Do not talk about AI. What does this remind you of in Statistical Mechanics, Cell Biology, or Differential Geometry?
+Propose ONE completely unhinged but mathematically isomorphic idea that maps their breakthrough to a totally different discipline to secure a new Nature/Science angle.
+"""
+    ranger_analysis = call_gemini(ranger_prompt)
+
+    final_report = f"## 🔴 Red Team (Math & Validity Critic)\n{red_analysis}\n\n---\n## 🔵 Blue Team (Code & Synergy Builder)\n{blue_analysis}\n\n---\n## 🟢 Ranger (Cross-Domain Serendipity)\n{ranger_analysis}\n"
+    return final_report
 
 def analyze_raw_data(date_str: str = None):
     if not date_str:
