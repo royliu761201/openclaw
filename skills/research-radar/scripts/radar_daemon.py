@@ -55,7 +55,7 @@ def call_gemini(prompt: str) -> str:
     if not api_key:
         return "Error calling Gemini: GEMINI_API_KEY environment variable is not set."
     
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-preview-02-05:generateContent?key={api_key}"
     headers = {'Content-Type': 'application/json'}
     data = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
