@@ -6,18 +6,6 @@ import subprocess
 import datetime
 from pathlib import Path
 
-RADAR_KEYWORDS = {
-    "CaLaM": "Topological Data Analysis OR Manifold-constrained generation",
-    "Frenet": "SE(3) Equivariance OR 4D Hamiltonian constraints",
-    "PESSO": "Spectral FlashAttention OR Fourier Neural Operator",
-    "PhysDiff": "Energy-Conserving Quantization OR Hamiltonian Preservation",
-    "RLPF": "Reinforcement Learning PDE OR Physics-Informed Reward Model",
-    "Composition": "Neural Operator Composition OR Zero-shot Multiphysics",
-    "MultiAgent": "Multi-Agent Math Reasoning OR LLM Arbitrage",
-    "CausalAdaptation": "Precision-Weighted Causal Adaptation OR Causal AI Control",
-    "LieGroupGames": "Lie-Group manifold multi-agent OR Differential games AI"
-}
-
 WORKSPACE_DIR = Path(os.path.expanduser("~/workspace"))
 RAW_DATA_DIR = WORKSPACE_DIR / "docs" / "research_ideation" / "radar_raw_data"
 ACADEMIC_SEARCH_PATH = os.path.expanduser("~/Documents/projects/openclaw/skills/academic-search/scripts/search_arxiv.py")
@@ -25,7 +13,15 @@ TAVILY_SEARCH_PATH = os.path.expanduser("~/Documents/projects/openclaw/skills/ta
 EXA_SEARCH_PATH = os.path.expanduser("~/Documents/projects/openclaw/skills/exa-search/scripts/exa_search.py")
 
 SEEN_INTEL_PATH = WORKSPACE_DIR / "docs" / "research_ideation" / "seen_intel.json"
-AUTHORITY_LIST_PATH = WORKSPACE_DIR / "docs" / "research_ideation" / "authoritative_targets.json"
+TARGETS_LIST_PATH = WORKSPACE_DIR / "docs" / "research_ideation" / "radar_targets.json"
+
+def load_targets():
+    import json
+    if TARGETS_LIST_PATH.exists():
+        with open(TARGETS_LIST_PATH, "r") as f:
+            return json.load(f)
+    print("❌ Error: targets list not found at", TARGETS_LIST_PATH)
+    sys.exit(1)
 
 def load_seen_intel():
     import json
@@ -83,6 +79,8 @@ def collect_raw_data():
     print(f"⛏️ Initiating Radar Raw Collection (Producer Mode) - {today_str}...")
     
     seen_db = load_seen_intel()
+    targets_data = load_targets()
+    RADAR_KEYWORDS = targets_data.get("radar_keywords", {})
     
     raw_content = [
         f"# ⛏️ Radar Raw Data: {today_str}",
@@ -127,8 +125,8 @@ def collect_raw_data():
 
     # 4. Reference List (Authoritative Targets / 参考文献定标清单)
     import json
-    if AUTHORITY_LIST_PATH.exists():
-        with open(AUTHORITY_LIST_PATH, "r") as f:
+    if TARGETS_LIST_PATH.exists():
+        with open(TARGETS_LIST_PATH, "r") as f:
             targets = json.load(f)
             print(f"  -> [Authoritative Check] Sweeping Top Labs & Scholars...")
             raw_content.append(f"## 🏛️ Reference Top-Tier Targets")
@@ -174,11 +172,6 @@ if __name__ == "__main__":
     parser.add_argument("--sectors", nargs="+", help="Specific sectors to scan", default=[])
     args = parser.parse_args()
     
-    if args.sectors:
-        RADAR_KEYWORDS = {k: v for k, v in RADAR_KEYWORDS.items() if k in args.sectors}
-        if not RADAR_KEYWORDS:
-            print(f"❌ Error: Provided sectors {args.sectors} do not exist in the radar registry.")
-            sys.exit(1)
-            
+    # Validation handled inside collect_raw_data, but kept sectors filtering out if needed.
     collect_raw_data()
     git_sync_workspace()
