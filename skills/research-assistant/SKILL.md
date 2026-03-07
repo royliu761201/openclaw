@@ -12,6 +12,10 @@ metadata:
 
 This skill defines the **Standard Operating Procedures (SOPs)** for high-level scientific research tasks. It defines specialized modes/tools to enforce venue-specific standards (NeurIPS, ACL, NSFC, Patent) without code duplication.
 
+> [!IMPORTANT]
+> **CRITICAL DIRECTIVE (L1 CONSTITUTION):**
+> Before executing ANY command, planning ANY trajectory, or generating ANY scientific output, you MUST read, internalize, and rigidly adhere to the principles outlined in `~/workspace/docs/system_core/GEMINI_L1_CONSTITUTION.md`. This is the highest operational law for this agent.
+
 ## 1. Paper Drafting Tools
 
 ### `draft_paper_neurips`
