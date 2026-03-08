@@ -49,7 +49,15 @@ How do we steal their operators for our current CaLaM, Frenet, or PESSO projects
 Propose one mathematically isomorphic idea mapping their breakthrough to a totally different discipline.
 
 ### 📚 Stage 5: Academic Grounding (References)
-For EVERY high-value research idea or innovation you propose, you MUST output a rigorously formatted Academic Reference List containing 20 to 30 high-quality benchmark citations. These references must focus on top-tier venues (Nature, Science, ICLR, ICML, CVPR, NeurIPS, KDD, IEEE S&P, etc.) to ensure the idea is firmly grounded in literature.
+For EVERY high-value research idea or innovation you propose, you MUST output a rigorously formatted Academic Reference List containing 20 to 30 high-quality benchmark citations. 
+
+**Definition of "High-Quality References":**
+1. **Venue Prestige**: Papers MUST originate from CCF-A conferences (e.g., NeurIPS, ICML, ICLR, CVPR, ACL, KDD, IEEE S&P) or Top-Tier Journals (Nature, Science, Cell, Lancet, or CAS Q1 journals with Impact Factor > 10).
+2. **Recency**: At least 70% of citations must be from the last 3-5 years (2021-present).
+3. **Relevance**: The references must directly back up the methodology, the physical mechanism (e.g., Hamiltonian operators), or the empirical benchmark you are suggesting.
+4. **Authority**: Prioritize papers authored by the top scholars and top institutions listed in the Knowledge Base.
+
+Do NOT hallucinate DOIs or ArXiv IDs. If you know the paper, cite the Title, Authors, Venue, and Year.
 
 > **CRITICAL ACTION**: After thinking, you MUST use your `write_to_file` tool to save your final analysis as a markdown file at: `{REPORTS_DIR}/{date_str}_RADAR_V2_REPORT.md`
 
