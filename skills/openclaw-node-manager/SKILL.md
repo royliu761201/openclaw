@@ -56,6 +56,19 @@ python3 /Users/roy-jd/openclaw/skills/ssh/scripts/ssh_tool.py --host {NODE_ID} e
 scp -i ~/.ssh/id_ed25519 /Users/roy-jd/workspace/config/openclaw_gateways/{CONFIG_NAME} {TARGET_USER}@{TARGET_IP}:/Users/{TARGET_USER}/openclaw/config/{CONFIG_NAME}
 ```
 
+### Step 1.5: Major Version Upgrade (Upstream Merge)
+
+If the boss requests a fundamental OpenClaw version upgrade (e.g., v3.6 to v3.7), you MUST execute the upgrade via SSoT Git topological operations.
+
+1. **Node 01 (Master) Upstream Merge**:
+   - Fetch the official `upstream/main` on Node 01.
+   - Run `git merge upstream/main` into your local customized branch (`mac`).
+   - Resolve all merge conflicts locally, commit, and push to `origin mac` (`git push origin mac`).
+   - Run a local `npm install && npm run build` on Node 01 to verify compilation safely before exposing edge nodes.
+2. **Node 0x (Edge) Deployment**:
+   - Follow normal **Step 1** (Edge nodes only pull from `mac`, NEVER from `upstream`).
+   - Proceed to **Step 2** to force a cold reboot of the new compiled gateway.
+
 ### Step 2: Recover (Absolute Scorched Earth Rebuild)
 
 Use the `ssh` tool to execute a massive, absolute kill command on the target. This includes destroying zombie ports (18789), clearing PM2, and cold-booting the engine with strict `.nvm/nvm.sh` sourcing to prevent PATH errors.
