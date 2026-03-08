@@ -25,6 +25,13 @@ As an Agent, you do **NOT** run any local Python wrapper scripts for this skill.
 - `{WORKSPACE_NAME}`: e.g., `dandan02`
 - `{NODE_VERSION}`: e.g., `v22.14.0`
 
+### Step 0: Pre-Flight (SSH Integrity Check)
+Before deploying or recovering, you MUST guarantee the target node's SSH mesh is fully authenticated globally.
+```bash
+python3 /Users/roy-jd/openclaw/skills/ssh/scripts/ssh_tool.py --host {NODE_ID} exec "echo 'Pre-flight check passed'"
+```
+*(If this hangs or fails with "Permission denied", you must **STOP** and first resolve the `.ssh/authorized_keys` trust missing on either side or jump-hosts before proceeding.)*
+
 ### Step 1: Deploy (SSoT Sync)
 Push the local configuration from Node 01 to the target node using native `scp`.
 ```bash

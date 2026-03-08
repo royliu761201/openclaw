@@ -87,36 +87,93 @@ def collect_raw_data():
         "> **Auto-harvested by Research-Radar (Collector)**\n"
     ]
     
+    import re
+    
+    def extract_identifiers(text):
+        # ArXiv ID format broadly: yymm.number or old style
+        arxiv_ids = set(re.findall(r'(\d{4}\.\d{4,5})', text))
+        urls = set(re.findall(r'(https?://[A-Za-z0-9\.\-\_\/\?\&\=\%]+)', text))
+        return arxiv_ids, urls
+
+    def filter_new_content(raw_text, engine_name):
+        if not raw_text or "*Error" in raw_text:
+            return raw_text, False
+            
+        a_ids, urls = extract_identifiers(raw_text)
+        
+        # If no identifiers found, we assume it's new (can't prove it's a duplicate)
+        if not a_ids and not urls:
+            return raw_text, True
+            
+        new_items_found = False
+        # Check ArXiv
+        for aid in a_ids:
+            if aid not in seen_db['arxiv']:
+                seen_db['arxiv'].append(aid)
+                new_items_found = True
+        
+        # Check URLs
+        for u in urls:
+            if u not in seen_db['web_urls']:
+                seen_db['web_urls'].append(u)
+                new_items_found = True
+                
+        # If json from ArXiv, we could precisely filter, but for raw markdown, 
+        # dropping the entire chunk if NO new items are found is the safest physical block.
+        if not new_items_found:
+            return "", False
+            
+        return raw_text, True
+
     for category, query in RADAR_KEYWORDS.items():
         print(f"  -> [Tri-Engine] Scraping raw data for: {category}")
         
-        raw_content.append(f"## 📦 Raw Sector: {category}")
+        # Determine if this category should bypass strict AI4S top-venue filtering
+        strict_venues = ["Nature", "Science", "ICLR", "NeurIPS", "ICML", "CVPR", "ICCV", "KDD", "Q1"]
+        bypass_strict = any(keyword.lower() in category.lower() for keyword in ["Medical", "Safety", "NLP", "OrgGPT", "Society", "Game", "Math", "LifeScience", "Cancer", "Affective", "Embodied", "Education"])
+        
+        category_buffer = []
         
         # 1. ArXiv (Academic)
         print("     |_ arXiv...")
         arxiv_res = run_search_arxiv(query, max_results=5)
-        raw_content.append("### 📚 1. ArXiv (Academic)")
-        raw_content.append(arxiv_res)
+        arxiv_res, has_new_arxiv = filter_new_content(arxiv_res, "arxiv")
+        if has_new_arxiv:
+            category_buffer.append("### 📚 1. ArXiv (Academic)")
+            category_buffer.append(arxiv_res)
         
-        # 2. Tavily (Web/News - Strictly Top Venues & CAS Q1/Q2)
+        # 2. Tavily (Web/News)
         print("     |_ Tavily...")
-        tavily_query = query + " (Nature OR Science OR ICLR OR NeurIPS OR ICML OR CVPR OR ICCV OR KDD OR Q1 OR Q2) recent breakthroughs AI"
+        tavily_query = query
+        if not bypass_strict:
+            tavily_query += " (" + " OR ".join(strict_venues) + " OR Q2) recent breakthroughs AI"
+        else:
+            tavily_query += " recent breakthroughs"
+            
         tavily_res = run_search_tavily(tavily_query, max_results=3)
-        raw_content.append("### 🌐 2. Tavily (Web & Industry News)")
-        raw_content.append(tavily_res)
+        tavily_res, has_new_tavily = filter_new_content(tavily_res, "tavily")
+        if has_new_tavily:
+            category_buffer.append("### 🌐 2. Tavily (Web & Industry News)")
+            category_buffer.append(tavily_res)
         
-        # 3. Exa (Code/Neural - Strictly Top Venues & CAS Q1/Q2)
+        # 3. Exa (Code/Neural)
         print("     |_ Exa...")
-        exa_query = query + " (Nature OR Science OR ICLR OR NeurIPS OR ICML OR CVPR OR ICCV OR KDD OR Q1) github repo official code"
+        exa_query = query
+        if not bypass_strict:
+            exa_query += " (" + " OR ".join(strict_venues) + ") github repo official code"
+        else:
+            exa_query += " github repo official code"
+            
         exa_res = run_search_exa(exa_query, max_results=3)
-        raw_content.append("### 💻 3. Exa (Code & Neural Intel)")
-        raw_content.append(exa_res)
+        exa_res, has_new_exa = filter_new_content(exa_res, "exa")
+        if has_new_exa:
+            category_buffer.append("### 💻 3. Exa (Code & Neural Intel)")
+            category_buffer.append(exa_res)
         
-        # (Assuming the LLM Consumer later will handle the deduplicated IDs from the raw text, 
-        # or we just let it fetch, but since this is raw bash output, full-text deduplication is left to Brain 
-        # for semantic filtering, but we explicitly note it here).
-        
-        raw_content.append("\n---\n")
+        if category_buffer:
+            raw_content.append(f"## 📦 Raw Sector: {category}")
+            raw_content.extend(category_buffer)
+            raw_content.append("\n---\n")
         
         # 🛡️ Absolute Physical Rate Limit (Anti-Ban Armor)
         # Protects Node 02/05 from being blacklisted by arXiv/IEEE
