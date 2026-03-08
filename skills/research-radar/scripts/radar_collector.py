@@ -247,6 +247,46 @@ def collect_raw_data():
                     raw_content.append(sch_res)
                 time.sleep(10)
 
+    # === Asynchronous Feishu Inbox Processing ===
+    FEISHU_INBOX_PATH = RAW_DATA_DIR / "feishu_inbox.json"
+    if FEISHU_INBOX_PATH.exists():
+        print("  -> [Feishu Asynchronous Handoff] Processing Inbox...")
+        raw_content.append(f"## 💬 Feishu Intercepted Intel (Asynchronous Handoff)")
+        try:
+            with open(FEISHU_INBOX_PATH, "r") as f:
+                import json
+                inbox_items = json.load(f)
+            
+            new_inbox_items = []
+            for item in inbox_items:
+                url = item.get("url", "")
+                context = item.get("context", "")
+                
+                # Check deduplication by simulating a raw text block containing the URL
+                _, is_new = filter_new_content(url, "inbox_check")
+                
+                if is_new:
+                    print(f"     |_ Extracting new Feishu URL: {url}")
+                    # Use a powerful web extractor to get the raw text 
+                    # We'll re-use Tavily search but just feed it the URL in hopes of content extraction
+                    # Or better, we just format it for Dandan Analyzer to take over
+                    raw_content.append(f"### 🔗 Link: {url}")
+                    raw_content.append(f"**Chatbot Context / Quick Summary:**\n> {context}\n")
+                    raw_content.append(f"*(This URL was intercepted from a live chat session. The Analyzer will cross-reference this URL with the chat context.)*\n\n")
+                    new_inbox_items.append(item)
+                else:
+                    print(f"     |_ [Skip] Feishu URL already processed: {url}")
+                    
+            if not new_inbox_items:
+                raw_content.append("*No new intercepts found today.*")
+                
+            # Erase the inbox to prevent infinite growth
+            with open(FEISHU_INBOX_PATH, "w") as f:
+                f.write("[]")
+                
+        except Exception as e:
+            print(f"     |_ [Error processing Feishu Inbox] {e}")
+
     save_seen_intel(seen_db)
     with open(raw_path, "w") as f:
         f.write("\n".join(raw_content))
