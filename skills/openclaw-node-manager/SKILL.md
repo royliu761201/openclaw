@@ -1,9 +1,9 @@
 ---
-name: node-manager
+name: openclaw-node-manager
 description: A universal, parameterized operational skill that performs Scorched-Earth Deployment, System Recovery, and Hardcore E2E Integration Testing on any OpenClaw compute node (e.g., Node 02, Node 03).
 ---
 
-# `node-manager` Skill
+# `openclaw-node-manager` Skill
 
 This L2 operational skill is the ultimate administrative weapon for managing the OpenClaw grid. It transcends simple deployment by automating the secure transfer of configurations, executing absolute process recovery (Scorched Earth rebuild), and conducting rigorous End-to-End (E2E) testing on any designated physical Node (e.g., `100.90.140.62` for Node 02).
 
@@ -17,7 +17,7 @@ The Agent is **REQUIRED** to execute this skill when:
 To fire the Scorched Earth Recovery and Verification pipeline, run the embedded Python script from Node 01, passing the necessary target parameters:
 
 ```bash
-python3 /Users/roy-jd/openclaw/skills/node-manager/scripts/manage_node.py --node 02 --user roy-002 --ip 100.90.140.62 --workspace dandan02 --pm2_name dandan-mac02 --config openclaw.mac02.json
+python3 /Users/roy-jd/openclaw/skills/openclaw-node-manager/scripts/manage_node.py --node 02 --user roy-002 --ip 100.90.140.62 --workspace dandan02 --pm2_name dandan-mac02 --config openclaw.mac02.json
 ```
 
 **Parameters Explained:**
