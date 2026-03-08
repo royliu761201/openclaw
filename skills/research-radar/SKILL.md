@@ -12,19 +12,19 @@ An autonomous, Git-SSoT-driven surveillance system utilizing `academic-search` t
 
 To eradicate manual literature monitoring while ensuring absolute data security and zero latency impact on the primary Node 01. The radar pipeline is purely decoupled into a **Producer (Scraper)** and a **Consumer (Brain)**.
 
-## Core Mechanisms (The Git-SSoT Pipeline)
+## Core Mechanisms (The Git-SSoT Omni-Scope Pipeline)
 
 1. **⛏️ The Producer (`scripts/radar_collector.py`)**:
-   - Deployed **exclusively on Node 02**.
-   - Runs silently via cron. It is a powerful **Tri-Engine Scraper (ArXiv, Tavily, Exa)** that blindly scrapes raw academic abstracts, deep web news, and GitHub code snippets.
-   - It dumps the combined intelligence into `workspace/docs/research_ideation/radar_raw_data/YYYY-MM-DD_RAW.md`.
+   - Deployed **exclusively on Node 02**. Runs **4 times daily** (02:00, 08:00, 14:00, 20:00).
+   - A highly aggressive **Tri-Engine Scraper (ArXiv, Tavily, Exa)** that covers both Academic tracking and the newly added **Omni-Scope Sectors** (National Policy, Funding Grants, AI Compute capabilities, and Top Scholars/Labs inner blogs).
+   - Incorporates **Regex-based Hard Deduplication (`seen_intel.json`)** to physically block duplicate `arXiv IDs` or `URLs` from ever entering the analysis stream.
    - Has absolutely **no access** to LLM APIs, preventing credential leakage and compute overhead. It strictly commits and pushes to Git.
 
 2. **🧠 The Consumer (`scripts/radar_analyzer.py` & `radar_manual.py`)**:
    - Deployed **exclusively on Node 01** (The Brain).
-   - Python scripts **ABSOLUTELY DO NOT** call LLM APIs directly (Zero Blind Token Burn).
-   - They pull raw `.md` files, cross-reference the rigidly-hardcoded `pi_profile_xiaohua_liu.md` and Idea List, and bundle them into an **Inbox Prompt**.
-   - Generates an `_INBOX.md` file in `radar_reports/`. Dandan (Agent) then reads this inbox and performs the 4-stage cognitive swarming (Triage, Red Team, Blue Team, Ranger) natively. User can view the token burn in real-time.
+   - Pulls the deduplicated `.md` files, cross-references the rigidly-hardcoded `pi_profile_xiaohua_liu.md` and Idea List, and bundles them into an **Inbox Prompt**.
+   - **The 5-Stage Swarming Engine**: Triggers the Triage, Red Team, Blue Team, Ranger, and the newly enforced **Academic Grounding (Stage 5)**.
+   - **Academic Grounding Law**: Forces the LLM to output 20-30 rigorous citations (CCF-A, CAS Q1, < 3 years old) for every high-value research idea proposed.
 
 ## Usage
 
@@ -77,3 +77,4 @@ python3 scripts/radar_analyzer.py --date 2026-03-07
 
 ### 🚫 防坑禁区 (Anti-Hallucination)
 - **The Grounding Law for Radar Associations**: When linking external research to internal `EXTENSION_IDEA_MASTER.md` items or existing papers, the Radar Brain Agent must NEVER guess the internal project scope based purely on title similarity. You MUST first physically query `workspace/docs/system_core/09_GROUNDED_PAPER_INDEX.md` or the corresponding SSoT to ensure the internal context being compared against is factually correct.
+- **The Grounding Law for Academic References**: When generating ideas, Dandan MUST inject 20-30 citations that are exclusively sourced from CCF-A or CAS Q1 journals, restricted to the last 3-5 years, heavily leveraging the Top Scholars explicitly listed in `radar_targets.json`. DOIs and ArXiv IDs MUST NEVER be hallucinated.
