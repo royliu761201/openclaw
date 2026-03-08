@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.whl
+*.pt
+*.onnx
+*.safetensors
+*.bin
+models/
+openclaw_data_links/
