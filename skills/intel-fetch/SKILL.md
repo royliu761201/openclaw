@@ -36,7 +36,11 @@ description: Advanced data reconnaissance and retrieval macro-skill. Replaces le
 2. **内网折返空投**:
    - 使用 `ssh_tool.py download` 将 /tmp 资产从 Node 05 抽回主控阵地（如 Node 01）。
    - 立即背靠背使用 `ssh_tool.py upload` 将资产精准制导到无网的 Target Node。
-3. **销毁跳板痕迹**: 必须通过 `ssh_tool.py` 删除 Node 05 上的临时缓存，绝不允许堵塞跳板机磁盘。
+### T3: 灾装备份回传 (Vault Replication)
+这是形成数据闭环的最后一步。当几十 GB 的重资产被成功拉取并安置在 GPU 端 (或 Node 02 等计算节点) 后，**必须立刻建立冷备**：
+1. 通过 `ssh_tool.py download` 将该资产从 GPU 下载回跳机/主控节点。
+2. 立即通过 `ssh_tool.py upload` 将资产传输至 Node 03 终极金库 (`~/data_vault/models/` 或 `~/data_vault/datasets/`) 永久封存。
+从而保证未来其它节点再次需要该数据时，100% 触发第一梯次的 `Symlink` 零秒下发！
 
 ---
 
