@@ -74,3 +74,6 @@ python3 scripts/radar_analyzer.py --date 2026-03-07
 1. **正反馈 (Idea 落地)**: 如果您觉得雷达今天给的跨界点子（比如用量子力学解算 Burgers 方程）很绝，您只需在聊天中对我说：*“把今天雷达提的量子 Burger 想法加入扩展清单”*。我就会立刻将其写入 `EXTENSION_IDEA_MASTER.md`，它正式成为我们下一步要啃的硬骨头。
 2. **负反馈 (免疫接种)**: 如果雷达今天给了一个极其愚蠢的 CV（计算机视觉）水文，您只需要骂一句：*“以后雷达少给我推这种纯 CV 的垃圾！”*。**划重点：此时系统会引爆 `solidify` 技能！** 我会立刻将您的这句怒火转化为一条物理级的 **L3 Anti-Body (抗体)**，并硬编码进 `pi_profile_xiaohua_liu.md`。
 **这就是真正的闭环：系统永远不会在同一个坑里摔倒两次。老板的每一次咒骂，都会变成系统底层的一行正则约束。**
+
+### 🚫 防坑禁区 (Anti-Hallucination)
+- **The Grounding Law for Radar Associations**: When linking external research to internal `EXTENSION_IDEA_MASTER.md` items or existing papers, the Radar Brain Agent must NEVER guess the internal project scope based purely on title similarity. You MUST first physically query `workspace/docs/system_core/09_GROUNDED_PAPER_INDEX.md` or the corresponding SSoT to ensure the internal context being compared against is factually correct.

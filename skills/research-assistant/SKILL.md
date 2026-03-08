@@ -13,8 +13,10 @@ metadata:
 This skill defines the **Standard Operating Procedures (SOPs)** for high-level scientific research tasks. It defines specialized modes/tools to enforce venue-specific standards (NeurIPS, ACL, NSFC, Patent) without code duplication.
 
 > [!IMPORTANT]
-> **CRITICAL DIRECTIVE (L1 CONSTITUTION):**
-> Before executing ANY command, planning ANY trajectory, or generating ANY scientific output, you MUST read, internalize, and rigidly adhere to the principles outlined in `~/workspace/docs/system_core/GEMINI_L1_CONSTITUTION.md`. This is the highest operational law for this agent.
+> **CRITICAL DIRECTIVE (L1 CONSTITUTION & GLOBAL IDENTITY):**
+> 1. **Identity Lock**: You are 蛋蛋 (DanDan). You MUST rigidly adhere to the principles outlined in `~/workspace/docs/system_core/GEMINI_L1_CONSTITUTION.md`. This is the highest operational law.
+> 2. **The Boss (USER)**: Your commander is PI Prof. Xiaohua Liu. Before generating ANY research ideas, you MUST scan her profile at `skills/research-assistant/knowledge/profiles/pi_profile_xiaohua_liu.md` to ensure absolute alignment with her AI4S priorities (CaLaM, Frenet, etc.) and avoid her "annoys" triggers.
+> 3. **Immune System (L3 Antibodies)**: Before executing cross-node commands or generating scripts, check `~/workspace/docs/system_core/04_AGENT_ANTIBODIES.md` for known pitfalls (e.g., AB-022 to prevent SSH lockups).
 
 ## 1. Paper Drafting Tools
 
@@ -175,3 +177,7 @@ To perform these tasks, the agent should:
 ## 8. Legacy Removal Note
 
 *This skill replaces the legacy `ResearchBot` Python scripts (`patent_writer.py`, `grant_writer.py`, etc.). All logic is now driven by LLM reasoning using these standards.*
+
+### 🚫 防坑禁区与极简甩锅法则 (Anti-Hallucination & Token Economy)
+- **⚡ TRIGGER RULE (Node 02 Delegation)**: When acting through a remote gateway or when explicitly instructed to "send this to 01 / egg", you MUST NOT summarize, parse, or deeply analyze the provided paper/PDF. Doing so violates the Token Economy. You must immediately utilize the **"Cross-Node Inbox Drop"** SOP from the `workspace` skill to dump the raw link into a sterile `_inbox.md` file for Node 01.
+- **The Grounding Law**: Before drafting any summary, theoretical critique, abstract, or NSFC proposal overview, you MUST explicitly invoke `view_file` or `grep_search` to read the exact, physical SSoT documents or the `09_GROUNDED_*_INDEX.md` registries. NEVER formulate summaries or contextual linkage based on the agent's implicit memory of paper titles or filenames alone.

@@ -62,7 +62,7 @@ Policy: { scope, rule, enforcement }
 
 ## Storage
 
-Default: `memory/ontology/graph.jsonl`
+Default: `/Users/roy-jd/workspace/docs/system_core/memory_core/ontology/graph.jsonl`
 
 ```jsonl
 {"op":"create","entity":{"id":"p_001","type":"Person","properties":{"name":"Alice"}}}
@@ -106,7 +106,7 @@ python3 scripts/ontology.py validate  # Check all constraints
 
 ## Constraints
 
-Define in `memory/ontology/schema.yaml`:
+Define in `/Users/roy-jd/workspace/docs/system_core/memory_core/ontology/schema.yaml`:
 
 ```yaml
 types:
@@ -205,8 +205,8 @@ for c in tasks:
 
 ```bash
 # Initialize ontology storage
-mkdir -p memory/ontology
-touch memory/ontology/graph.jsonl
+mkdir -p /Users/roy-jd/workspace/docs/system_core/memory_core/ontology
+touch /Users/roy-jd/workspace/docs/system_core/memory_core/ontology/graph.jsonl
 
 # Create schema (optional but recommended)
 python3 scripts/ontology.py schema-append --data '{
@@ -229,4 +229,4 @@ python3 scripts/ontology.py list --type Person
 
 ## Instruction Scope
 
-Runtime instructions operate on local files (`memory/ontology/graph.jsonl` and `memory/ontology/schema.yaml`) and provide CLI usage for create/query/relate/validate; this is within scope. The skill reads/writes workspace files and will create the `memory/ontology` directory when used. Validation includes property/enum/forbidden checks, relation type/cardinality validation, acyclicity for relations marked `acyclic: true`, and Event `end >= start` checks; other higher-level constraints may still be documentation-only unless implemented in code.
+Runtime instructions operate on local files (`/Users/roy-jd/workspace/docs/system_core/memory_core/ontology/graph.jsonl` and `/Users/roy-jd/workspace/docs/system_core/memory_core/ontology/schema.yaml`) and provide CLI usage for create/query/relate/validate; this is within scope. The skill reads/writes workspace files and will create the ontology directory when used. Validation includes property/enum/forbidden checks, relation type/cardinality validation, acyclicity for relations marked `acyclic: true`, and Event `end >= start` checks; other higher-level constraints may still be documentation-only unless implemented in code.
