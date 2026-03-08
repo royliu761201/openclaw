@@ -83,24 +83,10 @@ def mine_memory():
     # Save to file
     OUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     
-    # To prevent overwriting un-processed items, we merge with existing inbox if it exists
-    existing_items = []
-    if OUT_FILE.exists():
-        try:
-            with open(OUT_FILE, "r") as f:
-                existing_items = json.load(f)
-        except json.JSONDecodeError:
-            pass
-            
-    # Combine and deduplicate against existing
-    combined = {item["url"]: item for item in existing_items}
-    for item in final_list:
-        combined[item["url"]] = item
-        
     with open(OUT_FILE, "w") as f:
-        json.dump(list(combined.values()), f, indent=4, ensure_ascii=False)
+        json.dump(final_list, f, indent=4, ensure_ascii=False)
         
-    print(f"✅ Mined {len(final_list)} URLs from OpenClaw memory. Total in inbox: {len(combined)}")
+    print(f"✅ Mined {len(final_list)} URLs from OpenClaw memory in the last 24h.")
 
 def git_sync():
     print("🔄 Pushing Feishu Inbox to SSoT Git...")

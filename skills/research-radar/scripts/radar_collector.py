@@ -280,9 +280,9 @@ def collect_raw_data():
             if not new_inbox_items:
                 raw_content.append("*No new intercepts found today.*")
                 
-            # Erase the inbox to prevent infinite growth
-            with open(FEISHU_INBOX_PATH, "w") as f:
-                f.write("[]")
+            # Node 02 treats the inbox purely as read-only. 
+            # Node 01 automatically prunes it by only keeping the last 24 hours.
+            # Deduplication handles preventing duplicates over successive cron runs.
                 
         except Exception as e:
             print(f"     |_ [Error processing Feishu Inbox] {e}")
