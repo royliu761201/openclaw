@@ -25,6 +25,9 @@ The ONLY legal path for code and mission-critical documentation on Node 01 is:
 4. **Secret Isolation Law**: Secrets (`.env`, tokens) must never enter the Git repository. They are managed out-of-band via `.secrets/` and synced via `sync_secrets.py`.
 5. **Physical Isolation Law**: No code or data in `/root`. Absolute paths must be pinned to the workspace root.
 6. **Multi-Agent Workspace SSoT Law**: NEVER use `OPENCLAW_STATE_DIR` to configure edge agents serving multiple channels. You MUST hard-code their exact physical SSoT directory (e.g., `~/workspace/agent_workspaces/node02/workspace-agent-research`) explicitly into the `workspace` property of their specific `agents.list` entry within `openclaw.json`.
+7. **异构算力环境建站法则 (GPU Compute Zoning)**: Any execution environments targeting the GPU (`10.190.30.220`) MUST be cloned from the pre-warmed meta-base. You are FORBIDDEN from running global `pip install` or downloading massive new Conda environments from scratch. 
+   - **Mandatory GPU SOP**: Before initiating a research payload, instantiate the environment via: `conda create -n <project_name> --clone base-research`.
+   - **Offline Polyfill**: Follow up with localized `pip install --no-index` for missing project-specific wheels.
 
 ## 🧰 Embedded Meta-Tools (Scripts)
 The workspace skill hosts the cluster's core diagnostic and synchronization tools natively. They are invoked as follows:

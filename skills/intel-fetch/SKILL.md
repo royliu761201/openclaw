@@ -87,3 +87,14 @@ python3 ../ssh/scripts/ssh_tool.py --host node05 exec "rm -rf /tmp/bert-base"
 cd ~/workspace/projects_core/my_nlp_project/data
 ln -s /Volumes/Macintosh_HD/data_vault/models/bert-base ./model_weights
 ```
+
+```bash
+# === 实操案例 2：GPU 内部重资产的软链寄生 (Zero-Second Local Fetch) ===
+
+# 战术行动 1: 探查 GPU 算力枢纽的金库储备
+python3 ../ssh/scripts/ssh_tool.py --host 10.190.30.220 exec "ls /jhdx0003008/models/Llama3"
+
+# 战术行动 2: 确认已存在！100% 严禁产生任何全量网络拉取与物理复制
+# 直接以 Zero-Copy 的形式建立软链至计算任务沙盒
+python3 ../ssh/scripts/ssh_tool.py --host 10.190.30.220 exec "ln -s /jhdx0003008/models/Llama3 /root/workspace/projects_core/my_target_project/models/Llama3_Local"
+```
