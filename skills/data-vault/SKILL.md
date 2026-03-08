@@ -15,6 +15,7 @@ description: 强制管理与审查全网格冷备节点 (如 Node 03 等) 上的
 2. **禁生造 (No Raw Scripts)**: 获取冷备节点目录信息时，严禁脱离官方工具手搓原生长 bash 代码！必须严格调用系统现存的合规武器（如 `ssh_tool.py exec`）。
 3. **数据落点 (Strict Zoning)**: 遵从总指挥最高指示，外挂盘方案已被收容废弃。**所有大体量冷备资产必须且只能就地统一托管在目标机器的系统盘专属库 `~/data_vault/` 中。** 严禁在其系统盘其它家目录盲目散落！
 4. **代码绝禁 (Code Segregation)**: `data_vault` 分区仅存放静态大包资产（模型/数据/软环境）。任何人读写源代码，必须遵循 Git-Only 唯一真理法则，绝不允许把 Git 源码库私开小灶存放于此。
+5. **冷备与实战算力物理切割 (The Forge Isolation)**: 如果当前转移的资产是用于深度学习训练的活跃数据集（如 PoseBusters 等几十/上百GB语料），**绝对禁止**将其塞入 Node 03 的 Data Vault（纯 CPU 节点）。重装数据集必须直接跨端投递至 **GPU Server** (`10.190.*`) 的超宽带区 `/jhdx0003008/`！
 
 ## 🗄️ 全域资产落钉架构 (Asset Zoning Architecture)
 
