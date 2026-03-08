@@ -48,3 +48,42 @@ description: Advanced data reconnaissance and retrieval macro-skill. Replaces le
 
 1. 通过本 `intel-fetch` 获取的任何数据存放目录，必须第一时间被写入项目内的 `.gitignore`，防止 Git 仓库被核爆。
 2. 若 `intel-fetch` 会调用复杂的 Python 爬虫逻辑去解析网页，该 Python 脚本必须在顶部植入 L1 Constitution 第12条 **沙盒囚禁锁** (`in_venv = sys.prefix != sys.base_prefix`)。
+
+## ⚡ 触发条件 (TRIGGER RULE)
+
+**何时拔出此剑？**
+本技能优先级无限高，只要长官下达类似以下内容的指令，**强制立刻触发**：
+- *"帮我把 XXX Kaggle 数据集下载到本地"*
+- *"去 HF 上把 XXX 权重拉回 Node 02 / GPU"*
+- *"部署 XXX 环境，它需要好几个 G 的外部预训练缓存"*
+
+**只要任务涉及从外网获取几百 MB 以上的重型资产，绝对禁止本地盲目裸敲 `wget` 或随意写爬虫。必须 100% 遵照本《智能掠夺协议》，由 Agent 高能大脑亲自接管跳板路由！**
+
+---
+
+## 💻 战斗执行演示 (Execution Example)
+
+本技能 **没有** 专用的 Python 脚本堡垒。**你（Agent 自身）就是这个宏技能的大脑**！你需要像战区指挥官一样，组合调用现有的 `ssh_tool.py` 肌肉来完成这套高阶战术动作：
+
+```bash
+# === 实战案例：帮长官把 HF 上的 BERT 拉到断网的 Node 02 金库 ===
+
+# 战术动作 1: 查询全局金库底座 (查重防爆)
+python3 ../ssh/scripts/ssh_tool.py --host 03 exec "ls ~/data_vault/models/bert-base-uncased"
+
+# 战术动作 2: 若金库没有，动用 Node 05 美国兵营强行外网空投至临时区
+python3 ../ssh/scripts/ssh_tool.py --host node05 exec "huggingface-cli download bert-base-uncased --local-dir /tmp/bert-base"
+
+# 战术动作 3: 内网折返空投，抽回避难所
+python3 ../ssh/scripts/ssh_tool.py download --host node05 /tmp/bert-base ./bert-tmp
+
+# 战术动作 4: 洲际导弹制导 (砸入彻底无外网的 Node 02 金库)
+python3 ../ssh/scripts/ssh_tool.py upload --host 02 ./bert-tmp /Volumes/Macintosh_HD/data_vault/models/bert-base
+
+# 战术动作 5: 炸毁跳板机 (Node 05) 上的重资产残渣
+python3 ../ssh/scripts/ssh_tool.py --host node05 exec "rm -rf /tmp/bert-base"
+
+# 战术动作 6: 建立本战区项目的软链接 (Zero-Second Load)
+cd ~/workspace/projects_core/my_nlp_project/data
+ln -s /Volumes/Macintosh_HD/data_vault/models/bert-base ./model_weights
+```
