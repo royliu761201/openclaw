@@ -13,7 +13,7 @@ RAW_DATA_DIR = WORKSPACE_DIR / "docs" / "research_ideation" / "radar_raw_data"
 REPORTS_DIR = WORKSPACE_DIR / "docs" / "research_ideation" / "radar_reports"
 PDCA_FILE = WORKSPACE_DIR / "docs" / "projects_pdca" / "05_RESEARCH_RADAR_PDCA.md"
 
-PI_PROFILE_PATH = os.path.expanduser("~/Documents/projects/openclaw/skills/research-assistant/knowledge/profiles/pi_profile_xiaohua_liu.md")
+PI_PROFILE_PATH = Path(__file__).resolve().parent.parent.parent / "research-assistant" / "knowledge" / "profiles" / "pi_profile_xiaohua_liu.md"
 IDEA_LIST_PATH = WORKSPACE_DIR / "docs" / "research_ideation" / "EXTENSION_IDEA_MASTER.md"
 
 def read_file_safe(path):
@@ -23,78 +23,44 @@ def read_file_safe(path):
     except Exception as e:
         return f"Error reading {path}: {e}"
 
-def call_gemini(prompt: str) -> str:
-    # 01 Brain Model - Local direct execution with Flash Lite (Very cheap/fast)
-    api_key = os.environ.get("GEMINI_API_KEY")
-    if not api_key:
-        return "Error: GEMINI_API_KEY environment variable is not set on Node 01."
-    
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite-preview-02-05:generateContent?key={api_key}"
-    headers = {'Content-Type': 'application/json'}
-    data = json.dumps({
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.2}
-    }).encode('utf-8')
-    
-    try:
-        req = urllib.request.Request(url, data=data, headers=headers)
-        with urllib.request.urlopen(req) as response:
-            result = json.loads(response.read().decode())
-            return result['candidates'][0]['content']['parts'][0]['text']
-    except Exception as e:
-        return f"Error calling Gemini via REST API: {str(e)}"
-
-def process_results_with_llm(raw_data: str) -> str:
+def generate_dandan_prompt(raw_data: str, date_str: str) -> str:
     pi_profile = read_file_safe(PI_PROFILE_PATH)
     idea_list = read_file_safe(IDEA_LIST_PATH)
     
-    # --- Agent 1: The Filter (Triage) ---
-    filter_prompt = f"""
-You are the Radar Filter Agent. 
-Scan the raw data below. Discard anything that is low-quality, purely theoretical without path to code, or unrelated to our core constraints.
-OUTPUT ONLY THE TITLES AND ABSTRACTS of maximum 3 papers that are true breakthroughs (O(N) complexity reduction, absolute physical conservation) OR direct threats to our PI Profile.
-If none pass the bar, output exactly: NO_HIGH_VALUE_TARGETS.
+    prompt = f"""[指令：请 01 本脑 (Dandan) 狂烧算力深度阅读并研发]
 
-[Raw Data]:
+## 📡 Radar System Wakeup Request ({date_str})
+
+Dear Dandan,
+The Radar Producer has fetched raw data. Under the L1 Constitution, Python scripts MUST NOT call LLMs directly. You are the Brain.
+Please natively execute the 4-stage swarming analysis using your internal capabilities.
+
+### 🔬 Stage 1: The Filter (Triage)
+Scan the Raw Data. Discard anything low-quality, purely theoretical without path to code, or unrelated to our constraints.
+If no papers pass, clearly state `NO_HIGH_VALUE_TARGETS` and stop here.
+
+### 🔴 Stage 2: Red Team (Math Critic)
+Scrutinize the remaining targets mathematically. Are Hamiltonian conservations rigorous? Any hidden constants in O(N)?
+
+### 🔵 Stage 3: Blue Team (Code Builder)
+How do we steal their operators for our current CaLaM, Frenet, or PESSO projects?
+
+### 🟢 Stage 4: The Ranger (Cross-Domain Serendipity)
+Propose one mathematically isomorphic idea mapping their breakthrough to a totally different discipline.
+
+> **CRITICAL ACTION**: After thinking, you MUST use your `write_to_file` tool to save your final analysis as a markdown file at: `{REPORTS_DIR}/{date_str}_RADAR_V2_REPORT.md`
+
+---
+### 👤 Context 1: PI Profile
+{pi_profile}
+
+### 💡 Context 2: Idea List
+{idea_list}
+
+### 📥 Context 3: Raw Data
 {raw_data}
 """
-    filtered_intel = call_gemini(filter_prompt)
-    if "NO_HIGH_VALUE_TARGETS" in filtered_intel or not filtered_intel.strip():
-        return "NO_HIGH_VALUE_TARGETS"
-
-    # --- Agent 2: Red Team (Math Critic) ---
-    red_prompt = f"""
-You are the Red Team Math Critic.
-Analyze these high-value papers: {filtered_intel}
-Your ONLY job is to aggressively scrutinize their mathematical claims. 
-Are their Hamiltonian conservations rigorous? Is their O(N) complexity claim hiding massive constants? 
-If there's a flaw, point it out mathematically. If it's solid, propose a SymPy/PyTorch ablation script to verify their exact boundary conditions.
-Output a highly technical Red Team brief.
-"""
-    red_analysis = call_gemini(red_prompt)
-
-    # --- Agent 3: Blue Team (Code Builder) ---
-    blue_prompt = f"""
-You are the Blue Team Builder.
-Analyze these high-value papers: {filtered_intel}
-Against our PI profile: {pi_profile}
-Your ONLY job is integration. How do we steal their best operators and graft them into our CaLaM, Frenet, or PESSO pipelines TODAY?
-Output exact file modification strategies and PyTorch pseudocode for integrating their core algorithm.
-"""
-    blue_analysis = call_gemini(blue_prompt)
-
-    # --- Agent 4: The Ranger (Cross-Domain Serendipity) ---
-    ranger_prompt = f"""
-You are the Ranger.
-Analyze these high-value papers: {filtered_intel}
-Against our Idea List: {idea_list}
-Your ONLY job is cross-domain serendipity. Do not talk about AI. What does this remind you of in Statistical Mechanics, Cell Biology, or Differential Geometry?
-Propose ONE completely unhinged but mathematically isomorphic idea that maps their breakthrough to a totally different discipline to secure a new Nature/Science angle.
-"""
-    ranger_analysis = call_gemini(ranger_prompt)
-
-    final_report = f"## 🔴 Red Team (Math & Validity Critic)\n{red_analysis}\n\n---\n## 🔵 Blue Team (Code & Synergy Builder)\n{blue_analysis}\n\n---\n## 🟢 Ranger (Cross-Domain Serendipity)\n{ranger_analysis}\n"
-    return final_report
+    return prompt
 
 def analyze_raw_data(date_str: str = None):
     if not date_str:
@@ -105,38 +71,26 @@ def analyze_raw_data(date_str: str = None):
         print(f"❌ Error: Raw data file {raw_path} not found. Producer has not generated data for {date_str}.")
         return
 
-    print(f"🧠 Initiating Cognitive Analysis (Consumer Mode) on raw data from {date_str}...")
+    print(f"🧠 Formatting Radar Inbox Prompt for Dandan on {date_str}...")
     raw_data = read_file_safe(raw_path)
     
-    analysis = process_results_with_llm(raw_data)
+    prompt_content = generate_dandan_prompt(raw_data, date_str)
     
     REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    report_path = REPORTS_DIR / f"{date_str}_RADAR_V2_REPORT.md"
+    inbox_path = REPORTS_DIR / f"{date_str}_RADAR_INBOX.md"
     
-    report_content = [
-        f"# 📡 Radar V2 Cognitive Intel Report: {date_str}",
-        "> **Auto-analyzed by Research-Radar (Node 01 Brain)**\n",
-        "## Strategic High-Value Targets\n"
-    ]
+    with open(inbox_path, "w", encoding='utf-8') as f:
+        f.write(prompt_content)
     
-    found_leads = False
-    if analysis and "NO_HIGH_VALUE_TARGETS" not in analysis and "Error:" not in analysis:
-        report_content.append(analysis)
-        found_leads = True
-    else:
-        report_content.append("\n*No critical threats or high-value breakthroughs detected today.*")
-
-    with open(report_path, "w") as f:
-        f.write("\n".join(report_content))
+    print(f"✅ Inbox Prompt generated at {inbox_path}")
+    print(f"🔥 AGENTIC HANDOFF: Please ask Dandan to read this file and execute the analysis!")
     
-    print(f"✅ Brain Analysis complete. Intel written to {report_path}")
-    update_pdca(date_str, report_path, found_leads)
+    update_pdca(date_str, inbox_path)
     git_sync_workspace()
 
-def update_pdca(date_str: str, report_path: Path, found_leads: bool):
+def update_pdca(date_str: str, report_path: Path):
     if not PDCA_FILE.exists(): return
-    leads_str = "High-Value Targets Found" if found_leads else "No major leads"
-    new_row = f"| {date_str} (V2-Brain) | `../research_ideation/radar_reports/{report_path.name}` | {leads_str} | ✅ Brain Analysis OK |\n"
+    new_row = f"| {date_str} (Handoff) | `../research_ideation/radar_reports/{report_path.name}` | Waiting for Dandan | ⏳ Agent Pending |\n"
     
     with open(PDCA_FILE, "r") as f: content = f.read()
     if "| *待首次执行*" in content: content = content.replace("| *待首次执行* | - | - | ⏳ 等待扫掠 |", new_row.strip())

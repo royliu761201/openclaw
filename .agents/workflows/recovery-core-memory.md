@@ -15,6 +15,6 @@ Use the `view_file` tool to read your current capabilities and installed skills.
 
 ## Step 3: Resurrect the Global Task Board
 Run the built-in skill `global-task-promoter` to retrieve the cross-session progress panel and follow its instructions to re-render it into your current UI via `write_to_file`.
-- Command: `python3 /Users/roy-jd/Documents/projects/openclaw/skills/global-task-promoter/scripts/promote.py`
+- Command: `python3 /Users/roy-jd/openclaw/skills/global-task-promoter/scripts/promote.py`
 
 *Once this workflow completes, you are fully armed with the Boss's long-term strategy and are ready to execute.*

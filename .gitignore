@@ -133,3 +133,7 @@ _archive/
 node_modules
 
 workspace/
+skills/kokoro-tts/venv/
+skills/kokoro-tts/kokoro_onnx/
+skills/kokoro-tts/models/
+openclaw_data/

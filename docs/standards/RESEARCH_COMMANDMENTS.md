@@ -7,10 +7,10 @@
 
 所有 Agent 必须熟读并背诵以下文件：
 
-1. **工程基本法**：[AGENT_STRICT_BEHAVIOR.md](file:///Users/roy-jd/Documents/projects/openclaw/AGENT_STRICT_BEHAVIOR.md) (硬存软链、工具复用)
-2. **24小时铁律**：[24h_automated_work_manifesto.md](file:///Users/roy-jd/Documents/projects/openclaw/docs/standards/24h_automated_work_manifesto.md) (自愈、反馈、零冗余)
-3. **数据管理法**：[data_and_experiment_standard.md](file:///Users/roy-jd/Documents/projects/openclaw/docs/standards/data_and_experiment_standard.md) (三层五段、金库制度)
-4. **团队协作协议**：[AGENTS.md](file:///Users/roy-jd/Documents/projects/openclaw/AGENTS.md) (research-core 工具链调用)
+1. **工程基本法**：[AGENT_STRICT_BEHAVIOR.md](file:///Users/roy-jd/openclaw/AGENT_STRICT_BEHAVIOR.md) (硬存软链、工具复用)
+2. **24小时铁律**：[24h_automated_work_manifesto.md](file:///Users/roy-jd/openclaw/docs/standards/24h_automated_work_manifesto.md) (自愈、反馈、零冗余)
+3. **数据管理法**：[data_and_experiment_standard.md](file:///Users/roy-jd/openclaw/docs/standards/data_and_experiment_standard.md) (三层五段、金库制度)
+4. **团队协作协议**：[AGENTS.md](file:///Users/roy-jd/openclaw/AGENTS.md) (research-core 工具链调用)
 
 ---
 

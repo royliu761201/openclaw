@@ -12,7 +12,7 @@ def get_env_var(var_name):
     if var_name in os.environ:
         return os.environ[var_name]
         
-    env_path = "/Users/roy-jd/Documents/projects/openclaw/.env"
+    env_path = "/Users/roy-jd/openclaw/.env"
     if os.path.exists(env_path):
         with open(env_path, "r") as f:
             for line in f:

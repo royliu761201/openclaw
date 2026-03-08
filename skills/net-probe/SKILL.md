@@ -23,18 +23,18 @@ description: Use when you need to verify network topology, port reachability, or
 
 **命令语法:**
 ```bash
-/Users/roy-jd/Documents/projects/openclaw/skills/net-probe/scripts/probe.sh <target_host_or_ip> [port] [timeout_seconds]
+/Users/roy-jd/openclaw/skills/net-probe/scripts/probe.sh <target_host_or_ip> [port] [timeout_seconds]
 ```
 
 **实战示例:**
 探测 Node-02 的 SSH 端口是否连通（默认超时 3 秒）：
 ```bash
-/Users/roy-jd/Documents/projects/openclaw/skills/net-probe/scripts/probe.sh node-02 22
+/Users/roy-jd/openclaw/skills/net-probe/scripts/probe.sh node-02 22
 ```
 
 探测本地映射的 Node-03 穿透端口：
 ```bash
-/Users/roy-jd/Documents/projects/openclaw/skills/net-probe/scripts/probe.sh 127.0.0.1 2235 5
+/Users/roy-jd/openclaw/skills/net-probe/scripts/probe.sh 127.0.0.1 2235 5
 ```
 
 ### 2. SSH 隧道盲测 (SSH Tunnel Diagnosis)
@@ -55,12 +55,12 @@ echo $? # 如果是 0 即连通，255 即阻断
 ### 3. 全网格上帝视角仪表盘 (Cluster Network Dashboard)
 在决定是否拉取大模型、是否下放训练任务前，直接呼叫仪表盘获取全网的真实外网带宽和过墙拓扑：
 ```bash
-python3 /Users/roy-jd/Documents/projects/openclaw/skills/workspace/scripts/cluster_net_dashboard.py
+python3 /Users/roy-jd/openclaw/skills/workspace/scripts/cluster_net_dashboard.py
 ```
 *此工具将并发盲测全系节点对 Google/HF/Aliyun 的出站能力。*
 
 ### 4. GPU 算力高塔巡检 (GPU Forge Status Board)
 部署深度学习任务前，不要盲测，秒级启动 GPU 仪表盘获取实时利用率与显存：
 ```bash
-python3 /Users/roy-jd/Documents/projects/openclaw/skills/workspace/scripts/gpu_status_board.py
+python3 /Users/roy-jd/openclaw/skills/workspace/scripts/gpu_status_board.py
 ```

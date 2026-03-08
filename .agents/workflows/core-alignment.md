@@ -15,7 +15,7 @@ description: Execute the Core Alignment Protocol (The 5th Law) to perform deep p
 1. **执行雷达扫描**：
    使用 `run_command` 直接执行审计探针：
    ```bash
-   python3 /Users/roy-jd/Documents/projects/openclaw/skills/skill-aligner/scripts/audit.py
+   python3 /Users/roy-jd/openclaw/skills/skill-aligner/scripts/audit.py
    ```
 2. **处理违宪警报**：
    如果脚本输出 `[FAILED]` 并列出了违规技能（如遗留了 `/root` 废旧路径，或缺失宪法声明显卡），你必须：

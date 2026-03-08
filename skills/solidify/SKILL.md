@@ -26,7 +26,7 @@ When solidifying a lesson, the Agent must use `replace_file_content` to append t
 * **Action**: Append the rule to the "老板核心铁律" section.
 
 ### 2. `[L2]` 专科抗体 (Skill Guardrails)
-* **Target File**: `/Users/roy-jd/Documents/projects/openclaw/skills/<relevant-skill>/SKILL.md`
+* **Target File**: `/Users/roy-jd/openclaw/skills/<relevant-skill>/SKILL.md`
 * **Trigger Condition**: Use this for tool-specific bugs, missing parameters, or usage quirks (e.g., "Paramiko drops connection due to SSH_PORT").
 * **Action**: Append a `### 🚫 防坑禁区 (Anti-Hallucination)` section at the bottom of the tool's `SKILL.md`.
 

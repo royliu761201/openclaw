@@ -101,7 +101,7 @@ By writing custom `paramiko` scripts that targeted the raw IP `10.190.30.220` an
 ### The Solution (OpenClaw Native SSH Tool)
 
 **NEVER use raw Paramiko socket connections or `sshpass` when interacting with the OpenClaw cluster.**
-Always use the native, battle-tested OpenClaw SSH utility located at `/Users/roy-jd/Documents/projects/openclaw/skills/ssh/scripts/ssh_tool.py`.
+Always use the native, battle-tested OpenClaw SSH utility located at `/Users/roy-jd/openclaw/skills/ssh/scripts/ssh_tool.py`.
 
 1. **Rely on the Host Alias**: Always use the mapped hostname (`export SSH_HOST=gpu`) rather than the raw IP. This triggers `ssh_tool.py` to parse `~/.ssh/config` and apply the `ProxyCommand` tunnel.
 2. **Passwordless Integrity**: Do not export or hard-code `SSH_PASS`. The `ssh_tool.py` perfectly negotiates authentication using the local `~/.ssh/id_ed25519` key through the Netcat proxy.

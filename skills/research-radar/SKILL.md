@@ -20,11 +20,11 @@ To eradicate manual literature monitoring while ensuring absolute data security 
    - It dumps the combined intelligence into `workspace/docs/research_ideation/radar_raw_data/YYYY-MM-DD_RAW.md`.
    - Has absolutely **no access** to LLM APIs, preventing credential leakage and compute overhead. It strictly commits and pushes to Git.
 
-2. **🧠 The Consumer (`scripts/radar_analyzer.py`)**:
+2. **🧠 The Consumer (`scripts/radar_analyzer.py` & `radar_manual.py`)**:
    - Deployed **exclusively on Node 01** (The Brain).
-   - When triggered, it pulls the raw `.md` files from Git.
-   - It cross-references the raw abstracts against the rigidly-hardcoded `pi_profile_xiaohua_liu.md` (PURE-T rules).
-   - Generates the final tactical intel report in `radar_reports/` and injects the conclusion into `05_RESEARCH_RADAR_PDCA.md`.
+   - Python scripts **ABSOLUTELY DO NOT** call LLM APIs directly (Zero Blind Token Burn).
+   - They pull raw `.md` files, cross-reference the rigidly-hardcoded `pi_profile_xiaohua_liu.md` and Idea List, and bundle them into an **Inbox Prompt**.
+   - Generates an `_INBOX.md` file in `radar_reports/`. Dandan (Agent) then reads this inbox and performs the 4-stage cognitive swarming (Triage, Red Team, Blue Team, Ranger) natively. User can view the token burn in real-time.
 
 ## Usage
 

@@ -16,7 +16,7 @@ def get_api_key():
 
 def generate_ppt(json_data_str, output_path):
     print(f"Generating PPT -> {output_path}")
-    ppt_script = "/Users/roy-jd/Documents/projects/openclaw_podman_test/skills/ppt-maker/gen_ppt.py"
+    ppt_script = "/Users/roy-jd/openclaw_podman_test/skills/ppt-maker/gen_ppt.py"
     if not os.path.exists(ppt_script):
         print(f"[Error] PPT Maker skill not found at {ppt_script}")
         return
