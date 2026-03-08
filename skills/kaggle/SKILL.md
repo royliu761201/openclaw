@@ -24,10 +24,12 @@ The script requires Kaggle authentication credentials. You can provide these in 
 
 ## Remote Standards (Heavy Asset Visa Enforcement)
 
-> **[L1 Constitution Block]**: Kaggle datasets are often massive archives.
-> 1.  **Asset Routing**: ALWAYS download datasets to the node's untracked cold storage or `data_vault/` (e.g., `/Volumes/[DiskName]/data_vault/datasets/[dataset_name]`).
-> 2.  **No Direct Git Tracking**: Do NOT download datasets directly into `~/workspace/projects_core/` folders. Create the project folder and use `ln -s` to symlink the dataset into a `data/` subdirectory.
-> 3.  **Output Logs**: Ensure Kaggle kernel output logs are directed cleanly into the project's `results/` folder (which should be in `.gitignore`).
+> **[L1 Constitution Block - INTEL-FETCH REQUIRED]**: 
+> Kaggle datasets are often massive archives. **You are strictly forbidden** from downloading Kaggle datasets natively within this skill or dumping them into `~/workspace/projects_core/`.
+> 
+> 👉 **To download Kaggle Datasets, you MUST invoke the `intel-fetch` Macro-Skill.** `intel-fetch` implements the required "Node 05 US Proxy Jump" and "Node 03 Vault Symlinking" to safely load the assets without crashing the Git SSoT or stalling behind GFW.
+>
+> This `kaggle` skill is NOW STRICTLY limited to executing code (Kernels) and uploading outputs (`dataset_push`).
 
 ## Tools
 

@@ -24,7 +24,10 @@ description: Advanced data reconnaissance and retrieval macro-skill. Replaces le
 
 ### T1: 目标直连尝试 (Direct Node Fetch)
 1. 使用 `ssh_tool.py` 登录目标执行节点（例如 Node 02 或 GPU）。
-2. 在该节点的 `/tmp/` 或指定的 `data/raw/` 下达最基础的下载命令（如 `wget -c`, `curl -L -O`, 或 `huggingface-cli download`）。
+2. 在该节点的冷备区 (`~/data_vault/` 或 `/tmp/`) 下达最基础的下载命令：
+   - **Kaggle**: `kaggle datasets download -d <dataset>`
+   - **HuggingFace**: `huggingface-cli download <model>`
+   - **通用**: `wget -c`, `curl -L -O`
 *(如果你预判目标节点（比如局域网 Node 02/03）根本没有公网能力，直接跳过直连，进入 T2)*
 
 ### T2: 桥接跳板渗透 (The Node 05 Proxy Bypass)
