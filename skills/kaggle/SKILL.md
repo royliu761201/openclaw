@@ -31,6 +31,12 @@ The script requires Kaggle authentication credentials. You can provide these in 
 >
 > This `kaggle` skill is NOW STRICTLY limited to executing code (Kernels) and uploading outputs (`dataset_push`).
 
+### Dependencies
+- The `kaggle` Python package installed globally or in the active python environment.
+- Sufficient disk space for datasets.
+
+[L1 Constitution Block]
+
 ## Tools
 
 ### `kaggle_dataset_push`
