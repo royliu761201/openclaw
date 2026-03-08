@@ -72,6 +72,20 @@ def run_search_exa(query: str, max_results: int = 3) -> str:
         return f"*Error: exa-search script not found.*"
 
 def collect_raw_data():
+    # 🚨 PREEMPTIVE SSoT SYNC 🚨
+    # Force Node 02 to pull the latest radar_targets.json before reading. Guaranteed non-blocking.
+    print("🔄 [Pre-Flight] Synchronizing latest SSoT Targets from Git (Non-blocking)...")
+    try:
+        env = os.environ.copy()
+        env["GIT_TERMINAL_PROMPT"] = "0"
+        subprocess.run(["git", "pull", "--rebase"], cwd=str(WORKSPACE_DIR), check=True, timeout=30, env=env)
+    except subprocess.TimeoutExpired:
+        print("⚠️ [Pre-Flight] Warning: Git pull TIMED OUT after 30s. Triggering abort and falling back.")
+        subprocess.run(["git", "rebase", "--abort"], cwd=str(WORKSPACE_DIR), capture_output=True)
+    except subprocess.CalledProcessError as e:
+        print(f"⚠️ [Pre-Flight] Warning: Git pull FAILED. Triggering abort and falling back. Error: {e.stderr if e.stderr else e}")
+        subprocess.run(["git", "rebase", "--abort"], cwd=str(WORKSPACE_DIR), capture_output=True)
+
     RAW_DATA_DIR.mkdir(parents=True, exist_ok=True)
     today_str = datetime.datetime.now().strftime("%Y-%m-%d")
     raw_path = RAW_DATA_DIR / f"{today_str}_RAW.md"
