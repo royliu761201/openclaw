@@ -46,3 +46,9 @@ python3 /Users/roy-jd/openclaw/skills/ssh/scripts/ssh_tool.py --host {NODE_ID} e
 
 ## ⚠️ CONSTITUTIONAL ANCHORS
 - This skill enforces the [Scorched Earth Rebuild Law] mandated by the `GRAND_RETROSPECTIVE_OPENCLAW.md`. Never use graceful `pm2 restart` commands on OpenClaw Nodes. Only perform absolute deletion and cold restarts.
+
+### 🚫 防坑禁区 (Anti-Hallucination)
+- **Zombie Process & Port Locks**: `pm2 delete` alone DOES NOT kill detached child processes that hold the gateway port (e.g., `18789` or `ws://`). The Scorched Earth step must run absolute kills: `npx openclaw gateway stop || true && pkill -9 -f openclaw && pkill -9 -f node`.
+- **Silent PM2 Deaths**: PM2 will completely bury startup crashes (e.g., port in use) in `pm2 logs`. When diagnosing an offline gateway, ALWAYS bypass PM2 and run `OPENCLAW_DEBUG=true npx openclaw gateway` foreground to catch the true exception.
+- **SSH Key Pair Desync**: When pushing SSH credentials to edge nodes, you MUST push BOTH `id_ed25519` and `id_ed25519.pub`. Sending only the private key causes modern OpenSSH to throw `private key contents do not match public` and silently drop jump-host (`ProxyJump`) connections.
+- **PATH Truncation in Exec**: Agent commands spawned via SSH or PM2 inherit a crippled `$PATH`. To use native Python tools (`kaggle`, etc.), always strictly append the full paths like `export PATH=$HOME/.local/bin:$HOME/Library/Python/3.9/bin:$PATH` OR use module execution `python3 -m <module>`.
