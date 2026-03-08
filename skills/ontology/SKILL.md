@@ -34,7 +34,7 @@ Ontology 的本体数据库是一个纯文本 JSONL (`graph.jsonl`)，位于 `do
 ### 探底可用节点 (Probe All Nodes)
 
 ```bash
-python3 /Users/roy-jd/openclaw/skills/ontology/scripts/ontology.py list --type Node
+python3 ~/openclaw/skills/ontology/scripts/ontology.py list --type Node
 ```
 
 _如果查出来对方 Role 不是 Tensor Forge，就给我把大模型收起来！_
@@ -42,7 +42,7 @@ _如果查出来对方 Role 不是 Tensor Forge，就给我把大模型收起来
 ### 查证特定策略 (Lookup Policies)
 
 ```bash
-python3 /Users/roy-jd/openclaw/skills/ontology/scripts/ontology.py query --type Policy --where '{"scope":"workspace"}'
+python3 ~/openclaw/skills/ontology/scripts/ontology.py query --type Policy --where '{"scope":"workspace"}'
 ```
 
 记住：**Ontology 是 OpenClaw 物理世界的唯一真理 (SSoT)。不查此表盲打错配者，罪无可恕。**
