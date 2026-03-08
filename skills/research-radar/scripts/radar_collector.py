@@ -180,26 +180,57 @@ def collect_raw_data():
         print("  -> [Anti-Ban] Sleeping for 15 seconds before next burst...")
         time.sleep(15)
 
-    # 4. Reference List (Authoritative Targets / 参考文献定标清单)
-    import json
-    if TARGETS_LIST_PATH.exists():
-        with open(TARGETS_LIST_PATH, "r") as f:
-            targets = json.load(f)
-            print(f"  -> [Authoritative Check] Sweeping Top Labs & Scholars...")
-            raw_content.append(f"## 🏛️ Reference Top-Tier Targets")
+    # === Omni-Scope Intelligence Integration ===
+    OMNI_SECTORS = targets_data.get("omni_intel_sectors", {})
+    if OMNI_SECTORS:
+        raw_content.append(f"## 🏛️ Omni-Scope Intelligence (Policies, Crants, Deadlines)")
+        for omni_cat, omni_query in OMNI_SECTORS.items():
+            print(f"  -> [Omni-Scope] Scraping: {omni_cat}")
+            raw_content.append(f"### 🎯 Sector: {omni_cat}")
             
-            combined_labs = " OR ".join(targets.get("top_institutions", []))
-            if combined_labs:
-                lab_query = f"({combined_labs}) Breakthroughs AI4S"
-                raw_content.append("### 🧪 Top Institutions Intel")
-                raw_content.append(run_search_tavily(lab_query, 3))
-                time.sleep(10)
+            # For Policies and Grants, we rely heavily on Tavily to hit Gov/Funding sites
+            tavily_res = run_search_tavily(omni_query, max_results=3)
+            tavily_res, has_new_tavily = filter_new_content(tavily_res, "tavily")
+            if has_new_tavily:
+                raw_content.append("#### 🌐 Tavily (Web/Gov Intel)")
+                raw_content.append(tavily_res)
                 
-            combined_scholars = " OR ".join(targets.get("top_scholars", []))
-            if combined_scholars:
-                scholar_query = f"({combined_scholars}) New publications AI4S Nature Science"
-                raw_content.append("### 🎓 Top Scholars Intel")
-                raw_content.append(run_search_tavily(scholar_query, 3))
+            time.sleep(10)
+            
+    # === Institutional Blogs ===
+    INST_BLOGS = targets_data.get("institutional_blogs", [])
+    if INST_BLOGS:
+        raw_content.append(f"## 📰 Institutional Top Blogs")
+        print(f"  -> [Blogs] Sweeping Top AI Lab Blogs...")
+        blog_query = " OR ".join([f"site:{b}" for b in INST_BLOGS]) + " latest news breakthrough AI"
+        blog_res = run_search_tavily(blog_query, max_results=5)
+        blog_res, has_new_blogs = filter_new_content(blog_res, "tavily")
+        if has_new_blogs:
+             raw_content.append("#### 🌐 Tavily (Blog Intel)")
+             raw_content.append(blog_res)
+        time.sleep(10)
+
+    # === Reference List ===
+    targets = targets_data
+    if targets:
+        print(f"  -> [Authoritative Check] Sweeping Top Labs & Scholars...")
+        raw_content.append(f"## 🎓 Reference Top-Tier Targets")
+        
+        # Split large scholar lists to avoid shell command too long errors
+        scholars = targets.get("top_scholars", [])
+        if scholars:
+            # Chunking scholars into groups of 10
+            chunk_size = 10
+            scholar_chunks = [scholars[i:i + chunk_size] for i in range(0, len(scholars), chunk_size)]
+            
+            for idx, chunk in enumerate(scholar_chunks):
+                combined_scholars = " OR ".join(chunk)
+                scholar_query = f"({combined_scholars}) New publications AI"
+                sch_res = run_search_tavily(scholar_query, max_results=3)
+                sch_res, has_new_sch = filter_new_content(sch_res, "tavily")
+                if has_new_sch:
+                    raw_content.append(f"### 🎓 Top Scholars Intel (Batch {idx+1})")
+                    raw_content.append(sch_res)
                 time.sleep(10)
 
     save_seen_intel(seen_db)
