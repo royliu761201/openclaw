@@ -23,6 +23,8 @@ name: ontology
    - **`Node 01`**: Master Control (主脑中控，也就是你现在所在的机器)。
    - **`Node 02`**: Edge Gateway (边缘快递员，**严守零负载状态 Zero-Weight，绝对禁止跑计算实验/存大文件**)。
    - **`Node 03`**: Data Vault (冷备金库，纯 CPU 存储，跑不动 CUDA)。
+   - **`Node 05`**: Exit Node (无限制海外代理抓取出口)。
+   - **`Node 06`**: Jump Host (跳板机，仅作网络穿透辅助)。
    - **`GPU Server (10.190.*)`**: Air-Gapped Tensor Forge (全网**唯一**合规用于重型 AI 实验、大容量落盘 `/jhdx0003008/` 的禁区)。
 
 ## 使用指引 (Usage)
