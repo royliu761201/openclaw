@@ -1,52 +1,44 @@
-name: Sync Upstream
-
-on:
-  schedule:
-    # Daily at 03:30 UTC
-    - cron: "30 3 * * *"
-  workflow_dispatch:
+name: Sync upstream
 
 permissions:
   contents: write
 
-concurrency:
-  group: sync-upstream-${{ github.ref }}
-  cancel-in-progress: false
+on:
+  schedule:
+    - cron: '0 0 * * *' # Run at midnight every day
+  workflow_dispatch: # Enable manual trigger from GitHub UI
 
 jobs:
-  sync:
+  sync_latest_from_upstream:
     runs-on: ubuntu-latest
+    name: Sync latest commits from upstream repo
+
     steps:
-      - name: Checkout target branch
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: main
+    # Step 1: run a standard checkout action, provided by github
+    - name: Checkout target repo
+      uses: actions/checkout@v4
+      with:
+        ref: main
+        fetch-depth: 0 # fetch all history for all branches and tags
 
-      - name: Configure git identity
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Fetch upstream
-        run: |
-          git remote add upstream https://github.com/openclaw/openclaw.git
-          git fetch upstream main
-
-      - name: Merge upstream branch
-        id: merge
-        run: |
-          set -euo pipefail
-          if git merge-base --is-ancestor upstream/main HEAD; then
-            echo "No changes to sync."
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          git merge --no-edit upstream/main
-          echo "changed=true" >> "$GITHUB_OUTPUT"
-
-      - name: Push merged result
-        if: steps.merge.outputs.changed == 'true'
-        run: |
-          git push origin HEAD:main
+    # Step 2: run the sync action
+    - name: Sync upstream changes
+      id: sync
+      uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
+      with:
+        target_sync_branch: main
+        # Define the upstream repo
+        target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+        upstream_sync_repo: openclaw/openclaw
+        upstream_sync_branch: main
+        
+        test_mode: false
+      
+    # Step 3: Print a message based on the result
+    - name: Check sync result
+      if: steps.sync.outputs.has_new_commits == 'true'
+      run: echo "New commits were found and synced."
+      
+    - name: Check sync result (No new commits)
+      if: steps.sync.outputs.has_new_commits == 'false'
+      run: echo "No new commits found. Sync not needed."
