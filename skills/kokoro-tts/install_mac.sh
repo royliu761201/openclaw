@@ -38,7 +38,7 @@ python3 -m pip install --upgrade pip -q
 
 # Install from our curated vault with strict no-index enforcement
 echo ">>> Installing Heavy C++ Payloads (LLVM, NumPy, ONNX, Espeak-NG)..."
-python3 -m pip install "$RAW_DATA_DIR"/llvmlite*.whl "$RAW_DATA_DIR"/numpy*.whl "$RAW_DATA_DIR"/onnxruntime*.whl "$RAW_DATA_DIR"/espeakng_loader*.whl --no-index --find-links="$RAW_DATA_DIR"
+python3 -m pip install --no-deps "$RAW_DATA_DIR"/llvmlite*.whl "$RAW_DATA_DIR"/numpy*.whl "$RAW_DATA_DIR"/onnxruntime*.whl "$RAW_DATA_DIR"/espeakng_loader*.whl --no-index --find-links="$RAW_DATA_DIR"
 
 echo ">>> Unzipping Patched Kokoro Framework..."
 # We use the pre-patched framework to avoid Python 3.10 syntax errors on macOS

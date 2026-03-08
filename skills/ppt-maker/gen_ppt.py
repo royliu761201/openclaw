@@ -1,5 +1,18 @@
 import sys
 import os
+
+# --- L1 SANDBOX INCARCERATION PROBE ---
+in_venv = sys.prefix != sys.base_prefix
+if not in_venv:
+    print("⚠️ [L1 PROBE] Global scope detected. Self-incarcerating into VENV...")
+    venv_python = os.path.join(os.path.dirname(os.path.abspath(__file__)), "venv/bin/python3")
+    if os.path.exists(venv_python):
+        os.execv(venv_python, [venv_python] + sys.argv)
+    else:
+        print("❌ Fatal: Sandbox VENV not found. Please create one.")
+        sys.exit(1)
+# ------------------------------------------
+
 import subprocess
 from pptx import Presentation
 from pptx.util import Inches, Pt
