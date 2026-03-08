@@ -48,6 +48,9 @@ How do we steal their operators for our current CaLaM, Frenet, or PESSO projects
 ### 🟢 Stage 4: The Ranger (Cross-Domain Serendipity)
 Propose one mathematically isomorphic idea mapping their breakthrough to a totally different discipline.
 
+### 📚 Stage 5: Academic Grounding (References)
+For EVERY high-value research idea or innovation you propose, you MUST output a rigorously formatted Academic Reference List containing 20 to 30 high-quality benchmark citations. These references must focus on top-tier venues (Nature, Science, ICLR, ICML, CVPR, NeurIPS, KDD, IEEE S&P, etc.) to ensure the idea is firmly grounded in literature.
+
 > **CRITICAL ACTION**: After thinking, you MUST use your `write_to_file` tool to save your final analysis as a markdown file at: `{REPORTS_DIR}/{date_str}_RADAR_V2_REPORT.md`
 
 ---
