@@ -12,6 +12,7 @@ parser.add_argument("--ip", default="100.90.140.62", help="Target SSH IP address
 parser.add_argument("--workspace", default="dandan02", help="Agent workspace directory name")
 parser.add_argument("--pm2_name", default="dandan-mac02", help="PM2 daemon name")
 parser.add_argument("--config", default="openclaw.mac02.json", help="Local config filename")
+parser.add_argument("--node_version", default="v22.14.0", help="NVM Node version installed on remote")
 args_cli = parser.parse_args()
 
 HOST = args_cli.node
@@ -20,6 +21,7 @@ TARGET_IP = args_cli.ip
 WORKSPACE_NAME = args_cli.workspace
 PM2_NAME = args_cli.pm2_name
 CONFIG_NAME = args_cli.config
+NODE_VERSION = args_cli.node_version
 
 SSH_TOOL = "/Users/roy-jd/openclaw/skills/ssh/scripts/ssh_tool.py"
 LOCAL_CONFIG = f"/Users/roy-jd/workspace/config/openclaw_gateways/{CONFIG_NAME}"
@@ -52,7 +54,7 @@ run_local(f"scp -i ~/.ssh/id_ed25519 {LOCAL_CONFIG} {TARGET_USER}@{TARGET_IP}:{R
 
 # 2. 杀灭一切残留，硬启动
 reboot_cmd = f"""
-export PATH=$HOME/.nvm/versions/node/v22.14.0/bin:$PATH && \\
+export PATH=$HOME/.nvm/versions/node/{NODE_VERSION}/bin:$PATH && \\
 pm2 delete {PM2_NAME} || true && \\
 pkill -9 -f openclaw || true && \\
 cd /Users/{TARGET_USER}/openclaw && \\
@@ -80,7 +82,7 @@ test_queries = [
 for test_name, prompt in test_queries:
     print(f"\n================> 压测关卡: {test_name} <================")
     prompt_safe = prompt.replace('"', '\\"')
-    test_cmd = f"export PATH=$HOME/.nvm/versions/node/v22.14.0/bin:$PATH && cd /Users/{TARGET_USER}/openclaw && OPENCLAW_CONFIG_PATH=/Users/{TARGET_USER}/openclaw/config/{CONFIG_NAME} node scripts/run-node.mjs agent --agent agent-research -m \"{prompt_safe}\""
+    test_cmd = f"export PATH=$HOME/.nvm/versions/node/{NODE_VERSION}/bin:$PATH && cd /Users/{TARGET_USER}/openclaw && OPENCLAW_CONFIG_PATH=/Users/{TARGET_USER}/openclaw/config/{CONFIG_NAME} node scripts/run-node.mjs agent --agent agent-research -m \"{prompt_safe}\""
     
     print(f"📡 注入测试用例: {prompt}")
     run_ssh(test_cmd)
