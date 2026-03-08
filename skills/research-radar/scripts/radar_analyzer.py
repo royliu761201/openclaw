@@ -11,7 +11,7 @@ import json
 WORKSPACE_DIR = Path(os.path.expanduser("~/workspace"))
 RAW_DATA_DIR = WORKSPACE_DIR / "docs" / "research_ideation" / "radar_raw_data"
 REPORTS_DIR = WORKSPACE_DIR / "docs" / "research_ideation" / "radar_reports"
-PDCA_FILE = WORKSPACE_DIR / "docs" / "projects_pdca" / "05_RESEARCH_RADAR_PDCA.md"
+PDCA_FILE = WORKSPACE_DIR / "docs" / "projects_pdca" / "06_RADAR_META_SKILL_PDCA.md"
 
 PI_PROFILE_PATH = Path(__file__).resolve().parent.parent.parent / "research-assistant" / "knowledge" / "profiles" / "pi_profile_xiaohua_liu.md"
 IDEA_LIST_PATH = WORKSPACE_DIR / "docs" / "research_ideation" / "EXTENSION_IDEA_MASTER.md"

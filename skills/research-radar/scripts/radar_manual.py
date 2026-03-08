@@ -10,7 +10,7 @@ script_dir = Path(__file__).parent
 sys.path.append(str(script_dir))
 
 try:
-    from radar_analyzer import generate_dandan_prompt, REPORTS_DIR
+    from radar_analyzer import generate_dandan_prompt, REPORTS_DIR, update_pdca, git_sync_workspace
 except ImportError:
     print("❌ Error: Could not import radar_analyzer.py. Ensure this script is in the skills/research-radar/scripts/ directory.")
     sys.exit(1)
@@ -74,6 +74,10 @@ def main():
         
     print(f"✅ Inbox Prompt generated at {inbox_path}")
     print(f"🔥 AGENTIC HANDOFF: Please ask Dandan to read this file and execute the analysis for `{args.target}`!")
+    
+    # Merging Manual runs into the Global SSoT PDCA tracker and syncing to Git
+    update_pdca(f"{date_str}_Manual", inbox_path)
+    git_sync_workspace()
 
 if __name__ == "__main__":
     main()
