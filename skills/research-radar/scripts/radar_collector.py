@@ -266,6 +266,9 @@ def collect_raw_data():
                 _, is_new = filter_new_content(url, "inbox_check")
                 
                 if is_new:
+                    # 🐞 [BUGFIX]: We must actually save it to the database so it's not processed forever tomorrow
+                    seen_db['web_urls'].append(url)
+                    
                     print(f"     |_ Extracting new Feishu URL: {url}")
                     raw_content.append(f"### 🔗 Link: {url}")
                     raw_content.append(f"*(This URL was intercepted from a live chat session via _inbox.md. The Analyzer will cross-reference this URL with the chat context.)*\n\n")
