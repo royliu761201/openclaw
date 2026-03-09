@@ -1,34 +1,33 @@
-
-# Python
+node_modules
+**/node_modules/
+.env
+docker-compose.extra.yml
+dist
+pnpm-lock.yaml
+bun.lock
+bun.lockb
+coverage
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
+*.pyc
+.tsbuildinfo
+.pnpm-store
+.worktrees/
+.DS_Store
+**/.DS_Store
+ui/src/ui/__screenshots__/
+ui/playwright-report/
+ui/test-results/
+packages/dashboard-next/.next/
+packages/dashboard-next/out/
 
-# Virtual Env
-.venv
-venv/
-env/
+# Mise configuration files
+mise.toml
 
-# IDE
-.idea/
-.vscode/
+# Android build artifacts
+apps/android/.gradle/
+apps/android/app/build/
+apps/android/.cxx/
+apps/android/.kotlin/
 
 # Bun build artifacts
 *.bun-build
@@ -48,6 +47,7 @@ Core/
 apps/ios/*.xcodeproj/
 apps/ios/*.xcworkspace/
 apps/ios/.swiftpm/
+apps/ios/.derivedData/
 apps/ios/.local-signing.xcconfig
 vendor/
 apps/ios/Clawdbot.xcodeproj/
@@ -56,46 +56,27 @@ apps/macos/.build/**
 **/*.bun-build
 apps/ios/*.xcfilelist
 
-# Security
-*.key
-*.pem
-id_ed25519*
+# Vendor build artifacts
+vendor/a2ui/renderers/lit/dist/
+src/canvas-host/a2ui/*.bundle.js
+src/canvas-host/a2ui/*.map
+.bundle.hash
 
-# Logs and Databases
-*.log
-*.sqlite
-wandb/
-mobile_agent.log
+# fastlane (iOS)
+apps/ios/fastlane/README.md
+apps/ios/fastlane/report.xml
+apps/ios/fastlane/Preview.html
+apps/ios/fastlane/screenshots/
+apps/ios/fastlane/test_output/
+apps/ios/fastlane/logs/
+apps/ios/fastlane/.env
 
-# Temporary Root Files
-*.png
-*.jpg
-*.jpeg
-*.zip
-*.tar.gz
-*.rar
-missing_citations.txt
-autonomous_output*.log
-final_verification.log
-all_keys.txt
-all_refs.txt
-used_keys.txt
-used_refs.txt
-verify_archivist.py
-reproduce_draft.py
-emergency_draft.py
-exp_*.py
+# fastlane build artifacts (local)
+apps/ios/*.ipa
+apps/ios/*.dSYM.zip
 
-# Runtime Workspaces
-.lanes/
-lanes/
-
-# Large Binary Artifacts
-*.pt
-*.pth
-*.ckpt
-*.pdf
-*.safetensors
+# provisioning profiles (local)
+apps/ios/*.mobileprovision
 
 # Local untracked files
 .local/
@@ -114,26 +95,29 @@ USER.md
 !.agent/workflows/
 /local/
 package-lock.json
-.env
-config/vertex_service_account.json
+.claude/
+.agents/
+.agents
+.agent/
+skills-lock.json
 
 # Local iOS signing overrides
 apps/ios/LocalSigning.xcconfig
 
-# Keep tracked vendored/assets directories stageable for hooks
-!src/auto-reply/reply/export-html/vendor/
-!src/auto-reply/reply/export-html/vendor/**
-!ui/src/i18n/lib/
-!ui/src/i18n/lib/**
-._src
-.tmp-openclaw-state/
+# Xcode build directories (xcodebuild output)
+apps/ios/build/
+apps/shared/OpenClawKit/build/
+Swabble/build/
 
-# Archive
-_archive/
-node_modules
+# Generated protocol schema (produced via pnpm protocol:gen)
+dist/protocol.schema.json
+.ant-colony/
 
-workspace/
-skills/kokoro-tts/venv/
-skills/kokoro-tts/kokoro_onnx/
-skills/kokoro-tts/models/
-openclaw_data/
+# Eclipse
+**/.project
+**/.classpath
+**/.settings/
+**/.gradle/
+
+# Synthing
+**/.stfolder/

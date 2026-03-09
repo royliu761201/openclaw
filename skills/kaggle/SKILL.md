@@ -78,17 +78,21 @@ List kernels to check status.
 ./scripts/kaggle_tool.py kernels_list --user "username" --search "openclaw"
 ```
 
-### `kaggle_kernels_output`
+### `kaggle_remote_fetch` (MD-Driven KISS Protocol)
 
-Download logs and output files from a kernel run.
+🔥 **High-Level Protocol**🔥 For heavy assets, do NOT run tasks locally. Instead of relying on Python payload wrappers, we use raw MD-driven SSH sequences to utilize high-bandwidth execution nodes (e.g. Node 02, Node 05). **NOTE**: The remote node does not need `openclaw` installed, it merely uses standard `huggingface-cli` and `kaggle` tools.
 
-- **slug** (string, required): Kernel slug (e.g., `username/kernel-slug`).
-- **path** (string, required): Destination folder.
-
-**Usage**:
+**Usage (Raw CLI Protocol via `ssh_tool.py`)**:
 
 ```bash
-./scripts/kaggle_tool.py kernels_output "xiaohualiu/openclaw-experiment" "workspace/output"
+# 1. SSH into high-bandwidth gateway (e.g. Node 02 or 05) to pull raw files directly from HF
+ssh_tool.py --host 02 exec "huggingface-cli download THU-ATOM/posebusters --repo-type dataset --local-dir /tmp/posebusters"
+
+# 2. Assemble minimal Kaggle metadata physically on the remote edge
+ssh_tool.py --host 02 exec "echo '{\"title\": \"posebusters-data\", \"id\": \"YOUR_USERNAME/posebusters-data\", \"licenses\": [{\"name\": \"CC0-1.0\"}]}' > /tmp/posebusters/dataset-metadata.json"
+
+# 3. Inject strict secret context & push cloud payload entirely natively
+ssh_tool.py --host 02 --env "KAGGLE_USERNAME=xxx" --env "KAGGLE_KEY=yyy" exec "kaggle datasets create -p /tmp/posebusters --dir-mode zip"
 ```
 
 ## Troubleshooting (FAQ)

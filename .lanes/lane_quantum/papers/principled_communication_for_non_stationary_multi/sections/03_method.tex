@@ -1,0 +1,66 @@
+\section{Methodology: Principled Communication via Active Inference}
+\label{sec:methodology}
+
+We propose a novel framework for multi-agent coordination grounded in the Free Energy Principle (FEP) \cite{friston2010free, friston2017active}. Unlike traditional Multi-Agent Reinforcement Learning (MARL) that treats communication as an auxiliary signal to maximize a shared reward $\mathcal{R}$ \cite{lowe2017multi, rashid2018qmix}, our framework, \textbf{ActInf-Comm}, casts communication as a fundamental epistemic action designed to minimize Variational Free Energy (VFE). This shift allows agents to resolve non-stationarity by actively inferring the latent strategies of competitors, a critical requirement in high-frequency environments like Real-Time Bidding (RTB).
+
+\begin{figure*}[t]
+    \centering
+    % \includegraphics[width=\textwidth]{fig1_framework.pdf}
+    \caption{\textbf{The ActInf-Comm Framework Architecture.} (Left) The hierarchical generative model where Level 0 ($L_0$) processes immediate auction dynamics and Level 1 ($L_1$) infers market regimes. (Center) The Action Selection loop where policies $\pi$ are evaluated by Expected Free Energy ($\mathcal{G}$), decomposing into Epistemic Value (information gain) and Instrumental Value (preference satisfaction). (Right) The LLM-augmented inference engine that maps high-dimensional market observations into semantic tokens for accelerated belief updating. Communication ($\alpha_c$) serves to synchronize these latent beliefs across agents, preventing collusive traps by prioritizing model transparency over reward exploitation.}
+    \label{fig:framework}
+\end{figure*}
+
+\subsection{The Active Inference Agent: Generative Model and VFE}
+\label{sec:agent_model}
+
+Each agent $i \in \{1, \dots, N\}$ is modeled as a Bayesian inference engine that maintains a generative model $P(o, s, \pi)$ over observations $o$, hidden states $s$, and policies $\pi$. The hidden states $s = \{s_{env}, s_{other}\}$ encompass both the environmental dynamics (e.g., market price distributions) and the latent intentions of other agents (e.g., budget constraints, risk profiles).
+
+The agent's objective is to minimize the Variational Free Energy $\mathcal{F}$, which serves as an upper bound on the surprise (negative log-evidence):
+\begin{equation}
+    \mathcal{F}(q) = \underbrace{\mathbb{D}_{KL}[q(s) \parallel p(s)]}_{\text{Complexity}} - \underbrace{\mathbb{E}_{q(s)}[\ln p(o|s)]}_{\text{Accuracy}} \approx -\ln p(o)
+\label{eq:vfe}
+\end{equation}
+where $q(s)$ is the agent's internal belief (recognition density) about the world. By minimizing $\mathcal{F}$, the agent simultaneously optimizes its internal representation of the non-stationary environment and its predictions of future observations \cite{parr2022active}. 
+
+Policy selection in ActInf-Comm is governed by the \textit{Expected Free Energy} (EFE), denoted as $\mathcal{G}(\pi)$. For a future time horizon $\tau$, the agent evaluates policies $\pi$ based on:
+\begin{equation}
+    \mathcal{G}(\pi) = \sum_{\tau} \mathbb{E}_{q(o_\tau, s_\tau | \pi)} [\ln q(s_\tau | \pi) - \ln p(o_\tau, s_\tau)]
+\label{eq:efe}
+\end{equation}
+This objective naturally decomposes into \textit{instrumental value} (seeking preferred outcomes, e.g., winning an auction at low cost) and \textit{epistemic value} (seeking information to reduce uncertainty about $s$). In non-stationary MAS, the epistemic component is vital, as it compels agents to explore and update their models of competitors' shifting strategies before committing to intensive resource allocation \cite{da2020active}.
+
+\subsection{Communication as an Epistemic Action}
+\label{sec:comm_action}
+
+In our framework, the action space $\mathcal{A}$ is partitioned into environmental actions $\mathcal{A}_e$ (e.g., bid prices in RTB) and communicative actions $\mathcal{A}_c$ (e.g., broadcasted signals). Crucially, $\mathcal{A}_c$ is not rewarded by the environment; instead, its utility emerges from its ability to reduce the expected surprise of the collective system.
+
+We define a communicative action $\alpha_c \in \mathcal{A}_c$ as an ``epistemic probe.'' When agent $i$ emits a signal, it intends to modify the belief $q_j(s)$ of agent $j$, thereby making agent $j$'s future actions more predictable. The epistemic value of communication is formulated as the mutual information between the signal and the latent states:
+\begin{equation}
+    \text{EpistemicValue}(\alpha_c) = \mathbb{E}_{q(o_\tau | \alpha_c)} [ \mathbb{D}_{KL}[q(s_\tau | o_\tau, \alpha_c) \parallel q(s_\tau | \alpha_c)] ]
+\end{equation}
+Unlike standard MARL signals that often converge to ``cheap talk'' or collusive price-fixing in RTB \cite{zheng2022multiagent, brown2020language}, ActInf agents communicate to maintain ``generalized synchrony'' \cite{friston2015active}. Because the EFE prioritizes model accuracy, agents are disincentivized from sending deceptive signals that would increase their own long-term VFE by making the environment's response to their collusion unpredictable. This provides a principled, information-theoretic barrier against emergent collusion.
+
+\subsection{Hierarchical Generative Models for Non-Stationary MAS}
+\label{sec:hierarchical_model}
+
+To handle the multi-scale temporal dynamics of RTB, we employ a Hierarchical Active Inference (HAI) structure. The model is organized into two primary levels:
+
+\begin{enumerate}
+    \item \textbf{Level 0 ($L_0$): Fast-Scale Dynamics.} This level operates at the frequency of individual auctions. It performs inference on immediate states $s^{(0)}$, such as current bid requests and winning price volatility. The transition dynamics $\mathcal{P}^{(0)}$ are conditioned on the higher-level state $s^{(1)}$.
+    \item \textbf{Level 1 ($L_1$): Slow-Scale Regimes.} This level infers the ``context'' or ``regime'' of the market (e.g., high-competition periods, end-of-quarter budget flushing). Changes at this level represent the source of non-stationarity for $L_0$.
+\end{enumerate}
+
+The interaction between levels is governed by the exchange of prediction errors ($\epsilon = o - \hat{o}$) flowing upward and predictions flowing downward. In the context of RTB, an unexpected jump in market prices generates a large prediction error at $L_0$, which forces $L_1$ to update its belief about the current market regime. Communication actions $\alpha_c$ are often selected at $L_1$ to synchronize these regime beliefs across agents, ensuring coordination without the need for exhaustive re-training \cite{millidge2023mathematical}.
+
+\subsection{LLM-Augmented Inference and Emergent Concept Representation}
+\label{sec:llm_inference}
+
+A significant challenge in applying ActInf to complex MAS is the computational complexity of evaluating $\mathcal{G}(\pi)$ over high-dimensional state spaces. We address this by integrating Large Language Models (LLMs) as \textit{amortized inference engines} \cite{hu2023language, wang2024active}. 
+
+We utilize a pre-trained LLM (e.g., GPT-4o) to map sequences of market observations and agent signals into a compact semantic latent space $\mathcal{Z}$. The LLM serves two purposes:
+\begin{itemize}
+    \item \textbf{State Abstraction}: It translates raw auction logs into high-level semantic descriptions (e.g., ``competitor A is exhibiting predatory pricing behavior''), which are then used as observations for the $L_1$ generative model.
+    \item \textbf{Concept Synthesis}: When agents encounter novel non-stationary regimes not seen during training, the LLM-augmented component can propose new semantic tokens to represent these states. This allows ActInf agents to communicate \textit{unencoded concepts}—abstract strategies that were not part of the initial state space $\mathcal{S}$—by leveraging the world knowledge embedded in the LLM \cite{wei2022chain}.
+\end{itemize}
+
+Specifically, the LLM generates a distribution over possible latent explanations $q(s | \text{history}, \text{context})$, which acts as a sophisticated prior for the VFE minimization process. This acceleration allows the agents to maintain real-time responsiveness in milliseconds-level RTB auctions while performing deep hierarchical inference. By grounding the LLM's outputs in the rigorous VFE objective, we ensure that the ``hallucinations'' typical of generative models are filtered out by the accuracy requirements of the generative model $\mathcal{F}$ \cite{fountas2020active}.

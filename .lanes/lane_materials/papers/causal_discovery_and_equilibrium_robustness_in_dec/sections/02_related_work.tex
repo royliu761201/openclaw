@@ -1,0 +1,37 @@
+\section{Related Work}
+
+The quest for robust decentralized intelligence necessitates a synthesis of multi-agent reinforcement learning, causal discovery, and equilibrium analysis. Our work stands at the intersection of these fields, moving beyond heuristic optimization toward structurally-grounded system stability.
+
+\subsection{Multi-Agent Reinforcement Learning (MARL) and Non-Stationarity}
+The evolution of MARL has transitioned from simple independent learners to sophisticated Centralized Training with Decentralized Execution (CTDE) frameworks \cite{lowe2017multi, foerster2018counterfactual}. While algorithms such as QMIX \cite{rashid2018qmix} and MAPPO \cite{yu2022surprising} have achieved remarkable success in cooperative benchmarks, they remain fundamentally grounded in the assumption of environmental stationarity or ergodicity. Recent advances have attempted to address non-stationarity through meta-learning \cite{wang2023model} and transformer-based architectures that capture long-range temporal dependencies between agents \cite{wen2022multi, hu2023transformer}. However, these approaches often treat the shifting policies of other agents as a nuisance parameter to be ``filtered'' or ``adapted to,'' rather than an emergent phenomenon governed by underlying causal mechanisms. Unlike \cite{gronauer2022multi}, who provides a comprehensive survey of contemporary MARL, we argue that the ``latency illusion'' in high-frequency environments—where agents react to outdated correlations—can only be resolved by identifying the invariant causal drivers of the system.
+
+\subsection{Causal Discovery in Dynamic and Sequential Settings}
+Causal discovery aims to recover the latent directed acyclic graph (DAG) or structural equation model (SEM) from observational data \cite{pearl2009causality, spirtes2000causation}. While classical algorithms like PC and FCI \cite{spirtes2000causation} provide the foundation, they struggle with the high-dimensional, non-linear dynamics of sequential decision-making. The emergence of differentiable causal discovery, pioneered by NOTEARS \cite{zheng2018dag}, has enabled the integration of causal search into deep learning pipelines \cite{ng2022masked, li2024differentiable}. In the context of time-series and dynamical systems, recent work has explored Granger causality and constraint-based methods for identifying temporal causal links \cite{khanna2020economy, runge2023inferring}. Yet, these methods typically assume a single data-generating process. In decentralized systems, the causal structure is itself a function of the agents' evolving policies, creating a ``causal feedback loop'' that we explicitly formalize in Section 3.
+
+\subsection{Causal Reinforcement Learning (CRL)}
+Causal Reinforcement Learning (CRL) seeks to bridge the gap between ``seeing'' (correlation) and ``doing'' (intervention) \cite{bareinboim2023causal}. Early work in this niche focused on addressing unobserved confounders in multi-armed bandits and single-agent MDPs \cite{forney2017counterfactual, wang2021causal}. Recent breakthroughs have utilized Invariant Risk Minimization (IRM) \cite{arjovsky2019invariant} and Invariant Causal Prediction (ICP) \cite{peters2016causal} to learn policies that generalize across distributional shifts \cite{zhang2023invariant, lu2024robust}. Specifically, \cite{wang2023causal} explored learning causal representations to improve sample efficiency. Our work diverges from these single-agent perspectives by focusing on how causal awareness influences the \textit{equilibrium properties} of a multi-agent system. While \cite{sonntag2024causal} discusses causal discovery in multi-agent settings, their focus remains on coordination rather than the robustness of the resulting equilibrium in competitive, non-ergodic environments.
+
+\subsection{Equilibrium Robustness and Game-Theoretic Stability}
+The study of stability in decentralized systems is a cornerstone of algorithmic game theory \cite{shoham2008multiagent}. Traditional concepts like Nash Equilibrium (NE) and Quantal Response Equilibrium (QRE) assume agents possess perfect models or reach stability through infinite play. In dynamic settings, the focus has shifted toward robust solution concepts that account for model uncertainty \cite{pinto2017robust} and adversarial perturbations \cite{li2023adversarial}. Theoretical work on non-ergodicity in economics \cite{peters2019ergodicity} suggests that time-averages (expected utility) often fail to capture the long-term survival of agents in competitive systems. Furthermore, recent investigations into ``Systemic Risk'' in decentralized finance and high-frequency trading \cite{bouchaud2022complexity} highlight the fragility of optimization-centric agents. Our framework addresses these gaps by proving that \textit{Causal Multi-Agent Reinforcement Learning} (Causal MARL) can derive invariant relationships that provide a ``structural anchor'' for equilibria, ensuring stability even when individual agent strategies are in flux.
+
+\begin{table}[t]
+\centering
+\caption{Comparison of our framework with existing paradigms. Our approach is the only one to simultaneously address decentralized causal discovery and provable equilibrium robustness.}
+\label{tab:comparison}
+\resizebox{\columnwidth}{!}{%
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Feature} & \textbf{Standard MARL} & \textbf{Robust RL} & \textbf{Causal RL (Single)} & \textbf{Causal MARL (Ours)} \\
+\midrule
+Causal Awareness & No & No & Yes & \textbf{Yes} \\
+Equilibrium Focus & Emergent & Limited & No & \textbf{Provable} \\
+Distributional Shift & Fragile & Adversarial & Invariant & \textbf{Invariant} \\
+Agent Interactions & Correlational & Minimax & N/A & \textbf{Structural} \\
+\bottomrule
+\end{tabular}
+}%
+}%
+\end{table}
+
+This synthesis of causality and game theory leads directly to our theoretical framework, where we define the formal requirements for a ``Causal Agent'' in a decentralized world.

@@ -1,0 +1,11 @@
+{
+    "parallel_limit": 3,
+    "active_ideas": [
+        {
+            "id": "idea_001_autonomous_agents",
+            "status": "active",
+            "priority": 1,
+            "context_branch": "feature/idea_001"
+        }
+    ]
+}

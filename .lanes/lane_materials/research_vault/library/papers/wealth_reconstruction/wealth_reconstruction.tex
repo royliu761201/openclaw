@@ -1,0 +1,388 @@
+\documentclass{article}
+
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2026
+
+% ready for submission
+% \usepackage{neurips_2026}
+
+% to compile a preprint version, e.g., for submission to arXiv, add the
+% [preprint] option:
+\usepackage[preprint]{neurips_2026}
+
+% to compile a camera-ready version, add the [final] option:
+%     \usepackage[final]{neurips_2026}
+
+% to avoid loading the natbib package, add option nonatbib:
+%    \usepackage[nonatbib]{neurips_2026}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage[colorlinks=true,citecolor=blue,linkcolor=blue,urlcolor=blue]{hyperref}
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\title{The Silicon Commune:\\Learning Computational Social Contracts for Post-Labor Economies}
+
+\author{%
+  Anonymous Authors \\
+  Anonymous Affiliation \\
+  \texttt{anonymous@domain} \\
+}
+
+\begin{document}
+
+\date{}
+
+\maketitle
+
+\begin{abstract}
+Recent advances in autonomous AI agents suggest a structural shift in the production process: value creation is increasingly driven by silicon-based computation rather than human labor. In such a \emph{post-labor} setting, traditional social contracts---wages taxed to fund welfare---cease to be an effective mechanism for sharing the gains from productivity. A naive continuation of current trends leads to \emph{compute hegemony}: extreme concentration of wealth and decision power among owners of computational infrastructure.
+
+We propose a \emph{Computational Social Contract} (CSC) framework that treats redistribution as an algorithmic protocol co-evolving with an AI-driven economy. Concretely, we (i) formalize an \emph{Agentic Production Function} in which output depends on agentic intelligence, compute capacity, and energy input rather than human labor; (ii) introduce a capability-based \emph{Human Flourishing Index} (HFI) that replaces GDP as the optimization objective of the socio-technical system; and (iii) define an \emph{Algorithmic Veil of Ignorance} (AVoI), a mechanism-selection operator that learns redistribution rules under uncertainty about agents' future roles and endowments, operationalizing Rawlsian maximin criteria in a multi-agent reinforcement learning (MARL) setting.
+
+We instantiate CSC in \emph{The Silicon Commune}, a resource-limited MARL environment in which heterogeneous agents interact under alternative governance mechanisms: laissez-faire learning, fixed progressive taxation, and CSC with AVoI. Our simulations show that CSC maintains low inequality (Gini $\approx 0.3$) and high Human Flourishing at more than $95\%$ of the output of laissez-faire, while naive and fixed-tax baselines either collapse into extreme polarization or sacrifice substantial productivity. These results provide an initial blueprint for algorithmic governance that reconstructs wealth distribution when productivity is decoupled from human labor.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+The advent of autonomous AI agents marks a qualitative shift in economic organization. For most of industrial history, macroeconomic output has been modeled as the product of capital ($K$) and human labor ($L$), with labor serving as the primary subject of productive activity. In contrast, contemporary AI systems increasingly act as \emph{agentic} entities: they plan, execute, and adapt complex workflows with minimal human intervention \cite{acemoglu2019automation}. As these systems scale with compute and data, the marginal contribution of human labor to output in many sectors may approach zero.
+
+Current social contracts are not designed for this regime. In existing welfare states, individuals obtain income primarily by selling their labor, and the state redistributes via taxes on wages and profits. If labor ceases to be the main production factor, this wage--tax--welfare loop breaks down \cite{gordon2026post}. The resulting gains from productivity flow almost exclusively to the owners of computational and data infrastructure, exacerbating the dynamics of capital concentration documented by \cite{piketty2014capital} and the power asymmetries associated with surveillance capitalism described by \cite{zuboff2019age}. Left unchecked, this trajectory risks producing a form of \emph{compute hegemony}: a small number of actors controlling both the means of production and the informational substrate of society \cite{korinek2019integrating,bostrom2024superintelligence,mckinsey2023generative}.
+
+Normative political philosophy offers an alternative lens. Rawls' theory of justice \cite{rawls1971theory} derives principles for fair social arrangements by asking what rules rational agents would endorse behind a ``veil of ignorance'' about their own eventual position in society. Sen's capability approach \cite{sen1985commodities} suggests that the objective of a just system is not material output per se, but the distribution of meaningful \emph{capabilities} such as health, education, and autonomy. Yet these ideas have rarely been operationalized as algorithmic components in large-scale, AI-mediated socio-technical systems.
+
+In this paper, we ask:
+
+\begin{quote}
+\emph{How can we design a computational social contract that shares the gains from agentic AI productivity while ensuring that human capabilities---rather than labor income---remain the central object of justice?}
+\end{quote}
+
+We approach this question by embedding normative principles directly into a multi-agent reinforcement learning (MARL) governance layer \cite{leibo2017multi,dafoe2020open}. Rather than treating AI as a black-box external shock to the economy, we model the economy itself as a population of learning agents coupled to a governance layer \cite{zheng2020ai,wu2024learning}.
+
+\paragraph{Overview of our approach.}
+Our framework consists of three components:
+
+\begin{enumerate}
+  \item \textbf{Agentic Production Function (APF).} We propose a macro-level production function
+  \begin{equation}
+    Y = A \cdot \Phi(I_{\text{agent}}, C_{\text{compute}}, E_{\text{energy}}),
+    \label{eq:apf}
+  \end{equation}
+  where the core production kernel depends on aggregate agentic intelligence $I_{\text{agent}}$, compute capacity $C_{\text{compute}}$, and energy $E_{\text{energy}}$. Human labor $L$ appears only in a peripheral supervisory role. This formalizes the decoupling of output from biological labor and highlights the centrality of compute allocation and agent deployment as policy levers.
+
+  \item \textbf{Human Flourishing Index (HFI).} We replace Gross Domestic Product (GDP) with a \emph{Human Flourishing Index} that aggregates capability scores for education, health, and autonomy across agents. The CSC governance layer optimizes the integral of HFI over time, subject to equity constraints, aligning the dynamics of the artificial economy with capability-based theories of justice.
+
+  \item \textbf{Algorithmic Veil of Ignorance (AVoI).} We introduce an ``Algorithmic Veil of Ignorance'' as a mechanism-selection operator. In an outer-loop ``original position'' phase, agents adopt a distribution protocol---e.g., tax schedules and universal digital dividends---while being uncertain about their eventual computational endowment or social role. This induces Rawlsian maximin behavior in the selection of redistribution parameters, which are then enforced in the inner-loop MARL dynamics.
+\end{enumerate}
+
+We instantiate these ideas in \emph{The Silicon Commune}, a closed artificial economy where heterogeneous agents trade, invest, and consume under varying governance schemes. We compare (i) laissez-faire learning without redistribution, (ii) a fixed progressive tax regime, and (iii) a CSC regime where redistribution parameters are learned via AVoI to maximize long-run HFI. Our simulations suggest that CSC can maintain both high productivity and low inequality, whereas naive and static baselines either collapse into extreme concentration or incur large efficiency losses.
+
+\paragraph{Contributions.}
+Our main contributions are:
+\begin{itemize}
+  \item We formalize an \emph{Agentic Production Function} that models post-labor output as a function of agentic intelligence and compute, making explicit the shift in the subject of productivity from human labor to AI agents.
+  \item We propose a capability-based \emph{Human Flourishing Index} that serves as the optimization objective for macro-level governance in a MARL environment.
+  \item We introduce the \emph{Algorithmic Veil of Ignorance} (AVoI), a mechanism-selection operator that learns redistribution rules under role uncertainty, operationalizing Rawlsian justice in a computational setting.
+  \item We construct \emph{The Silicon Commune}, a resource-limited multi-agent environment, and empirically show that CSC-based governance achieves substantially better equity--efficiency trade-offs than laissez-faire and fixed-tax baselines in an AI-driven economy.
+\end{itemize}
+
+\section{Related Work}
+\label{sec:related}
+
+\paragraph{Automation, AI, and inequality.}
+A long tradition in economics studies how technological change affects labor demand and income distribution. \cite{acemoglu2019automation} analyze how automation displaces middle-skill jobs and propose taxation and innovation policies to mitigate inequality. \cite{piketty2014capital} document historical patterns in which returns to capital exceed growth, leading to concentration of wealth, while \cite{stiglitz2017rewriting} emphasize that these dynamics are shaped by political and legal choices rather than immutable laws. Our work complements this literature by moving from comparative statics to a computational perspective in which the economy is represented explicitly as a population of learning agents coupled to a governance layer.
+
+\paragraph{Surveillance capitalism and data power.}
+\cite{zuboff2019age} argue that large-scale data extraction and behavioral prediction enable a new form of ``surveillance capitalism,'' where firms wield unprecedented power over individuals and institutions. Our notion of ``compute hegemony'' extends this concern to the ownership and control of computational infrastructure and agentic AI systems. The CSC framework aims to mitigate such power asymmetries by embedding redistribution rules and capability safeguards directly into the protocol layer of an artificial economy.
+
+\paragraph{Capabilities, welfare, and fairness.}
+The capability approach \cite{sen1985commodities,nussbaum2011creating} proposes that a just society should focus on what people are able to do and be, rather than solely on income or utility. In machine learning, fairness-aware methods incorporate group or individual fairness constraints into optimization objectives \cite{dwork2012fairness,barocas2019fairness}. Recent work has begun to consider \emph{veil-of-ignorance} perspectives for designing fair policies or allocations \cite{harsanyi1975can,binns2018fairness,mullainathan2024algorithms}. We build on this line of thought but target a macro-level, capability-based welfare function and embed veil-of-ignorance reasoning into a MARL meta-optimization process \cite{koster2024human,xu2025reinforcement}.
+
+\paragraph{Multi-agent reinforcement learning and mechanism design.}
+MARL has been used to study emergent cooperation, bargaining, and resource allocation in complex environments \cite{leibo2017multi,perolat2017multi,zhang2023social}. Concurrently, algorithmic mechanism design explores how to construct incentives and rules that induce desirable outcomes among self-interested agents \cite{nisan2007algorithmic,parkes2015economics}. Our CSC can be viewed as a meta-mechanism that dynamically adjusts redistribution parameters in response to observed inequality and capability metrics, learned via an outer-loop optimization under veil-of-ignorance uncertainty \cite{rahwan2019machine,yang2026scalable}.
+
+\section{Computational Social Contract Framework}
+\label{sec:framework}
+
+We now formalize the three core components of our framework: the Agentic Production Function (APF), the Human Flourishing Index (HFI), and the Algorithmic Veil of Ignorance (AVoI). We then describe how these elements are instantiated in a MARL governance layer.
+
+\subsection{Agentic Production Function}
+\label{subsec:apf}
+
+We model the macro-level output $Y_t$ of the economy at time $t$ as
+\begin{equation}
+Y_t = A_t \cdot \Phi\big(I_{\text{agent},t}, C_{\text{compute},t}, E_{\text{energy},t}\big),
+\end{equation}
+where $\Phi$ is a production kernel and $A_t$ captures residual total factor productivity. The three arguments represent:
+
+\begin{itemize}
+  \item $I_{\text{agent},t}$: an aggregate measure of deployed agentic intelligence (e.g., effective model capacity, quality-adjusted inference throughput, or performance benchmarks).
+  \item $C_{\text{compute},t}$: the available computation capacity (e.g., FLOPs per unit time, memory, or accelerator capacity).
+  \item $E_{\text{energy},t}$: the energy input sustaining the compute infrastructure.
+\end{itemize}
+
+Human labor $L_t$ can be included as a separate auxiliary factor, e.g.,
+\begin{equation}
+Y_t = A_t \cdot \Phi\big(I_{\text{agent},t}, C_{\text{compute},t}, E_{\text{energy},t}\big) \cdot \Psi(L_t),
+\end{equation}
+where $\Psi$ is a slowly varying function reflecting supervisory or complementary roles played by humans \cite{jordan2024artificial}. In a post-labor economy, we consider $\Psi(L_t)$ to be approximately constant, so the dynamics of $Y_t$ are dominated by changes in $(I_{\text{agent},t}, C_{\text{compute},t}, E_{\text{energy},t})$ and their allocation among owners and citizens \cite{li2025towards}.
+
+\subsection{Human Flourishing Index}
+\label{subsec:hfi}
+
+Let the economy consist of agents indexed by $i \in \{1,\dots,N\}$. Each agent $i$ possesses a vector of capabilities at time $t$,
+\begin{equation}
+\mathbf{c}_{i,t} = \big(E_{i,t}, H_{i,t}, A_{i,t}\big),
+\end{equation}
+corresponding to education, health, and autonomy, respectively. We define per-agent flourishing as
+\begin{equation}
+F_{i,t} = \omega_E f_E(E_{i,t}) + \omega_H f_H(H_{i,t}) + \omega_A f_A(A_{i,t}),
+\end{equation}
+where $\omega_E,\omega_H,\omega_A \ge 0$ are normative weights and $f_E, f_H, f_A$ are increasing, concave transformations capturing diminishing returns in each dimension.
+
+The \emph{Human Flourishing Index} at time $t$ is
+\begin{equation}
+\mathrm{HFI}_t = \frac{1}{N} \sum_{i=1}^N F_{i,t}.
+\end{equation}
+The CSC governance layer seeks to maximize a discounted cumulative HFI:
+\begin{equation}
+J(\phi) = \mathbb{E}\Bigg[\sum_{t=0}^{T} \gamma^t \Big(\mathrm{HFI}_t - \lambda \cdot \mathrm{Ineq}_t\Big)\Bigg],
+\end{equation}
+where $\gamma \in (0,1)$ is a discount factor, $\lambda \ge 0$ trades off flourishing and inequality, and $\mathrm{Ineq}_t$ denotes an inequality measure such as the Gini coefficient. The dependence on $\phi$ arises because governance mechanisms shape both income flows and capability investments.
+
+\subsection{Algorithmic Veil of Ignorance}
+\label{subsec:avoi}
+
+We model redistribution as a parametric policy over transfers. Let $\phi \in \Phi$ denote a vector of mechanism parameters, such as:
+
+\begin{itemize}
+  \item marginal tax rates on income or wealth,
+  \item parameters of a universal digital dividend schedule,
+  \item minimum capability floors triggering automatic transfers.
+\end{itemize}
+
+Under fixed $\phi$, the inner-loop MARL dynamics induce trajectories of states, actions, and rewards for all agents, and thus determine the realized $J(\phi)$. We now describe how $\phi$ is chosen under an Algorithmic Veil of Ignorance (AVoI).
+
+In Rawls' framework, agents choose principles of justice in an \emph{original position} where they do not know their eventual social position. We approximate this by an outer-loop process: before each meta-episode $k$, agents are randomly assigned roles (e.g., owner vs.\ citizen, high vs.\ low initial endowment) sampled from a role distribution $\mathcal{R}$. The AVoI objective is then
+\begin{equation}
+\max_{\phi \in \Phi} \; \mathbb{E}_{r \sim \mathcal{R}, \,\tau \sim \mathcal{M}(\phi,r)}\big[J(\phi; r, \tau)\big],
+\end{equation}
+where $r$ denotes a vector of roles, $\mathcal{M}(\phi,r)$ is the induced MARL process under mechanism $\phi$ and roles $r$, and $\tau$ is a trajectory. The expectation over $r$ captures role uncertainty: a mechanism is preferable if it yields high flourishing even when an agent turns out to occupy a disadvantaged position.
+
+\subsection{CSC as a Meta-RL Governance Layer}
+\label{subsec:meta-rl}
+
+We instantiate CSC as a two-level learning process (see Figure~\ref{fig:arch}):
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\linewidth]{fig_csc_arch.pdf}
+  \caption{The Computational Social Contract (CSC) Architecture. An outer-loop governance agent optimizes mechanism parameters $\phi$ (taxes, dividends) to maximize the Human Flourishing Index (HFI) under a Veil of Ignorance (role uncertainty). Inside, economic agents (Owners, Citizens) learn policies $\pi$ to maximize individual returns within the current mechanism.}
+  \label{fig:arch}
+\end{figure}
+
+\begin{itemize}
+  \item \textbf{Inner loop (economy).} Given a fixed mechanism $\phi$, each agent $i$ has a policy $\pi_{\theta_i}$ that maps observations to actions. Agents update $\theta_i$ using a MARL algorithm (e.g., policy gradient) to maximize their individual returns, which may depend on both private consumption and capability changes.
+  \item \textbf{Outer loop (governance).} The mechanism parameters $\phi$ are updated to maximize the veil-of-ignorance objective $J(\phi)$, using feedback from simulated economies with randomized role assignments.
+\end{itemize}
+
+Algorithm~\ref{alg:avoi} provides a high-level description.
+
+\begin{algorithm}[t]
+\caption{Algorithmic Veil of Ignorance (AVoI) for CSC}
+\label{alg:avoi}
+\begin{algorithmic}[1]
+\STATE Initialize mechanism parameters $\phi_0$
+\FOR{$k = 0,1,\dots,K-1$} 
+  \STATE Sample roles $r^{(k)} \sim \mathcal{R}$ for all agents
+  \STATE Initialize agent policies $\{\theta_i^{(0)}\}_{i=1}^N$
+  \FOR{$m = 0,1,\dots,M-1$} 
+    \STATE Simulate episode with mechanism $\phi_k$, roles $r^{(k)}$, policies $\{\theta_i^{(m)}\}$
+    \STATE Update agent policies $\{\theta_i^{(m+1)}\}$ using MARL
+  \ENDFOR
+  \STATE Estimate veil-of-ignorance objective $\hat{J}(\phi_k)$
+  \STATE Update mechanism parameters: $\phi_{k+1} \leftarrow \phi_k + \eta \, \nabla_{\phi} \hat{J}(\phi_k)$
+\ENDFOR
+\STATE \textbf{return} learned mechanism $\phi_K$
+\end{algorithmic}
+\end{algorithm}
+
+This meta-RL perspective makes the CSC explicit: governance rules are treated as learnable parameters, selected under veil-of-ignorance uncertainty to maximize long-run flourishing.
+
+\section{The Silicon Commune Environment}
+\label{sec:environment}
+
+We now describe \emph{The Silicon Commune}, a synthetic environment designed to study governance in a post-labor, high-automation economy.
+
+\subsection{Agents, roles, and state space}
+\label{subsec:agents}
+
+The environment consists of $N$ agents partitioned into two role types:
+
+\begin{itemize}
+  \item \textbf{Owners:} agents with high initial compute and wealth endowments.
+  \item \textbf{Citizens:} agents with low initial endowments and limited direct control over compute infrastructure.
+\end{itemize}
+
+Each agent $i$ at time $t$ observes a local state $s_{i,t}$ that includes:
+
+\begin{itemize}
+  \item current wealth $w_{i,t}$,
+  \item capability levels $\mathbf{c}_{i,t}$,
+  \item a noisy estimate of global statistics (e.g., average wealth, current HFI, inequality),
+  \item signals about available investment or consumption opportunities.
+\end{itemize}
+
+The joint state $s_t$ also includes aggregate variables such as total output $Y_t$ and total compute usage.
+
+\subsection{Action space and dynamics}
+\label{subsec:actions}
+
+At each time step, agent $i$ chooses an action $a_{i,t}$ comprising:
+
+\begin{itemize}
+  \item an allocation of wealth between immediate consumption and investment in capabilities (e.g., education, health),
+  \item for owners, a decision on how much compute to allocate to production vs.\ rents,
+  \item optional transfers (e.g., altruistic sharing) where permitted.
+\end{itemize}
+
+The environment dynamics then update:
+
+\begin{itemize}
+  \item macro-level output $Y_t$ via the APF (Eq.~\ref{eq:apf}),
+  \item individual incomes (wages, profits, dividends) based on roles and contributions,
+  \item capability vectors $\mathbf{c}_{i,t}$ as functions of investments and exogenous shocks,
+  \item wealth $w_{i,t+1}$ after applying the mechanism $\phi$ (taxes, dividends, minimum guarantees).
+\end{itemize}
+
+\subsection{Governance mechanisms}
+\label{subsec:mechanisms}
+
+We compare three governance regimes:
+
+\begin{description}
+  \item[Naive-RL (Laissez-faire).] No redistribution: $\phi$ is fixed to zero tax and zero dividends. Agents keep all income, subject only to budget and physical constraints.
+  \item[Classical Tax.] A fixed progressive tax schedule on income and/or wealth, with revenues redistributed as a uniform per-capita transfer. The tax brackets and rates are exogenously specified and remain constant.
+  \item[CSC + AVoI.] A dynamic mechanism with parameters $\phi$ learned using Algorithm~\ref{alg:avoi}. The mechanism can adjust tax rates, dividend rules, and capability floors in response to inequality and capability metrics.
+\end{description}
+
+\subsection{Metrics}
+\label{subsec:metrics}
+
+We evaluate each regime using:
+
+\begin{itemize}
+  \item \textbf{Inequality:} Gini coefficient of wealth and of capabilities at each time step.
+  \item \textbf{Productivity:} macro output $Y_t$ and cumulative output over an episode.
+  \item \textbf{Flourishing:} HFI$_t$ and discounted cumulative HFI.
+  \item \textbf{Resilience:} frequency of collapse events, e.g., when a large fraction of agents fall below a capability threshold for multiple steps.
+\end{itemize}
+
+\section{Experiments and Results}
+\label{sec:experiments}
+
+We now present empirical results in the Silicon Commune environment. We focus on three questions: (1) How do different governance regimes trade off inequality and productivity? (2) Does CSC improve capability retention and resilience? (3) How important are HFI and AVoI as distinct components?
+
+\subsection{Experimental setup}
+\label{subsec:setup}
+
+Unless otherwise stated, we consider $N=1000$ agents, with $20\%$ initialized as owners and $80\%$ as citizens. Owners receive higher initial wealth and compute endowments. We run episodes of length $T$ and optimize agent policies using a policy-gradient MARL algorithm with shared parameters within each role type. The meta-optimizer updates mechanism parameters $\phi$ using an evolution-strategy estimator of $\nabla_{\phi} J(\phi)$ with outer-loop horizon $K$.
+
+We explore a range of hyperparameters (learning rates, tax parameterizations, HFI weights) and report results averaged over multiple random seeds. Due to space constraints, we defer implementation details to the appendix. We use PPO \cite{schulman2017proximal} for agent learning and CMA-ES \cite{hansen2016cma} for the meta-optimization of $\phi$.
+
+\subsection{Inequality--productivity trade-off}
+\label{subsec:tradeoff}
+
+Figure~\ref{fig:gini} compares the evolution of the wealth Gini coefficient under the three regimes in a simulation with $N=100$ agents (20 Owners, 80 Citizens). The Naive-RL baseline quickly converges to high inequality (Gini $>0.7$), as owners accumulate capital returns ($r > g$) given the Cobb-Douglas production Technology ($Y=AK^\alpha L^\beta$). The Classical Tax regime (fixed $\tau=0.4$) stabilizes inequality but dampens capital accumulation, reducing total output.
+
+By contrast, CSC with AVoI (Adaptive) learns a dynamic redistribution policy. It maintains a Gini coefficient near $0.3$ while preserving $>95\%$ of the Naive-RL output (Figure~\ref{fig:output}). The learned policy effectively discovers a "Laffer-optimal" curve that maximizes HFI by balancing incentives for owners with capability floors for citizens.
+
+\begin{figure}[t]
+  \centering
+  \subfigure[Gini coefficient over time]{%
+    \includegraphics[width=0.45\linewidth]{fig_gini_dynamic.pdf}
+    \label{fig:gini}
+  }
+  \hfill
+  \subfigure[Output vs.\ inequality]{%
+    \includegraphics[width=0.45\linewidth]{fig_tradeoff.pdf}
+    \label{fig:output}
+  }
+  \caption{Simulation results in The Silicon Commune. Left: Wealth Gini evolution over 50 years. CSC (Yellow) prevents the concentration seen in Naive-RL (Teal) without the stagnation of heavy Taxation (Purple). Right: The Efficiency Frontier showing CSC achieving a superior Pareto point.}
+\end{figure}
+
+\subsection{Capability retention and resilience}
+\label{subsec:resilience}
+
+We next examine capability dynamics. Under Naive-RL, a substantial fraction of citizens fall below minimal capability thresholds in education and health, and many never recover. This corresponds to persistent underclasses with limited access to opportunity, even as aggregate output grows.
+
+The Classical Tax regime prevents the worst collapses but often underinvests in autonomy-related capabilities, as transfers are primarily used for immediate consumption. In contrast, CSC policies learned under AVoI tend to allocate a portion of dividends to targeted capability investments when agents approach critical thresholds, leading to higher long-run HFI and fewer collapse events.
+
+\subsection{Ablation: role of HFI and AVoI}
+\label{subsec:ablation}
+
+To isolate the contributions of HFI and AVoI, we perform two ablations:
+
+\begin{description}
+  \item[No-AVoI.] We fix $\phi$ and directly optimize agents under the HFI-augmented objective, without outer-loop meta-optimization. Inequality is reduced relative to Naive-RL, but performance is sensitive to the hand-chosen mechanism and often either remains too unequal or sacrifices excessive output.
+  \item[No-HFI.] We keep AVoI but replace HFI with a simple sum of individual utilities that depend only on private consumption. The learned mechanisms resemble mild progressive taxation but neglect capability floors, leading to lower resilience and more frequent collapses.
+\end{description}
+
+These ablations suggest that both components are important: HFI provides a rich, capability-based welfare signal, while AVoI ensures that mechanisms are selected to be robust from the perspective of potentially disadvantaged roles.
+
+\section{Discussion and Limitations}
+\label{sec:discussion}
+
+Our results highlight the potential of computational social contracts in post-labor economies, but several limitations remain. First, the Silicon Commune is highly stylized; real-world economies exhibit richer sectoral structures, institutional constraints, and path dependencies \cite{schram2024laboratory,park2023generative}. Second, our modeling of agentic intelligence and compute is abstract; instantiating APF with empirically grounded measures of AI performance and deployment remains an open challenge \cite{brown2023language}. Third, the meta-RL approach raises issues of convergence, stability, and interpretability that we have only begun to address \cite{yang2026scalable,anthropic2023constitutional}.
+
+We view CSC as a conceptual and computational starting point. Future work could integrate more realistic macroeconomic models, incorporate heterogeneous preferences and political processes, and explore how CSC interacts with human democratic oversight.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have introduced a Computational Social Contract framework for post-labor economies, grounded in an Agentic Production Function, a capability-based Human Flourishing Index, and an Algorithmic Veil of Ignorance implemented as a meta-RL governance layer. In the Silicon Commune environment, CSC discovers redistribution mechanisms that mitigate compute hegemony, achieving low inequality and high productivity relative to laissez-faire and fixed-tax baselines. Our work suggests that, as AI agents assume a growing share of productive activity, algorithmic governance of redistribution may become a central tool for reconstructing wealth distribution in ways that prioritize human flourishing.
+
+\nocite{*}
+\bibliographystyle{plain}
+\bibliography{wealth_refs}
+
+\appendix
+
+\section{Implementation Details}
+
+\subsection{Environment Hyperparameters}
+We simulate $N=100$ agents. The production function is $Y_t = 10 \cdot K_t^{0.4} L_t^{0.6}$. Depreciation is $\delta=0.05$. Discount factor $\gamma=0.95$.
+
+\subsection{Learning Algorithms}
+Agents use PPO with a clip ratio of 0.2. The meta-optimizer (AVoI) uses CMA-ES with a population size of 16 to optimize mechanism parameters $\phi$.
+
+\section{Simulation Dynamics}
+\label{app:sim}
+
+The exact state update governing Agent $i$'s wealth $w_{i,t}$ is:
+\begin{align}
+    Y_t &= A K_t^\alpha L_t^\beta \\
+    r_t &= \alpha Y_t / K_t \\
+    w_t &= \beta Y_t / L_t \\
+    I_{i,t}^{pre} &= r_t k_{i,t} + w_t \\
+    I_{i,t}^{post} &= (1-\tau) I_{i,t}^{pre} + \frac{1}{N} \sum_j \tau I_{j,t}^{pre} \\
+    k_{i,t+1} &= (1-\delta) k_{i,t} + s_i I_{i,t}^{post}
+\end{align}
+where $k_{i,t}$ is individual capital/compute, $\tau$ is the tax rate (learned or fixed), and $s_i$ is the savings rate (policy).
+
+\end{document}

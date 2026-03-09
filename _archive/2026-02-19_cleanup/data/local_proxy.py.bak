@@ -1,0 +1,89 @@
+import socket
+import select
+import struct
+import sys
+import threading
+import time
+
+LOG_FILE = "/tmp/proxy.log"
+
+def log(msg):
+    with open(LOG_FILE, "a") as f:
+        f.write(f"[{time.strftime('%H:%M:%S')}] {msg}\n")
+        f.flush()
+
+def handle_client(client, remote_addr):
+    remote = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        log(f"Connecting to remote: {remote_addr}")
+        remote.settimeout(30)
+        remote.connect(remote_addr)
+        log(f"Connected to {remote_addr}")
+    except Exception as e:
+        log(f"Failed to connect to {remote_addr}: {e}")
+        client.close()
+        return
+
+    def forward(src, dst, direction):
+        try:
+            while True:
+                data = src.recv(4096)
+                if not data: break
+                dst.sendall(data)
+        except Exception as e:
+            pass
+        finally:
+            src.close()
+            dst.close()
+
+    threading.Thread(target=forward, args=(client, remote, "C->S"), daemon=True).start()
+    threading.Thread(target=forward, args=(remote, client, "S->C"), daemon=True).start()
+
+class Socks5Proxy:
+    def __init__(self, host='127.0.0.1', port=7890):
+        self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.server.bind((host, port))
+        self.server.listen(100)
+        log(f"Listening on {host}:{port}")
+
+    def run(self):
+        while True:
+            client, addr = self.server.accept()
+            # Basic SOCKS5 Handshake
+            try:
+                client.settimeout(30)
+                client.recv(262) # Auth methods
+                client.send(b"\x05\x00") # No Auth
+                
+                # Request
+                data = client.recv(4)
+                ver, cmd, rsv, atyp = struct.unpack("!BBBB", data)
+                if cmd != 1: client.close(); continue
+                
+                if atyp == 1: # IPv4
+                    addr = socket.inet_ntoa(client.recv(4))
+                    port = struct.unpack("!H", client.recv(2))[0]
+                elif atyp == 3: # Domain
+                    length = ord(client.recv(1))
+                    addr = client.recv(length).decode()
+                    port = struct.unpack("!H", client.recv(2))[0]
+                else:
+                    client.close(); continue
+                
+                log(f"Request: {addr}:{port}")
+                
+                # Reply OK
+                client.send(b"\x05\x00\x00\x01" + socket.inet_aton("0.0.0.0") + struct.pack("!H", 0))
+                
+                # Start forwarding
+                client.settimeout(None)
+                handle_client(client, (addr, port))
+            except Exception as e:
+                log(f"Handshake Error: {e}")
+                client.close()
+
+if __name__ == "__main__":
+    # Clear log
+    with open(LOG_FILE, "w") as f: f.write("Starting Proxy...\n")
+    Socks5Proxy().run()

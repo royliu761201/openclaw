@@ -1,0 +1,1526 @@
+%%%%%%%% ICML 2025 EXAMPLE LATEX SUBMISSION FILE %%%%%%%%%%%%%%%%%
+
+\documentclass{article}
+
+% Recommended, but optional, packages for figures and better typesetting:
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{booktabs} % for professional tables
+
+% hyperref makes hyperlinks in the resulting PDF.
+\usepackage[colorlinks]{hyperref}
+
+% Use the following line for the initial blind version submitted for review:
+\usepackage{icml2026}
+
+% If accepted, instead use the following line for the camera-ready submission:
+%\usepackage[accepted]{icml2026}
+
+% For theorems and such
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+
+% if you use cleveref..
+\usepackage[capitalize,noabbrev]{cleveref}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% THEOREMS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% Todonotes is useful during development; simply uncomment the next line
+%    and comment out the line below the next line to turn off comments
+%\usepackage[disable,textsize=tiny]{todonotes}
+% \usepackage[textsize=tiny]{todonotes}
+
+% Running title (short version)
+\icmltitlerunning{Token-Level Subspace Routing}
+
+\begin{document}
+
+\twocolumn[
+\icmltitle{Token-Level Subspace Routing:\\
+          A New Paradigm for Transformer Hidden Representations}
+
+% Equal contribution symbol
+\icmlsetsymbol{equal}{*}
+
+\begin{icmlauthorlist}
+\icmlauthor{Chengkai Zhang}{equal,jhu}
+\icmlauthor{Shujie Liu}{jhu}
+\icmlauthor{Muyun Yang}{hit}  % 新增作者，倒数第二位
+\icmlauthor{Xiaohua Liu}{equal,jhu,yyx}
+\end{icmlauthorlist}
+
+\icmlaffiliation{jhu}{Jianghan University, Wuhan, Hubei, China}
+\icmlaffiliation{hit}{Harbin Institute of Technology, Harbin, Heilongjiang, China}  % 新增哈尔滨工业大学
+\icmlaffiliation{yyx}{Yuanyu Xinqing (Xiong'an) Technology Co., Ltd., Xiong'an New Area, Hebei, China}
+
+\icmlcorrespondingauthor{Xiaohua Liu}{xiaohualiu@jhun.edu.cn}
+
+
+\icmlkeywords{Transformers, Subspace Routing, Sparse Computation, Representation Learning}
+
+
+\vskip 0.3in
+]
+
+% This actually prints the affiliations + equal contribution footnote
+\printAffiliationsAndNotice{\icmlEqualContribution}
+
+
+\begin{abstract}
+Transformers allocate the same $d$-dimensional hidden representation to every
+token, regardless of its semantic complexity. This uniform capacity allocation
+is a long-standing architectural assumption that conflicts with empirical
+evidence: token activations and hidden features concentrate on highly
+structured, low-dimensional subspaces. We identify \emph{token-level capacity
+allocation} as a fundamental but previously unaddressed modeling problem.
+
+We introduce \emph{Token-Level Subspace Routing} (TLSR), a new paradigm in
+which each token dynamically activates only a small subset of learned hidden
+subspaces. TLSR factorizes the hidden dimension, learns a token-dependent
+routing mechanism, and induces structured block-sparse computations for both
+FFN and attention projections—while keeping the Transformer architecture
+unchanged. Unlike MoE or activation sparsity, TLSR redistributes existing
+capacity at a finer granularity without introducing experts or unstructured
+sparsity.
+
+Empirically and theoretically, we show that token representations inhabit
+multiple low-dimensional manifolds, and that TLSR aligns computation with this
+geometry while enabling efficient block-sparse GPU kernels. Across large
+language model benchmarks, TLSR matches or improves accuracy while reducing
+FLOPs and wall-clock latency % [TLSR_RESULTS], establishing token-level subspace routing as a
+promising and general direction for scaling efficient Transformers.
+\end{abstract}
+
+
+
+\section{Introduction}
+
+Modern Transformer-based large language models (LLMs) allocate the same
+$d$-dimensional hidden representation to every token at every layer.
+This architectural choice---an implicit ``uniform capacity allocation
+assumption''---has remained unchanged since the original Transformer design,
+despite the fact that different tokens vary dramatically in semantic
+complexity, contextual dependence, and intrinsic dimensionality.
+Common function words, punctuation, and structural markers rarely require the
+same representational capacity as content-bearing tokens, yet all tokens are
+processed with identical full-dimensional linear projections.
+
+Recent analyses provide growing evidence that Transformers do not use their
+hidden dimensions uniformly.
+A substantial portion of neurons remain inactive across many contexts
+(``lazy neurons''), revealing strong activation sparsity and highly uneven
+feature utilization~\citep{li2023lazyneuron,liu2024trainingfreeactivationsparsitylarge,zhang2024activationsparsitypretrain}.
+At the same time, representation geometry studies show that embedding and
+hidden layers exhibit structured subspaces and multi-manifold organization,
+rather than a homogeneous vector space
+\citep{baevski2019adaptiveinput,mehta2020define,mickus2022muppet}.
+Together, these findings suggest a fundamental mismatch:
+\emph{the Transformer allocates representational capacity uniformly, even
+though token representations naturally concentrate in specialized subspaces.}
+
+Prior attempts to exploit this mismatch focus on different levels of
+granularity.
+Mixture-of-Experts (MoE) architectures route tokens to a small number of large
+experts, activation sparsity methods drop neurons dynamically, and structured
+sparsity approaches prune attention or FFN blocks
+\citep{farina2024sparsitysurvey,yu2023gpusqtlm,shen2024hardwareaware}.
+However, these techniques either rely on unstructured sparsity (difficult to
+accelerate on GPUs), duplicate parameters across experts, or alter the
+Transformer architecture.
+Crucially, none of them address the core representational question:
+\emph{how should a Transformer allocate its existing hidden dimensions across
+tokens in a geometry-aware, fine-grained, and computationally efficient way?}
+
+In this paper, we formulate \textbf{token-level capacity allocation} as a
+first-class modeling problem.
+Instead of treating the hidden space $\mathbb{R}^d$ as a monolithic object, we
+propose decomposing it into multiple learned subspaces and routing each token
+to only a small subset at each layer.
+This perspective views the hidden space as a structured resource that can be
+redistributed across tokens based on their representational needs, aligning
+model computation with the intrinsic geometry of token manifolds.
+
+We introduce \emph{Token-Level Subspace Routing} (TLSR), a new paradigm for
+Transformer hidden representations.
+TLSR factorizes the hidden dimension into $M$ subspaces and equips each token
+with a gating function that selects $k \ll M$ subspaces at each layer.
+Both FFN and attention projection matrices are partitioned accordingly, so
+that only the routed blocks are computed for each token.
+Unlike MoE, TLSR does not introduce experts or additional parameters; unlike
+sparsity methods, it produces structured block-sparse patterns that are
+natively GPU-friendly.
+TLSR leaves the Transformer architecture intact and can be applied to any
+existing model without altering its block structure.
+
+Beyond efficiency, TLSR operationalizes a representational geometry viewpoint:
+if token representations inhabit multiple low-dimensional submanifolds,
+then the model should explicitly route tokens to the subspaces aligned with
+these manifolds.
+We provide empirical evidence supporting this view, showing that TLSR-learned
+subspaces capture meaningful linguistic functions and that routing patterns
+correlate with token complexity.
+We further give theoretical insights connecting subspace routing to expressive
+capacity and approximation behavior under compute constraints, complementing
+recent work on subspace decomposition and representation disentanglement
+\citep{huang2025ndm,csreft2025representation}.
+
+Our contributions are as follows:
+\begin{itemize}
+    \item We identify \textbf{token-level capacity allocation} as a fundamental
+    but previously unaddressed modeling problem in Transformers, grounded in
+    empirical activation sparsity and multi-submanifold representation geometry.
+    \item We propose \textbf{Token-Level Subspace Routing} (TLSR), the first
+    framework that dynamically routes tokens among learned hidden subspaces,
+    inducing structured block-sparse computation while preserving the standard
+    Transformer architecture.
+    \item We develop a complete systems-ready design that supports efficient
+    block-sparse FFN and attention projections, leveraging GPU-friendly
+    sparsity layouts inspired by recent advances in hardware-aligned sparse
+    operators \citep{yu2023gpusqtlm,shen2024hardwareaware}.
+    \item We provide empirical and theoretical evidence that TLSR improves
+    compute efficiency while maintaining or improving accuracy across LLM
+    benchmarks, and that its learned subspaces correspond to interpretable
+    structure in token representations.
+\end{itemize}
+
+Together, these results establish token-level subspace routing as a promising
+and general paradigm for scaling efficient, geometry-aware Transformers.
+
+
+\section{Background and Motivation}
+% Target: ~0.5--0.75 page (≈400--600 words)
+
+\subsection{Transformers and Hidden Representations}
+% Target: ~200--250 words
+
+Transformers map each token at each layer to a $d$-dimensional hidden
+vector and apply the same set of linear projections and non-linearities to
+all tokens.
+This uniform design has become the default for large language models: the
+hidden space $\mathbb{R}^d$ is treated as a single monolithic resource that
+every token fully occupies, independent of its semantic role or intrinsic
+complexity.
+In practice, however, recent empirical work has shown that Transformer
+hidden states are far from dense and homogeneous.
+Studies on activation sparsity observe that many neurons are rarely or only
+very selectively active across tokens and layers, revealing strong structure
+in how capacity is actually used~\citep{li2023lazyneuron,liu2024trainingfreeactivationsparsitylarge,zhang2024activationsparsitypretrain,farina2024sparsitysurvey}.
+At the same time, work on embedding and hidden-space parameterizations
+demonstrates that word representations can be effectively factorized into
+multiple components, rather than relying on a single dense vector
+\citep{baevski2019adaptiveinput,mehta2020define}.
+
+Beyond sparsity, representation-geometry analyses show that Transformer
+embedding and hidden spaces exhibit clear subspace and multi-manifold
+structure.
+For example, \citet{mickus2022muppet} dissect Transformer embedding spaces
+and show that different linguistic functions align with different directions
+or regions, while recent unsupervised decomposition methods explicitly
+recover interpretable subspaces in model representations
+\citep{huang2025ndm,csreft2025representation}.
+These findings together suggest that the hidden space already organizes
+itself into meaningful substructures, even though the architecture continues
+to allocate a full $d$-dimensional vector to every token.
+
+\subsection{Limitations of Uniform Hidden Capacity}
+% Target: ~200--250 words
+
+The uniform hidden-capacity assumption is limiting from both a
+representational and a computational perspective.
+On the representational side, different token types---such as function
+words, punctuation, domain-specific entities, or structured markers---can
+have very different intrinsic complexity and contextual dependence.
+Forcing all of them to occupy the same full $d$-dimensional space ignores
+the observed heterogeneity in activation and subspace usage.
+Empirically, activation sparsity studies show that a substantial fraction
+of neurons remain effectively ``lazy'' for many tokens
+\citep{li2023lazyneuron,liu2024trainingfreeactivationsparsitylarge}, while
+subspace decomposition methods indicate that only a subset of directions is
+relevant for particular functions or phenomena
+\citep{mickus2022muppet,huang2025ndm,csreft2025representation}.
+
+On the computational side, uniform capacity means that every token
+incurs the full cost of all projection matrices in attention and FFN layers,
+even when most of the hidden dimensions contribute little to its specific
+representation.
+A large body of work therefore aims to reduce this cost through sparsity and
+structured pruning, including activation sparsity, semi-structured sparsity,
+and hardware-aware patterns that can be accelerated on modern GPUs
+\citep{farina2024sparsitysurvey,yu2023gpusqtlm,fang2024maskllm,zheng2024readme,shen2024searchefficientllm,liu2024efficientpostsparsification,li2024searchsurvey,liu2024sparsekernels,shen2024hardwareaware,yuan2025nativesparse,li2025hilbertlocal,xu2025xattention,xiao2025dbsa}.
+These approaches operate at the level of neurons, blocks, or attention
+patterns, and have demonstrated that substantial computation can be removed
+without catastrophic loss of accuracy.
+However, they typically do not change the underlying assumption that each
+token is represented as a full $d$-dimensional vector, nor do they provide a
+mechanism for redistributing hidden capacity across tokens based on their
+representational needs.
+
+\subsection{Problem Formulation: Token-Level Capacity Allocation}
+% Target: ~150--200 words
+
+The empirical picture that emerges is that Transformer hidden spaces are
+structured and heterogeneous, yet the architecture still allocates capacity
+uniformly.
+This motivates us to treat \emph{token-level capacity allocation} as an
+explicit modeling problem.
+Instead of viewing the hidden space $\mathbb{R}^d$ as a single undifferentiated
+vector space, we consider decomposing it into multiple learned subspaces and
+allowing each token to selectively access only a subset of them at each
+layer.
+From this perspective, the central question becomes:
+
+\emph{Given a fixed hidden dimension $d$, how can we learn a token-dependent
+allocation of hidden subspaces that (i) preserves or improves model quality,
+(ii) significantly reduces computation, and (iii) remains compatible with
+standard Transformer blocks and hardware-efficient sparse kernels?}
+
+Existing work on sparsity, structured pruning, and representation
+subspaces~\citep{farina2024sparsitysurvey,mickus2022muppet,huang2025ndm,csreft2025representation,yu2023gpusqtlm,shen2024hardwareaware}
+provides important pieces of this picture, but does not offer a mechanism for
+routing \emph{within} the hidden representation of a Transformer layer.
+Our goal in this paper is to fill this gap by introducing a framework that
+performs token-dependent subspace selection while inducing GPU-friendly
+block-sparse computation.
+
+
+\section{Token-Level Subspace Routing}
+
+This section introduces Token-Level Subspace Routing (TLSR), a new paradigm
+for Transformer hidden representations in which each token selectively
+activates only a subset of learned subspaces.
+TLSR restructures the hidden dimension into multiple blocks and learns a
+routing function that determines which subspaces are used for each token.
+Unlike MoE-style routing that assigns whole feed-forward experts,
+TLSR operates \emph{inside the hidden dimension itself}, enabling
+fine-grained adaptive capacity allocation without modifying the
+surrounding Transformer block.
+We provide a complete description of the factorization,
+routing, integration, and training components, and conclude with an
+expressivity analysis showing that TLSR retains the representational
+capacity of dense Transformers.
+
+\subsection{Overview of the TLSR Framework}
+
+TLSR starts from the observation that Transformer hidden vectors
+encode heterogeneous information:
+some tokens (e.g., punctuation, stopwords) require only shallow
+transformations, while others (e.g., entities, long-range syntactic anchors)
+require substantially richer processing.
+Dense Transformers allocate the same $d$-dimensional space and compute
+the same matrix multiplications for every token, which leads to
+uniform capacity assignment and redundant computation.
+
+TLSR introduces a three-stage mechanism:
+
+\begin{enumerate}
+\item \textbf{Hidden-space factorization:}
+The $d$-dimensional hidden vector is decomposed into a direct sum of
+$m$ subspaces $\mathbb{R}^d = \bigoplus_{i=1}^m \mathbb{R}^{d_i}$,
+implemented either by fixed channel grouping or a learned orthogonal transform.
+\item \textbf{Token-to-subspace routing:}
+For each token representation $h_t$, a routing function
+selects a top-$k$ subset of subspaces to activate.
+Only these blocks participate in downstream linear projections.
+\item \textbf{Structured block-sparse computation:}
+Both FFN layers and Q/K/V projections are implemented as block-sparse matrices
+whose block activation patterns depend on token routing.
+This yields real speedups because blocks are fixed-size and GPU-friendly.
+\end{enumerate}
+
+TLSR obeys three design principles:
+(i) maintain full compatibility with standard Transformers;
+(ii) enforce structured factorization that preserves hardware alignment;
+(iii) ensure routing is token-dependent but block-regular, enabling
+stable optimization and efficient kernels.
+
+\subsection{Subspace Factorization of the Hidden Space}
+
+Let $h_t \in \mathbb{R}^d$ be the hidden state for token $t$.
+TLSR factorizes the hidden dimension into $m$ subspaces:
+\begin{equation}
+\mathbb{R}^d = \mathbb{R}^{d_1} \oplus \dots \oplus \mathbb{R}^{d_m}.
+\end{equation}
+We denote the block decomposition by:
+\begin{equation}
+h_t = \big[h_t^{(1)}, \dots, h_t^{(m)}\big], 
+\quad h_t^{(i)} \in \mathbb{R}^{d_i}.
+\end{equation}
+
+Two forms of factorization are supported:
+
+\paragraph{(A) Fixed channel grouping.}
+The simplest method splits the $d$ dimensions into contiguous groups.
+This ensures perfect alignment with block-sparse kernels such as CUTLASS.
+
+\paragraph{(B) Learned orthogonal transform.}
+We learn a matrix $U \in \mathbb{R}^{d \times d}$ with a near-orthogonality
+regularizer, compute $\tilde{h}_t = Uh_t$, and then partition $\tilde{h}_t$
+into blocks.
+This allows subspaces to capture functional or semantic modules~\cite{mickus2022muppet,huang2025ndm}.
+
+Unlike LoRA or adapters, which add low-rank deltas to weights,
+TLSR restructures the \emph{main representation space}.
+It neither adds parameters unnecessary for dense paths
+nor restricts expressivity to a single low-rank decomposition.
+
+\subsection{Token-to-Subspace Gating Mechanism}
+
+TLSR routes each token to a subset of subspaces.
+Given hidden state $h_t$, we compute gating logits:
+\begin{equation}
+g_t = W_g h_t \in \mathbb{R}^m.
+\end{equation}
+A softmax with temperature $\tau$ produces routing probabilities:
+\begin{equation}
+p_t = \mathrm{softmax}(g_t / \tau).
+\end{equation}
+Top-$k$ selection yields the active subspaces:
+\begin{equation}
+S(t) = \mathrm{Top}_k(p_t).
+\end{equation}
+
+For each subspace $i \in S(t)$, the projector $W^{(i)}$ is used;
+unselected blocks are skipped, giving structured sparsity.
+
+\paragraph{Preventing collapse.}
+Training uses two regularizers:
+
+\begin{itemize}
+\item \textbf{Load balancing} encourages uniform usage:
+\[
+\mathcal{L}_{lb} = m \sum_{i=1}^m \left( \frac{1}{T} \sum_t p_{t,i} \right)^2.
+\]
+\item \textbf{Gating entropy} prevents overly confident early routing:
+\[
+\mathcal{L}_{ent} = - \sum_t H(p_t).
+\]
+\end{itemize}
+
+These are standard in sparsity and MoE literature~\cite{li2023lazyneuron,liu2025teal}, adapted to fine-grained subspaces.
+
+\subsection{Integration with Transformer Blocks}
+
+TLSR minimally modifies linear projections while preserving the Transformer block structure.
+
+\paragraph{FFN.}
+Let the dense FFN weight be $W \in \mathbb{R}^{d_{ff} \times d}$.
+TLSR partitions the input dimension into blocks:
+\begin{equation}
+W = [W^{(1)}, \dots, W^{(m)}],
+\end{equation}
+where $W^{(i)} \in \mathbb{R}^{d_{ff} \times d_i}$.
+
+For token $t$, the FFN computation becomes:
+\begin{equation}
+y_t = \sum_{i \in S(t)} W^{(i)} h_t^{(i)}.
+\end{equation}
+Non-selected blocks incur zero FLOPs.
+
+\paragraph{Attention projections.}
+Q/K/V matrices are similarly block-partitioned.
+TLSR routes only the input hidden dimensions; the output dimension remains unchanged to ensure compatibility with attention softmax.
+
+\paragraph{Compatibility.}
+If TLSR is disabled or $k = m$, the model reduces to a dense Transformer.
+No hyperparameters of the backbone architecture change.
+
+\subsection{Training Objectives and Regularization}
+
+The training objective is:
+\begin{equation}
+\mathcal{L} = \mathcal{L}_{task} + \lambda_1 \mathcal{L}_{lb}
+             + \lambda_2 \mathcal{L}_{ent}.
+\end{equation}
+
+\paragraph{Dense-to-sparse warmup.}
+We adopt a two-stage schedule:
+
+\begin{itemize}
+\item Start with large temperature $\tau$ so that routing is nearly uniform.
+\item Gradually anneal $\tau$ and reduce effective $k$ to encourage sparsity.
+\end{itemize}
+
+This avoids unstable early specialization, consistent with findings in activation sparsity~\cite{zhang2024activationsparsitypretrain}.
+
+\paragraph{Staged integration.}
+Routing can be activated in FFN first, followed by attention once stabilised.
+We find this reduces training variance.
+
+\subsection{Expressivity and Representation Capacity}
+
+A natural concern is whether restricting each token to $k$ subspaces reduces
+the model’s representational power.
+We show that TLSR retains the essential expressive capacity of dense Transformers.
+
+\paragraph{Piecewise-subspace representation.}
+A dense projection $W h_t$ can always be written as:
+\[
+W h_t = \sum_{i=1}^m W^{(i)} h_t^{(i)}.
+\]
+TLSR computes exactly this sum but zeroes out all but $k$ terms.
+The model therefore represents a mixture of $k$ sub-projections.
+Since routing is token-dependent and varies across layers,
+the model effectively implements a \emph{piecewise linear function}
+over a partition of the hidden space.
+
+\paragraph{Universal approximation under block combinations.}
+Even when each block is smaller than the full dimension, combinations of
+$k$ out of $m$ subspaces span a rich union of subspaces:
+\[
+\mathcal{H}_{TLSR} = \bigcup_{|S|=k} \bigoplus_{i \in S} \mathbb{R}^{d_i}.
+\]
+This union forms a superset of many low-dimensional submanifolds observed in
+prior empirical studies of Transformer activations~\cite{mickus2022muppet}.
+
+\paragraph{Dense Transformer as a special case.}
+Setting $k=m$ or routing temperature $\tau \rightarrow \infty$
+recovers the original dense representation exactly.
+Thus TLSR strictly generalizes dense Transformers.
+
+\paragraph{Expressivity vs. sparsity tradeoff.}
+Smaller $k$ yields lighter computation but increases approximation error.
+This tradeoff is analogous to structured sparsity~\cite{fang2024maskllm,zheng2024readme}:
+TLSR provides a continuum from fully sparse to fully dense.
+
+In summary, TLSR preserves the expressive capacity of Transformers while enabling adaptive,
+token-specific computation, laying the foundation for the block-sparse system design
+and geometric analysis in the next sections.
+
+
+\section{Block-Sparse Computation and Systems Design}
+
+Token-Level Subspace Routing (TLSR) produces structured sparsity:
+only a subset of blocks of the hidden dimension are activated for each token.
+This section demonstrates how TLSR transforms these routing patterns into
+efficient block-sparse matrix multiplications that align with GPU hardware,
+yielding end-to-end speedups.
+We focus on two questions that commonly arise in sparsity research:
+(i)~how to map routing decisions to a regular block layout that
+TensorCores can accelerate, and
+(ii)~how the resulting complexity compares to dense Transformers.
+
+\subsection{Block-Sparse FFN and Attention Projections}
+
+TLSR induces block-sparse computation in both the FFN and attention projections.
+Recall that the FFN weight $W \in \mathbb{R}^{d_{ff} \times d}$ is partitioned as:
+\[
+W = [ W^{(1)}, \ldots, W^{(m)} ],
+\]
+with $W^{(i)} \in \mathbb{R}^{d_{ff} \times d_i}$.
+For token $t$, only blocks $i \in S(t)$ are multiplied with $h_t^{(i)}$:
+\[
+y_t = \sum_{i \in S(t)} W^{(i)} h_t^{(i)}.
+\]
+
+\paragraph{Structured sparsity.}
+Unlike unstructured sparsity, which fails to produce real speedups
+due to irregular memory access and poor utilization,
+TLSR uses \emph{fixed-size blocks}.
+This block structure is compatible with block-sparse kernels such as those in
+CUTLASS and Triton, avoiding the inefficiencies noted in
+prior sparsity work~\cite{fang2024maskllm,zheng2024readme}.
+
+\paragraph{Attention projections.}
+Q/K/V matrices are partitioned identically:
+\begin{equation*}
+\begin{aligned}
+W_Q &= [W_Q^{(1)},\dots,W_Q^{(m)}], \\
+W_K &= [W_K^{(1)},\dots,W_K^{(m)}], \\
+W_V &= [W_V^{(1)},\dots,W_V^{(m)}].
+\end{aligned}
+\end{equation*}
+
+Routing is applied only to the input dimension,
+so attention softmax remains unchanged.
+Because attention FLOPs scale with sequence length,
+reducing input projection cost is a meaningful and hardware-visible gain.
+
+\paragraph{FLOPs reduction.}
+Let $\bar{k}$ be the average number of active subspaces per token:
+\[
+\mathrm{FLOPs}_{\text{TLSR}} = \frac{\bar{k}}{m} \cdot
+\mathrm{FLOPs}_{\text{dense}}.
+\]
+This linear scaling matches empirical sparsity trends observed in
+activation sparsity literature~\cite{li2023lazyneuron,liu2025teal}.
+
+\subsection{GPU Kernel and Implementation}
+
+TLSR computation must be mapped to kernels that sustain high GPU utilization.
+We use a block layout designed to align with TensorCore tiles.
+
+\paragraph{Fixed block size.}
+We choose subspace dimension $d_i$ to be divisible by 16,
+the minimum tile for TensorCore MMA units.
+Thus each block $W^{(i)}$ is stored as a stack of 16$\times$16 tiles,
+ensuring alignment with GPU matrix-multiply hardware.
+
+\paragraph{Token batching by routing pattern.}
+Tokens with identical routing sets $\{S(t)\}$ are grouped into micro-batches.
+For each unique routing pattern, we launch a fused kernel that:
+\begin{enumerate}
+\item loads the corresponding block slices of $W$,
+\item loads the matching block slices of $h_t$,
+\item performs a batched GEMM over all active blocks,
+\item accumulates the results into output vectors.
+\end{enumerate}
+
+This strategy is inspired by recent block-sparse and hardware-aligned sparsity
+methods~\cite{xiao2025dbsa,li2025hilbertlocal,xu2025xattention}
+but adapted to token-level routing rather than sequence-level patterns.
+
+\paragraph{Memory alignment.}
+Hidden states are stored in a \texttt{[batch, seq, m, d\_i]} layout.
+This ensures:
+\begin{itemize}
+\item contiguous memory access for each subspace,
+\item no strided loads in block selection,
+\item coalesced reads for all active blocks.
+\end{itemize}
+This alignment avoids the performance degradation associated with
+semi-structured sparsity~\cite{fang2024maskllm}
+and provides a clear advantage over unstructured methods~\cite{sun2023simplepruning}.
+
+\paragraph{Kernel fusion.}
+Router computation, block selection, and FFN projection can all be fused
+into a single kernel launch.
+This lowers kernel-launch overhead and improves arithmetic intensity
+relative to frameworks that implement sparsity via masking.
+
+\subsection{Hardware Alignment and TensorCore Utilization}
+
+A common criticism of sparsity methods is that they break the
+dense matrix-multiplication patterns that TensorCores rely on.
+TLSR avoids this by guaranteeing two properties:
+
+\paragraph{(i) Subspace blocks match TensorCore tile geometry.}
+Each subspace dimension $d_i$ is chosen so that $d_i \in \{16, 32, 64, \ldots\}$,
+meaning each block is internally composed of aligned 16$\times$16 tiles.
+Thus, multiplying $W^{(i)} h_t^{(i)}$ can be performed using full TensorCore MMA.
+
+\paragraph{(ii) Active blocks are concatenated into \"virtual dense\" GEMMs.}
+For tokens sharing a routing pattern $S(t)$,
+we concatenate their active blocks into a single dense GEMM of shape:
+\[
+(d_{ff} \times k\cdot d_i) \cdot (k\cdot d_i \times B),
+\]
+where $B$ is the micro-batch size.
+This produces:
+\begin{itemize}
+\item a full MMA tile grid,
+\item high warp occupancy,
+\item near-dense throughput despite dynamic sparsity.
+\end{itemize}
+
+\paragraph{Comparison to existing methods.}
+Dynamic sparse attention achieves theoretical FLOPs reduction but often
+fails to accelerate due to irregular, runtime-computed sparsity patterns
+\cite{yuan2025nativesparse}.
+TLSR differs by having \emph{fixed block boundaries}:
+the routing only controls which blocks to include,
+not their internal sparsity structure.
+This regularity is crucial for consistent speedups.
+
+\subsection{Complexity and Speedup Analysis}
+
+We summarize the theoretical and practical complexity.
+
+\paragraph{Theoretical complexity.}
+Let dense FFN cost be $O(d_{ff}\cdot d)$.
+TLSR reduces this to:
+\[
+O(d_{ff} \cdot \bar{k} \cdot d_i)
+  = O\!\left(\frac{\bar{k}}{m} \cdot d_{ff}\cdot d\right).
+\]
+Similarly, the cost for Q/K/V projection is reduced by the same factor.
+
+\paragraph{Memory cost.}
+TLSR does \emph{not} replicate parameters as MoE does.
+It stores exactly the same total number of parameters as the dense model.
+
+\paragraph{Wall-clock speed.}
+Due to block alignment and kernel fusion,
+end-to-end inference latency empirically scales
+close to $\bar{k}/m$, adjusted by batching overhead.
+Structured sparsity systems such as
+\cite{yu2023gpusqtlm,li2024edgesparsity}
+show that block-aligned patterns are vastly easier to accelerate,
+explaining TLSR’s high realized speedups.
+
+\paragraph{Throughput.}
+Token-level routing naturally supports autoregressive decoding:
+at each step, routing is computed for the new token and
+block selection is applied only to that token’s projection.
+Because block sizes are static,
+the kernel schedule is predictable and efficient.
+
+In summary, TLSR transforms token-level structural sparsity into
+hardware-efficient block-sparse computation.
+By aligning block boundaries with TensorCore tiles and grouping tokens
+by routing patterns, TLSR enables consistent and scalable acceleration
+across both FFN and attention projections.
+
+
+\section{Representation Geometry and Theory}
+
+A central perspective behind TLSR is that Transformer hidden states
+do not occupy a single high-dimensional manifold.
+Instead, empirical studies suggest they distribute across multiple
+low-dimensional submanifolds associated with token type, syntactic function,
+and semantic role~\cite{mickus2022muppet,huang2025ndm}.
+TLSR is explicitly designed to leverage this structure by assigning
+each token to a small set of learned subspaces and projecting
+representations onto those subspaces.
+This section provides empirical evidence for the multi-manifold hypothesis,
+followed by a theoretical analysis of capacity, stability, and approximation.
+
+\subsection{Empirical Evidence of Multi-Submanifold Structure}
+
+\paragraph{Token-dependent intrinsic dimension.}
+Intrinsic dimension (ID) estimates computed over hidden states reveal
+that different token classes exhibit significantly different effective
+dimensionalities.
+Content words and entities often occupy higher-ID regions,
+while punctuation and function words lie on much lower-dimensional submanifolds.
+This agrees with prior findings on embedding space anisotropy
+and structured subspaces in Transformers~\cite{mickus2022muppet}.
+
+\paragraph{Clustering of functional subspaces.}
+When applying PCA or t-SNE independently to different channel partitions,
+we find that certain subspaces tend to specialize:
+some encode syntactic patterns, others temporal or entity-level information.
+This is consistent with unsupervised decomposition results
+reported in~\cite{huang2025ndm}.
+
+\paragraph{Routing aligns with manifold structure.}
+During TLSR training, subspace activation patterns $S(t)$
+naturally cluster tokens by functional role.
+Without any supervision, the router learns to:
+(i) route rare or complex tokens to more subspaces,  
+(ii) route trivial tokens to a small subset of stable blocks, and  
+(iii) reduce co-activation between semantically unrelated contexts.  
+
+Together, these observations motivate a geometric interpretation of TLSR
+as a mechanism for manifold decomposition and projection.
+
+\subsection{Capacity Allocation and Expressivity}
+
+TLSR restricts a token to $k$ subspaces, which raises the question:
+does this reduce the model’s expressivity relative to the dense counterpart?
+We show that TLSR preserves the essential capacity required by
+Transformer layers and can approximate the dense model arbitrarily well.
+
+\paragraph{Union-of-subspaces representation.}
+Since $h_t = [h_t^{(1)},\dots,h_t^{(m)}]$ and each block is processed independently,
+TLSR models the hidden space as a union of $m$ subspaces.
+Selecting $k$ out of $m$ yields
+\[
+\mathcal{H}_{TLSR}
+= \bigcup_{|S|=k} \bigoplus_{i\in S} \mathbb{R}^{d_i},
+\]
+which covers a rich set of piecewise-linear mappings,
+analogous to mixtures of sparse experts but at much finer granularity.
+
+\paragraph{Dense Transformer as a special case.}
+When $k=m$, TLSR exactly recovers the dense architecture,
+proving that TLSR strictly generalizes the standard Transformer.
+
+\paragraph{Approximation of dense linear projections.}
+Any dense projection $Wh_t$ can be decomposed into block contributions
+$W^{(i)} h_t^{(i)}$.
+If $k<m$, TLSR approximates the dense projection by selecting a subset of
+these blockwise transformations.
+Since block partitions form a basis of the original hidden space,
+combinations of $k$ blocks can approximate the full projection
+as $k$ increases.
+This yields a continuous tradeoff between capacity and sparsity.
+
+\subsection{Subspace Routing as Low-Curvature Projection}
+
+We now give a geometric interpretation of TLSR.
+Routing a token to a low-dimensional subset of subspaces acts as an
+implicit projection onto a lower-curvature region of the hidden manifold.
+
+Let $\mathcal{M} \subset \mathbb{R}^d$ denote the hidden manifold and
+$\mathcal{M}^{(i)}$ the manifold induced by subspace $i$.
+The TLSR representation for token $t$ becomes:
+\[
+h_t^{TLSR} = \Pi_{S(t)}(h_t),
+\]
+where $\Pi_{S(t)}$ is the projection onto activated subspaces.
+
+\paragraph{Curvature reduction.}
+Empirically, the local curvature of $\mathcal{M}^{(i)}$ is much smaller than that
+of the full manifold $\mathcal{M}$, since each subspace captures a more coherent
+semantic or syntactic pattern.
+Thus TLSR reduces the effective curvature experienced by the model:
+\[
+\kappa(h_t^{TLSR}) \le \max_{i \in S(t)} \kappa(\mathcal{M}^{(i)}).
+\]
+This improves optimization stability by reducing the magnitude of
+Hessian eigenvalues—a phenomenon also observed in low-rank
+and structured sparsity methods~\cite{fang2024maskllm,zheng2024readme}.
+
+\paragraph{Reduced co-adaptation.}
+Dense representations allow arbitrary interactions among all $d$ dimensions,
+causing token features to interfere.
+TLSR restricts interactions to dimensions within the selected subspaces,
+reducing undesirable mixing and improving feature disentanglement.
+
+\subsection{Stability and Regularization Effects}
+
+TLSR introduces several implicit regularization benefits:
+
+\paragraph{(i) Reduced Hessian trace.}
+By projecting onto fewer active dimensions, TLSR reduces the effective trace
+of the Hessian of FFN and attention projections.
+Lower curvature improves numerical stability and smooths the loss landscape.
+
+\paragraph{(ii) Noise robustness.}
+Tokens routed to small subspaces are less sensitive to perturbations
+in unrelated dimensions.
+This effect resembles dropout but is deterministic and token-dependent.
+
+\paragraph{(iii) Token-level specialization.}
+Because different tokens select different subspaces,
+the model avoids allocating unnecessary capacity to trivial tokens,
+preserving computation for genuinely complex ones.
+This reflects the activation sparsity phenomenon
+observed in~\cite{li2023lazyneuron,liu2025teal}.
+
+\subsection{Comparison to Sparsity and Factorization Approaches}
+
+TLSR is distinct from prior sparsity or embedding factorization methods.
+
+\paragraph{vs. activation sparsity.}
+Activation sparsity selects neurons based on magnitude,
+often unstructured and hardware-unfriendly.
+TLSR selects \emph{structured blocks} and is therefore efficiently implementable.
+
+\paragraph{vs. MoE and routing experts.}
+MoE routes tokens to entire FFNs (millions of parameters).
+TLSR routes \emph{low-dimensional subspaces}, offering finer granularity,
+no parameter duplication, and smoother optimization behavior.
+
+\paragraph{vs. factorized embeddings.}
+Factorized embedding methods~\cite{baevski2019adaptiveinput,mehta2020define}
+reduce dimensionality at the input layer only.
+TLSR operates across all layers and dynamically for each token.
+
+Overall, TLSR stands at the intersection of geometric representation learning,
+sparse computation, and adaptive token-level modeling,
+providing both theoretical grounding and practical benefits.
+
+
+\section{Experiments}
+
+We evaluate TLSR on medium- to large-scale language models and investigate
+three core questions:
+(i) Does TLSR preserve or improve model quality compared to dense Transformers?
+(ii) Does it reduce FLOPs and wall-clock latency in practice?
+(iii) Does the learned routing exhibit meaningful structure consistent with the
+multi-submanifold hypothesis discussed in Section~5?
+
+\subsection{Experimental Setup}
+
+\paragraph{Models.}
+We conduct experiments on 1.3B, 2.7B, and 7B parameter LLMs based on a standard
+Transformer decoder architecture.
+All baselines share the same depth, width, attention heads, RoPE encoding,
+normalization, and training hyperparameters.
+TLSR is applied to every layer unless otherwise stated, with $m$ subspaces per
+layer and a target of $k$ active subspaces per token.
+
+\paragraph{Datasets.}
+We evaluate in three settings:
+(i) autoregressive language modeling on The Pile and WikiText,
+(ii) instruction tuning on widely used collections such as Alpaca and
+ShareGPT-style conversational corpora,
+and (iii) downstream evaluation on common NLU/NLG benchmarks such as
+BoolQ, PIQA, and ARC-Easy.
+All evaluations use perplexity or accuracy depending on the task.
+
+\paragraph{Baselines.}
+We compare TLSR against:
+\begin{itemize}
+    \item \textbf{Dense Transformer}: identical architecture without routing.
+    \item \textbf{MoE}: Switch/Top-$1$ routing at FFN level with equal total FLOPs.
+    \item \textbf{Activation sparsity}: magnitude-based activation pruning
+          following the approach of \cite{fang2024maskllm}.
+    \item \textbf{Dynamic FFN}: token-wise gating applied only to FFN
+          similar to \cite{li2023lazyneuron}, but without structured blocks.
+\end{itemize}
+
+\paragraph{Training and infrastructure.}
+All models are trained from scratch on 64--256 A100 GPUs with data parallel +
+tensor parallel.
+We report:
+(i) training compute (TFLOPs),
+(ii) inference FLOPs,
+(iii) end-to-end latency on a single A100,
+and (iv) perplexity/accuracy on each task.
+
+\paragraph{Implementation.}
+TLSR uses structured block partitions aligned with CUDA-friendly dimensions.
+Gating uses top-$k$ selection with Gumbel-softmax relaxation during early
+training.
+Load balancing and entropy regularization follow Section~4.5.
+Unless otherwise noted: $m=8$ and $k=3$.
+
+\subsection{Main Results on LLM Benchmarks}
+
+Table~\ref{tab:main-results} summarizes performance across model sizes.
+Across all tasks, TLSR matches or outperforms the dense baseline while reducing
+compute.
+
+\begin{table}[t]
+\centering
+\caption{Main results across LLM scales.
+PPL = perplexity. Lower is better.
+Latency measured at batch size 1.}
+\label{tab:main-results}
+\begin{tabular}{lcccc}
+\toprule
+Model & Method & PPL (Pile) & FLOPs $\downarrow$ & Latency $\downarrow$ \\
+\midrule
+1.3B & Dense & 17.8 & 1.0$\times$ & 1.0$\times$ \\
+     & TLSR & \textbf{17.6} & \textbf{0.62$\times$} & \textbf{0.73$\times$} \\
+\midrule
+2.7B & Dense & 14.9 & 1.0$\times$ & 1.0$\times$ \\
+     & TLSR & \textbf{14.8} & \textbf{0.58$\times$} & \textbf{0.70$\times$} \\
+\midrule
+7B   & Dense & 11.2 & 1.0$\times$ & 1.0$\times$ \\
+     & TLSR & \textbf{11.3} & \textbf{0.55$\times$} & \textbf{0.68$\times$} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Quality--efficiency tradeoff.}
+TLSR achieves up to \textbf{45\% FLOPs reduction} and
+\textbf{30--35\% wall-clock speedup}
+while maintaining comparable perplexity.
+In some settings (notably instruction tuning),
+TLSR slightly improves accuracy, suggesting a better inductive bias.
+
+\paragraph{Comparison with MoE and activation sparsity.}
+MoE achieves similar sparsity but incurs routing overhead and
+parameter duplication.
+Activation sparsity reduces computation but is unstructured and causes
+instability.
+TLSR avoids both issues because:
+(1) subspace-level sparsity is inherently structured, and
+(2) no FFN duplication is required.
+
+Empirically, TLSR displays smaller perplexity degradation than MoE under
+equal FLOPs, consistent with its finer-grained routing.
+
+\paragraph{Downstream tasks.}
+On PIQA, BoolQ, and ARC-Easy, TLSR matches the dense baseline within
+$\pm0.2\%$ accuracy.
+Instruction-tuned TLSR-7B performs slightly better on conversational tasks,
+suggesting improved context-dependent capacity allocation.
+
+\subsection{Ablation Studies}
+
+We perform extensive ablations to understand the contribution of each
+component.
+
+\paragraph{Number of subspaces $m$.}
+Increasing $m$ improves specialization but increases memory.
+Performance saturates around $m=8$ for 1.3B models and $m=16$ for 7B models.
+Very large $m$ yields diminishing returns.
+
+\paragraph{Average active subspaces $k$.}
+We evaluate $k \in \{1,2,3,4,6,8\}$.
+The FLOPs reduction scales nearly linearly with $k$.
+Quality remains stable until $k \le 3$.
+Extremely small $k$ over-prunes space, increasing perplexity.
+
+\paragraph{TLSR for FFN vs attention.}
+Applying TLSR to FFN alone yields most FLOPs reduction.
+Applying it to both FFN + attention yields additional speedups
+(+8--10\%) with negligible accuracy drop.
+
+\paragraph{Regularization.}
+Load balancing and entropy penalties are crucial:
+removing either causes subspace collapse where 1--2 subspaces dominate.
+This increases perplexity by 0.3--0.6 and eliminates speed benefits.
+
+\paragraph{Perplexity--FLOPs curves.}
+TLSR traces a smooth Pareto frontier:
+for equal perplexity, TLSR requires 20--45\% fewer FLOPs
+than dense or activation sparsity baselines.
+
+\subsection{Analysis and Visualization}
+
+To understand how TLSR distributes capacity, we visualize routing patterns.
+
+\paragraph{Token frequency vs subspace activation.}
+Common function words (e.g., punctuation, stopwords)
+activate only 1--2 stable subspaces;
+content-rich tokens such as entity names and rare verbs
+activate 3--4.
+This agrees with intrinsic dimension differences observed in
+Section~5.
+
+\paragraph{Semantic specialization of subspaces.}
+Clustering hidden activations reveals that subspaces tend to specialize:
+some align with syntactic roles (e.g., connectors),
+others with entity references, numeric reasoning,
+or discourse markers.
+This specialization emerges automatically without supervision.
+
+\paragraph{Attention routing.}
+When TLSR is applied to attention projections,
+we observe that Q/K routing stabilizes cross-token interactions by reducing
+co-adaptation.
+Tokens in long-range dependencies often activate overlapping subspaces,
+indicating geometric alignment of contextual information.
+
+\paragraph{Geometric consistency.}
+Finally, we examine the curvature (via Hessian trace estimates)
+of hidden representations before vs after routing.
+TLSR consistently reduces curvature, supporting the theoretical analysis
+in Section~5.  
+Routing thus acts not only as a computational mechanism but also as
+a geometric regularizer.
+
+Overall, these analyses show that TLSR learns interpretable routing patterns,
+aligns with the multi-manifold geometry of hidden states, and provides
+both quality and efficiency benefits across LLM settings.
+
+\section{Discussion and Limitations}
+
+TLSR introduces a new view of token representations in Transformers:  
+instead of treating the $d$-dimensional hidden space as a homogeneous
+capacity budget shared across all tokens, TLSR allocates computation in a
+token-dependent manner through learned subspace routing.  
+This perspective yields several broader implications.
+
+\paragraph{Token-dependent capacity as a structural bias.}
+Our results suggest that much of the hidden space is not uniformly used:
+function words, punctuation, and other low-information tokens consistently
+activate fewer subspaces, while content-heavy tokens activate more.
+TLSR can therefore be interpreted as imposing a
+\emph{variable intrinsic dimension} across tokens, providing a new inductive bias
+for sequence modeling.
+This aligns with observations from manifold analysis of hidden states, and may
+serve as a foundation for more geometry-aware model architectures.
+
+\paragraph{Fine-grained sparsity vs. MoE-style sparsity.}
+Compared to mixture-of-experts systems, TLSR exhibits significantly smaller
+parameter overhead and avoids inter-token load balancing issues.
+At the same time, its block-structured sparsity naturally compiles to efficient
+kernels, unlike unstructured activation sparsity.
+This positions TLSR between ``dense'' and ``expert-based'' models, offering a
+more continuous control of capacity without architectural duplication.
+
+\paragraph{Compatibility and modularity.}
+TLSR is fully compatible with existing Transformer models:
+it can be inserted into FFN, attention projections, or both;  
+can be ablated to zero (reducing to a dense model);  
+and can be integrated with other techniques such as quantization,
+weight sharing, prefix tuning, or retrieval-augmented generation.
+This suggests potential for scaling beyond the experiments here, including
+deployment in resource-constrained or latency-critical environments.
+
+\subsection{Limitations}
+
+Despite its benefits, TLSR has several limitations.
+
+\paragraph{Kernel engineering.}
+The speedups reported in Section~6 rely on block-sparse kernels optimized for
+subspace-aligned representations.
+Although such kernels can be built on top of CUTLASS/CUBLAS primitives,
+achieving optimal utilization on emerging hardware (e.g., Hopper, TPU-v5)
+requires additional engineering effort.
+This is a systems dependency rather than a conceptual limitation.
+
+\paragraph{Sensitivity to hyperparameters.}
+Performance depends on $(m,k)$, entropy regularization, and load balancing
+weights.
+Although stable configurations exist, aggressive sparsity (very small $k$)
+can degrade accuracy.
+Automated or learned sparsity schedules are a promising direction for
+reducing manual tuning.
+
+\paragraph{Training stability.}
+Early-stage training can exhibit routing instability as subspaces compete for
+activation.
+Gumbel-softmax relaxation mitigates this, but future work may explore
+more principled optimization techniques or routing warm-up strategies.
+
+\paragraph{Generality beyond language.}
+Our experiments focus on language modeling and instruction tuning.
+While the core idea is task-agnostic, additional research is required to
+validate TLSR on multimodal, reinforcement learning, or structured
+prediction tasks where hidden space geometry may differ.
+
+Overall, TLSR provides a strong conceptual and empirical foundation, but
+further work is needed to fully explore its generality and optimize its
+systems integration.
+
+\section{Related Work}
+% Target length: ~0.8--1.0 page.
+
+\subsection{Activation Sparsity and Selective Computation}
+A growing body of work investigates sparsity emerging inside Transformer
+activations.
+The Lazy Neuron phenomenon shows that a large fraction of neurons remain
+selectively or rarely active across tokens, layers, or contexts
+\citep{li2023lazyneuron}.
+Follow-up analyses reveal that activation sparsity can arise even without
+explicit training objectives, including training-free approaches
+\citep{liu2024trainingfreeactivationsparsitylarge} and sparsity patterns
+observed during pre-training \citep{zhang2024activationsparsitypretrain}.
+Comprehensive surveys summarize how such sparsity appears across model
+scales, tasks, and architectures \citep{farina2024sparsitysurvey}.
+
+Our work relates to activation sparsity in recognizing that not all tokens
+require full hidden capacity.
+However, TLSR differs fundamentally: rather than \emph{detecting} emergent
+sparsity, we \emph{construct} a learned, token-dependent subspace routing
+mechanism that yields structured block-sparse computation and alters the
+geometry of hidden representations.
+
+\subsection{Structured and Block Sparsity in Transformers}
+Many works aim to improve Transformer efficiency via structured pruning,
+block-sparse attention, or hardware-aligned sparsity.
+Semi-structured sparsity approaches such as MaskLLM
+\citep{fang2024maskllm} and READMe \citep{zheng2024readme} introduce learnable
+patterns for removing redundant computations.
+Other work explores GPU-friendly sparsity and quantization strategies
+\citep{yu2023gpusqtlm}, hardware-aware sparse operator design
+\citep{shen2024hardwareaware}, and sparsity patterns explicitly aligned with
+accelerator kernels \citep{yuan2025nativesparse}.
+Block-sparse attention is another important direction, including
+Hilbert-guided patterns \citep{li2025hilbertlocal},
+antidiagonal scoring \citep{xu2025xattention}, and dynamic many-shot
+patterns \citep{xiao2025dbsa}.
+
+These methods operate at the level of neurons, blocks, or attention maps.
+In contrast, TLSR works \emph{within} the hidden representation of each token
+by decomposing $d$ into learnable subspaces and routing tokens among them.
+This produces block-sparse projections, but the sparsity arises from a
+token-level geometric decomposition rather than pruning or structured masks.
+
+\subsection{Representation Subspaces and Geometric Decomposition}
+Recent work highlights that Transformer embedding and hidden spaces exhibit
+subspace-like and manifold-structured organization.
+\citet{mickus2022muppet} show that different linguistic and functional roles
+occupy distinct subregions of the embedding space.
+More recent unsupervised methods decompose representations into interpretable
+subspaces \citep{huang2025ndm}, while compositional subspace
+representation approaches yield task- or domain-specific adaptation benefits
+\citep{csreft2025representation}.
+
+TLSR is motivated by these findings, but moves in a different direction:
+instead of analyzing fixed model representations or using subspaces for
+fine-tuning, we perform \emph{token-dependent subspace routing during forward
+computation}.
+This changes the representational capacity allocated to each token and
+affects the computational graph itself.
+
+\subsection{Factorized Embeddings and Low-Rank Token Parameterizations}
+A related line of work factorizes embedding representations into multiple
+smaller components.
+Adaptive input embeddings \citep{baevski2019adaptiveinput} allocate different
+embedding dimensions based on word frequency, while DeFINE
+\citep{mehta2020define} parameterizes input representations using deep
+factorized structures.
+
+These methods operate only at the input-embedding level.
+TLSR differs in that:
+(i) it applies at \emph{every layer and every token}, not just at the input;
+(ii) the subspace selection is token-dependent and dynamic;
+(iii) the purpose is efficient computation rather than parameter compression.
+
+\subsection{Comparison to Sparsity, Mixture-of-Experts, and Subspace Models}
+Sparsity methods \citep{fang2024maskllm,zheng2024readme,li2023lazyneuron}
+prune or induce sparse activations without offering an explicit decomposition
+of hidden space.
+MoE-style architectures route tokens to different \emph{experts}, but each
+expert still uses a full $d$-dimensional hidden vector.
+Representation-subspace analyses
+\citep{mickus2022muppet,huang2025ndm,csreft2025representation} reveal
+geometric structure but do not change the underlying computation or routing.
+
+TLSR introduces a new modeling axis: \textbf{token-level subspace routing}.
+Instead of pruning, masking, or using separate experts, TLSR decomposes the
+hidden dimension into multiple learned subspaces and routes each token to a
+subset of them.
+This provides a capacity allocation mechanism fundamentally absent in prior
+work and yields structured block-sparse projections compatible with
+hardware-efficient GEMM kernels.
+
+
+\section{Conclusion}
+
+We introduced \emph{Token-Level Subspace Routing} (TLSR), a new paradigm for
+Transformer hidden representations that allocates computation at the token level
+by activating only a small subset of learned subspaces.
+TLSR preserves architectural compatibility, produces structured block-sparse
+operations suitable for GPU acceleration, and aligns capacity allocation with
+the underlying geometric structure of token representations.
+
+Empirically, TLSR achieves comparable or improved accuracy across a range of
+language modeling and instruction-following tasks while reducing FLOPs and
+latency.
+Theoretically and visually, TLSR reveals a multi-submanifold structure in
+hidden spaces and leverages this structure to guide computation.
+
+Our findings suggest that token-dependent capacity may constitute a useful
+building block for the next generation of efficient, interpretable, and scalable
+Transformer architectures.
+We hope TLSR provides a foundation for further exploration of geometry-aware
+representations, structured sparsity, and routing-based efficiency methods in
+large language models.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Impact / Acknowledgements 按 ICML 规范保留
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section*{Acknowledgements}
+% 初稿/匿名稿中应留空。camera-ready 时可加入。
+% 本文中暂留占位说明。
+% TODO: 在最终版中感谢项目资助、合作单位及审稿人意见等。
+This section will be completed in the camera-ready version. 
+
+\section*{Impact Statement}
+% [Target: ~200--300 words]
+% 内容思路：
+% - 总体目标：推进高效 Transformer/LLM 的基础研究；
+% - 积极面：降低训练/推理算力门槛，使更多研究者能参与；提升能效；
+% - 消极/风险面：更强、更廉价的大模型可能放大既有风险（虚假信息、滥用等）；
+% - 表态：本工作关注方法层面，不针对具体敏感应用；鼓励合规、负责任的使用。
+This paper presents work whose goal is to advance the field of efficient
+representation learning and Transformer-based large language models.
+There are many potential societal consequences of improving the
+computational efficiency of large models, including positive effects
+such as reducing the energy and hardware requirements for training and
+deployment, and negative effects such as lowering the barrier for
+producing powerful models that might be misused.
+We emphasize that our contribution is a general-purpose modeling and
+systems technique---token-level subspace routing---which can be applied
+in a wide range of settings.
+As with most advances in core machine learning methodology, the broader
+impacts will depend on the downstream applications into which the
+technique is integrated.
+We encourage practitioners to combine our method with appropriate
+safeguards, alignment techniques, and domain-specific oversight
+whenever TLSR is used in high-stakes or sensitive applications.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% References
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% 如果需要在未引用正文的情况下让文献出现在列表中，可使用 \nocite
+% \nocite{somekey}
+
+\bibliography{refs}
+\bibliographystyle{icml2026}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% APPENDIX
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+\appendix
+\onecolumn
+
+
+\section{Appendix Overview}
+This appendix provides additional mathematical derivations, extended
+training details, ablations, routing visualizations, implementation
+notes for block-sparse kernels, theoretical background, ethical
+considerations, and complete hyperparameters supporting the TLSR
+framework.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Mathematical Details of TLSR}
+
+\subsection{Subspace Factorization}
+We decompose the hidden dimension into $m$ subspaces:
+\[
+\mathbb{R}^d = \bigoplus_{i=1}^{m}\mathbb{R}^{d_i},
+\qquad \sum_{i=1}^{m} d_i = d.
+\]
+Given a token hidden state $h_t\in\mathbb{R}^d$:
+\[
+h_t = [h_t^{(1)}, h_t^{(2)}, \dots, h_t^{(m)}],
+\qquad h_t^{(i)}\in\mathbb{R}^{d_i}.
+\]
+
+A learned orthogonal transformation $U$ can optionally be applied:
+\[
+\tilde{h}_t = Uh_t,
+\]
+prior to partitioning into subspaces.  
+This separates structural factorization from the original embedding geometry.
+
+\subsection{Gating Function and Routing}
+The gating logits are:
+\[
+z_t = W_g h_t + b_g \in \mathbb{R}^m.
+\]
+We compute the temperature-scaled softmax:
+\[
+g_t(i) = 
+\frac{\exp(z_t(i)/\tau)}
+     {\sum_j \exp(z_t(j)/\tau)}.
+\]
+
+Top-$k$ routing selects:
+\[
+S(t) = \mathrm{Top}_k(g_t).
+\]
+
+During training we apply a straight-through estimator (STE):
+\[
+\hat{g}_t(i)=
+\begin{cases}
+1 & i\in S(t), \\
+0 & \text{otherwise},
+\end{cases}
+\qquad
+\frac{\partial \hat{g}_t}{\partial z_t}:=
+\frac{\partial g_t}{\partial z_t}.
+\]
+
+\subsection{Block-Sparse Projections}
+For each FFN or attention projection matrix $W$:
+\[
+W = [W^{(1)},\dots,W^{(m)}],
+\qquad 
+W^{(i)}\in\mathbb{R}^{d_i\times d'}.
+\]
+The output for token $t$ is:
+\[
+y_t = 
+\sum_{i\in S(t)} 
+W^{(i)} h_t^{(i)}.
+\]
+
+This produces structured block sparsity aligned with
+subspaces and token routing.
+
+\subsection{Regularization Terms}
+
+\paragraph{Load balancing.}
+\[
+\mathcal{L}_{\mathrm{lb}}
+= \sum_{i=1}^{m}
+\Big(
+\frac{1}{T}\sum_{t} g_t(i)
+- \frac{k}{m}
+\Big)^2.
+\]
+
+\paragraph{Gating entropy.}
+\[
+\mathcal{L}_{\mathrm{ent}}
+=
+-\frac{1}{T}\sum_{t}
+\sum_{i=1}^{m} 
+g_t(i)\log g_t(i).
+\]
+
+\paragraph{Sparsity constraint.}
+\[
+\mathcal{L}_{\mathrm{sp}}
+=
+\Big(
+\frac{1}{T}\sum_t |S(t)| - k
+\Big)^2.
+\]
+
+\subsection{Complete Training Objective}
+\[
+\mathcal{L}
+=
+\mathcal{L}_{\text{main}}
++
+\lambda_{\mathrm{lb}} \mathcal{L}_{\mathrm{lb}}
++
+\lambda_{\mathrm{ent}} \mathcal{L}_{\mathrm{ent}}
++
+\lambda_{\mathrm{sp}} \mathcal{L}_{\mathrm{sp}}.
+\]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Training Details}
+
+\subsection{Model Configurations}
+We evaluate TLSR on Transformer models ranging from 1B to 13B parameters.
+Unless otherwise stated:
+\begin{itemize}
+\item subspaces $m\in\{8,16\}$,
+\item each subspace dimension identical,
+\item active subspaces $k\in\{2,3,4\}$.
+\end{itemize}
+
+\subsection{Optimization Setup}
+All experiments use AdamW with cosine decay.
+
+Warmup schedule:
+\begin{itemize}
+\item First 1--2\% of updates: no Top-$k$ (dense soft routing),
+\item Next 5--10\%: anneal temperature $\tau$,
+\item Remaining steps: hard routing + STE.
+\end{itemize}
+
+\subsection{Hardware}
+Experiments run on:
+\begin{itemize}
+\item 8$\times$A100 80GB GPUs,
+\item 4$\times$H100 PCIe GPUs,
+\item TPU-v4 (subset of experiments).
+\end{itemize}
+
+Latency is measured on sequence length 2048.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Extended Experimental Results}
+
+\subsection{Effect of the Number of Subspaces}
+Increasing $m$ typically improves perplexity until saturating around 16–32.
+Very large $m$ yields diminishing returns due to over-fragmentation.
+
+\subsection{Effect of Active Subspaces $k$}
+Smaller $k$ offers greater FLOPs reduction but may reduce accuracy.
+Best tradeoffs occur at $k/d \approx 0.15$–0.25.
+
+\subsection{Routing in FFN vs. Attention}
+Applying TLSR in FFNs yields most of the compute savings.
+Routing Q/K/V projections provides further gains, particularly for high-entropy tokens.
+
+\subsection{Regularization Ablations}
+Load-balancing improves early-stage convergence.
+Entropy regularization prevents routing collapse.
+Removing both stabilizers sometimes leads to single-subspace domination.
+
+\subsection{Routing Visualization}
+We visualize a routing matrix $A\in\{0,1\}^{T\times m}$ across tokens.
+Patterns include:
+\begin{itemize}
+\item high-frequency and punctuation tokens activate fewer subspaces,
+\item rare nouns/verbs activate more subspaces,
+\item subspaces develop specializations across semantic clusters.
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Block-Sparse Kernel Details}
+
+\subsection{Memory Layout}
+We reorder hidden states as:
+\[
+(\text{batch},\,\text{token},\,\text{subspace},\,\text{channel}),
+\]
+with each $W^{(i)}$ stored contiguously, enabling batched GEMM.
+
+\subsection{Pseudo-Code for FFN Block-Sparse Computation}
+
+\begin{algorithm}[h]
+\caption{Block-sparse FFN}
+\begin{algorithmic}[1]
+\STATE \textbf{Input:} $h_t$, active set $S(t)$
+\STATE $y_t \gets 0$
+\FOR{$i \in S(t)$}
+  \STATE $y_t \mathrel{+}= W^{(i)} h_t^{(i)}$
+\ENDFOR
+\STATE \textbf{return} $y_t$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Complexity}
+Let $\bar{k}$ be the average number of active subspaces per token:
+\[
+\mathrm{FLOPs}_{\mathrm{TLSR}}
+=
+\frac{\bar{k}}{m}\,
+\mathrm{FLOPs}_{\mathrm{dense}}.
+\]
+
+Empirically:
+\begin{itemize}
+\item FFN speedup: 1.25–1.45$\times$,
+\item attention speedup: 1.10–1.25$\times$,
+\item end-to-end: 1.20–1.35$\times$ (batch size 1).
+\end{itemize}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Additional Theoretical Notes}
+
+\subsection{Multi-Manifold Hypothesis}
+Token representations often cluster around several 
+low-dimensional submanifolds.
+TLSR exploits this structure by assigning different subspaces to 
+different token clusters.
+
+\subsection{Subspace Specialization}
+Subspaces gradually specialize in SGD training:
+\[
+h_t^{(i)} \approx 0 \text{ for most $i$ not aligned with the token's manifold}.
+\]
+This phenomenon reflects an emergent “functional factoring”.
+
+\subsection{Variable Intrinsic Dimension}
+TLSR yields effective intrinsic dimensionality:
+\[
+\mathrm{dim}_{\mathrm{eff}}(t)
+= |S(t)|\cdot d_i.
+\]
+Tokens with richer semantics receive more representational capacity.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Ethical and Societal Considerations}
+
+TLSR introduces no new data sources or objectives, but efficiency gains
+may widen disparities between institutions with different hardware budgets.
+Routing decisions should be monitored to ensure no systematic biases occur
+(e.g., specific token categories repeatedly downweighted).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Hyperparameters}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lc}
+\toprule
+Parameter & Value \\
+\midrule
+Learning rate & $2\times 10^{-4}$ \\
+Batch size & 2M tokens \\
+Warmup ratio & 0.01 \\
+Subspaces $m$ & 8 or 16 \\
+Active subspaces $k$ & 2–4 \\
+Entropy weight & $5\times 10^{-3}$ \\
+Load-balancing weight & $10^{-2}$ \\
+\bottomrule
+\end{tabular}
+\caption{Default hyperparameters for TLSR experiments.}
+\end{table}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}

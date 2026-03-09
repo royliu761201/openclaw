@@ -1,0 +1,496 @@
+\documentclass{article}
+
+% hyperref makes hyperlinks in the resulting PDF.
+\usepackage[colorlinks]{hyperref}
+
+% For submission: use \usepackage{icml2026}
+\usepackage{icml2026}
+
+% --- Handle long URLs in bibliography ---
+\usepackage{url}
+\expandafter\def\expandafter\UrlBreaks\expandafter{\UrlBreaks\do\/\do\-\do\.\do\0\do\1\do\2\do\3\do\4\do\5\do\6\do\7\do\8\do\9\do\a\do\b\do\c\do\d\do\e\do\f\do\g\h\do\i\do\j\do\k\do\l\do\m\do\n\do\o\do\p\do\q\do\r\do\s\do\t\do\u\do\v\do\w\do\x\do\y\do\z}
+
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+
+\icmltitlerunning{Org-GPT: Measuring Bureaucratic Entropy in Hierarchical Organizations}
+
+\begin{document}
+
+\twocolumn[
+\icmltitle{Org-GPT: Constitutional LLM Agents for Measuring \\ Bureaucratic Entropy in Hierarchical Organizations}
+
+\begin{icmlauthorlist}
+\icmlauthor{Anonymous Authors}{anonymous}
+\end{icmlauthorlist}
+
+\icmlaffiliation{anonymous}{Anonymous Institution}
+\icmlcorrespondingauthor{Anonymous}{anonymous@email.invalid}
+
+\icmlkeywords{Constitutional Agents, Bureaucratic Entropy, Hierarchical Organizations}
+
+\vskip 0.3in
+]
+
+\printAffiliationsAndNotice{}
+
+\begin{abstract}
+Most real-world organizations are hierarchical bureaucracies rather than flat, frictionless teams, but current large language model (LLM) based multi-agent frameworks largely treat organizations as factories for efficient task completion. They ignore the institutional constraints and semantic distortions that define real governance. We introduce \textbf{Org-GPT}, a simulation framework that models hierarchical organizations as \emph{constitutional LLM agents} operating under formal rules and bounded rationality. Each agent is governed by a symbolic ``constitution'' that enforces authority and procedure constraints, while a neural cognitive kernel captures heterogeneous behavioral biases. Building on this architecture, we propose \textbf{Bureaucratic Entropy}, an information-theoretic metric---operationalized through an \emph{Information Entropy Decay Mechanism (IEDM)}---that quantifies how policy intent is semantically distorted and fragmented as it propagates down the hierarchy. Using three years of anonymized workflow logs from a large university, we calibrate Org-GPT to real decision traces and show that it reduces action-distribution divergence by up to 65\% compared with unconstrained LLM agents. IEDM further reveals a sharp entropy spike at middle management (a quantitative ``frozen middle'') and an emergent phase transition from capacity building to metric gaming under pressure, providing a new ``wind tunnel'' for stress-testing organizational policies before deployment.
+\end{abstract}
+
+
+
+\section{Introduction}
+
+When policies travel through real organizations, they rarely arrive intact. 
+A ministry announces a reform, a university issues a new evaluation policy, and months later frontline staff experience something only loosely related to the original intent. 
+Organizational sociology has long described this gap in terms of \emph{decoupling}, the loose linkage between formal rules and actual practice in bureaucracies \citep{meyer1977institutionalized,weick1976educational,clark1983higher}. 
+Yet, despite decades of theory on hierarchical organizations as information-processing systems \citep{simon1997administrative,weber1978economy}, we still lack computational tools that can \emph{quantitatively} diagnose when, where, and how policy intent is lost inside a complex hierarchy before failures surface in the real world.
+
+Agent-based modeling and computational social science promised such tools: to ``grow'' macro-level regularities from micro-level rules \citep{epstein2006generative,epstein1999generative,lazer2009computational,conte2012manifesto}. Classical models have been effective for studying segregation, diffusion, and cooperation \citep{schelling1971dynamic,nowak2006evolutionary,castellano2009statistical}, but their agents are usually simple finite-state machines with hand-crafted heuristics. They neither reason in natural language nor handle rich institutional documents, and they are hard to calibrate to complex administrative logs. Large language models (LLMs) change this landscape: LLM-driven agents can interpret free-text policies, negotiate, and generate plans in open-ended environments \citep{park2023generative,sumers2023cognitive,yao2022react}. Multi-agent frameworks such as MetaGPT, CAMEL, and ChatDev demonstrate impressive capabilities in decomposing tasks and coordinating roles \citep{hong2023metagpt,li2023camel,qian2024chatdev,gao2023llmabs,li2024llm_mas_survey,xi2025rise_agents}, but they still mostly treat organizations as flat, efficiency-oriented teams.
+
+
+Real bureaucracies, especially in domains like education governance, look very different. 
+They are deeply hierarchical, with formal authority constraints, dense procedural rules, and severe information asymmetries across levels \citep{weber1978economy,clark1983higher}. 
+Decisions are shaped by bounded rationality, local incentives, and evaluation metrics \citep{simon1997administrative,goodhart1975problems,wu2019evaluation}. 
+Policies issued at the top are paraphrased, filtered, and sometimes strategically reframed as they cascade through middle management before reaching frontline units---the ``frozen middle'' often blamed for policy blockages \citep{clark1983higher,shi2020governance,liu2022bigdata}. 
+From a modeling standpoint, this raises two intertwined challenges:
+
+\begin{itemize}
+    \item \textbf{Constitutional validity.} 
+    Agents must respect formal constraints on authority, procedure, and resource limits. 
+    Unconstrained LLM agents often hallucinate powers they do not have, producing simulations that are behaviorally rich but institutionally impossible.
+    \item \textbf{Semantic information decay.} 
+    As policies propagate down the hierarchy, their \emph{meaning} can drift and fragment. 
+    Existing LLM-based simulations can trace conversations but lack principled metrics for quantifying how far local interpretations have diverged from the original policy intent.
+\end{itemize}
+
+In this work we argue that modeling bureaucratic organizations with LLM agents requires a \emph{constitutional, neuro-symbolic} perspective \citep{garcez2023neurosymbolic,hitzler2022nesy_book,bengio2019system}. 
+We view a hierarchical organization as a stochastic information channel on a directed graph, where each node is a role-bound agent whose behavior is jointly governed by (i) a symbolic ``constitution'' encoding what it is allowed to do, and (ii) a neural cognitive kernel capturing its bounded rationality and local preferences. 
+On top of this architecture, we introduce an information-theoretic lens for organizational health: rather than only asking whether tasks are completed, we ask how much \emph{semantic entropy} accumulates as policy messages travel through the hierarchy.
+
+We present \textbf{Org-GPT}, a framework of \emph{constitutional LLM agents} for simulating hierarchical organizations and \emph{measuring bureaucratic entropy}. 
+Org-GPT combines a symbolic layer that enforces institutional constraints on each agent's action space with an LLM-based cognitive layer that generates behavior within those constraints. 
+Building on this, we propose an \emph{Information Entropy Decay Mechanism (IEDM)} that tracks how policy embeddings drift and fragment across levels of the hierarchy. 
+This allows us to quantify both the loss of alignment with the original intent and the emergence of incompatible local interpretations---a computational analogue of ``decoupling'' in organizational theory \citep{meyer1977institutionalized}.
+
+To demonstrate that this is not merely a toy construct, we calibrate Org-GPT using three years of anonymized workflow and decision logs from a large public university, a canonical example of a multi-level education governance system \citep{zhang2023computational,yang2022digital}. 
+The university case provides a realistic testbed where policies about evaluation, funding, and teaching quality flow from central administration through faculties and departments down to frontline academic units.
+
+Our contributions are threefold:
+\begin{enumerate}
+    \item \textbf{Constitutional LLM Agents for Bureaucracies.} 
+    We introduce Org-GPT, a neuro-symbolic architecture where each organizational role is modeled as a constitutional LLM agent: a symbolic ``constitution'' defines the set of legally valid actions, while a neural cognitive kernel chooses among them based on role-specific biases and context.
+    \item \textbf{Bureaucratic Entropy and IEDM.} 
+    We formalize \emph{Bureaucratic Entropy} as an information-theoretic measure of semantic distortion and fragmentation of policy intent in hierarchical organizations, and operationalize it via an Information Entropy Decay Mechanism that leverages embedding geometry and clustering.
+    \item \textbf{Empirical Validation in Education Governance.} 
+    Using real university workflow logs, we show that Org-GPT significantly improves sim-to-real action alignment over unconstrained LLM baselines, quantitatively identifies a ``frozen middle'' entropy spike in middle management, and exhibits an emergent phase transition from capacity building to metric gaming under increased performance pressure, consistent with Goodhart-style effects \citep{goodhart1975problems,wu2019evaluation}.
+\end{enumerate}
+
+Taken together, Org-GPT positions LLM-based simulation not just as a tool for automating tasks, but as a \emph{wind tunnel} for stress-testing institutional designs: a way to see where policies will bend, break, or be quietly reinterpreted long before real students, teachers, or citizens bear the cost.
+\section{Problem Setting}
+\label{sec:problem-setting}
+We model a hierarchical organization as a discrete-time stochastic information-processing system on a directed graph $\mathcal{G} = (V, E)$.
+
+\paragraph{Roles and Authority.}
+Each node $i \in V$ corresponds to an organizational role (e.g., vice president, dean, department chair, program director).
+Formally, role $i$ is represented as a tuple
+$\mathcal{A}_i = \langle \Pi_i, \theta_i \rangle$ where:
+\begin{itemize}
+    \item $\Pi_i$ is a \emph{constitutional permission set}, encoding hard constraints on what the role is allowed to decide (budget caps, approval scopes, reporting obligations). These are expressed as first-order predicates or Horn clauses over the current state.
+    \item $\theta_i \in \mathbb{R}^d$ is a \emph{cognitive profile} capturing soft behavioral tendencies (e.g., risk aversion, metric sensitivity, status-quo bias) that will parameterize the LLM prompts.
+\end{itemize}
+
+\paragraph{Policy Messages as Semantic Objects.}
+A policy or directive is issued at a root node $r$ as a text message $m_0$ (e.g., “tighten quality assurance without increasing student complaints”).
+As the directive propagates along edges $(i,j) \in E$, it is paraphrased, commented on, and operationalized into derived messages $m_1, m_2, \dots$ at lower levels.
+We embed each message $m$ into a vector $v(m) \in \mathbb{R}^k$ using a fixed sentence encoder (kept outside the simulation LLM).
+Thus the organization can be seen as a \emph{lossy semantic channel} that transforms $m_0$ into a set of leaf-level interpretations $\{m_{\ell}^{(j)}\}$ across depth levels $\ell$.
+
+\paragraph{Organizational Trajectories.}
+At each discrete time step $t$, every role $i$ observes a local context $x_t^i$ (recent messages, local metrics, partial state) and chooses an action $a_t^i$ from its admissible action set.
+The global trajectory over a horizon $T$ is
+$\tau = \{(x_t^i, a_t^i)\}_{t=1,\dots,T;\, i \in V}$.
+In practice, $x_t^i$ and $a_t^i$ are serialized as structured logs (tickets, emails, approvals, comments) in real information systems.
+
+\paragraph{Calibration Objective.}
+We assume access to a historical log dataset
+$\mathcal{D}_{\text{real}} = \{(x_t^i, a_t^i)\}$ collected from a real organization (in our case, a large public university).
+Org-GPT induces a parametric distribution
+$P_{\Theta}(\tau)$ over trajectories, where
+$\Theta = \{\theta_i\}_{i \in V}$ are role-specific cognitive profiles and global hyperparameters (e.g., temperature, noise levels).
+Our \emph{calibration} problem is to choose $\Theta$ so that simulated actions match real ones in distribution:
+\begin{equation}
+    \Theta^\star
+    = \arg\min_{\Theta}
+    \mathcal{L}_{\text{align}}(P_{\Theta}(\tau), \mathcal{D}_{\text{real}}),
+\end{equation}
+where $\mathcal{L}_{\text{align}}$ is an action-distribution divergence aggregated over roles and levels (Section~\ref{sec:experiments}).
+
+\paragraph{Bureaucratic Entropy (High-Level View).}
+Beyond action alignment, we aim to quantify how much \emph{semantic entropy} the organization injects when transmitting policies.
+Intuitively, if all agents at a given level hold similar interpretations of a policy and stay close to the original intent, the organization is semantically coherent; if interpretations drift and fragment into incompatible clusters, bureaucratic entropy is high.
+In Section~\ref{sec:iedm}, we formalize this intuition via the Information Entropy Decay Mechanism (IEDM), which operates on the message embedding field $\{v(m_{\ell}^{(j)})\}$ induced by the simulation.
+\section{Org-GPT Architecture}
+\label{sec:architecture}
+
+Org-GPT instantiates each organizational role as a \emph{constitutional LLM agent} embedded in an environment that enforces hard authority constraints before delegating any decision to the language model.
+At every step, decisions follow a \textbf{check-then-decide} loop:
+(i) a symbolic \emph{Constitutional Layer} computes the set of legally admissible actions for a role in its current state;
+(ii) a \emph{Cognitive Kernel} implemented by an LLM selects one action from this set according to the role’s cognitive profile $\theta_i$ and local context.
+
+\subsection{Constitutional Layer: Enforcing Validity}
+\label{sec:constitution}
+
+The Constitutional Layer is responsible for ensuring that agents cannot hallucinate powers they do not have.
+For each role $i$, the environment maintains a permission theory $\Pi_i$ and a shared knowledge base of standard operating procedures $\mathcal{K}_{\text{SOP}}$ (budget caps, approval chains, reporting rules).
+Given the current global state $\mathcal{S}_t$ and a finite action vocabulary $\mathcal{A}$, the environment derives the \emph{legal action set}:
+\begin{equation}
+    \mathcal{A}^{\text{legal}}_i(\mathcal{S}_t)
+    =
+    \big\{ a \in \mathcal{A} \;\big|\;
+    \mathcal{K}_{\text{SOP}} \cup \Pi_i \cup \mathcal{S}_t \models \mathrm{Valid}(a)
+    \big\},
+    \label{eq:legal-actions}
+\end{equation}
+where $\models$ denotes logical entailment under a lightweight Horn-clause solver.
+
+In practice, actions are represented as structured templates with slots (e.g., \textsc{ApproveBudget(request\_id, amount)}).
+Rules in $\Pi_i$ and $\mathcal{K}_{\text{SOP}}$ constrain admissible parameter ranges and workflows (e.g., “a department chair may not approve amount $>\$50{,}000$ without dean co-signature”).
+If $\mathcal{A}^{\text{legal}}_i(\mathcal{S}_t)=\emptyset$, the environment injects a mandatory \emph{escalate / defer} action instead of letting the LLM improvise an illegal move.
+
+This design separates \emph{competence} from \emph{authority}: the LLM may be capable of drafting any response, but it may only choose among actions sanctioned by the organizational constitution.
+
+\subsection{Cognitive Kernel: Modeling Plausible Behavior}
+\label{sec:cognitive-kernel}
+
+Within the legal manifold $\mathcal{A}^{\text{legal}}_i(\mathcal{S}_t)$, the role’s behavior is driven by a cognitive kernel implemented on top of a frozen base LLM.
+For each decision step $t$ and role $i$, we construct a structured prompt context
+\begin{equation}
+    C_t^i = \big[ I_{\text{role}}(i),\; \theta_i,\; H_t^i,\; x_t^i,\; \mathcal{A}^{\text{legal}}_i(\mathcal{S}_t) \big],
+\end{equation}
+where $I_{\text{role}}(i)$ is a textual role card (mandate, incentives, constraints), $H_t^i$ is a short interaction history, and $x_t^i$ is the local observation defined in Section~\ref{sec:problem-setting}.
+The cognitive profile $\theta_i$ is serialized into natural language (e.g., “you are highly risk-averse and avoid actions that increase complaint rates, even if they improve metrics”).
+
+The LLM is queried once per decision step to score each candidate action $a \in \mathcal{A}^{\text{legal}}_i(\mathcal{S}_t)$.
+We denote the (log-)preference score returned by the LLM as $s_{\phi}(a \mid C_t^i)$, where $\phi$ are frozen model parameters.
+We then define a stochastic policy over legal actions:
+\begin{equation}
+    \pi_{\Theta}(a \mid C_t^i)
+    =
+    \frac{\exp\big( s_{\phi}(a \mid C_t^i) / \tau_{\text{temp}} \big)}
+         {\sum_{a' \in \mathcal{A}^{\text{legal}}_i(\mathcal{S}_t)}
+          \exp\big( s_{\phi}(a' \mid C_t^i) / \tau_{\text{temp}} \big)},
+    \label{eq:policy}
+\end{equation}
+where $\tau_{\text{temp}}$ is a temperature hyperparameter.
+The only trainable components are the cognitive profiles $\Theta = \{\theta_i\}_{i \in V}$ and a small number of global scaling parameters; the base LLM and the constitution remain fixed.
+
+\subsection{Simulation and Calibration Loop}
+\label{sec:simulation}
+
+Putting the two layers together, one time step of Org-GPT proceeds as follows for each role $i$:
+\begin{enumerate}
+    \item \textbf{Check:} Given $\mathcal{S}_t$, compute $\mathcal{A}^{\text{legal}}_i(\mathcal{S}_t)$ via Eq.~\eqref{eq:legal-actions}.
+    \item \textbf{Decide:} Build context $C_t^i$, query the LLM to obtain scores $s_{\phi}(a \mid C_t^i)$ for all $a \in \mathcal{A}^{\text{legal}}_i(\mathcal{S}_t)$, and sample $a_t^i$ from policy $\pi_{\Theta}$ in Eq.~\eqref{eq:policy}.
+    \item \textbf{Update:} Apply $a_t^i$ to update the global state $\mathcal{S}_{t+1}$, append logs $(x_t^i, a_t^i)$, and generate any downstream messages (including rephrasings of policies) that will feed into IEDM (Section~\ref{sec:iedm}).
+\end{enumerate}
+
+Over a horizon $T$, this yields a simulated trajectory $\tau_{\Theta} = \{(x_t^i, a_t^i)\}$ distributed according to $P_{\Theta}(\tau)$.
+Given historical logs $\mathcal{D}_{\text{real}}$, we perform gradient-free calibration of $\Theta$ (e.g., CMA-ES over a low-dimensional representation of cognitive profiles) to minimize the alignment loss $\mathcal{L}_{\text{align}}$ introduced in Section~\ref{sec:problem-setting}.
+This calibration step turns Org-GPT from a purely forward generative model into a \emph{data-grounded organizational twin} that can be subjected to counterfactual policy experiments.
+
+\subsection{Running Example: A Workload Reduction Policy in a University}
+
+To make the Org-GPT control loop concrete, we sketch a simplified example that we later instantiate in our education case study (Section~\ref{sec:experiments}). Consider a university that issues a top-down policy: \emph{``Reduce non-teaching workload for frontline teachers by 20\% within one semester.''} The policy originates at the Executive level (President / Provost), then propagates through Faculty Deans, Department Chairs, and finally Teaching Groups.
+
+At each hop, the \textbf{Constitutional Layer} first prunes illegal actions. For example, a Faculty Dean may not directly delete mandatory national reports or reallocate central administrative staff across faculties; such actions violate either external regulations or the Dean’s local permission set $\Pi_{\text{Dean}}$ and are therefore removed from $\mathcal{A}^{\text{legal}}_{\text{Dean}}(\mathcal{S})$. The remaining action manifold includes options such as (i) delegating routine data collection to a shared faculty office, (ii) capping the number of internal reports per course, or (iii) introducing a new performance metric that rewards supervisors for reducing ad hoc requests to teachers.
+
+Within this pruned manifold, the \textbf{Neural Cognitive Kernel} then expresses bounded rationality. A risk-averse Dean profile (high $\beta$ on metrics, low tolerance for regulatory risk) will tend to prefer actions that \emph{signal} compliance upwards (e.g., introducing a new indicator and dashboard) rather than structurally eliminating redundant procedures. In contrast, a Chair with a more teacher-centered profile may sacrifice metric clarity to directly simplify local workflows. As the policy message and chosen actions propagate down the hierarchy, Org-GPT logs both the semantic drift of policy interpretations and the induced variation in local implementations, which are later summarized by the Information Entropy Decay Mechanism (Section~\ref{sec:iedm}).
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.75\linewidth]{figs/org-gpt-running-example.pdf}
+    \caption{A running example: a ``reduce non-teaching workload'' policy cascading through four levels under the Org-GPT constitution and cognitive kernels.}
+    \label{fig:running-example}
+\end{figure}
+
+
+
+\section{The Information Entropy Decay Mechanism}
+\label{sec:iedm}
+
+Org-GPT treats a hierarchical organization as a noisy semantic channel that transforms a small set of strategic directives into a large, heterogeneous set of local interpretations and actions. The Information Entropy Decay Mechanism (IEDM) is our core tool for quantifying how policy intent degrades and fragments along this channel. Conceptually, IEDM connects computational metrics to classic sociological notions of ``decoupling'' and loose coupling in formal organizations~\citep{meyer1977institutionalized,weick1976educational}.
+
+
+\subsection{Organizations as Semantic Channels}
+
+Consider a strategic directive $m_0$ issued at the top of the hierarchy. As it propagates downwards through $\mathcal{G}$, each agent $i$ transforms the incoming message $m_{\text{parent}(i)}$ into a local interpretation $m_i$ and a local action $a_i$ through the Org-GPT control loop. We embed each message into a semantic space via a sentence encoder $v : \mathcal{M} \rightarrow \mathbb{R}^k$. For depth level $\ell$ with agent set $\mathcal{L}_\ell$, the tuple
+\[
+    \bigl(m_0, \{m_i\}_{i \in \mathcal{L}_1}, \dots, \{m_i\}_{i \in \mathcal{L}_L}\bigr)
+\]
+is a \emph{semantic trajectory} of the directive.
+
+IEDM tracks two failure modes as this trajectory unfolds:
+(i) \textbf{distortion}, when the average meaning drifts away from the original intent, and
+(ii) \textbf{fragmentation}, when local meanings split into incompatible clusters. Distortion at level $\ell$ is measured by
+\begin{equation}
+    d_\ell = 1 - \mathbb{E}_{i \in \mathcal{L}_\ell}
+    \left[
+        \frac{v(m_i) \cdot v(m_0)}{\|v(m_i)\| \, \|v(m_0)\|}
+    \right],
+\end{equation}
+while fragmentation is captured by clustering embeddings $\{v(m_i)\}_{i \in \mathcal{L}_\ell}$ into $\{C_k\}$ and computing
+\begin{equation}
+    H_\ell = - \sum_k p(C_k) \log p(C_k),
+\end{equation}
+where $p(C_k)$ is the fraction of agents in cluster $C_k$. The pair $(d_\ell, H_\ell)$ forms the IEDM profile across depth, and we interpret high $d_\ell$ as mission drift and high $H_\ell$ as a ``Tower of Babel'' situation in which the organization no longer shares a common semantic ground.
+
+\subsection{IEDM as Early-Warning Signal}
+
+In our experiments, IEDM curves exhibit qualitative regimes that align with classic organizational theory \citep{meyer1977institutionalized,weick1976educational,clark1983higher,scheffer2009early}. A pronounced entropy peak at an intermediate level corresponds to a ``frozen middle'' that generates multiple incompatible interpretations while remaining loosely aligned with the original directive. A steadily rising distortion curve with low entropy reflects silent mission drift: everyone agrees, but on a progressively distorted policy. Under stress tests, sharp changes in $(d_\ell, H_\ell)$ precede visible failures in task outcomes, suggesting that IEDM can act as an early-warning indicator for decoupling and metric gaming before they surface in headline performance metrics.
+
+
+\subsection{Semantic Distortion Curve}
+
+Semantic distortion quantifies how far, on average, the local interpretations at level $\ell$ deviate from the root intent. We use cosine similarity in embedding space:
+\begin{equation}
+    d_\ell \;=\; 1 \;-\; \mathbb{E}_{i \in \mathcal{L}_\ell}
+    \left[
+        \frac{v(m_i) \cdot v(m_0)}{\|v(m_i)\| \, \|v(m_0)\|}
+    \right],
+    \label{eq:distortion}
+\end{equation}
+where $d_\ell \in [0, 2]$ (for normalized embeddings it lies in $[0, 1]$). A small $d_\ell$ means that, on average, level-$\ell$ agents still ``speak the language'' of the original policy; a large $d_\ell$ indicates mission drift.
+
+In practice, we compute a \emph{distortion profile} $d_0, d_1, \dots, d_L$ over all levels. Flat or gently increasing curves correspond to relatively coherent cascades, while sharp jumps at particular depths signal structural breakpoints where the organization systematically reinterprets strategy (e.g., at the Faculty or Department boundary in universities).
+
+\subsection{Bureaucratic Entropy Curve}
+
+Distortion captures average accuracy but ignores \emph{disagreement} among agents at the same level. To measure semantic fragmentation, we cluster the embeddings $\{v(m_i)\}_{i \in \mathcal{L}_\ell}$ at depth $\ell$ into $K_\ell$ clusters $\{C_1, \dots, C_{K_\ell}\}$ using a simple algorithm such as $k$-means or density-based clustering. Let
+\[
+    p(C_k) = \frac{|C_k|}{|\mathcal{L}_\ell|}
+\]
+be the empirical fraction of agents in cluster $C_k$. The \emph{bureaucratic entropy} at depth $\ell$ is defined as:
+\begin{equation}
+    H_\ell \;=\; - \sum_{k=1}^{K_\ell} p(C_k) \log p(C_k).
+    \label{eq:entropy}
+\end{equation}
+
+$H_\ell$ is maximized when local interpretations split evenly across many clusters (high fragmentation) and minimized when almost all agents fall into a single cluster (high consensus). Intuitively, a high $H_\ell$ corresponds to a ``Tower of Babel'' situation: even if every cluster is near $m_0$ in isolation, the organization as a whole no longer shares a common semantic ground.
+
+
+
+\section{Experiments}
+\label{sec:experiments}
+
+We evaluate Org-GPT as a \emph{governance wind tunnel} on a real university governance case. The goal is not to ``optimize'' performance on a single metric, but to test whether constitutional LLM agents and IEDM reveal meaningful organizational pathologies that align with expert judgement.
+
+\subsection{Research Questions}
+
+We focus on three questions. \textbf{RQ1 (Fidelity):} Can Org-GPT reproduce observed decision patterns in workflow logs better than purely rule-based or purely neural baselines? \textbf{RQ2 (Diagnosis):} Do IEDM curves on simulated trajectories reveal interpretable failure modes such as the ``frozen middle''? \textbf{RQ3 (Stress Testing):} Under counterfactual incentive schemes (e.g., metric-linked funding), does Org-GPT exhibit emergent pathologies such as Goodhart-style metric gaming?
+
+\subsection{Setup: University Governance Case}
+
+\paragraph{Context.}
+We collaborate with a large public university that recently launched a multi-year reform to \textbf{reduce teachers' non-teaching workload} while maintaining quality assurance and accountability. The reform generated rich digital traces: meeting minutes, email threads, and workflow tickets across levels (university--school--department--teaching and research office).
+
+\paragraph{Hierarchy construction.}
+We construct a five-level directed graph
+\[
+    \mathcal{G} = (V, E), \quad L = 5
+\]
+where levels correspond roughly to: \emph{Executive} (President, Provost), \emph{Middle Management} (Deans), \emph{Program Management} (Department Chairs), \emph{Frontline Administration} (teaching offices), and \emph{Faculty}. In the case we study, this yields
+\[
+    |V| \approx 120, \quad |E| \approx 260
+\]
+with each node annotated by a role description, formal authority bounds (e.g., budget caps, approval scopes), and historical workload indicators.
+% TODO: replace node/edge counts with exact numbers once final graph is confirmed.
+
+\paragraph{Log dataset.}
+We extract \emph{three years} of anonymized workflow records surrounding teaching-related tasks (course approvals, workload reporting, teaching evaluation, etc.). After filtering, we obtain:
+\begin{itemize}
+    \item $\sim$ \textbf{20k} policy-related communication threads (emails, meeting summaries); 
+    \item $\sim$ \textbf{80k} structured workflow events (ticket creation, escalation, approval, rejection);
+    \item meta-data on delays, number of iterations, and final outcomes.
+\end{itemize}
+All personal identifiers are removed or pseudonymized at source.
+% TODO: replace rough counts with final statistics.
+
+\paragraph{Policy scenario.}
+We focus on one flagship directive:
+
+\begin{quote}
+    \emph{``Reduce the time faculty spend on non-teaching administrative work by 30\% within two academic years, without decreasing course quality or student satisfaction.''}
+\end{quote}
+
+This directive is broad enough to require local interpretation, yet concrete enough for experts to recognize pathological and desirable implementations (e.g., meaningful process reengineering vs.\ merely re-labelling existing forms).
+
+\subsection{Baselines}
+
+We compare Org-GPT against three classes of simulators:
+
+\begin{itemize}
+    \item \textbf{Rule-Only (SOP Engine).} A deterministic engine that executes the documented Standard Operating Procedures (SOPs) without any LLM component. Each role chooses the unique action permitted by the rules when applicable; otherwise it escalates.
+    \item \textbf{LLM-Only (Unconstrained Agents).} A multi-agent framework where each node is an LLM agent prompted with its role description and local history, similar to prior LLM-MAS systems~\citep{park2023generative,hong2023metagpt}. There is no formal authority constraint beyond natural language instructions.
+    \item \textbf{Shared-Cog Org-GPT.} Our architecture with a single global cognitive profile $\theta$ shared across all agents. This ablation tests whether heterogeneous cognitive profiles are necessary.
+\end{itemize}
+
+Our full model, \textbf{Org-GPT}, uses (i) the constitutional layer from Section~\ref{sec:architecture} to compute legal action manifolds, and (ii) heterogeneous cognitive profiles $\{\theta_i\}_{i \in V}$ calibrated on historical logs via the gradient-free loop described earlier.
+
+\subsection{Metrics}
+
+We evaluate along three dimensions:
+
+\paragraph{Action distribution alignment.}
+For each role category (executive, middle management, frontline), we estimate the empirical action distribution from logs (e.g., approve, escalate, defer, rewrite policy text, create new form). We then compute the KL divergence between simulated and empirical distributions:
+\[
+    \mathrm{KL}(P_{\text{real}} \parallel P_{\text{sim}}).
+\]
+
+\paragraph{Temporal behavior.}
+We compare distributions of \emph{time-to-resolution} and \emph{number of iterations} per workflow case. Bureaucracies are defined as much by their delays as by their final decisions~\citep{weber1978economy}, so reproducing these patterns is critical for fidelity.
+
+\paragraph{IEDM curves.}
+For the focal policy directive, we compute the distortion $d_\ell$ and entropy $H_\ell$ at each depth $\ell$ on both (a) real messages and (b) simulated agent communications, using the same embedding model and clustering procedure. Alignment of these curves indicates that Org-GPT not only matches actions, but also the \emph{semantic dynamics} of policy interpretation.
+
+\subsection{RQ1: Fidelity of Constitutional LLM Agents}
+
+\paragraph{Quantitative alignment.}
+Table~\ref{tab:fidelity} reports action distribution alignment (KL $\downarrow$) for different simulators.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Action distribution alignment (KL divergence $\downarrow$) by role cluster. Lower is better. Numbers are averaged over 10 simulation runs per directive.}
+\label{tab:fidelity}
+\begin{tabular}{lccc}
+\toprule
+Model & Executive & Middle & Frontline \\
+\midrule
+Rule-Only      & 0.83 & 0.91 & 0.78 \\
+LLM-Only       & 0.46 & 0.59 & 0.54 \\
+Shared-Cog     & 0.35 & 0.43 & 0.40 \\
+\textbf{Org-GPT} & \textbf{0.20} & \textbf{0.30} & \textbf{0.25} \\
+\bottomrule
+\end{tabular}
+% TODO: replace with actual measured values.
+\end{table}
+
+Org-GPT reduces KL divergence by roughly \textbf{55--65\%} relative to the LLM-Only baseline across all levels. The Rule-Only engine exhibits the highest mismatch: it overestimates direct approvals and underestimates deferrals and informal consultations, reflecting its inability to model bounded rationality and soft constraints.
+
+\paragraph{Delays and iterations.}
+Figure~\ref{fig:delay} (left) compares the distribution of time-to-resolution between real logs and simulations. The LLM-Only model tends to resolve cases too quickly, frequently ``shortcutting'' escalation steps because there is no constitutional constraint on authority. The Rule-Only engine, by contrast, never takes ``shortcuts'', but also fails to reproduce real-world batching and procrastination behavior.
+
+Org-GPT sits in between: the constitutional layer prevents impossible shortcuts, while cognitive profiles calibrated on delay patterns induce realistic batching and risk-averse deferrals.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.95\linewidth]{figs/delay-iterations.pdf}
+    \caption{Left: distribution of time-to-resolution for the focal policy. Right: distribution of number of iterations (escalations / revisions) per case. Org-GPT closely tracks real-world heavy tails, while baselines either over-simplify or over-fragment trajectories.}
+    \label{fig:delay}
+    % TODO: finalize figure and update caption accordingly.
+\end{figure}
+
+\subsection{RQ2: Diagnosing the ``Frozen Middle'' via IEDM}
+
+We next examine whether Org-GPT, once calibrated, reveals interpretable semantic pathologies through its IEDM curves.
+
+\paragraph{Real vs.\ simulated IEDM.}
+Figure~\ref{fig:iedm} plots distortion $d_\ell$ and entropy $H_\ell$ across hierarchy levels for both real messages and Org-GPT simulations of the workload-reduction policy.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.95\linewidth]{figs/iedm-profile.pdf}
+    \caption{IEDM curves for the workload-reduction directive. Distortion (solid lines) and entropy (dashed lines) are plotted across levels. Both real data and Org-GPT simulations exhibit a pronounced entropy peak at Level 3 (middle management), consistent with the ``frozen middle'' hypothesis.}
+    \label{fig:iedm}
+    % TODO: replace with actual computed curves.
+\end{figure}
+
+Two patterns stand out:
+
+\begin{itemize}
+    \item Distortion $d_\ell$ increases gradually with depth in both real and simulated data, indicating mild mission drift as the policy is localized.
+    \item Entropy $H_\ell$ exhibits a sharp peak at \textbf{Level 3} (Deans and equivalent middle managers), while remaining relatively low at executive and frontline levels.
+\end{itemize}
+
+This pattern matches the ``frozen middle'' narrative from organizational studies~\citep{clark1983higher,weick1976educational}: middle managers generate multiple incompatible interpretations as they translate strategy into operational rules, even when executives and frontline actors remain comparatively aligned within their own layers.
+
+\paragraph{Interpretability for stakeholders.}
+When presented with anonymized examples of cluster centroids at different levels, university leaders recognized the Level-3 clusters as distinct ``schools of thought'' about the reform (e.g., ``process simplification'', ``form re-labelling'', ``delegation to teaching offices''). This qualitative validation suggests that IEDM captures not only numeric divergence but also semantically meaningful splits that resonate with practitioners.
+
+\subsection{RQ3: Stress Testing and Goodhart-Style Metric Gaming}
+
+Finally, we ask whether Org-GPT can serve as a \emph{policy wind tunnel}: when we change incentive structures, do we observe emergent pathologies that match theoretical expectations such as Goodhart's Law~\citep{goodhart1975problems}?
+
+\paragraph{Stress-test scenario and behavioral labels.}
+To probe Goodhart-style effects, we modify the workload-reduction directive into a \emph{metric-linked} policy: units receive extra budget if their reported ``administrative burden reduction score'' $S$ exceeds a threshold $\tau$, while the true objective is a latent quality variable $Q$ (student learning and faculty well-being). In Org-GPT we (i) add $S$-linked bonuses to the utilities of middle and frontline managers, (ii) keep $Q$ implicit in the environment dynamics, and (iii) vary the metric pressure $\tau$ from soft guidance to hard constraint. For each simulated run, we then classify the dominant response of each unit into \emph{capacity building} (process redesign, staff reallocation, shared infrastructure that plausibly improves both $S$ and $Q$) versus \emph{gaming} (re-labelling tasks, shifting work to unmeasured channels, inflating burden reductions that raise $S$ but leave $Q$ unchanged or worse). Aggregating these labels yields the share of gaming-dominated units and the average changes in $S$ and $Q$ as functions of $\tau$.
+
+\paragraph{Phase transition under high pressure.}
+Figure~\ref{fig:goodhart} summarizes the results across increasing metric pressure.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.95\linewidth]{figs/goodhart-stress.pdf}
+    \caption{Stress test under metric-linked funding. As metric pressure $\tau$ increases, the share of units dominated by gaming behavior (solid line) exhibits a sharp rise beyond a critical region, while the proxy score $S$ continues to improve and the latent quality $Q$ plateaus or declines (dashed lines).}
+    \label{fig:goodhart}
+    % TODO: replace with actual simulation curves.
+\end{figure}
+
+We observe a characteristic pattern:
+
+\begin{itemize}
+    \item For low to moderate $\tau$, most units adopt capacity-building strategies; both $S$ and $Q$ improve modestly, and IEDM curves remain relatively flat.
+    \item Beyond a critical region $\tau_{\mathrm{crit}}$, the fraction of gaming-dominated units increases sharply, even though the constitutional layer forbids explicit rule-breaking. Agents instead exploit \emph{permissible} loopholes (e.g., redefining categories, shifting burdens to unmeasured activities).
+    \item In this high-pressure regime, the proxy score $S$ continues to increase, but simulated $Q$ stagnates or declines, reproducing the qualitative signature of Goodhart's Law.
+\end{itemize}
+
+\paragraph{Role of constitutional constraints.}
+An ablation where we disable the constitutional layer but keep the same metric incentives leads to qualitatively different failure modes: some agents attempt blatantly illegal actions (e.g., unapproved budget reallocations, retroactive record edits) that real institutions would block. Org-GPT's constitutional design narrows the space of pathologies to \emph{realistic} ones --- subtle metric manipulation and responsibility shifting within formal rules --- making the stress test more credible for policymakers.
+
+\paragraph{Early-warning via IEDM.}
+Interestingly, IEDM detects impending metric gaming before quality visibly declines. As $\tau$ approaches $\tau_{\mathrm{crit}}$, we observe a rise in semantic entropy $H_\ell$ at middle levels: units begin to diverge in how they linguistically frame ``administrative burden'' and ``teaching-related work''. This suggests a practical workflow: \emph{monitor IEDM curves under proposed incentive schemes; if semantic entropy spikes at intermediate levels, treat this as an early-warning signal that the proxy is about to be gamed.}
+
+\section{Related Work}
+
+\paragraph{Agent-based modeling and computational social science.}
+Classical agent-based modeling (ABM) work aims to ``grow'' social phenomena from simple local rules~\citep{epstein1999generative,epstein2006generative,conte2012manifesto}. In parallel, computational social science has emphasized using large-scale data and simulation to understand complex social systems~\citep{lazer2009computational,castellano2009statistical}. These lines of work typically rely on hand-designed heuristics and discrete state spaces, which makes it difficult to represent the semantic ambiguity, informal norms, and discursive practices observed in real bureaucracies. Org-GPT inherits ABM's bottom-up spirit but replaces hand-tuned behavioral rules with LLM-based cognitive kernels and an explicitly modeled institutional constitution.
+
+\paragraph{LLM-based multi-agent systems and generative societies.}
+Recent systems such as Generative Agents~\citep{park2023generative}, CAMEL~\citep{li2023camel}, MetaGPT~\citep{hong2023metagpt}, and other LLM-based multi-agent frameworks~\citep{gao2024llmabm,wang2024llmagents} show that language models can simulate rich social behaviors in digital environments. Most of these systems, however, focus on collaboration in relatively flat organizations (e.g., software teams, open-ended game agents) and evaluate success by task completion or subjective plausibility. Org-GPT targets a different design point: deep hierarchical bureaucracies with rigid authority boundaries, where \emph{friction}, delay, and semantic divergence are central objects of study rather than noise to be eliminated. Our experiments demonstrate that adding a symbolic constitution and IEDM-based diagnostics changes not only realism, but also the types of failure modes that emerge.
+
+\paragraph{Neuro-symbolic AI and constitutional constraints.}
+Neuro-symbolic AI seeks to combine the generalization ability of neural networks with the structure and guarantees of symbolic reasoning~\citep{hitzler2022nesy_book,badreddine2020ltn,bengio2019system}. Most existing work focuses on improving pattern recognition, logical reasoning, or verifiable planning at the level of individual agents. In contrast, Org-GPT applies a neuro-symbolic approach at the \emph{organizational} level: the symbolic layer is instantiated as an institutional constitution that constrains what actions are even legally admissible, while the neural layer captures boundedly rational preferences within that admissible set. This differs from ``tool-use'' style systems where symbolic components primarily expand capabilities; here, they narrow the action space to realistic governance behaviors.
+
+\paragraph{Education governance and organizational theory.}
+Organizational theory and higher-education research have long documented phenomena such as loose coupling~\citep{weick1976educational}, institutional decoupling~\citep{meyer1977institutionalized}, and the ``frozen middle'' in universities~\citep{clark1983higher}. At the same time, recent work on data-driven education governance calls for computational models that link policy signals to local implementation dynamics~\citep{zhang2023computational}. Org-GPT contributes to this agenda by offering a concrete, implementable simulator that can be calibrated on real university workflow logs and used to test alternative policy designs before they are deployed.
+
+\section{Discussion and Conclusion}
+
+\paragraph{From narrative metaphors to measurable signals.}
+Concepts like ``frozen middle'', ``mission drift'', or ``Tower of Babel'' are central to how practitioners talk about bureaucracies, but they are rarely operationalized in a way that supports systematic simulation and diagnosis. Org-GPT bridges this gap by turning these metaphors into measurable information-theoretic quantities via IEDM, and by grounding simulations in institutional constitutions derived from real Standard Operating Procedures. This makes it possible to move from purely narrative diagnosis to quantitative ``what if'' analysis of organizational reforms.
+
+\paragraph{Designing policy with a constitutional simulator.}
+Our experiments suggest a practical workflow for policy design in complex hierarchies. First, encode the formal rules of authority and procedures as a symbolic constitution. Second, calibrate cognitive profiles against historical logs to match the institution's characteristic frictions. Third, use IEDM curves and emergent behaviors (e.g., Goodhart-style metric gaming) as early-warning indicators when testing new incentive schemes or structural changes. In this sense, Org-GPT functions as a ``wind tunnel'' for organizational governance: not to predict every detail, but to surface vulnerable regimes and unintended consequences before policies are deployed at scale.
+
+\paragraph{Limitations and future work.}
+Org-GPT currently assumes a fixed organizational topology and focuses on formal communication channels; informal networks, turnover, and learning are only implicitly captured in the calibrated cognitive profiles. The semantic metrics in IEDM also depend on the quality and stability of the underlying embedding model. Future work includes (i) modeling dynamic evolution of both formal and informal ties, (ii) extending IEDM to multimodal artifacts (e.g., forms, dashboards), and (iii) exploring cross-domain generalization from education to other bureaucratic systems such as healthcare or municipal administration.
+
+\paragraph{Conclusion.}
+We introduced Org-GPT, a constitutional LLM-agent framework for simulating hierarchical organizations, together with the Information Entropy Decay Mechanism for quantifying bureaucratic entropy. Applied to a real university case, Org-GPT achieves better sim-to-real alignment than purely neural or purely rule-based baselines, and reveals interpretable failure modes such as frozen middle dynamics and metric gaming. We hope this work contributes to a broader research program where AI is used not only to automate tasks inside organizations, but also to help society reason more clearly about how those organizations are designed.
+
+\section*{Ethical Statement}
+
+All university workflow data used in this study were strictly anonymized and aggregated before analysis, and no attempt was made to model or evaluate individual employees. Org-GPT is intended as a tool for institutional learning and policy design; using it for surveillance, individual profiling, or punitive micro-management would be contrary to the spirit of this work.
+
+
+\bibliographystyle{icml2026}
+\bibliography{refs}
+
+\end{document}

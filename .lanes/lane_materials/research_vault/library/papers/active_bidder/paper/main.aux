@@ -1,0 +1,155 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{sutton2018reinforcement}
+\citation{he2016deep,devlin2018bert}
+\citation{zhao2023survey,achiam2023gpt}
+\citation{touvron2023llama,dubey2024llama}
+\citation{rombach2022high,peebles2023scalable}
+\citation{silver2016mastering,pathak2024foundation}
+\citation{friston2010free}
+\citation{yang2024zero,bronstein2024geometric}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{1}{section.1}\protected@file@percent }
+\newlabel{sec:introduction}{{1}{1}{Introduction}{section.1}{}}
+\citation{kingma2014adam,goodfellow2014generative}
+\citation{kovachki2023neural,smith2024scaling}
+\citation{gu2023mamba,vaswani2023evolution}
+\citation{radford2021learning}
+\citation{dao2023flashattention,sun2024learning,reid2024llama}
+\citation{sutton2018reinforcement}
+\citation{wu2024ai,wang2024generalist}
+\citation{liu2023medtime}
+\citation{zhao2023survey,achiam2023gpt}
+\citation{guo2017deepfm}
+\citation{cheng2016wide}
+\citation{vaswani2017attention}
+\citation{zhou2018deep}
+\citation{dubey2024llama,zhao2023survey}
+\citation{wang2024generalist,pathak2024foundation}
+\citation{sutton2018reinforcement}
+\citation{wu2018deep}
+\citation{silver2016mastering}
+\citation{levine2020offline}
+\citation{sun2024learning,yang2024zero}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Related Work}{3}{section.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}CTR Prediction and Real-Time Bidding (RTB)}{3}{subsection.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Reinforcement Learning in Advertising}{3}{subsection.2.2}\protected@file@percent }
+\citation{friston2010free}
+\citation{peebles2023scalable}
+\citation{bronstein2024geometric}
+\citation{kovachki2023neural,lu2024physics}
+\citation{reid2024llama,sun2024learning}
+\citation{dao2023flashattention}
+\citation{gu2023mamba}
+\citation{sutton2018reinforcement}
+\citation{friston2010free}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Active Inference and Generative Control}{4}{subsection.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Summary of Differentiation}{4}{subsection.2.4}\protected@file@percent }
+\citation{sun2024learning}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Methodology}{5}{section.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}The Active Inference Bidding Objective}{5}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Complexity vs. Accuracy: The Informational Trade-off}{5}{subsection.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.1}Accuracy: Maximizing Relevance}{5}{subsubsection.3.2.1}\protected@file@percent }
+\citation{vaswani2017attention}
+\citation{devlin2018bert}
+\citation{gu2023mamba}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.2.2}Complexity: Regularizing Belief Updates}{6}{subsubsection.3.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Neural Implementation and Latent Space Dynamics}{6}{subsection.3.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}The Bidding Algorithm}{6}{subsection.3.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Connection to Existing Paradigms}{6}{subsection.3.5}\protected@file@percent }
+\citation{diemert2018criteo}
+\citation{li2010contextual}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces Active-Bidder: Variational Free Energy Minimization}}{7}{algorithm.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4}Experiments}{7}{section.4}\protected@file@percent }
+\newlabel{sec:experiments}{{4}{7}{Experiments}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Experimental Setup and Baselines}{7}{subsection.4.1}\protected@file@percent }
+\citation{schulman2017proximal}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Convergence Analysis of Variational Free Energy}{8}{subsection.4.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces \textbf  {Convergence of Variational Free Energy ($\mathcal  {F}$) and Model Accuracy.} The blue curve represents the bound $\mathcal  {F} = D_{KL}[q(\psi ) \| p(\psi | \mathbf  {o})] - \mathbb  {E}_{q}[\log p(\mathbf  {o} | \psi )]$, showing a rapid descent in the initial phase (epistemic foraging) followed by a stable asymptotic behavior. The red dashed line tracks the Mean Squared Error (MSE) of the bid-response prediction, demonstrating that VFE minimization is a tight proxy for learning the environment's latent dynamics.}}{8}{figure.1}\protected@file@percent }
+\newlabel{fig:vfe_convergence}{{1}{8}{\textbf {Convergence of Variational Free Energy ($\mathcal {F}$) and Model Accuracy.} The blue curve represents the bound $\mathcal {F} = D_{KL}[q(\psi ) \| p(\psi | \mathbf {o})] - \mathbb {E}_{q}[\log p(\mathbf {o} | \psi )]$, showing a rapid descent in the initial phase (epistemic foraging) followed by a stable asymptotic behavior. The red dashed line tracks the Mean Squared Error (MSE) of the bid-response prediction, demonstrating that VFE minimization is a tight proxy for learning the environment's latent dynamics}{figure.1}{}}
+\citation{li2010contextual}
+\citation{schulman2017proximal}
+\citation{zhao2018deep}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Comparative Performance: CTR vs. LTV}{9}{subsection.4.3}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces \textbf  {Performance Comparison across Metric Categories.} Values represent the mean $\pm $ standard deviation over 10 independent runs. LTV is normalized to the LinUCB baseline.}}{9}{table.1}\protected@file@percent }
+\newlabel{tab:comparison_results}{{1}{9}{\textbf {Performance Comparison across Metric Categories.} Values represent the mean $\pm $ standard deviation over 10 independent runs. LTV is normalized to the LinUCB baseline}{table.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Ablation Study: The Power of Epistemic Value}{9}{subsection.4.4}\protected@file@percent }
+\citation{sutton2018reinforcement}
+\citation{milano2020recommender}
+\citation{friston2010action}
+\citation{shneiderman2022human,zhang2024trustworthy}
+\citation{kingma2013auto}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}Sensitivity to Market Volatility}{10}{subsection.4.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Discussion}{10}{section.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Theoretical Significance: Beyond Myopic Exploitation}{10}{subsection.5.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Limitations: The Computational Cost of Inference}{10}{subsection.5.2}\protected@file@percent }
+\citation{buckley2017free,smith2022active}
+\citation{scellier2017equilibrium,davies2024neuromorphic}
+\citation{seaver2019algorithms}
+\citation{constant2022biosemiotics}
+\citation{pariser2011filter,hancox2024digital}
+\citation{albarracin2023epistemic}
+\citation{friston2024morphogenesis}
+\citation{tan2022federated,li2025privacy}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Societal Impact: Combating Clickbait and Manipulation}{11}{subsection.5.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Future Work: Multi-Agent Active Inference}{11}{subsection.5.4}\protected@file@percent }
+\bibdata{refs}
+\bibcite{achiam2023gpt}{{1}{2023}{{Achiam et~al.}}{{Achiam, Adler, Agarwal, Ahmad, Akkaya, Aleman, et~al.}}}
+\bibcite{albarracin2023epistemic}{{2}{2023}{{Albarracin et~al.}}{{Albarracin, Constant, Friston, and Hipolito}}}
+\bibcite{bronstein2024geometric}{{3}{2024}{{Bronstein et~al.}}{{Bronstein, Bruna, Cohen, and Veli{\v {c}}kovi{\'c}}}}
+\bibcite{buckley2017free}{{4}{2017}{{Buckley et~al.}}{{Buckley, Kim, McGregor, and Seth}}}
+\bibcite{cheng2016wide}{{5}{2016}{{Cheng et~al.}}{{Cheng, Koc, Harmsen, Shaked, Chandra, Aradhye, Anderson, Corrado, Fu, Henry, et~al.}}}
+\bibcite{constant2022biosemiotics}{{6}{2022}{{Constant et~al.}}{{Constant, Sims, and Friston}}}
+\bibcite{dao2023flashattention}{{7}{2024}{{Dao}}{{}}}
+\bibcite{davies2024neuromorphic}{{8}{2024}{{Davies et~al.}}{{}}}
+\bibcite{devlin2018bert}{{9}{2019}{{Devlin et~al.}}{{Devlin, Chang, Lee, and Toutanova}}}
+\bibcite{diemert2018criteo}{{10}{2018}{{Diemert et~al.}}{{Diemert, Meynet, Galland, and Lefortier}}}
+\bibcite{dubey2024llama}{{11}{2024}{{Dubey et~al.}}{{Dubey, Jauhri, Pandey, Agrawal, Agarwal, Akkaya, et~al.}}}
+\bibcite{friston2010free}{{12}{2010}{{Friston}}{{}}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Conclusion}{12}{subsection.5.5}\protected@file@percent }
+\bibcite{friston2010action}{{13}{2010}{{Friston et~al.}}{{Friston, Daunizeau, Kilner, and Kiebel}}}
+\bibcite{friston2024morphogenesis}{{14}{2024}{{Friston et~al.}}{{Friston, Levin, and Ramstead}}}
+\bibcite{goodfellow2014generative}{{15}{2014}{{Goodfellow et~al.}}{{Goodfellow, Pouget-Abadie, Mirza, Xu, Warde-Farley, Ozair, Courville, and Bengio}}}
+\bibcite{gu2023mamba}{{16}{2024}{{Gu and Dao}}{{}}}
+\bibcite{guo2017deepfm}{{17}{2017}{{Guo et~al.}}{{Guo, Tang, Ye, Li, and He}}}
+\bibcite{hancox2024digital}{{18}{2024}{{Hancox et~al.}}{{Hancox, Smith, et~al.}}}
+\bibcite{he2016deep}{{19}{2016}{{He et~al.}}{{He, Zhang, Ren, and Sun}}}
+\bibcite{kingma2014adam}{{20}{2015}{{Kingma and Ba}}{{}}}
+\bibcite{kingma2013auto}{{21}{2014}{{Kingma and Welling}}{{}}}
+\bibcite{kovachki2023neural}{{22}{2023}{{Kovachki et~al.}}{{Kovachki, Lanthaler, and Mishra}}}
+\bibcite{levine2020offline}{{23}{2020}{{Levine et~al.}}{{Levine, Kumar, Tucker, and Fu}}}
+\bibcite{li2010contextual}{{24}{2010}{{Li et~al.}}{{Li, Chu, Langford, and Schapire}}}
+\bibcite{li2025privacy}{{25}{2025}{{Li et~al.}}{{}}}
+\bibcite{liu2023medtime}{{26}{2023}{{Liu et~al.}}{{Liu, Chen, and Yang}}}
+\bibcite{lu2024physics}{{27}{2024}{{Lu et~al.}}{{Lu, Jin, Pang, Zhang, and Karniadakis}}}
+\bibcite{milano2020recommender}{{28}{2020}{{Milano et~al.}}{{Milano, Taddeo, and Floridi}}}
+\bibcite{pariser2011filter}{{29}{2011}{{Pariser}}{{}}}
+\bibcite{pathak2024foundation}{{30}{2024}{{Pathak et~al.}}{{}}}
+\bibcite{peebles2023scalable}{{31}{2023}{{Peebles and Xie}}{{}}}
+\bibcite{radford2021learning}{{32}{2021}{{Radford et~al.}}{{Radford, Kim, Hallacy, Ramesh, Goh, Agarwal, Sastry, Askell, Mishkin, Clark, et~al.}}}
+\bibcite{reid2024llama}{{33}{2024}{{Reid et~al.}}{{Reid, Marlan, and Sun}}}
+\bibcite{rombach2022high}{{34}{2022}{{Rombach et~al.}}{{Rombach, Blattmann, Lorenz, Esser, and Ommer}}}
+\bibcite{scellier2017equilibrium}{{35}{2017}{{Scellier and Bengio}}{{}}}
+\bibcite{schulman2017proximal}{{36}{2017}{{Schulman et~al.}}{{Schulman, Wolski, Dhariwal, Radford, and Klimov}}}
+\bibcite{seaver2019algorithms}{{37}{2019}{{Seaver}}{{}}}
+\bibcite{shneiderman2022human}{{38}{2022}{{Shneiderman}}{{}}}
+\bibcite{silver2016mastering}{{39}{2016}{{Silver et~al.}}{{Silver, Huang, Maddison, Guez, Sifre, Van Den~Driessche, Schrittwieser, Antonoglou, Panneershelvam, Lanctot, et~al.}}}
+\bibcite{smith2024scaling}{{40}{2024}{{Smith et~al.}}{{Smith, Brown, and Wilson}}}
+\bibcite{smith2022active}{{41}{2022}{{Smith et~al.}}{{Smith, Friston, and Whyte}}}
+\bibcite{sun2024learning}{{42}{2024}{{Sun et~al.}}{{Sun, Wang, Liu, Hoffman, and Darrell}}}
+\bibcite{sutton2018reinforcement}{{43}{2018}{{Sutton and Barto}}{{}}}
+\bibcite{tan2022federated}{{44}{2022}{{Tan et~al.}}{{Tan, Yu, Cui, and Yang}}}
+\bibcite{touvron2023llama}{{45}{2023}{{Touvron et~al.}}{{Touvron, Martin, Stone, Albert, Almahairi, Babaei, Bashlykov, Batra, Bhargava, Bhosale, et~al.}}}
+\bibcite{vaswani2017attention}{{46}{2017}{{Vaswani et~al.}}{{Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez, Kaiser, and Polosukhin}}}
+\bibcite{vaswani2023evolution}{{47}{2023}{{Vaswani et~al.}}{{}}}
+\bibcite{wang2024generalist}{{48}{2024}{{Wang et~al.}}{{Wang, Xu, Zhang, et~al.}}}
+\bibcite{wu2024ai}{{49}{2024}{{Wu et~al.}}{{Wu, Zhang, Chen, et~al.}}}
+\bibcite{yang2024zero}{{50}{2024}{{Yang et~al.}}{{Yang, Zhao, et~al.}}}
+\bibcite{zhang2024trustworthy}{{51}{2024}{{Zhang et~al.}}{{}}}
+\bibcite{wu2018deep}{{52}{2019}{{Zhang et~al.}}{{Zhang, Yao, Sun, and Tay}}}
+\bibcite{zhao2023survey}{{53}{2023}{{Zhao et~al.}}{{Zhao, Zhou, Li, Tang, Wang, Hou, Min, Zhang, Zhang, Dong, et~al.}}}
+\bibcite{zhao2018deep}{{54}{2018}{{Zhao et~al.}}{{}}}
+\bibcite{zhou2018deep}{{55}{2018}{{Zhou et~al.}}{{Zhou, Zhu, Song, Fan, Zhu, Ma, Yan, Jin, Li, and Gai}}}
+\bibstyle{plainnat}
+\gdef \@abspage@last{15}

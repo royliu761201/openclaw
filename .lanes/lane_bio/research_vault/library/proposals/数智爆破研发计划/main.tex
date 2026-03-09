@@ -1,0 +1,344 @@
+% !TEX program = xelatex
+% ============================================================
+% 正式内部文档：数智爆破中的爆破模拟与智能决策（AI引入）
+% 结构：Why / What / How / With What
+% 说明：参考文献放在 refs.bib 中
+% ============================================================
+
+\documentclass[12pt,a4paper,fontset=mac]{ctexart}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{Heiti SC}
+
+% -------------------- 页面与排版 --------------------
+\usepackage[a4paper,margin=2.2cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0.35em}
+
+% -------------------- 常用宏包 --------------------
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{amsmath,amssymb}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{cite}
+\usepackage{gbt7714}
+
+\usepackage{longtable}
+\usepackage{array}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  urlcolor=black,
+  citecolor=black
+}
+
+\setlist[itemize]{leftmargin=2.0em, itemsep=0.25em, topsep=0.25em}
+\setlist[enumerate]{leftmargin=2.0em, itemsep=0.25em, topsep=0.25em}
+
+% -------------------- 术语与缩写（正文统一写法） --------------------
+\newcommand{\abbr}[2]{#1（\textsc{#2}）} % 中文全称（缩写）
+\newcommand{\AI}{\textsc{AI}}
+\newcommand{\PPV}{\textsc{PPV}}
+\newcommand{\UQ}{\textsc{UQ}}
+\newcommand{\MWD}{\textsc{MWD}}
+
+% -------------------- 文档信息 --------------------
+\title{\bfseries\LARGE 数智爆破中的爆破模拟与智能决策\\
+\Large（引入人工智能的机理--数据融合方案 / 内部正式文档）}
+\author{\large 刘晓华\\ \normalsize 精细爆破全国重点实验室\quad 数智爆破所}
+\date{\large \today}
+
+\begin{document}
+\maketitle
+
+\vspace{-0.4em}
+\noindent\textbf{密级：内部资料（仅限项目组与授权人员阅览与使用）}\\
+\noindent\textbf{版本：}V1.0 \quad \textbf{用途：}团队共识、立项推进、任务分解与实施落地依据
+
+\vspace{0.8em}
+\tableofcontents
+\newpage
+
+% =========================
+% 术语表（两列，自动分页；建议置于正文之前）
+% =========================
+\section*{术语表}
+\addcontentsline{toc}{section}{术语表}
+
+\setlength{\tabcolsep}{6pt}
+\renewcommand{\arraystretch}{1.25}
+\small
+
+\begin{longtable}{
+  >{\raggedright\arraybackslash}p{3.4cm}
+  >{\raggedright\arraybackslash}p{\dimexpr\linewidth-3.4cm-2\tabcolsep\relax}
+}
+\toprule
+\textbf{术语} & \textbf{释义} \\
+\midrule
+\endfirsthead
+
+\toprule
+\textbf{术语} & \textbf{释义} \\
+\midrule
+\endhead
+
+\midrule
+\multicolumn{2}{r}{\small（续下页）} \\
+\endfoot
+
+\bottomrule
+\endlastfoot
+
+数智爆破 & 以数据治理为基础，融合机理模型与\abbr{人工智能}{AI}，形成爆破设计、施工、监测、校正与优化的一体化技术体系。\\
+爆破模拟 & 对爆破能量输入、波动传播、损伤断裂、碎裂与块体运动等过程进行计算建模，用于预测振动、损伤/破碎与爆堆等工程响应。\\
+高保真数值模拟 & 以有限元（FEM）、离散元（DEM）及耦合方法为代表的机理计算模型，可较完整刻画过程，但计算代价高、对参数与工况依赖强。\\
+多保真建模 & 低保真模型与高保真模型协同构建训练与评测体系，在计算成本与预测精度之间取得平衡。\\
+代理模型（代理模拟） & 采用机器学习近似高保真仿真的前向映射，实现快速推理并输出关键工程指标。\\
+算子学习 & 学习输入函数/场到输出函数/场的映射，用于跨网格、跨尺度的快速近似求解。\\
+物理一致性约束 & 在学习与推理中引入边界一致、趋势一致、稳定性、单调性或守恒趋势等约束，以提升可信度与泛化能力。\\
+不确定性量化（\UQ） & 对输出给出置信区间或概率分布，用于风险评估与决策约束。\\
+等效隐变量 & 将难以精确测量的细节因素（如耦合状态、局部强度差异、节理影响等）表示为可解释的参数或参数场。\\
+反演校正 & 利用现场观测（振动波形、施工记录、爆堆影像/点云等）对等效隐变量或模型状态进行更新，使模型与现场对齐。\\
+可辨识性 & 在给定观测条件下，参数/状态是否能够被稳定推断与约束的性质；不可辨识时应采用降维等效表示或以风险输出替代点估计。\\
+爆破振动（\PPV） & 峰值质点速度（Peak Particle Velocity），常用作爆破振动控制与安全评价的核心指标之一。\\
+频带能量/主频特征 & 对振动信号的频域或时频域能量分布、主频与带宽等特征描述，用于更全面表征振动影响。\\
+随钻测量（\MWD） & 钻孔施工过程中采集的随钻参数数据，可用于爆破质量预测、状态估计与模型校正。\\
+块度分布 & 爆破后碎块尺寸的统计分布，可用分位数、对数正态或幂律参数等表征。\\
+数字筛分 & 基于影像/点云等数据的碎块尺寸自动统计方法，用于获得块度分布及其统计指标。\\
+爆堆形态指标 & 对堆高、扩散范围、抛掷距离、孔隙率代理等的综合表征，用于评估装运效率与作业组织。\\
+多目标优化 & 同时优化多个相互冲突目标（如块度/堆形/成本），通常输出非支配解集合供工程选择。\\
+风险约束（概率约束） & 用概率形式表达安全约束（如 $\mathbb{P}(\PPV>\tau)\le \alpha$），在不确定性条件下实现风险可控决策。\\
+Pareto前沿 & 多目标优化中不可进一步同时改进各目标的解集合，反映“安全—效率—成本”的权衡边界。\\
+数字孪生 & 将工程对象映射为可更新的数字模型，形成“监测—校正—预测—决策—回灌”的闭环运行体系。\\
+状态孪生 & 强调依据监测数据对系统状态进行实时或准实时更新与一致性维护的数字孪生实现形态。\\
+工程回灌 & 将现场实施与监测结果反馈至数据与模型体系，用于迭代训练、校正参数、更新策略与沉淀案例。\\
+
+\end{longtable}
+
+\normalsize
+\newpage
+
+% ============================================================
+\section{立项依据（Why）}
+% ============================================================
+
+\subsection{问题背景与现实需求}
+爆破工程长期面临“设计—施工—监测—复盘”链条割裂的问题。传统爆破模拟以高保真数值计算为主（有限元、离散元及其耦合等），在工程实践中存在以下突出矛盾：
+\begin{itemize}
+  \item \textbf{计算代价高与决策时效性矛盾：} 高保真仿真周期长，难以支撑方案快速迭代与现场快速评估；现有研究多集中于离线数值分析与工况对比\cite{Rong2024InSituJointBlasting,Sun2025BifurcatedTunnelBlasting,Guan2024NonCutBlastScheme,Men2025WaterInrushFEMSPH}。
+  \item \textbf{参数强依赖经验与现场不确定性矛盾：} 岩体非均质、节理结构、装药耦合状态、施工偏差与延期误差等关键因素难以精确测量，导致“可跑算例”与“可用决策”之间存在显著差距；碎裂评价也常依赖后验统计或额外算法处理（如数字筛分等）\cite{Song2025DigitalSievingFragmentation}。
+  \item \textbf{多目标权衡与安全约束矛盾：} 块度与爆堆形态（效率与成本）与振动、飞石、超挖、边坡稳定等安全红线高度耦合，缺乏可解释、可量化风险的系统化决策方法。近年来，爆破振动与飞石的机器学习预测研究快速增长，显示出数据驱动方向的工程需求与可行性\cite{Hosseini2023PPVEnsemble,Komadja2022SustainabilityPPV,Chen2025CatBoostPPV,BozkurtKeser2025DeepEnsemblePPV,Taiwo2024FlyrockML,Mishra2023FlyrockHSV}。
+\end{itemize}
+
+\subsection{科学与工程核心挑战}
+爆破过程可抽象为受控能量输入驱动的多尺度强非线性介质动力学与断裂碎裂演化，其核心难点集中在：
+\begin{itemize}
+  \item \textbf{多尺度与强非线性：} 冲击波传播（毫秒级）与块体运动（秒级）并存；孔周局部效应与台阶工程尺度效应并存。
+  \item \textbf{不连续与拓扑变化：} 损伤、断裂、接触与碎裂导致拓扑结构发生变化，单一连续模型难以完整描述。
+  \item \textbf{反问题与可辨识性：} 监测数据有限，需明确哪些“等效隐变量”可由观测约束并稳定反演，避免不可辨识导致的过拟合与失真。
+  \item \textbf{风险可控的多目标优化：} 爆破设计本质为在不确定性条件下的多目标优化与概率风险约束问题。近年来不确定性评估与集成学习被用于爆破振动预测与评价，提供了风险表达的可操作路径\cite{BozkurtKeser2025DeepEnsemblePPV}。
+\end{itemize}
+
+\subsection{引入人工智能的必要性与定位}
+\abbr{人工智能}{AI}在本方案中的定位不是替代物理机理，而是构建“可对齐、可泛化、可决策”的数智爆破闭环能力：
+\begin{itemize}
+  \item \textbf{学习型代理模拟：} 将高保真仿真从小时/天级压缩至秒级推理，为方案搜索、优化与在线评估提供可用算力基础；并与数字筛分、振动/损伤统计等输出需求对齐\cite{Song2025DigitalSievingFragmentation}。
+  \item \textbf{机理约束学习：} 在学习过程中显式引入守恒趋势、边界一致性、单调性等约束，提升可信度与跨工况泛化能力（用于解决仅靠经验拟合的脆弱性）。
+  \item \textbf{不确定性量化：} \abbr{不确定性量化}{UQ}输出由点估计升级为分布与置信区间，为安全红线提供风险概率表达与可审计依据；相关思想已在振动预测研究中体现\cite{BozkurtKeser2025DeepEnsemblePPV}。
+  \item \textbf{反演校正与闭环更新：} 利用振动波形、施工记录、爆堆影像等少量观测，对等效隐变量进行更新，实现模型与现场对齐；隧道爆破质量与评价相关研究亦显示了多源数据（如\MWD）在质量预测中的价值\cite{Jin2025MWDQuality,Shi2024TunnelBlastingReview}。
+  \item \textbf{数字孪生承载：} 将“模拟—监测—校正—决策”固化为数字孪生能力是行业趋势，隧道与地下工程数字孪生方向已有系统性研究与应用探索\cite{Li2024TunnelDT,Salzgeber2024FromDigitalModelToDT,Fang2024StatusDTOverUnderExcavation,Zhu2025DTUndergroundInfraReview,Michal2025DTInTunnelConstruction,Sharafat2025DTCavernStability,Pan2025DTOverbreak,Lapcevic2025DTBlastFragmentation,Li2025JointDistributionTunnel}。
+\end{itemize}
+
+% ============================================================
+\section{建设目标与交付物（What）}
+% ============================================================
+
+\subsection{总体目标}
+构建面向工程爆破的\textbf{机理--数据融合爆破模拟与智能决策体系}，实现：
+\begin{center}
+\textbf{高保真可对齐（可信）\quad + \quad 秒级可决策（可用）\quad + \quad 不确定性可量化（可控）}
+\end{center}
+
+\subsection{具体目标}
+\begin{enumerate}
+  \item 建立统一的数据与对象表示体系，贯通孔网/装药/延期/地质域/边界/监测等要素，实现结构化治理与可追溯管理。
+  \item 建立多保真机理基准与等效参数化体系，形成可用于训练、验证与对齐的高保真标尺与评测协议（面向典型隧道/矿山爆破工况）。
+  \item 构建学习型代理模拟模型，实现秒级输出关键工程指标（振动、损伤/破碎统计、爆堆形态）及其不确定性，并满足物理一致性要求。
+  \item 建立基于监测数据的反演校正能力，形成等效隐变量后验更新机制，并给出可辨识性边界结论。
+  \item 建立风险受控的多目标优化与方案推荐机制，输出可解释的Pareto解集与风险概率报告，支撑工程采用。
+\end{enumerate}
+
+\subsection{交付物与验收口径}
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{p{2.8cm}X p{4.3cm}}
+\toprule
+\textbf{交付物} & \textbf{内容范围} & \textbf{验收口径} \\
+\midrule
+算法体系 & 数据治理、代理模拟、反演校正、风险优化闭环算法与实现 & 模块可运行；输入输出定义清晰；版本可追溯 \\
+原型平台 & 数据接入、训练、评测、方案推荐、报告生成与日志审计 & 可部署；可复现实验；可生成标准化报告 \\
+数据体系 & 统一数据schema、质量控制规则、基准任务与数据划分策略 & 字段一致；单位一致；质量评分可用；基准固定 \\
+评测指标体系 & 振动、破碎、爆堆、风险与物理一致性指标 & 指标定义明确；可计算；可对比；可审计 \\
+论文/知识产权 & 方法论与工程化成果沉淀 & 形成可投稿文本与专利/软著材料 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+% ============================================================
+\section{技术路线与任务分解（How）}
+% ============================================================
+
+\subsection{总体技术路线}
+本方案采用“数据治理—机理对齐—\AI{}代理—反演校正—风险优化—工程回灌”的闭环路线：
+\begin{center}
+\textbf{数据治理} $\rightarrow$
+\textbf{多保真机理对齐} $\rightarrow$
+\textbf{学习型代理模拟} $\rightarrow$
+\textbf{反演校正} $\rightarrow$
+\textbf{风险受控优化} $\rightarrow$
+\textbf{工程回灌迭代}
+\end{center}
+
+% -------------------- 任务一 --------------------
+\subsection{任务一：统一对象表示与数据治理}
+\textbf{目标：} 形成适用于“多孔协同爆破”的统一表示与数据标准，建立可追溯的数据资产。
+
+\textbf{主要工作：}
+\begin{itemize}
+  \item 建立孔网—装药—延期—地质域—边界—监测的统一数据schema（字段、单位、坐标系、时间戳、版本）。
+  \item 建立工程对象表示：以“炮孔/药包/起爆单元”为基本对象，显式刻画空间邻接与时序干涉关系，支撑后续\AI{}建模与数字孪生对接\cite{Li2024TunnelDT,Salzgeber2024FromDigitalModelToDT}。
+  \item 建立数据质量控制：缺失字段规则、异常值检测、对齐校验（坐标/时间/单位一致性）、质量评分。
+\end{itemize}
+
+% -------------------- 任务二 --------------------
+\subsection{任务二：多保真机理基准与等效参数化}
+\textbf{目标：} 构建高保真标尺与等效参数化体系，为\AI{}训练与现场对齐提供可信基础。
+
+\textbf{主要工作：}
+\begin{itemize}
+  \item 构建典型工况族：覆盖孔距/排距/抵抗线、分段装药与耦合状态、延期模式、地质域与边界条件等组合；对隧道爆破质量评价与指标体系对齐\cite{Shi2024TunnelBlastingReview}。
+  \item 形成多保真数据：低保真大规模覆盖 + 高保真小规模精标，用于联合训练与评测；并与典型数值模拟研究对齐形成可复现算例簇\cite{Rong2024InSituJointBlasting,Sun2025BifurcatedTunnelBlasting,Guan2024NonCutBlastScheme,Men2025WaterInrushFEMSPH}。
+  \item 明确等效隐变量集合：例如等效耦合系数、等效损伤阈值场、等效各向异性参数等，并给出参数边界与物理含义说明；针对节理分布等结构因素的影响路径形成参数化口径\cite{Li2025JointDistributionTunnel}。
+  \item 建立一致性评测：工程指标一致性（振动与破碎统计量）与物理一致性（边界、趋势、稳定性）双维度评测；对破碎统计可结合数字筛分等算法形成统一输出口径\cite{Song2025DigitalSievingFragmentation}。
+\end{itemize}
+
+% -------------------- 任务三 --------------------
+\subsection{任务三：学习型代理模拟模型}
+\textbf{目标：} 实现秒级推理的代理模拟能力，输出关键工程指标及不确定性，并满足物理一致性要求。
+
+\textbf{主要工作：}
+\begin{itemize}
+  \item 构建结构感知模型：面向多孔协同与时序干涉，采用结构化学习框架刻画输入到输出的映射；振动预测以\abbr{峰值质点速度}{PPV}及频带能量为核心输出，并对标既有机器学习预测工作作为基准对照\cite{Hosseini2023PPVEnsemble,Komadja2022SustainabilityPPV,Chen2025CatBoostPPV,BozkurtKeser2025DeepEnsemblePPV}。
+  \item 输出体系：聚焦工程可决策指标（\PPV{}与频带能量、块度分布参数、细料率、爆堆形态指标等），避免仅给出不可直接决策的中间场。
+  \item 可信约束：引入物理一致性约束（边界一致、趋势一致、稳定性约束等），并形成可审计的“约束违规率”统计。
+  \item 不确定性量化：建立分布预测或置信区间输出，并进行校准评测；参考振动预测中不确定性评估的研究范式\cite{BozkurtKeser2025DeepEnsemblePPV}。
+  \item 扩展风险项：对飞石距离等高风险指标，形成可接入的预测与评测模块，参考传感器与高速影像驱动的飞石预测研究\cite{Taiwo2024FlyrockML,Mishra2023FlyrockHSV}。
+\end{itemize}
+
+% -------------------- 任务四 --------------------
+\subsection{任务四：反演校正与可辨识性分析}
+\textbf{目标：} 基于现场观测对等效隐变量进行后验更新，实现模型与现场对齐，并明确可辨识性边界。
+
+\textbf{主要工作：}
+\begin{itemize}
+  \item 观测数据接入：振动波形（多测点）、施工记录（孔位/药量/延期误差）、爆堆影像/点云（如具备）等；隧道爆破质量预测中\abbr{随钻测量}{MWD}等数据源可作为可选增强输入\cite{Jin2025MWDQuality}。
+  \item 反演机制：以代理模型作为快速前向算子，结合更新策略得到等效隐变量后验分布与不确定性。
+  \item 可辨识性分析：通过敏感性分析、后验收缩、信息增益等方式，形成“可反演/不可反演”边界结论及原因说明。
+  \item 与数字孪生对接：将“监测—更新—回灌”固化为孪生状态更新流程，参考隧道与地下工程数字孪生研究中的状态孪生与监测闭环思路\cite{Fang2024StatusDTOverUnderExcavation,Zhu2025DTUndergroundInfraReview,Michal2025DTInTunnelConstruction}。
+\end{itemize}
+
+% -------------------- 任务五 --------------------
+\subsection{任务五：风险受控的多目标优化与方案推荐}
+\textbf{目标：} 在不确定性条件下输出可解释的方案推荐与风险报告，实现“从预测到决策”。
+
+\textbf{主要工作：}
+\begin{itemize}
+  \item 建立优化变量集合：孔网参数、装药结构、延期模式等；建立可操作的工程约束集合。
+  \item 多目标优化：同时考虑块度/爆堆效率/成本等目标，输出Pareto解集供工程选择。
+  \item 风险约束：将振动超限、飞石风险、超挖风险等以概率方式表达，并在优化中施加约束；振动预测基准对照可采用公开的机器学习研究范式\cite{Hosseini2023PPVEnsemble,Komadja2022SustainabilityPPV,Chen2025CatBoostPPV}。
+  \item 报告输出：对推荐方案给出风险概率、关键敏感因素与可解释说明，满足审计与工程采用要求。
+  \item 面向隧道场景：将欠挖/超挖检测与质量评价结果纳入优化闭环，并参考数字孪生驱动的欠挖/超挖监测研究\cite{Pan2025DTOverbreak,Fang2024StatusDTOverUnderExcavation}。
+\end{itemize}
+
+% ============================================================
+\section{资源条件与组织保障（With What）}
+% ============================================================
+
+\subsection{数据与采集保障}
+\begin{itemize}
+  \item 内部数据资产：工程案例资料、振动监测数据、施工记录、地质资料、爆堆影像/点云等；同时可将粉尘、污染物迁移等环境影响模拟与监测作为可扩展模块\cite{Jia2022DustSuppressionBurningRock,Yin2022PollutantMigrationBlasting,Huang2019BlastingDustSimulation}。
+  \item 采集规范：形成最小关键字段采集要求，确保孔位偏差、延期误差、耦合状态等关键不确定性可被记录并回灌。
+  \item 数据安全：分级授权、脱敏策略、审计日志、版本控制与可追溯机制。
+\end{itemize}
+
+\subsection{算力与平台保障}
+\begin{itemize}
+  \item 依托智算中心GPU/CPU集群：支撑高保真仿真批量生成、\AI{}训练与推理、风险优化计算。
+  \item 平台化与工程化：容器化部署、自动化训练与评测流水线、报告生成与可视化展示、可重复运行与回归评测机制。
+\end{itemize}
+
+\subsection{团队分工与协同机制}
+\begin{itemize}
+  \item 机理与工程组：指标定义、工况体系、工程约束与验收逻辑、试点组织与现场验证。
+  \item 仿真与建模组：多保真算例库、等效参数化、物理一致性评测与基准维护。
+  \item \AI{}与数据组：代理模型、不确定性量化、反演校正、风险优化方法与实现。
+  \item 平台与运维组：数据治理、权限安全、MLOps与部署、日志审计与质量控制。
+\end{itemize}
+
+% ============================================================
+\section{实施计划与阶段成果}
+% ============================================================
+
+\subsection{阶段划分与里程碑}
+\begin{table}[h]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\begin{tabularx}{\linewidth}{p{2.4cm}X}
+\toprule
+\textbf{阶段} & \textbf{阶段成果} \\
+\midrule
+第一阶段 & 数据schema与质量规则定稿；对象表示与基准任务确定；多保真算例库初版完成；平台骨架可运行 \\
+第二阶段 & 代理模型初版实现并完成基准评测（含\PPV/破碎统计输出）；不确定性输出与校准机制建立；形成可复现训练与评测流程 \\
+第三阶段 & 反演校正模块上线；形成可辨识性分析结论与文档；试点数据回灌闭环贯通 \\
+第四阶段 & 风险受控多目标优化闭环完成；方案推荐与风险报告可用；平台交付版本定版与推广准备 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{核心评价指标体系}
+\begin{itemize}
+  \item \textbf{时效性：} 单方案推理时间满足工程迭代需求；支持批量方案快速评估。
+  \item \textbf{准确性与一致性：} 关键工程指标误差满足应用要求；物理一致性约束达标。
+  \item \textbf{不确定性可用性：} 置信区间校准可靠；风险概率输出稳定可审计。
+  \item \textbf{闭环能力：} 具备“监测—校正—再推荐”的贯通能力，可在试点场景完成验证。
+\end{itemize}
+
+% ============================================================
+\section{风险分析与控制措施}
+% ============================================================
+
+\begin{itemize}
+  \item \textbf{数据不完备与噪声影响模型有效性：} 建立最小关键字段规范与质量评分；采用等效参数化与鲁棒训练；引入回归评测与失败案例库。
+  \item \textbf{代理模型黑盒风险与泛化不足：} 强化物理一致性约束与不确定性校准；采用多保真联合训练与域标签分层建模；引入可解释归因与消融验证。
+  \item \textbf{反演不可辨识导致结论不稳定：} 开展可辨识性分析并明确边界；对不可辨识变量采用合并/降维的等效表示；以风险输出而非单点参数作为决策依据。
+  \item \textbf{优化结果难以工程采纳：} 输出Pareto解集与风险报告；提供保守/均衡/效率优先等可选策略；形成可审计的解释与复盘机制。
+\end{itemize}
+
+% ============================================================
+% 参考文献
+% ============================================================
+\clearpage
+\phantomsection
+\addcontentsline{toc}{section}{参考文献}
+\bibliographystyle{gbt7714-numerical}
+\bibliography{refs}
+
+\end{document}

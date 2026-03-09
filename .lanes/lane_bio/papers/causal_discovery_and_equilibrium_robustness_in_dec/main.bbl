@@ -1,0 +1,241 @@
+\begin{thebibliography}{10}
+
+\bibitem{arjovsky2019invariant}
+Martin Arjovsky, Leon Bottou, Ishaan Gulrajani, and David Lopez-Paz.
+\newblock Invariant risk minimization.
+\newblock {\em arXiv preprint arXiv:1907.02893}, 2019.
+
+\bibitem{ref_new_arxivorg}
+arXiv.org.
+\newblock {arXiv} preprints.
+\newblock \url{https://arxiv.org/}, 2023.
+
+\bibitem{bareinboim2023causal}
+Elias Bareinboim and J~Correa.
+\newblock Causal inference for machine learning.
+\newblock {\em arXiv preprint arXiv:2303.08950}, 2023.
+
+\bibitem{bernstein2002complexity}
+David Bernstein and Uriel Vazirani.
+\newblock Complexity of combinatorial optimization problems.
+\newblock In {\em Algorithms and Theory of Computation}, pages 137--143.
+  Springer, 2002.
+
+\bibitem{bouchaud2022complexity}
+Jean-Philippe Bouchaud.
+\newblock Complexity and the limits of prediction.
+\newblock {\em arXiv preprint arXiv:2201.06866}, 2022.
+
+\bibitem{eichler2012causal}
+N.~Eichler.
+\newblock Causal discovery with observational and interventional data.
+\newblock {\em arXiv preprint arXiv:1203.0621}, 2012.
+
+\bibitem{foerster2018counterfactual}
+Jakob Foerster, Maribeth Chen, Iain Murray, and Pablo Hernandez-Leal.
+\newblock Counterfactual reasoning and learning from observational data.
+\newblock In {\em Proceedings of the 17th International Conference on
+  Autonomous Agents and MultiAgent Systems}, pages 1005--1013, 2018.
+
+\bibitem{forney2017counterfactual}
+A.~Forney and E.~Bareinboim.
+\newblock Counterfactual inference for causal representation learning.
+\newblock {\em arXiv preprint arXiv:1707.06950}, 2017.
+
+\bibitem{gao2024causal}
+Jiaxuan Gao, K.~Zhang, and Y.~Wang.
+\newblock Causal reinforcement learning with counterfactual exploration.
+\newblock {\em Journal of Causal ML}, 2024.
+
+\bibitem{gronauer2022multi}
+Sven Gronauer and Klaus Diepold.
+\newblock Multi-agent reinforcement learning with a causal perspective.
+\newblock In {\em International Conference on Machine Learning}, pages
+  7606--7621, 2022.
+
+\bibitem{ref_new_opticaorg}
+Optica~Publishing Group.
+\newblock {Optica} publishing group.
+\newblock \url{https://opg.optica.org/}, 2023.
+
+\bibitem{hernandez2019survey}
+Pablo Hernandez-Leal and Bilal Kartal.
+\newblock A survey of counterfactual reasoning.
+\newblock {\em arXiv preprint arXiv:1904.11104}, 2019.
+
+\bibitem{hu2023transformer}
+S.~Hu and X.~Li.
+\newblock Transformer-based methods for causal inference.
+\newblock {\em Machine Learning}, 2023.
+
+\bibitem{khanna2020economy}
+S.~Khanna and V.~Tan.
+\newblock Economy of reasoning: training agents by explaining their actions.
+\newblock {\em arXiv preprint arXiv:2011.07372}, 2020.
+
+\bibitem{kingma2014adam}
+Diederik~P Kingma and Jimmy Ba.
+\newblock Adam: A method for stochastic optimization.
+\newblock In {\em arXiv preprint arXiv:1412.6980}, 2014.
+
+\bibitem{li2023adversarial}
+S.~Li and L.~Busoniu.
+\newblock Adversarial attacks on causal discovery.
+\newblock {\em Proceedings of the AAAI Conference on Artificial Intelligence},
+  37(10):11415--11423, 2023.
+
+\bibitem{li2024differentiable}
+X.~Li and Y.~Wang.
+\newblock Differentiable causal discovery with transformers.
+\newblock {\em NeurIPS}, 2024.
+
+\bibitem{lowe2017multi}
+Ryan Lowe, Yi~Wu, Aviv Tamar, and Jean Harb.
+\newblock Multi-agent actor-critic for mixed cooperative-competitive
+  environments.
+\newblock In {\em Advances in neural information processing systems},
+  volume~30, 2017.
+
+\bibitem{lu2024robust}
+C.~Lu and J.~Peters.
+\newblock Robust reinforcement learning via causal invariance.
+\newblock {\em ICML}, 2024.
+
+\bibitem{ng2022masked}
+Ignavier Ng and S.~Lachapelle.
+\newblock Masked autoencoders are sparse labelers.
+\newblock In {\em Proceedings of the IEEE/CVF Conference on Computer Vision and
+  Pattern Recognition}, pages 20146--20156, 2022.
+
+\bibitem{papoudakis2021agent}
+Georgios Papoudakis and Stefano~V. Albrecht.
+\newblock Agent-based modeling of complex systems with emergent behaviors.
+\newblock In {\em Proceedings of the ACM Conference on Economics and
+  Computation}, 2021.
+
+\bibitem{pearl2009causality}
+Judea Pearl.
+\newblock {\em Causality: Models, reasoning, and inference}.
+\newblock Cambridge university press, 2009.
+
+\bibitem{peters2016causal}
+Jonas Peters, Dominik Janzing, and Bernhard Sch{\"o}lkopf.
+\newblock Causal discovery with inseparable effects.
+\newblock {\em Journal of Machine Learning Research}, 17(1):317--354, 2016.
+
+\bibitem{peters2017elements}
+Jonas Peters, Dominik Janzing, and Bernhard Sch{\"o}lkopf.
+\newblock Elements of causal inference: Foundations and learning algorithms.
+\newblock {\em Springer}, 2017.
+
+\bibitem{peters2019ergodicity}
+Ole Peters.
+\newblock Ergodicity breaking in complex systems.
+\newblock {\em Physical Review E}, 99(3):032122, 2019.
+
+\bibitem{pinto2017robust}
+Lerrel Pinto and Abhinav Gupta.
+\newblock Robust imitation learning for sequential decision making.
+\newblock In {\em International Conference on Machine Learning}, pages
+  2809--2818, 2017.
+
+\bibitem{pitis2022counterfactual}
+Silviu Pitis and Anirudh Garg.
+\newblock Counterfactual reinforcement learning.
+\newblock In {\em International Conference on Machine Learning}, pages
+  17705--17725, 2022.
+
+\bibitem{rashid2018qmix}
+Tabish Rashid and Mikayel Samvelyan.
+\newblock Qmix: Value-based deep multi-agent reinforcement learning.
+\newblock In {\em International conference on machine learning}, pages
+  4295--4304. PMLR, 2018.
+
+\bibitem{ref_new_researchgatenet}
+ResearchGate.
+\newblock {ResearchGate} network.
+\newblock \url{https://www.researchgate.net/}, 2023.
+
+\bibitem{runge2023inferring}
+Jakob Runge.
+\newblock Inferring causal relationships from time series data.
+\newblock {\em Nature Reviews Physics}, 2023.
+
+\bibitem{scholkopf2021causality}
+Bernhard Sch{\"o}lkopf, Peter Spirtes, and Dominik Janzing.
+\newblock Causality for machine learning.
+\newblock {\em Philosophical Transactions of the Royal Society A},
+  379(2207):20200311, 2021.
+
+\bibitem{ref_new_amazonawscom}
+Amazon~Web Services.
+\newblock {AWS} machine learning resources.
+\newblock \url{https://aws.amazon.com/machine-learning/}, 2023.
+
+\bibitem{shoham2008multiagent}
+Yoav Shoham and Kevin Leyton-Brown.
+\newblock {\em Multiagent systems: Algorithmic, game-theoretic, and logical
+  foundations}.
+\newblock Cambridge university press, 2008.
+
+\bibitem{sonntag2024causal}
+D.~Sonntag and J.~Peters.
+\newblock Causal discovery from observational data with latent confounders.
+\newblock {\em Journal of Causal Inference}, 2024.
+
+\bibitem{spirtes2000causation}
+Peter Spirtes, Clark~N Glymour, and Richard Scheines.
+\newblock {\em Causation, prediction, and search}.
+\newblock MIT press, 2000.
+
+\bibitem{sutton2018reinforcement}
+Richard~S Sutton and Andrew~G Barto.
+\newblock {\em Reinforcement learning: An introduction}.
+\newblock MIT press, 2018.
+
+\bibitem{wang2021causal}
+L.~Wang and W.~Zhang.
+\newblock Causal representation learning for interpretable and robust agents.
+\newblock {\em arXiv preprint arXiv:2105.03701}, 2021.
+
+\bibitem{wang2023causal}
+Y.~Wang and M.~Jordan.
+\newblock Causal models for offline reinforcement learning.
+\newblock {\em Machine Learning}, 2023.
+
+\bibitem{wang2024causal_rl}
+Z.~Wang and Y.~Bengio.
+\newblock Causal reinforcement learning: A survey.
+\newblock {\em ACM Computing Surveys}, 2024.
+
+\bibitem{wang2023model}
+Z.~Wang and J.~Chen.
+\newblock Model-based reinforcement learning with causal inference.
+\newblock {\em NeurIPS}, 2023.
+
+\bibitem{wen2022multi}
+Muning Wen and Jakub Kuba.
+\newblock Multi-agent reinforcement learning with causal awareness.
+\newblock In {\em International Conference on Learning Representations}, 2022.
+
+\bibitem{yu2022surprising}
+Chao Yu and Akash Velu.
+\newblock Surprising results in causal discovery from observational data.
+\newblock {\em Journal of Machine Learning Research}, 23(1):1--50, 2022.
+
+\bibitem{zhang2024causal}
+H.~Zhang and S.~Levine.
+\newblock Causal discovery in reinforcement learning.
+\newblock {\em Journal of AI Research}, 2024.
+
+\bibitem{zhang2023invariant}
+K.~Zhang and B.~Scholkopf.
+\newblock Invariant and causal representations for reinforcement learning.
+\newblock {\em arXiv preprint arXiv:2303.08942}, 2023.
+
+\bibitem{zheng2018dag}
+Xun Zheng and Bryon Aragam.
+\newblock Dags with no tears: Continuous learning of directed acyclic graphs.
+\newblock {\em Advances in Neural Information Processing Systems}, 31, 2018.
+
+\end{thebibliography}

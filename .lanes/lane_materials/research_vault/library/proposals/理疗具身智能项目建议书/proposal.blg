@@ -1,0 +1,48 @@
+This is BibTeX, Version 0.99d (TeX Live 2025)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: proposal.aux
+The style file: plain.bst
+Database file #1: refs.bib
+Warning--empty journal in ames2019control
+You've used 10 entries,
+            2118 wiz_defined-function locations,
+            548 strings with 5801 characters,
+and the built_in function-call counts, 3014 in all, are:
+= -- 285
+> -- 179
+< -- 0
++ -- 70
+- -- 60
+* -- 202
+:= -- 551
+add.period$ -- 31
+call.type$ -- 10
+change.case$ -- 54
+chr.to.int$ -- 0
+cite$ -- 11
+duplicate$ -- 107
+empty$ -- 210
+format.name$ -- 60
+if$ -- 598
+int.to.chr$ -- 0
+int.to.str$ -- 10
+missing$ -- 10
+newline$ -- 54
+num.names$ -- 20
+pop$ -- 53
+preamble$ -- 1
+purify$ -- 44
+quote$ -- 0
+skip$ -- 77
+stack$ -- 0
+substring$ -- 122
+swap$ -- 10
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 40
+warning$ -- 1
+while$ -- 26
+width$ -- 12
+write$ -- 106
+(There was 1 warning)

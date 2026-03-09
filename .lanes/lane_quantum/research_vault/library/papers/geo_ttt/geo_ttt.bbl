@@ -1,0 +1,263 @@
+\begin{thebibliography}{45}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Anonymous(2024)]{templora2024}
+Anonymous.
+\newblock With greater text comes greater necessity: Inference-time training
+  for long text generation.
+\newblock In \emph{COLM}, 2024.
+
+\bibitem[Anonymous(2025)]{inplacettt2025}
+Anonymous.
+\newblock In-place test-time training for large language models.
+\newblock In \emph{ICLR (Under Review)}, 2025.
+
+\bibitem[Belkin and Niyogi(2003)]{belkin2003laplacian}
+Mikhail Belkin and Partha Niyogi.
+\newblock Laplacian eigenmaps for dimensionality reduction.
+\newblock \emph{Neural computation}, 2003.
+
+\bibitem[Belkin et~al.(2006)Belkin, Niyogi, and
+  Sindhwani]{belkin2006manifoldreg}
+Mikhail Belkin, Partha Niyogi, and Vikas Sindhwani.
+\newblock Manifold regularization: A geometric framework for learning from
+  labeled and unlabeled examples.
+\newblock \emph{Journal of Machine Learning Research}, 7:\penalty0 2399--2434,
+  2006.
+
+\bibitem[Ben-David et~al.(2010)Ben-David, Blitzer, Crammer, Kulesza, Pereira,
+  and Vaughan]{ben2010theoryshift}
+Shai Ben-David, John Blitzer, Koby Crammer, Alex Kulesza, Fernando Pereira, and
+  Jennifer~Wortman Vaughan.
+\newblock A theory of domain adaptation.
+\newblock In \emph{NeurIPS}, 2010.
+
+\bibitem[Bronstein et~al.(2017)Bronstein, Bruna, LeCun, Szlam, and
+  Vandergheynst]{bronstein2017geometric}
+Michael~M Bronstein, Joan Bruna, Yann LeCun, Arthur Szlam, and Pierre
+  Vandergheynst.
+\newblock Geometric deep learning: going beyond euclidean data.
+\newblock \emph{IEEE Signal Processing Magazine}, 2017.
+
+\bibitem[Chapelle and Zien(2005)]{chapelle2005manifold}
+Olivier Chapelle and Alexander Zien.
+\newblock Semi-supervised classification by low density separation.
+\newblock In \emph{AISTATS}, 2005.
+
+\bibitem[Chapelle et~al.(2006)Chapelle, Sch{\"o}lkopf, and
+  Zien]{chapelle2006ssl}
+Olivier Chapelle, Bernhard Sch{\"o}lkopf, and Alexander Zien.
+\newblock \emph{Semi-Supervised Learning}.
+\newblock MIT Press, 2006.
+
+\bibitem[Chen et~al.(2024)]{chen2024understanding}
+Yifan Chen et~al.
+\newblock Understanding self-training for test-time adaptation: A label noise
+  perspective.
+\newblock In \emph{NeurIPS}, 2024.
+
+\bibitem[Coifman and Lafon(2005)]{coifman2005diffusion}
+Ronald~R Coifman and Stephane Lafon.
+\newblock Diffusion maps.
+\newblock \emph{Proceedings of the National Academy of Sciences}, 102\penalty0
+  (21):\penalty0 7426--7431, 2005.
+
+\bibitem[DeepSeek-AI(2025)]{deepseek2025}
+DeepSeek-AI.
+\newblock Deepseek-r1: Incentivizing reasoning capability in llms via
+  reinforcement learning.
+\newblock \emph{Technical Report}, 2025.
+
+\bibitem[Grandvalet and Bengio(2005)]{grandvalet2005entropy}
+Yves Grandvalet and Yoshua Bengio.
+\newblock Semi-supervised learning by entropy minimization.
+\newblock \emph{NeurIPS}, 2005.
+
+\bibitem[Guo et~al.(2024)]{verifymatch2024}
+J.~Guo et~al.
+\newblock Verifymatch: Verification-enhanced pseudo-labeling with llms.
+\newblock In \emph{EMNLP}, 2024.
+
+\bibitem[Hu et~al.(2025)]{tlm2025}
+Z.~Hu et~al.
+\newblock Test-time learning for large language models.
+\newblock In \emph{ICML}, 2025.
+
+\bibitem[Kipf and Welling(2017)]{kipf2017gcn}
+Thomas~N Kipf and Max Welling.
+\newblock Semi-supervised classification with graph convolutional networks.
+\newblock In \emph{ICLR}, 2017.
+
+\bibitem[Koltchinskii(2006)]{koltchinskii2006localization}
+Vladimir Koltchinskii.
+\newblock Local rademacher complexities and oracle inequalities in risk
+  minimization.
+\newblock \emph{The Annals of Statistics}, 2006.
+
+\bibitem[Kumar and Levine(2024)]{kumar2024consistency}
+Aviral Kumar and Sergey Levine.
+\newblock On the consistency of pseudo-labeling for non-parametric models.
+\newblock \emph{JMLR}, 2024.
+
+\bibitem[Lee(2013)]{lee2013pseudolabel}
+Dong-Hyun Lee.
+\newblock Pseudo-label: The simple and efficient semi-supervised learning
+  method for deep neural networks.
+\newblock \emph{ICML Workshop}, 2013.
+
+\bibitem[Li et~al.(2025)]{templora2025emotion}
+X.~Li et~al.
+\newblock Temporary lora-enhanced llms for long-sequence emotion recognition.
+\newblock \emph{IEEE TASLP}, 2025.
+
+\bibitem[Lightman et~al.(2024)Lightman, Kosaraju, Burda, Edwards,
+  et~al.]{lightman2024let}
+Hunter Lightman, Vineet Kosaraju, Yuri Burda, Harri Edwards, et~al.
+\newblock Let's verify step by step.
+\newblock \emph{ICLR}, 2024.
+
+\bibitem[Liu et~al.(2024)]{llmttt2024mm}
+Y.~Liu et~al.
+\newblock Llmttt: Test-time training on graphs with large language models.
+\newblock In \emph{ACM Multimedia}, 2024.
+
+\bibitem[Mamou et~al.(2020)Mamou, Leathan, et~al.]{mamou2020emergence}
+Jonathan Mamou, Hang Leathan, et~al.
+\newblock Emergence of separable manifolds in deep language representations.
+\newblock \emph{ICLR}, 2020.
+
+\bibitem[Mummadi et~al.(2021)]{mummadi2021tta}
+Chaithanya~Kumar Mummadi et~al.
+\newblock Test-time normalization for covariate shift.
+\newblock In \emph{ICCV}, 2021.
+
+\bibitem[Park et~al.(2024)]{park2024geometry}
+Kiho Park et~al.
+\newblock The geometry of truth: Mechanism of fact retrieval in large language
+  models.
+\newblock In \emph{ICLR}, 2024.
+
+\bibitem[Reiss et~al.(2023)]{reiss2023geometric}
+Tal Reiss et~al.
+\newblock Geometric analysis of large language models.
+\newblock \emph{NeurIPS}, 2023.
+
+\bibitem[Snell et~al.(2024)Snell, Lee, Xu, and Kumar]{snell2024scaling}
+Charlie Snell, Jaehoon Lee, Kelvin Xu, and Aviral Kumar.
+\newblock Scaling laws for test-time compute.
+\newblock \emph{arXiv preprint arXiv:2406.14283}, 2024.
+
+\bibitem[Sohn et~al.(2020)Sohn, Berthelot, Li, Zhang, Carlini, Cubuk, Kurakin,
+  Zhang, and Raffel]{sohn2020fixmatch}
+Kihyuk Sohn, David Berthelot, Chun-Liang Li, Zizhao Zhang, Nicholas Carlini,
+  Ekin~D Cubuk, Alex Kurakin, Han Zhang, and Colin Raffel.
+\newblock Fixmatch: Simplifying semi-supervised learning with consistency and
+  confidence.
+\newblock \emph{NeurIPS}, 2020.
+
+\bibitem[Sun et~al.(2020)Sun, Wang, Liu, Miller, Efros, and Hardt]{sun2020ttt}
+Yu~Sun, Xiaolong Wang, Zhuang Liu, John Miller, Alexei Efros, and Moritz Hardt.
+\newblock Test-time training with self-supervision for generalization under
+  distribution shifts.
+\newblock In \emph{ICML}, 2020.
+
+\bibitem[Sun et~al.(2023)]{sun2023learning}
+Yu~Sun et~al.
+\newblock Learning to sample: Counting with test-time training.
+\newblock In \emph{ICML}, 2023.
+\newblock Often referred to as TTT-Linear/TTT-Flow in context.
+
+\bibitem[Tenenbaum et~al.(2000)Tenenbaum, De~Silva, and
+  Langford]{tenenbaum2000isomap}
+Joshua~B Tenenbaum, Vin De~Silva, and John~C Langford.
+\newblock A global geometric framework for nonlinear dimensionality reduction.
+\newblock \emph{Science}, 2000.
+
+\bibitem[Tsybakov(2009)]{tsybakov2009}
+Alexandre~B Tsybakov.
+\newblock Introduction to nonparametric estimation.
+\newblock \emph{Springer}, 2009.
+
+\bibitem[Wang et~al.(2021)Wang, Shelhamer, Liu, Olshausen, and
+  Darrell]{wang2021tent}
+Dequan Wang, Evan Shelhamer, Shaoteng Liu, Bruno Olshausen, and Trevor Darrell.
+\newblock Tent: Fully test-time entropy minimization.
+\newblock In \emph{ICLR}, 2021.
+
+\bibitem[Wang et~al.(2023)]{wang2023otta}
+Jian Wang et~al.
+\newblock In search of lost online test-time adaptation: A survey.
+\newblock \emph{arXiv preprint arXiv:2302.11517}, 2023.
+
+\bibitem[Wang et~al.(2025)]{ttcompute2025}
+L.~Wang et~al.
+\newblock A survey of test-time compute: From intuition to principle.
+\newblock \emph{arXiv}, 2025.
+
+\bibitem[Wang et~al.(2022)Wang, Wei, Schuurmans, Le, Chi, Narang, Chowdhery,
+  and Zhou]{selfconsistency2022}
+Xuezhi Wang, Jason Wei, Dale Schuurmans, Quoc Le, Ed~Chi, Sharan Narang,
+  Aakanksha Chowdhery, and Denny Zhou.
+\newblock Self-consistency improves chain-of-thought reasoning.
+\newblock In \emph{NeurIPS}, 2022.
+
+\bibitem[Wu et~al.(2024)]{wu2024representational}
+Yuxin Wu et~al.
+\newblock Representational drift in large language models during test-time
+  adaptation.
+\newblock In \emph{ICML}, 2024.
+
+\bibitem[Xiao et~al.(2024)Xiao, Zhang, and Snoek]{xiao2024beyond}
+Zhisheng Xiao, Y.~Zhang, and C.~Snoek.
+\newblock Beyond model adaptation at test time: A survey.
+\newblock \emph{arXiv preprint arXiv:2401.XXXX}, 2024.
+
+\bibitem[Xie et~al.(2025)]{xie2025memoryttt}
+Y.~Xie et~al.
+\newblock Test-time memory editing for llm adaptation.
+\newblock In \emph{ACL}, 2025.
+
+\bibitem[Yang et~al.(2025)]{yang2025search}
+Zonglin Yang et~al.
+\newblock Reasoning as search: A theoretical framework for test-time compute.
+\newblock In \emph{ICML}, 2025.
+
+\bibitem[Yarowsky(1995)]{yaroslavsky2010selftraining}
+David Yarowsky.
+\newblock Unsupervised word sense disambiguation rivaling supervised methods.
+\newblock \emph{ACL}, 1995.
+
+\bibitem[Zhang et~al.(2024)Zhang, Liang, et~al.]{zhang2024surveytta}
+Feng Zhang, Jian Liang, et~al.
+\newblock Test-time adaptation under distribution shifts: A comprehensive
+  survey.
+\newblock \emph{International Journal of Computer Vision (IJCV)}, 2024.
+
+\bibitem[Zhang et~al.(2025)]{ttcsurvey2025}
+Y.~Zhang et~al.
+\newblock A survey on test-time scaling in large language models.
+\newblock \emph{arXiv}, 2025.
+
+\bibitem[Zhao et~al.(2025)]{corepo2025}
+P.~Zhao et~al.
+\newblock Self-training large language models with confident reasoning
+  (core-po).
+\newblock In \emph{Findings EMNLP}, 2025.
+
+\bibitem[Zhou et~al.(2004)Zhou, Bousquet, Lal, Weston, and
+  Sch{\"o}lkopf]{zhou2004lgc}
+Dengyong Zhou, Olivier Bousquet, Thomas~N Lal, Jason Weston, and Bernhard
+  Sch{\"o}lkopf.
+\newblock Learning with local and global consistency.
+\newblock In \emph{NeurIPS}, 2004.
+
+\bibitem[Zhu and Ghahramani(2002)]{zhu2003lp}
+Xiaojin Zhu and Zoubin Ghahramani.
+\newblock Learning from labeled and unlabeled data with label propagation.
+\newblock In \emph{Technical Report CMU-CALD-02-107}, 2002.
+
+\end{thebibliography}

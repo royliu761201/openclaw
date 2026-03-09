@@ -1,0 +1,222 @@
+\begin{thebibliography}{39}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Amit et~al.(2024)]{amit2024segdiff}
+Tomer Amit et~al.
+\newblock Segdiff: Image segmentation with diffusion probabilistic models.
+\newblock In \emph{CVPR}, 2024.
+
+\bibitem[Anonymous(2026{\natexlab{a}})]{anonymous_icml}
+Anonymous.
+\newblock Frenet-flow: Equivariant diffusion on the fiber bundle for generative
+  modeling of 3d framed curves.
+\newblock In \emph{Under Review at ICML}, 2026{\natexlab{a}}.
+
+\bibitem[Anonymous(2026{\natexlab{b}})]{anonymous_ijcai}
+Anonymous.
+\newblock Frenet-toponet: Differentiable topology and curvature learning for
+  anatomically valid tubular structures.
+\newblock In \emph{Under Review at IJCAI}, 2026{\natexlab{b}}.
+
+\bibitem[Bergou et~al.(2008)]{bergou2008discrete}
+Miklos Bergou et~al.
+\newblock Discrete elastic rods.
+\newblock \emph{ACM Trans. Graph.}, 2008.
+
+\bibitem[Bronstein et~al.(2021)Bronstein, Bruna, Cohen, and
+  Velickovic]{bronstein2021geometric}
+Michael~M Bronstein, Joan Bruna, Taco Cohen, and Petar Velickovic.
+\newblock Geometric deep learning: Grids, groups, graphs, geodesics, and
+  gauges.
+\newblock \emph{arXiv preprint}, 2021.
+
+\bibitem[Chen et~al.(2025)]{chen2025dynamic}
+Hao Chen et~al.
+\newblock Dynamic centerline supervision for thin structure segmentation.
+\newblock \emph{IEEE TMI}, 2025.
+
+\bibitem[Clough et~al.(2020)]{clough2020topological}
+James~R Clough et~al.
+\newblock A topological loss function for deep-learning based image
+  segmentation using persistent homology.
+\newblock \emph{TPAMI}, 2020.
+
+\bibitem[Do~Carmo(2016)]{docarmo2016differential}
+Manfredo~P Do~Carmo.
+\newblock \emph{Differential Geometry of Curves and Surfaces}.
+\newblock Dover Publications, 2016.
+
+\bibitem[Geiger and Smidt(2022)]{geiger2022e3nn}
+Mario Geiger and Tess Smidt.
+\newblock e3nn: Euclidean neural networks.
+\newblock In \emph{arXiv preprint}, 2022.
+
+\bibitem[Gu et~al.(2025)]{gu2025topomamba}
+Xianfeng Gu et~al.
+\newblock Topo-mamba: Topology-aware state space models for tubular structures.
+\newblock In \emph{CVPR}, 2025.
+
+\bibitem[Hatamizadeh et~al.(2022)]{hatamizadeh2022swinunetr}
+Ali Hatamizadeh et~al.
+\newblock Swin-unetr: Swin transformers for semantic segmentation of brain
+  tumors.
+\newblock In \emph{CVPR}, 2022.
+
+\bibitem[Ho et~al.(2020)Ho, Jain, and Abbeel]{ho2020denoising}
+Jonathan Ho, Ajay Jain, and Pieter Abbeel.
+\newblock Denoising diffusion probabilistic models.
+\newblock In \emph{NeurIPS}, 2020.
+
+\bibitem[Hu et~al.(2021)]{hu2021topoloss}
+Xinrui Hu et~al.
+\newblock Topology-preserving deep image segmentation.
+\newblock In \emph{NeurIPS}, 2021.
+
+\bibitem[Huang et~al.(2024)]{huang2024stu}
+Z~Huang et~al.
+\newblock Stu-net: Scalable and transferable medical image segmentation models.
+\newblock In \emph{CVPR}, 2024.
+
+\bibitem[Isensee et~al.(2021)]{isensee2021nnunet}
+Fabian Isensee et~al.
+\newblock nn{U-Net}: a self-configuring method for deep learning-based
+  biomedical image segmentation.
+\newblock \emph{Nature Methods}, 2021.
+
+\bibitem[Jo et~al.(2022)]{jo2022score}
+Jaehyeong Jo et~al.
+\newblock Score-based generative modeling of graphs.
+\newblock In \emph{ICML}, 2022.
+
+\bibitem[Kirillov et~al.(2023)]{kirillov2023segment}
+Alexander Kirillov et~al.
+\newblock Segment anything.
+\newblock \emph{ICCV}, 2023.
+
+\bibitem[Lee et~al.(2023)]{lee2023curvnet}
+Jaemin Lee et~al.
+\newblock Curvnet: Curvature-aware neural networks for vessel segmentation.
+\newblock \emph{IEEE TMI}, 2023.
+
+\bibitem[Liao et~al.(2024)]{liao2024equiformer}
+Yi-Lun Liao et~al.
+\newblock Equiformerv2: Scalable equivariant transformer for 3d atomistic
+  graphs.
+\newblock In \emph{ICLR}, 2024.
+
+\bibitem[Litjens et~al.(2017)]{litjens2017survey}
+Geert Litjens et~al.
+\newblock A survey on deep learning in medical image analysis.
+\newblock \emph{Medical Image Analysis}, 2017.
+
+\bibitem[Lugmayr et~al.(2022)]{lugmayr2022repaint}
+Andreas Lugmayr et~al.
+\newblock Repaint: Inpainting using denoising diffusion probabilistic models.
+\newblock In \emph{CVPR}, 2022.
+
+\bibitem[Ma et~al.(2024)Ma, Li, and Wang]{ma2024umamba}
+Jun Ma, F~Li, and B~Wang.
+\newblock U-mamba: Enhancing long-range dependency for biomedical image
+  segmentation.
+\newblock In \emph{MICCAI}, 2024.
+
+\bibitem[Meng et~al.(2022)]{meng2022sdedit}
+Chenlin Meng et~al.
+\newblock Sdedit: Guided image synthesis and editing with stochastic
+  differential equations.
+\newblock In \emph{ICLR}, 2022.
+
+\bibitem[Persch et~al.(2023)]{persch2023toothfairy}
+Alexandra Persch et~al.
+\newblock Toothfairy: Curated cbct dataset for dental and root canal
+  segmentation.
+\newblock \emph{Medical Image Analysis}, 2023.
+
+\bibitem[Qin et~al.(2024)]{qin2024atm}
+Y~Qin et~al.
+\newblock Atm-22: A challenge on airway tree modeling.
+\newblock \emph{arXiv preprint}, 2024.
+
+\bibitem[Satorras et~al.(2021)Satorras, Hoogeboom, and Welling]{satorras2021n}
+V{\i}ctor~Garcia Satorras, Emiel Hoogeboom, and Max Welling.
+\newblock E(n) equivariant graph neural networks.
+\newblock In \emph{ICML}, 2021.
+
+\bibitem[Shi et~al.(2024)]{shi2024centerlineboundarydice}
+Wenhao Shi et~al.
+\newblock Centerline boundary dice for accurate tubular segmentation.
+\newblock \emph{Medical Image Analysis}, 2024.
+
+\bibitem[Shit et~al.(2021)]{shit2021cldice}
+Suprosanna Shit et~al.
+\newblock cldice: a novel topology-preserving loss function for tubular
+  structure segmentation.
+\newblock In \emph{CVPR}, 2021.
+
+\bibitem[Song et~al.(2021)]{song2021score}
+Yang Song et~al.
+\newblock Score-based generative modeling through stochastic differential
+  equations.
+\newblock \emph{ICLR}, 2021.
+
+\bibitem[Su et~al.(2022)]{su2022frenet}
+Hao Su et~al.
+\newblock Frenet: Differentiable curvature and torsion loss for neural surface
+  optimization.
+\newblock \emph{CVPR}, 2022.
+
+\bibitem[Vignac et~al.(2023)]{vignac2023digress}
+Clement Vignac et~al.
+\newblock Digress: Discrete denoising diffusion for graph generation.
+\newblock In \emph{ICLR}, 2023.
+
+\bibitem[Wagner et~al.(2024)]{wagner2024skeleton}
+Jonas Wagner et~al.
+\newblock Skeleton recall loss for topology-aware segmentation.
+\newblock In \emph{MICCAI}, 2024.
+
+\bibitem[Wasserthal et~al.(2023)]{wasserthal2023totalsegmentator}
+Jakob Wasserthal et~al.
+\newblock Totalsegmentator: Robust segmentation of 104 anatomic structures in
+  ct images.
+\newblock \emph{Radiology: Artificial Intelligence}, 2023.
+
+\bibitem[Wolleb et~al.(2022)]{wolleb2022diffusion}
+Julia Wolleb et~al.
+\newblock Diffusion models for implicit image segmentation ensembles.
+\newblock In \emph{MIDL}, 2022.
+
+\bibitem[Wu et~al.(2025)]{wu2025medsam2}
+Jun Wu et~al.
+\newblock Medsam-2: A universal foundation model for medical image
+  segmentation.
+\newblock \emph{Nature Medicine}, 2025.
+
+\bibitem[Wu et~al.(2023)]{wu2023medsegdiff}
+Junde Wu et~al.
+\newblock Medsegdiff: Medical image segmentation with diffusion probabilistic
+  model.
+\newblock \emph{arXiv preprint arXiv:2211.00611}, 2023.
+
+\bibitem[Yang et~al.(2021)]{yang2021tubetk}
+B~Yang et~al.
+\newblock Tubetk: Adopting tubes to track floating objects.
+\newblock In \emph{CVPR}, 2021.
+
+\bibitem[Yim et~al.(2024)]{yim2024se3}
+Jason Yim et~al.
+\newblock {SE}(3) diffusion model with application to protein backbone
+  generation.
+\newblock In \emph{ICLR}, 2024.
+
+\bibitem[Zhao et~al.(2025)]{zhao2025deformcl}
+Ziwei Zhao et~al.
+\newblock Deformcl: Learning deformable centerline representation for vessel
+  extraction.
+\newblock In \emph{CVPR}, 2025.
+
+\end{thebibliography}

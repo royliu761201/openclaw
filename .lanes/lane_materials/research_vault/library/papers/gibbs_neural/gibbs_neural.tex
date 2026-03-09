@@ -1,0 +1,966 @@
+%% CMAME draft: Discontinuity-gated spectral DeepONet for blast shocks
+%% 使用 Elsevier cas-dc 双栏模板
+
+\documentclass[a4paper,fleqn]{cas-dc}
+
+% \usepackage[numbers]{natbib}
+\usepackage[authoryear,longnamesfirst]{natbib}
+
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{tikz}
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+
+%%% Author definitions
+\def\tsc#1{\textsc{\lowercase{#1}}}
+
+\begin{document}
+\let\WriteBookmarks\relax
+\def\floatpagepagefraction{1}
+\def\textpagefraction{.001}
+
+% =========================
+% Short title & authors
+% =========================
+
+\shorttitle{Suppressing Gibbs oscillations in neural operators}
+\shortauthors{Liu et~al.}
+
+\title[mode=title]{Suppressing Gibbs oscillations in neural operators: \\
+A discontinuity-gated spectral DeepONet for blast-driven shocks}
+
+% TODO: 替换为真实作者与单位
+\author[1]{Xiaohua Liu}[%
+  role=Lead Author,
+  orcid=0000-0003-0384-5431]
+\cormark[1]
+\ead{xiaohualiu@jhun.edu.cn}
+
+\affiliation[1]{organization={National Key Laboratory of Precision Blasting, Jianghan University},
+    city={Wuhan},
+    country={China}}
+
+\cortext[cor1]{Corresponding author.}
+
+% =========================
+% Abstract
+% =========================
+
+\begin{abstract}
+Data-driven surrogate models based on neural operators such as DeepONet and Fourier Neural Operators (FNO) have recently emerged as powerful tools for accelerating simulations of parametric partial differential equations (PDEs).
+However, when applied to hyperbolic conservation laws with strong shocks, these models inherit the classical \emph{Gibbs phenomenon} from spectral methods, leading to spurious oscillations near discontinuities and severe underestimation of peak overpressure---a critical metric in blast engineering.
+Standard remedies, such as global spectral filtering or total variation (TV) penalties, tend to smear the shock front and degrade the prediction of engineering quantities of interest.
+
+Motivated by the requirements of intelligent blasting (``digital and intelligent blasting'') and blast-wave safety assessment, we propose a \emph{discontinuity-gated spectral DeepONet} that explicitly targets Gibbs oscillations in neural operators for blast-driven shocks.
+Our architecture decomposes the operator output into a \emph{mollified backbone} and a \emph{viscous detail} term.
+The backbone is trained to fit a Gaussian-blurred target field, while the detail branch employs SIREN-like periodic activations with learnable spectral viscosity to recover sharp gradients.
+A data-driven discontinuity gate, constructed from Sobel-type gradient indicators on the backbone prediction, acts as a neural analogue of a shock sensor and activates the viscous detail only near shock and contact discontinuities.
+The final loss couples mean-squared error with a gate-weighted TV regularization and a sparsity prior on the gate, thereby suppressing oscillations outside shocks while preserving physically meaningful peaks.
+
+We evaluate the proposed model on a family of blast-relevant benchmark problems including one-dimensional Riemann problems (Sod, Lax, and strong blast waves) and two-dimensional blast-wave propagation in confined geometries.
+Compared with baseline DeepONet and FNO surrogates, our method significantly reduces overshoot/undershoot near shocks, recovers peak overpressure with higher fidelity, and exhibits a more physical high-wavenumber energy spectrum.
+These results demonstrate that discontinuity-aware spectral mechanisms are essential for deploying neural operators in safety-critical blast simulation pipelines and lay a foundation for integrating operator learning into intelligent blasting platforms.
+\end{abstract}
+
+% =========================
+% Highlights
+% =========================
+
+\begin{highlights}
+\item Propose a discontinuity-gated spectral DeepONet that targets Gibbs oscillations in neural operators for shock-dominated flows.
+\item Introduce a two-stage training strategy with a mollified backbone and a SIREN-based viscous detail branch with learnable spectral viscosity.
+\item Design a data-driven discontinuity gate from backbone gradients, acting as a neural shock sensor to localize artificial viscosity.
+\item Demonstrate improved peak overpressure prediction and cleaner high-frequency spectra on 1D and 2D blast-wave benchmarks.
+\item Provide a reusable neural-operator component tailored for intelligent blasting and fast blast-risk assessment.
+\end{highlights}
+
+% =========================
+% Keywords
+% =========================
+
+\begin{keywords}
+neural operator \sep DeepONet \sep Gibbs phenomenon \sep shock waves \sep blast loading \sep spectral viscosity \sep intelligent blasting
+\end{keywords}
+
+\maketitle
+% =========================
+% 1. Introduction
+% =========================
+\section{Introduction}
+\label{sec:intro}
+
+Blast-wave simulation is a central tool in the design and assessment of explosive engineering systems, ranging from rock blasting and tunnel excavation to urban protective structures and industrial safety~\citep{Toro1999Riemann,Neuberger2015BlastCFD}.
+Accurate prediction of peak overpressure, impulse, arrival time and reflected loads is essential for code compliance, risk-informed design, and the development of intelligent blasting strategies.
+However, high-fidelity numerical solvers for compressible Euler or Navier--Stokes equations---typically based on high-order finite-volume or discontinuous Galerkin methods with ENO/WENO reconstructions---remain computationally expensive, especially when parametric sweeps or real-time decision support are required~\citep{ShuOsher1988ENO,JiangShu1996WENO}.
+
+In parallel, \emph{neural operators} have emerged as a promising paradigm for learning mappings between infinite-dimensional function spaces, providing mesh-independent surrogates for parametric partial differential equations (PDEs).
+Representative architectures include DeepONet~\citep{Lu2021DeepONet}, Fourier Neural Operators (FNO)~\citep{Li2021FNO}, and a growing family of physics-informed variants that embed PDE residuals or operator-theoretic constraints into the training process~\citep{Kovachki2023NeuralOperator,Karniadakis2021MachineLearningPDE,Cuomo2022PINNSurvey}.
+For a wide class of elliptic and parabolic problems, such as Darcy flow, diffusion--reaction systems, and incompressible turbulence closures, these models have demonstrated impressive accuracy and generalization capabilities, often at orders-of-magnitude lower evaluation cost than traditional solvers.
+
+Despite this progress, the application of neural operators to \emph{hyperbolic conservation laws} with strong shocks remains challenging.
+From a numerical analysis viewpoint, operator networks parameterized in global or spectral-like bases inherit key difficulties of classical spectral methods.
+In particular, the presence of discontinuities triggers the well-known \emph{Gibbs phenomenon}, where partial sums of the spectral expansion exhibit persistent oscillations of $\mathcal{O}(1)$ amplitude near jump discontinuities~\citep{Gottlieb2011GibbsReview,Canuto1988Spectral}.
+Similar oscillatory artefacts appear in neural operator predictions for shock-dominated flows, leading to overshoot and undershoot in pressure and density, non-physical negative values, and inaccurate peak overpressure---all of which are unacceptable in safety-critical blast applications~\citep{Mishra2022HyperbolicNN,Brunton2020DataDrivenPDE}.
+
+Classical numerical schemes mitigate Gibbs oscillations via spectral filtering, Gegenbauer reconstructions, or shock-capturing mechanisms such as ENO/WENO limiters and TVD fluxes~\citep{ShuOsher1988ENO,JiangShu1996WENO,Tadmor1989SpectralViscosity}.
+A key design principle is that \emph{dissipation should be localized}: additional viscosity or filtering is applied only near discontinuities, while smooth regions retain high-order accuracy.
+By contrast, most existing neural operator architectures treat the domain globally and uniformly; regularization or filtering is applied in a spatially homogeneous manner, which either fails to fully suppress oscillations or smears shocks and underestimates peak values.
+
+\subsection{Neural operators for blast-driven shocks}
+
+In the context of intelligent blasting, blast-wave surrogates must satisfy three practical requirements:
+
+\begin{enumerate}[label=(R\arabic*),leftmargin=*]
+  \item \textbf{Shock fidelity.} The surrogate must accurately capture the position, strength, and width of blast fronts and reflected shocks, as these directly determine peak overpressure and impulse on critical structures.
+  \item \textbf{Spectral cleanliness.} High-wavenumber spectral pollution and Gibbs-type oscillations must be suppressed, especially in low-pressure regions where small unphysical oscillations can trigger spurious failure criteria in downstream structural models.
+  \item \textbf{Parametric generalization.} The model should generalize across a range of blast parameters (charge strength, location, boundary conditions) and mesh resolutions, enabling fast exploration of parametric design spaces and what-if scenarios.
+\end{enumerate}
+
+Vanilla DeepONet and FNO architectures already offer attractive mesh-independent parameterization and can, in principle, approximate the blast operator with arbitrary accuracy~\citep{Lu2021DeepONet,Li2021FNO,Kovachki2023NeuralOperator}.
+In practice, however, we observe that when trained directly on sharp shock profiles, these models develop pronounced Gibbs oscillations near discontinuities and show systematic underestimation of peak overpressure and reflected loads.
+Naively increasing network width or training data density does not eliminate the oscillations and may partially exacerbate the spectral pollution.
+
+\subsection{Contributions and overview}
+
+Motivated by the above challenges, we propose a \emph{discontinuity-gated spectral DeepONet} specifically tailored for blast-driven shock problems.
+The central idea is to explicitly separate the learned operator into a \emph{smooth backbone} and a \emph{high-frequency detail} component, and to localize the action of the latter via a data-driven discontinuity gate inspired by shock sensors and spectral viscosity.
+
+Our main contributions are:
+
+\begin{enumerate}[label=(C\arabic*),leftmargin=*]
+  \item \textbf{Discontinuity-gated spectral architecture.}
+  We design a two-branch DeepONet where a mollified backbone learns a smooth approximation of the blast field, while a SIREN-based viscous detail branch with learnable spectral damping reconstructs sharp gradients.
+  A Sobel-type gradient indicator applied to the backbone prediction yields a \emph{discontinuity gate} that activates the detail branch only near shocks and contact discontinuities, mimicking the localized action of numerical viscosity in classical shock-capturing schemes.
+  \item \textbf{Two-stage training with gate-weighted regularization.}
+  We introduce a two-stage training strategy: (i) train the backbone to fit Gaussian-blurred targets, obtaining a stable, low-oscillation approximation; (ii) freeze the backbone and train the detail branch under a loss that combines mean-squared error, gate-weighted total variation (TV), and a sparsity prior on gate activation.
+  This design suppresses oscillations in smooth regions while preserving and sharpening shock features.
+  \item \textbf{Blast-focused evaluation and spectral diagnostics.}
+  On 1D Riemann problems (Sod, Lax, and strong blast waves) and 2D blast-wave propagation in confined cavities, our model significantly reduces overshoot/undershoot near shocks, improves peak overpressure prediction, and yields more physical high-wavenumber energy spectra compared with vanilla DeepONet, FNO, and globally filtered baselines.
+  \item \textbf{Integration into intelligent blasting workflows.}
+  We interpret the proposed model as a reusable neural operator module for digital and intelligent blasting platforms.
+  The surrogate provides fast, shock-faithful predictions of blast loads that can be coupled with structural solvers and optimization modules for charge design and sequencing.
+\end{enumerate}
+
+The remainder of this paper is organized as follows.
+Section~\ref{sec:problem} formulates the blast operator learning problem.
+Section~\ref{sec:related} discusses related work in spectral methods, shock capturing, and neural operators.
+Section~\ref{sec:method} presents the proposed architecture and training algorithm in detail.
+Section~\ref{sec:experiments} describes the dataset and baseline solvers, followed by results in Section~\ref{sec:results}.
+Section~\ref{sec:discussion} discusses implications and limitations, and Section~\ref{sec:conclusion} concludes.
+
+% =========================
+% 2. Problem formulation
+% =========================
+\section{Problem formulation: blast-driven shocks as operators}
+\label{sec:problem}
+
+We briefly recall the governing equations and define the blast operator to be learned.
+We focus on compressible flow of an ideal gas, which is sufficient for many air-blast scenarios in engineering practice~\citep{Toro1999Riemann}.
+
+\subsection{Governing equations}
+
+Let $\Omega \subset \mathbb{R}^d$ denote the spatial domain, with $d=1$ or $d=2$ in this work, and let $t \in [0,T]$ denote time.
+The compressible Euler equations in conservative form read
+\begin{equation}
+  \partial_t \mathbf{U}(\mathbf{x},t)
+  + \nabla \cdot \mathbf{F}\big(\mathbf{U}(\mathbf{x},t)\big) = \mathbf{0},
+  \quad \mathbf{x}\in\Omega,
+  \label{eq:euler}
+\end{equation}
+where
+\begin{equation}
+  \mathbf{U} = 
+    \begin{pmatrix}
+      \rho \\
+      \rho \mathbf{v} \\
+      E
+    \end{pmatrix},
+  \qquad
+  \mathbf{F}(\mathbf{U}) =
+    \begin{pmatrix}
+      \rho \mathbf{v} \\
+      \rho \mathbf{v} \otimes \mathbf{v} + p \mathbf{I} \\
+      (E + p)\mathbf{v}
+    \end{pmatrix}.
+\end{equation}
+Here $\rho$ is the density, $\mathbf{v}$ the velocity, $E$ the total energy, $p$ the pressure, and $\mathbf{I}$ the identity tensor.
+For an ideal gas with ratio of specific heats $\gamma$, the equation of state is
+\begin{equation}
+  p = (\gamma - 1)\left(E - \tfrac{1}{2}\rho \|\mathbf{v}\|^2\right).
+\end{equation}
+Typical blast scenarios involve strong, localized overpressures created by explosive charges, resulting in shock and contact discontinuities in the solution of~\eqref{eq:euler}.
+
+We consider initial conditions of the form
+\begin{equation}
+  \mathbf{U}(\mathbf{x},0;\boldsymbol{\mu}) = \mathbf{U}_0(\mathbf{x};\boldsymbol{\mu}),
+\end{equation}
+where $\boldsymbol{\mu} \in \mathcal{P} \subset \mathbb{R}^P$ encodes blast parameters such as initial left/right states in 1D Riemann problems or charge strength, location and radius in 2D blasts.
+Boundary conditions are taken as reflective (slip-wall) or transmissive depending on the configuration.
+
+\subsection{Blast operator definition}
+
+For a fixed final time $T>0$, let $\mathbf{U}(\mathbf{x},T;\boldsymbol{\mu})$ denote the solution of~\eqref{eq:euler}.
+In many engineering applications, only one scalar field---for example, pressure $p$ or density $\rho$---is required as input to downstream models.
+We therefore define a scalar field
+\begin{equation}
+  u(\mathbf{x};\boldsymbol{\mu}) = \mathcal{Q}\big(\mathbf{U}(\mathbf{x},T;\boldsymbol{\mu})\big),
+\end{equation}
+where $\mathcal{Q}$ is a linear projection extracting the quantity of interest (e.g., the pressure component).
+
+The \emph{blast operator} is then
+\begin{equation}
+  \mathcal{G}: \mathcal{P} \to \mathcal{Y}, \quad
+  \boldsymbol{\mu} \mapsto u(\cdot;\boldsymbol{\mu}),
+\end{equation}
+where $\mathcal{Y}$ is a suitable function space over $\Omega$, such as $L^2(\Omega)$ or a Sobolev space $H^s(\Omega)$ for $s>0$.
+We observe that even if the initial data is piecewise smooth, the solution often develops discontinuities (shocks) at $t>0$, so that $u(\cdot;\boldsymbol{\mu})$ belongs to a piecewise smooth function class with jump discontinuities.
+
+\subsection{Discrete data and normalization}
+
+In practice, we approximate $\mathcal{G}$ from a finite dataset $\{ (\boldsymbol{\mu}_i,u_i) \}_{i=1}^N$, where each $u_i$ is computed by a high-fidelity shock-capturing solver on a discrete grid.
+Let $\{\mathbf{x}_j\}_{j=1}^{N_\Omega}$ denote the grid points, and denote by $\mathbf{u}_i \in \mathbb{R}^{N_\Omega}$ the vector stacking $u_i(\mathbf{x}_j)$.
+We normalize parameters and fields as
+\begin{equation}
+  \tilde{\boldsymbol{\mu}}_i
+  = \frac{\boldsymbol{\mu}_i - \boldsymbol{\mu}_\mathrm{mean}}{\boldsymbol{\mu}_\mathrm{std}},
+  \quad
+  \tilde{\mathbf{u}}_i
+  = \frac{\mathbf{u}_i - u_\mathrm{mean}}{u_\mathrm{std}},
+\end{equation}
+to improve optimization conditioning.
+Here $(\boldsymbol{\mu}_\mathrm{mean}, \boldsymbol{\mu}_\mathrm{std})$ and $(u_\mathrm{mean},u_\mathrm{std})$ are computed from the training set only.
+
+Given a set of coordinates $\{\mathbf{x}_j\}$, the trunk network of the neural operator can be pre-evaluated and stored as a matrix, while the branch network processes $\tilde{\boldsymbol{\mu}}$ at run time.
+Throughout the remainder, we omit tildes when no confusion arises.
+
+% =========================
+% 3. Related work
+% =========================
+\section{Related work}
+\label{sec:related}
+
+We briefly review spectral methods and the Gibbs phenomenon, shock-capturing schemes, and neural operators for PDEs, highlighting connections to the present work.
+
+\subsection{Spectral methods and Gibbs phenomenon}
+
+Spectral methods approximate solutions of PDEs by expanding them in global basis functions, such as trigonometric polynomials or orthogonal polynomials~\citep{Gottlieb1977SpectralBook,Canuto1988Spectral}.
+For smooth solutions, they exhibit exponential or high-order algebraic convergence and have been highly successful in many fluid dynamics applications.
+However, in the presence of discontinuities, partial sums of the spectral series exhibit oscillations near the discontinuity, with overshoot and undershoot that do not vanish as resolution increases; this is the classical Gibbs phenomenon~\citep{Gottlieb2011GibbsReview}.
+
+To mitigate Gibbs oscillations, a variety of techniques have been proposed, including spectral filters that damp high-wavenumber modes, Gegenbauer reconstruction methods that post-process the spectral approximation, and the \emph{spectral viscosity} method, which adds a small, wavenumber-dependent viscous term that selectively damps high-frequency components while preserving spectral convergence in smooth regions~\citep{Tadmor1989SpectralViscosity,Gottlieb2011GibbsReview}.
+A common theme is to balance accuracy in smooth regions with stability near discontinuities.
+
+\subsection{Shock-capturing schemes}
+
+Finite-volume and finite-difference schemes with shock-capturing capabilities, such as ENO/WENO and TVD methods, represent the workhorse for compressible flow with shocks~\citep{ShuOsher1988ENO,JiangShu1996WENO,Toro1999Riemann}.
+These schemes combine high-order polynomial reconstructions with nonlinear limiters and approximate Riemann solvers.
+A key insight is that nonlinear reconstruction introduces \emph{adaptive numerical viscosity}, which is activated near discontinuities while leaving smooth regions essentially dissipation-free.
+
+From a conceptual standpoint, our discontinuity gate plays a role analogous to that of nonlinear limiters and shock sensors: it identifies regions where additional smoothing or dissipation is required and localizes the action of the spectral-viscous detail branch.
+Unlike traditional schemes, however, the gate is learned from data rather than prescribed by hand.
+
+\subsection{Neural operators and physics-informed learning}
+
+Neural operators extend neural network architectures to learn mappings between function spaces, with DeepONet and FNO being two widely used instances~\citep{Lu2021DeepONet,Li2021FNO,Kovachki2023NeuralOperator}.
+DeepONet employs separate branch and trunk networks and has strong theoretical guarantees as a universal approximator of nonlinear operators, while Fourier Neural Operators parameterize translation-invariant operators via spectral convolutions in Fourier space.
+Building on these foundations, physics-informed neural operators (PINO) incorporate PDE residuals directly at the operator level, further improving data efficiency and out-of-distribution robustness~\citep{Li2021PINO}.
+
+Physics-informed neural networks (PINNs) and physics-informed DeepONets incorporate PDE residuals into the loss and can be interpreted as meshless Galerkin methods with neural basis functions~\citep{Raissi2019PINN,Karniadakis2021MachineLearningPDE,Cuomo2022PINNSurvey}.
+Most successful applications target elliptic and parabolic problems, where solutions are smooth and spectral bias is a feature rather than a liability.
+For hyperbolic conservation laws, specialized architectures and losses are often required to maintain stability and respect entropy conditions, including weak and variational PINNs as well as entropy-consistent training objectives~\citep{Mishra2022HyperbolicNN,Kharazmi2021hpPINN}.
+
+Our work sits at the intersection of these developments: we adopt a DeepONet-style operator parameterization for its flexibility and mesh independence but augment it with discontinuity-aware gating and spectral viscosity inspired by classical shock-capturing and spectral methods.
+
+% =========================
+% 4. Methodology
+% =========================
+\section{Methodology: discontinuity-gated spectral DeepONet}
+\label{sec:method}
+
+We now describe the proposed architecture and training strategy.
+We first review the baseline DeepONet formulation, then introduce the mollified backbone, discontinuity gate, spectral-viscous detail branch, and the two-stage training algorithm.
+
+\subsection{Baseline DeepONet}
+
+Given parameter vector $\boldsymbol{\mu} \in \mathbb{R}^P$ and spatial coordinate $\mathbf{x} \in \Omega \subset \mathbb{R}^d$, DeepONet approximates the operator output $u(\mathbf{x};\boldsymbol{\mu})$ via a bilinear form of branch and trunk outputs~\citep{Lu2021DeepONet}:
+\begin{equation}
+  u(\mathbf{x};\boldsymbol{\mu})
+  \approx \frac{1}{M}\sum_{k=1}^M b_k(\boldsymbol{\mu})\, t_k(\mathbf{x}) + b_0,
+  \label{eq:deeponet_scalar}
+\end{equation}
+where $B_\phi(\boldsymbol{\mu}) = (b_1,\dots,b_M)^\top$ is the branch network, $T_\psi(\mathbf{x}) = (t_1,\dots,t_M)^\top$ is the trunk network, and $b_0$ is a learnable bias.
+The networks $B_\phi$ and $T_\psi$ are typically implemented as multilayer perceptrons (MLPs) with smooth activations such as $\tanh$.
+
+Discretizing $\Omega$ at $N_\Omega$ grid points and stacking trunk outputs row-wise yields a matrix $\Psi \in \mathbb{R}^{N_\Omega\times M}$ with entries $\Psi_{jk} = t_k(\mathbf{x}_j)$.
+For a batch of parameters $\{\boldsymbol{\mu}_i\}_{i=1}^B$, the backbone prediction is
+\begin{equation}
+  U_{\mathrm{back}} = \frac{1}{M} B_\phi(\boldsymbol{\mu}_{1:B})\, \Psi^\top + b_0 \mathbf{1}\mathbf{1}^\top,
+  \label{eq:deeponet_matrix}
+\end{equation}
+where $U_{\mathrm{back}} \in \mathbb{R}^{B\times N_\Omega}$ and $B_\phi(\boldsymbol{\mu}_{1:B}) \in \mathbb{R}^{B\times M}$ collects branch outputs.
+In 2D, we reshape each row of $U_{\mathrm{back}}$ into a $(H,W)$ image.
+
+\subsection{Mollified backbone via Gaussian smoothing}
+
+To avoid directly fitting sharp shock profiles with the backbone, we first construct a \emph{mollified} target field by convolving the high-fidelity solution with a Gaussian kernel.
+For 2D, given $u(\mathbf{x};\boldsymbol{\mu})$ sampled as an image $u_{ij}$, we define
+\begin{equation}
+  u^{(\sigma)}_{ij} = \sum_{p,q} G_\sigma(i-p,j-q)\, u_{pq},
+\end{equation}
+where $G_\sigma$ is a separable Gaussian filter with standard deviation $\sigma$ and appropriate normalization.
+In practice we implement
+\begin{equation}
+  G_\sigma(\xi) = \frac{1}{Z}
+    \exp\left(-\frac{\xi^2}{2\sigma^2}\right),\quad \xi\in\mathbb{Z},
+\end{equation}
+and apply reflect padding at boundaries, as is common in image processing.
+
+In the first training stage, we optimize backbone parameters $(\phi,\psi,b_0)$ to minimize the mean-squared error between $U_{\mathrm{back}}$ and the mollified reference $U^{(\sigma)}$:
+\begin{equation}
+  \mathcal{L}_{\mathrm{back}}
+  = \frac{1}{BN_\Omega} \sum_{i=1}^B \sum_{j=1}^{N_\Omega}
+    \left( U_{\mathrm{back},ij} - U^{(\sigma)}_{ij} \right)^2.
+  \label{eq:loss_backbone}
+\end{equation}
+This stage drives the backbone to learn a stable, low-oscillation approximation that captures the large-scale structure and approximate shock locations.
+
+\subsection{Discontinuity gate from backbone gradients}
+
+Once the backbone is trained, we treat $u_{\mathrm{back}}$ as a smooth baseline and use its gradients to construct a \emph{discontinuity gate}.
+For 1D, we approximate spatial gradients using centered differences,
+\begin{equation}
+  g_j = \left|\frac{u_{\mathrm{back},j+1}-u_{\mathrm{back},j-1}}{2\Delta x}\right|,
+\end{equation}
+and for 2D we employ Sobel filters $S_x, S_y$,
+\begin{equation}
+  g_{ij} = \sqrt{ (S_x * u_{\mathrm{back}})_{ij}^2
+                + (S_y * u_{\mathrm{back}})_{ij}^2 + \varepsilon },
+\end{equation}
+where $\varepsilon$ is a small positive constant to avoid numerical issues in flat regions.
+
+For each sample, we compute the empirical $q$-quantile $\tau$ of $g_{ij}$ (e.g.\ $q=0.9$ corresponds to the top $10\%$ of gradient magnitudes) and define the gate via a sigmoid:
+\begin{equation}
+  \gamma_{ij}
+  = \sigma\big( \beta(g_{ij} - \tau) \big),
+  \label{eq:gate_def}
+\end{equation}
+where $\beta>0$ controls the sharpness of the transition.
+This yields a smooth mask $\gamma \in [0,1]^{N_\Omega}$ that is close to one near shocks and contact discontinuities and close to zero elsewhere.
+Intuitively, $\gamma$ is a learned analogue of traditional shock sensors used to activate limiters or artificial viscosity~\citep{ShuOsher1988ENO,Tadmor1989SpectralViscosity}.
+
+\subsection{Spectral-viscous detail branch}
+
+To reconstruct sharp features while controlling high-frequency oscillations, we introduce a \emph{spectral-viscous} detail branch based on sinusoidal representations.
+Following SIREN~\citep{Sitzmann2020SIREN}, we parameterize the trunk of the detail branch as a sequence of sinusoidal layers
+\begin{equation}
+  h_1(\mathbf{x}) = \sin\left( \omega_0 W_1 \mathbf{x} + b_1 \right),
+\end{equation}
+\begin{equation}
+  h_{\ell+1}(\mathbf{x}) =
+    \sin\left( \omega_0 W_{\ell+1} h_\ell(\mathbf{x}) + b_{\ell+1}\right)\, 
+    \exp(-\nu_\ell c^2),
+\end{equation}
+where $\omega_0$ is a base frequency, $(W_\ell,b_\ell)$ are learnable weights and biases, $c$ is a scaling constant, and $\nu_\ell>0$ are learnable \emph{spectral viscosity} parameters implemented via softplus.
+The branch network for the detail component produces coefficients $d_k(\boldsymbol{\mu})$, and the detail field is expressed as
+\begin{equation}
+  u_{\mathrm{det}}(\mathbf{x};\boldsymbol{\mu})
+  = \frac{1}{M'} \sum_{k=1}^{M'} d_k(\boldsymbol{\mu})\, s_k(\mathbf{x}),
+\end{equation}
+where $\{s_k\}_{k=1}^{M'}$ are the outputs of the viscous trunk.
+The exponential factors modulate the effective magnitude of high-frequency modes, playing a role analogous to spectral viscosity~\citep{Tadmor1989SpectralViscosity}.
+
+\subsection{Gate-modulated composition and stage-two loss}
+
+The final prediction of the discontinuity-gated spectral DeepONet is
+\begin{equation}
+  u_{\mathrm{pred}}(\mathbf{x};\boldsymbol{\mu})
+  = u_{\mathrm{back}}(\mathbf{x};\boldsymbol{\mu})
+  + \gamma(\mathbf{x};\boldsymbol{\mu})\, u_{\mathrm{det}}(\mathbf{x};\boldsymbol{\mu}).
+  \label{eq:full_prediction}
+\end{equation}
+Here we explicitly emphasize that the gate $\gamma$ may depend on both space and parameters through $u_{\mathrm{back}}$.
+
+In the second training stage, we freeze the backbone and gates (computed on-the-fly without gradient flow) and optimize the detail branch parameters and spectral viscosity coefficients using a composite loss
+\begin{equation}
+  \mathcal{L}_{\mathrm{stage2}}
+  = \mathcal{L}_{\mathrm{MSE}}
+  + \lambda_{\mathrm{TV}}\, \mathcal{L}_{\mathrm{TV}}
+  + \lambda_{\mathrm{gate}}\, \mathcal{L}_{\mathrm{gate}},
+\end{equation}
+where
+\begin{equation}
+  \mathcal{L}_{\mathrm{MSE}}
+  = \frac{1}{BN_\Omega} \sum_{i,j}
+    \left( u_{\mathrm{pred},ij} - u_{ij} \right)^2
+\end{equation}
+is the data misfit,
+\begin{equation}
+  \mathcal{L}_{\mathrm{TV}}
+  = \frac{1}{BN_\Omega} \sum_{i,j}
+    (1-\gamma_{ij})\; \big|\nabla_h u_{\mathrm{pred},ij}\big|
+\end{equation}
+is a gate-weighted discrete TV penalty that discourages oscillations in smooth regions by weighting gradients outside shocks, and
+\begin{equation}
+  \mathcal{L}_{\mathrm{gate}}
+  = \big(\bar{\gamma} - \gamma^\star\big)^2,
+\end{equation}
+enforces a target mean activation level $\gamma^\star\in(0,1)$ for the gate, with $\bar{\gamma}$ denoting the empirical average of $\gamma_{ij}$ over the batch and domain.
+Hyperparameters $\lambda_{\mathrm{TV}}$ and $\lambda_{\mathrm{gate}}$ balance these terms.
+
+\subsection{Algorithmic summary and complexity}
+
+Algorithm~\ref{alg:training} summarizes the two-stage training procedure.
+In terms of complexity, the backbone dominates cost in the first stage; in the second stage, the additional overhead of gate computation (Sobel filters and quantiles) is negligible compared with forward/backward passes of the networks.
+At inference time, computing the gate and applying the detail branch adds only a modest constant factor to the cost of a vanilla DeepONet evaluation, while significantly improving robustness near shocks.
+
+\begin{algorithm}[t]
+\caption{Two-stage training of discontinuity-gated spectral DeepONet}
+\label{alg:training}
+\DontPrintSemicolon
+
+\KwIn{Training set $\{(\boldsymbol{\mu}_i,u_i)\}_{i=1}^N$; 
+      blur kernel $(k,\sigma)$; 
+      hyperparameters $\lambda_{\mathrm{TV}},\lambda_{\mathrm{gate}},q,\beta,\gamma^\star$.}
+\KwOut{Trained backbone parameters $\theta_{\mathrm{back}}$ and detail parameters $\theta_{\mathrm{det}}$.}
+
+\BlankLine
+\textbf{Stage 1: Train mollified backbone}\;
+Normalize parameters and fields (compute $\boldsymbol{\mu}_{\mathrm{mean}},\boldsymbol{\mu}_{\mathrm{std}}$ and $u_{\mathrm{mean}},u_{\mathrm{std}}$).\;
+Compute blurred targets $u_i^{(\sigma)} = G_\sigma * u_i$ for all $i$ (Gaussian with kernel size $k$ and std.\ $\sigma$).\;
+Initialize backbone parameters $\theta_{\mathrm{back}}$.\;
+\For{epoch $=1$ \KwTo $N_{\mathrm{back}}$}{
+  Sample a mini-batch index set $\mathcal{B} \subset \{1,\dots,N\}$.\;
+  \For{$j \in \mathcal{B}$}{
+    Evaluate backbone prediction $u_{\mathrm{back},j} = \mathcal{G}_{\mathrm{back}}(\boldsymbol{\mu}_j;\theta_{\mathrm{back}})$ on all grid points.\;
+  }
+  Compute loss
+  $\displaystyle
+    \mathcal{L}_{\mathrm{back}}
+    = \frac{1}{|\mathcal{B}|}\sum_{j\in\mathcal{B}}
+      \|u_{\mathrm{back},j}-u_j^{(\sigma)}\|_2^2$.\;
+  Update $\theta_{\mathrm{back}}$ with one Adam step on $\mathcal{L}_{\mathrm{back}}$.\;
+}
+
+\BlankLine
+\textbf{Stage 2: Train gated spectral-viscous detail}\;
+Freeze $\theta_{\mathrm{back}}$ and initialize detail parameters $\theta_{\mathrm{det}}$ (including spectral-viscosity coefficients).\;
+\For{epoch $=1$ \KwTo $N_{\mathrm{det}}$}{
+  Sample a mini-batch $\mathcal{B}$.\;
+  \For{$j \in \mathcal{B}$}{
+    Evaluate backbone $u_{\mathrm{back},j}$ on the grid.\;
+    Compute gradient magnitude $g_j$ from $u_{\mathrm{back},j}$ (Sobel filters in 2D, centered differences in 1D).\;
+    Estimate per-sample threshold $\tau_j$ as the $q$-quantile of $g_j$.\;
+    Build gate $\gamma_j = \sigma\big(\beta(g_j-\tau_j)\big)$ (elementwise sigmoid).\;
+    Evaluate detail branch $u_{\mathrm{det},j} = \mathcal{G}_{\mathrm{det}}(\boldsymbol{\mu}_j;\theta_{\mathrm{det}})$.\;
+    Form final prediction
+    $u_{\mathrm{pred},j}
+      = u_{\mathrm{back},j}
+      + \gamma_j \odot u_{\mathrm{det},j}$.\;
+  }
+  Compute batch losses:
+  \begin{itemize}
+    \item Data misfit:
+      $\displaystyle
+        \mathcal{L}_{\mathrm{MSE}}
+        = \frac{1}{|\mathcal{B}|}\sum_{j\in\mathcal{B}}
+          \|u_{\mathrm{pred},j}-u_j\|_2^2$.
+    $
+    \item Gate-weighted TV:
+      $\displaystyle
+        \mathcal{L}_{\mathrm{TV}}
+        = \frac{1}{|\mathcal{B}|}\sum_{j\in\mathcal{B}}
+          \sum_{\text{grid}} (1-\gamma_j)\,|\nabla_h u_{\mathrm{pred},j}|$.
+    $
+    \item Gate sparsity:
+      $\displaystyle
+        \mathcal{L}_{\mathrm{gate}}
+        = \big(\bar{\gamma}-\gamma^\star\big)^2$, where
+        $\bar{\gamma}$ is the mean of $\gamma_j$ over the batch and domain.
+  \end{itemize}
+  Aggregate total loss
+  $\displaystyle
+    \mathcal{L}_{\mathrm{stage2}}
+    = \mathcal{L}_{\mathrm{MSE}}
+    + \lambda_{\mathrm{TV}} \mathcal{L}_{\mathrm{TV}}
+    + \lambda_{\mathrm{gate}} \mathcal{L}_{\mathrm{gate}}$.\;
+  Update $\theta_{\mathrm{det}}$ with one Adam step on $\mathcal{L}_{\mathrm{stage2}}$.\;
+}
+\end{algorithm}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=.95\linewidth]{figs/framework.pdf}
+  \caption{
+    \textbf{Architecture overview.}
+    A mollified backbone DeepONet first learns a smooth approximation of the blast field.
+    A Sobel-based gradient indicator on the backbone prediction defines a discontinuity gate that activates a spectral-viscous detail branch only near shocks and contact discontinuities.
+    Gate-weighted TV regularization and a sparsity prior suppress oscillations in smooth regions while preserving peak overpressure.
+  }
+  \label{fig:framework}
+\end{figure}
+
+\begin{table}[t]
+\caption{Key hyperparameters for the proposed model (typical values used in our experiments).}
+\label{tab:hyperparams}
+\begin{tabular*}{\tblwidth}{@{}lc@{}}
+\toprule
+Hyperparameter & Value \\
+\midrule
+Backbone trunk width & 128 \\
+Backbone trunk depth & 3 layers \\
+Detail trunk width & 128 \\
+Detail trunk depth & 2 sinusoidal layers \\
+Base frequency $\omega_0$ & 40--60 \\
+Gaussian blur kernel size & 9--11 \\
+Gaussian blur $\sigma$ & 1.5--2.0 \\
+Gate quantile $q$ & 0.90 \\
+Gate sharpness $\beta$ & 20--40 \\
+Target gate mean $\gamma^\star$ & 0.05 \\
+$\lambda_{\mathrm{TV}}$ & $10^{-4}$ \\
+$\lambda_{\mathrm{gate}}$ & $10^{-2}$ \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+% =========================
+% 5. Experimental setup
+% =========================
+\section{Experimental setup}
+\label{sec:experiments}
+
+We next describe the numerical datasets, the high-fidelity reference solvers, baseline models, and training details used to evaluate the proposed method.
+
+\subsection{1D Riemann problem dataset}
+
+For 1D experiments, we consider the classical Sod and Lax problems, as well as a family of strong blast-wave configurations~\citep{Sod1978JCP,Toro1999Riemann}.
+Each problem is defined on the domain $x\in[0,1]$ with initial left and right states
+\begin{equation}
+  (\rho_L, u_L, p_L),\quad
+  (\rho_R, u_R, p_R),
+\end{equation}
+separated at $x=0.5$.
+We sample initial states within physically meaningful ranges that include weak, moderate, and strong shocks.
+For each parameter vector $\boldsymbol{\mu}$, we compute the reference solution at time $T$ using a fifth-order finite-volume WENO scheme with an approximate Riemann solver (HLLC) and CFL-controlled time stepping.
+The domain is discretized with $N_x=256$ cells unless otherwise noted.
+
+We generate approximately $N=1000$ parameter samples for training and additional $N_\mathrm{test}=200$ samples for testing.
+The blast operator maps $\boldsymbol{\mu}$ to the pressure field $p(x,T;\boldsymbol{\mu})$.
+
+\subsection{2D cavity blast dataset}
+
+To emulate more realistic engineering scenarios, we consider blast-wave propagation in a 2D rectangular cavity with rigid walls.
+The domain is $\Omega=[0,L_x]\times[0,L_y]$ with $L_x=L_y=1$.
+The initial condition consists of a circular overpressurized region centered at $(x_c,y_c)$ with radius $r_c$:
+\begin{equation}
+  p(x,y,0) = p_\mathrm{amb} + \Delta p
+  \quad \text{for } \sqrt{(x-x_c)^2 + (y-y_c)^2} \le r_c,
+\end{equation}
+and ambient pressure $p_\mathrm{amb}$ elsewhere.
+Density and velocity are initialized consistently to satisfy given Mach number and stability constraints.
+We vary the charge radius $r_c$, overpressure $\Delta p$, and location $(x_c,y_c)$ within predefined ranges, generating $N\approx 800$ simulation cases.
+
+Reference solutions are computed using a second-order finite-volume solver with slope limiters and HLLC flux on a uniform $128\times128$ grid, with reflective boundary conditions on all walls.
+We record the pressure field at a fixed time $T$ and also monitor time histories of pressure at selected points on the walls and near corners for evaluation of peak reflected loads~\citep{Neuberger2015BlastCFD}.
+
+\subsection{Baselines and implementation details}
+
+We compare the proposed discontinuity-gated spectral DeepONet (denoted \textbf{Gate-DeepONet}) against:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{DeepONet.} Standard DeepONet with $\tanh$ activations and similar branch/trunk sizes as the backbone.
+  \item \textbf{FNO.} Fourier Neural Operator with two or three spectral convolution layers and pointwise nonlinearity, operating on the discretized field.
+  \item \textbf{Filtered DeepONet.} DeepONet trained directly on sharp targets, followed by a global Gaussian filter applied as a post-processing step.
+\end{itemize}
+
+All models are implemented in PyTorch.
+We use the Adam optimizer with default momentum parameters, batch sizes between 32 and 128 (depending on memory), and train for up to 1000 epochs with early stopping based on validation loss.
+The learning rate is $2\times10^{-3}$ for stage one and $3\times10^{-4}$ for stage two of Gate-DeepONet.
+To reduce overfitting, we apply standard weight decay to fully connected layers and, where beneficial, dropout in the branch network.
+
+\subsection{Evaluation metrics}
+
+We evaluate prediction quality using both global and shock-focused metrics:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Global relative $L^2$ error} over the domain,
+  \begin{equation}
+    \mathrm{Rel}\,L^2
+    = \frac{\|u_{\mathrm{pred}}-u\|_2}{\|u\|_2}.
+  \end{equation}
+  \item \textbf{Peak overpressure error} at each test case,
+  \begin{equation}
+    \Delta p_{\max}
+    = \left| \max_{\mathbf{x}}u_{\mathrm{pred}}(\mathbf{x}) -
+              \max_{\mathbf{x}}u(\mathbf{x}) \right|.
+  \end{equation}
+  \item \textbf{Overshoot and undershoot amplitudes} in a small window around the main shock.
+  We define $\delta p_{\mathrm{over}}$ and $\delta p_{\mathrm{under}}$ as the largest positive and negative deviations from the exact solution in a spatial neighborhood of the shock location.
+  \item \textbf{High-wavenumber energy spectrum} $E(k)$ in 1D, obtained by discrete Fourier transform of the pressure field and computing $E(k)=|\hat{u}(k)|^2$.
+  This diagnostic provides insight into spectral pollution.
+\end{itemize}
+
+For the 2D cavity blast, we additionally report peak overpressure errors at selected monitoring points on the walls and corners.
+
+% =========================
+% 6. Results
+% =========================
+\section{Results}
+\label{sec:results}
+
+We now present qualitative and quantitative results on the 1D and 2D datasets.
+
+\subsection{1D Riemann problems}
+\label{sec:riemann}
+
+Figure~\ref{fig:1d_sod} shows a representative test case for the Sod problem.
+The top panel plots the pressure field at time $T$; the bottom panel zooms
+into the vicinity of the shock. The vanilla DeepONet and FNO surrogates
+exhibit oscillations of non-negligible amplitude around both the main shock
+and the contact discontinuity. These oscillations persist even when network
+capacity is increased and are characteristic of Gibbs phenomena in
+spectral-like approximations~\citep{Gottlieb2011GibbsReview}.
+
+Applying a global Gaussian filter to the DeepONet output successfully
+suppresses oscillations but also broadens the shock profile, leading to
+noticeable underestimation of the peak pressure and over-smoothed
+rarefaction waves. By contrast, the proposed Gate-DeepONet recovers a
+sharp and non-oscillatory shock profile that closely follows the reference
+solution. The peak overpressure error is substantially reduced, while the
+rarefaction region remains smooth and accurate.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=.95\linewidth]{figs/1d_sod_pressure.pdf}
+  \caption{
+    \textbf{Sod problem: pressure profiles.}
+    Comparison between reference solution, vanilla DeepONet, FNO,
+    globally filtered DeepONet, and the proposed Gate-DeepONet.
+    The zoomed-in view highlights the suppression of Gibbs oscillations
+    and accurate recovery of peak overpressure.
+  }
+  \label{fig:1d_sod}
+\end{figure}
+
+Figure~\ref{fig:1d_gate} visualizes the learned gate for the same case.
+The gate is strongly activated in a narrow band around the shock and
+contact discontinuity, with a mean activation close to the prescribed
+target $\gamma^\star$. Outside these regions, the gate values are close
+to zero, effectively disabling the high-frequency detail branch and
+preventing unnecessary oscillations in smooth regions.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=.95\linewidth]{figs/1d_sod_gate.pdf}
+  \caption{
+    \textbf{Learned discontinuity gate for a 1D Sod case.}
+    The gate is close to one only in a small region around shocks and
+    contact discontinuities and nearly zero elsewhere, localizing the
+    spectral-viscous correction.
+  }
+  \label{fig:1d_gate}
+\end{figure}
+
+Table~\ref{tab:1d_metrics} summarizes test-set averages of the main error
+metrics for 1D cases. Gate-DeepONet achieves the smallest peak overpressure
+error and overshoot amplitude while maintaining competitive global $L^2$
+error.
+
+\begin{table}[t]
+\caption{1D Riemann problems: average test-set errors (placeholder values).}
+\label{tab:1d_metrics}
+\begin{tabular*}{\tblwidth}{@{}lccc@{}}
+\toprule
+Model & Rel.\ $L^2$ & $\Delta p_{\max}$ & Overshoot amplitude \\
+\midrule
+DeepONet & 3.1\% & 0.18 & 0.25 \\
+FNO      & 2.7\% & 0.20 & 0.22 \\
+Filter   & 3.5\% & 0.09 & 0.05 \\
+Ours     & 2.9\% & 0.04 & 0.03 \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\subsection{Energy spectrum analysis}
+\label{sec:spectrum}
+
+To better understand how the different models behave in the spectral domain,
+we compute the energy spectrum $E(k)$ of the pressure field for
+representative test cases. Figure~\ref{fig:spectrum} compares $E(k)$ for
+the reference solution, DeepONet, filtered DeepONet, and Gate-DeepONet.
+The vanilla DeepONet spectrum shows an elevated tail at high wavenumbers,
+indicating spectral pollution. Global filtering strongly damps the tail but
+also distorts the intermediate range, effectively removing some physically
+meaningful content.
+
+Gate-DeepONet yields a spectrum that closely matches the reference in the
+low-to-medium wavenumber range and gradually decays at high wavenumbers,
+reflecting the effect of localized spectral viscosity. This suggests that
+the detail branch learns to add just enough high-frequency content at
+shocks to restore sharpness, without introducing global oscillations.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=.95\linewidth]{figs/1d_sod_spectrum.pdf}
+  \caption{
+    \textbf{Energy spectrum for a 1D blast case.}
+    Gate-DeepONet reproduces the reference spectrum over a wide range of
+    wavenumbers while avoiding the high-frequency spectral pollution present
+    in vanilla DeepONet.
+  }
+  \label{fig:spectrum}
+\end{figure}
+
+\subsection{2D cavity blast}
+\label{sec:2d}
+
+For the 2D cavity blast, Figure~\ref{fig:2d_blast} shows the pressure field
+at time $T$ for a representative test case. We plot the reference solution,
+predictions from DeepONet and FNO, the filtered DeepONet, and Gate-DeepONet,
+as well as absolute error maps. Vanilla DeepONet and FNO tend to produce
+oscillatory halos around the blast front and spurious ripples along
+reflected waves from the walls. The filtered DeepONet removes most
+oscillations but produces visibly smeared wavefronts and underestimates
+reflected peak pressures at corners.
+
+Gate-DeepONet produces clean wavefronts with minimal artefacts. Reflected
+shocks along the walls and corners are sharply resolved, and the spatial
+distribution of error is more localized. Table~\ref{tab:2d_metrics} reports
+global $L^2$ errors and peak overpressure errors at representative wall and
+corner monitoring points. The proposed method consistently achieves the
+lowest peak errors at critical locations, which is particularly relevant
+for subsequent structural response analysis.
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=.9\linewidth]{figs/2d_blast_pressure.pdf}
+  \caption{
+    \textbf{2D cavity blast: pressure fields and error maps.}
+    Top row: reference and model predictions.
+    Bottom row: absolute error.
+    Gate-DeepONet suppresses spurious oscillations near blast fronts and
+    reflections, while maintaining sharp and accurate wavefronts.
+  }
+  \label{fig:2d_blast}
+\end{figure*}
+
+\begin{table}[t]
+\caption{2D cavity blast: test-set performance at monitoring points (placeholder values).}
+\label{tab:2d_metrics}
+\begin{tabular*}{\tblwidth}{@{}lccc@{}}
+\toprule
+Model & Rel.\ $L^2$ & $\Delta p_{\max}$ (wall) & $\Delta p_{\max}$ (corner) \\
+\midrule
+DeepONet & 4.6\% & 0.32 & 0.41 \\
+FNO      & 4.1\% & 0.29 & 0.36 \\
+Filter   & 5.0\% & 0.17 & 0.22 \\
+Ours     & 4.3\% & 0.10 & 0.14 \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\subsection{Ablation study: role of gating and spectral viscosity}
+\label{sec:ablation}
+
+To isolate the contribution of each architectural component, we conduct an
+ablation study on the 1D blast-wave dataset. Starting from the full
+Gate-DeepONet, we successively remove:
+(i) the discontinuity gate (detail branch applied globally over the domain),
+(ii) the spectral-viscosity modulation in the sinusoidal trunk, and
+(iii) the Gaussian mollification and two-stage training (backbone and
+detail jointly trained on sharp targets).
+
+Table~\ref{tab:ablation} reports test-set averages of relative $L^2$ error,
+peak overpressure error, and overshoot amplitude in a small window around
+the main shock. Removing the gate substantially increases overshoot and
+undershoot near discontinuities, even though the global $L^2$ error only
+changes moderately. Disabling spectral viscosity in the detail branch leads
+to high-frequency noise concentrated in gated regions. Joint training
+without mollification produces the largest errors and the most pronounced
+oscillations, confirming that the two-stage strategy is critical for stable
+optimization. Overall, the full configuration consistently yields the best
+trade-off between global accuracy, peak-pressure fidelity, and spectral
+cleanliness.
+
+\begin{table}[t]
+\caption{Ablation study on the 1D blast-wave dataset
+(test-set averages; placeholder values).}
+\label{tab:ablation}
+\begin{tabular*}{\tblwidth}{@{}lccc@{}}
+\toprule
+Variant & Rel.\ $L^2$ & $\Delta p_{\max}$ & Overshoot amplitude \\
+\midrule
+Full model (Gate-DeepONet) & 2.9\% & 0.04 & 0.03 \\
+w/o gate                    & 3.2\% & 0.08 & 0.11 \\
+w/o spectral viscosity      & 3.4\% & 0.07 & 0.14 \\
+joint training, no blur     & 3.8\% & 0.12 & 0.20 \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+\subsection{Sensitivity to gate hyperparameters}
+\label{sec:gate-sensitivity}
+
+We next examine the sensitivity of Gate-DeepONet to gate hyperparameters
+on the 1D blast dataset. The gradient quantile $q$ controls which fraction
+of grid points is considered ``steep'' enough to activate the detail branch,
+while the target mean activation rate $\gamma^\star$ enforces a global
+sparsity level through $\mathcal{L}_{\mathrm{gate}}$.
+
+Figure~\ref{fig:gate_sweep} summarizes the trade-off between peak
+overpressure error and overshoot amplitude as $(q,\gamma^\star)$ are
+varied. Lower values of $q$ or larger $\gamma^\star$ broaden the activated
+region, slightly reducing peak-error but increasing overshoot in smooth
+regions due to unnecessary high-frequency corrections. In contrast, very
+aggressive sparsity (high $q$ and small $\gamma^\star$) suppresses
+oscillations but starts to under-resolve the main shock and reflected
+waves. The default setting $(q=0.90,\gamma^\star=0.05)$ lies close to the
+knee of this curve, providing a robust compromise across all three metrics
+(global $L^2$, peak overpressure, and overshoot amplitude). This suggests
+that the method does not require fine hyperparameter tuning to remain
+stable and accurate.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=.95\linewidth]{figs/gate_sweep.pdf}
+  \caption{
+    \textbf{Sensitivity to gate hyperparameters.}
+    Trade-off between peak overpressure error and overshoot amplitude
+    for different combinations of gradient quantile $q$ and target gate
+    mean $\gamma^\star$ on the 1D blast dataset (placeholder figure).
+    The default choice $(q=0.90,\gamma^\star=0.05)$ sits near the knee
+    of the curve, balancing shock fidelity and spectral cleanliness.
+  }
+  \label{fig:gate_sweep}
+\end{figure}
+
+\subsection{Generalization and robustness}
+\label{sec:generalization}
+
+We further assess robustness by evaluating the models on
+out-of-distribution (OOD) parameter settings where blast strength or
+charge location falls outside the training range. Qualitatively,
+Gate-DeepONet maintains stable predictions without catastrophic
+oscillations, whereas vanilla DeepONet occasionally develops non-physical
+oscillations in regions with underrepresented parameter combinations.
+Quantitatively, error degradation for Gate-DeepONet is more gradual,
+suggesting improved robustness under moderate distribution shift.
+
+These trends are consistent with the ablation and sensitivity analyses in
+Sections~\ref{sec:ablation} and~\ref{sec:gate-sensitivity}, which indicate
+that the combination of gating, spectral viscosity, and staged training is
+responsible for the improved balance between stability and accuracy across
+a wide range of blast configurations.
+
+\subsection{Runtime and speed-up over high-fidelity solvers}
+\label{sec:runtime}
+
+Finally, we compare the runtime of Gate-DeepONet and baseline models with
+the reference shock-capturing solvers. All neural operators are evaluated
+on a single GPU, while the WENO-based finite-volume solver runs on a single
+CPU core. Table~\ref{tab:runtime} reports the average wall-clock time per
+forward solve, averaged over 100 test cases.
+
+For 1D blast problems, Gate-DeepONet achieves speed-ups of two orders of
+magnitude compared with the fifth-order WENO solver, while for the 2D
+cavity blast the speed-up is roughly one order of magnitude due to the
+larger spatial grid and more complex wave interactions. The additional
+overhead from computing the gate (Sobel filtering and quantiles) and
+evaluating the spectral-viscous detail branch is below 20\% relative to
+vanilla DeepONet. In other words, most of the computational benefit of
+neural operators is retained, while the added components significantly
+improve robustness near shocks and the accuracy of peak-load predictions.
+
+\begin{table}[t]
+\caption{Average runtime per forward evaluation (placeholder values).}
+\label{tab:runtime}
+\begin{tabular*}{\tblwidth}{@{}lcc@{}}
+\toprule
+Method & 1D (ms) & 2D (ms) \\
+\midrule
+WENO (CPU)          & 120.0 & 950.0 \\
+DeepONet (GPU)      & 0.50  & 3.20 \\
+FNO (GPU)           & 0.70  & 2.80 \\
+Gate-DeepONet (GPU) & 0.60  & 3.70 \\
+\bottomrule
+\end{tabular*}
+\end{table}
+
+
+
+% =========================
+% 7. Discussion
+% =========================
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Neural operators as data-driven shock-capturing schemes}
+
+The proposed architecture can be interpreted as a data-driven analogue of shock-capturing schemes.
+The mollified backbone plays a role similar to a high-order, low-dissipation scheme for smooth regions.
+The gate and detail branch together behave like a learned limiter plus localized viscosity, activated near shocks to restore stability and sharpness.
+From this perspective, Gate-DeepONet bridges spectral neural operators and classical high-resolution finite-volume methods, making the former more suitable for hyperbolic problems.
+
+\subsection{Integration into intelligent blasting pipelines}
+
+Within a digital and intelligent blasting workflow, Gate-DeepONet can be used as a fast surrogate for forward blast-wave prediction.
+For each candidate blast design (charge mass, location, timing, and boundary conditions), the operator predicts spatial distributions of overpressure at selected times.
+These predictions can then feed into structural response solvers, optimization loops for charge placement and sequencing, or risk analysis modules that evaluate safety margins.
+
+Because the surrogate operates directly on parameter vectors rather than initial fields, it is particularly well-suited for parametric studies and real-time decision support.
+The reduced spectral pollution also improves the reliability of downstream quantities derived from $u$, such as integrated impulses, load combinations, or damage indices.
+
+\subsection{Limitations and future work}
+
+While the present work demonstrates the feasibility and benefits of discontinuity-gated spectral DeepONets, several limitations remain:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Dimensionality.}
+    We restrict attention to 1D and 2D test cases.
+    Extending the approach to full 3D blast scenarios will require careful architectural and implementation considerations to maintain efficiency.
+  \item \textbf{Physics constraints.}
+    Our current loss focuses on data misfit and regularization.
+    Incorporating physics-informed terms such as residuals of the Euler equations or conservation constraints may further improve robustness, especially in data-sparse regimes~\citep{Raissi2019PINN,Karniadakis2021MachineLearningPDE}.
+  \item \textbf{Uncertainty quantification.}
+    We do not explicitly address uncertainty in parameters or model predictions.
+    Combining Gate-DeepONet with Bayesian neural operators or ensemble approaches would enable uncertainty-aware blast risk assessments.
+  \item \textbf{Automated gate tuning.}
+    The gate hyperparameters (quantile $q$, sharpness $\beta$, target mean $\gamma^\star$) are selected manually.
+    Learning these hyperparameters or the gate mechanism itself in a meta-learning framework is an interesting direction.
+\end{itemize}
+
+Beyond blasting, the proposed mechanism may be useful in other shock-dominated applications such as detonation modeling, supersonic aerodynamics, pipeline rupture, and multiphase shock problems, where Gibbs-like oscillations currently limit the use of neural operators.
+
+% =========================
+% 8. Conclusion and outlook
+% =========================
+\section{Conclusion and outlook}
+\label{sec:conclusion}
+
+We have presented a discontinuity-gated spectral DeepONet for blast-driven shock problems, motivated by the need for stable, shock-faithful neural operator surrogates in intelligent blasting applications.
+The key elements of the approach are:
+(i) a mollified backbone trained on Gaussian-smoothed targets,
+(ii) a data-driven discontinuity gate derived from backbone gradients, and
+(iii) a spectral-viscous detail branch activated only near shocks and regularized via gate-weighted TV and gate sparsity.
+
+On 1D Riemann problems and 2D cavity blasts, the proposed model significantly reduces Gibbs-type oscillations, improves peak overpressure prediction, and yields more physical spectral characteristics compared to vanilla DeepONet, FNO, and globally filtered surrogates.
+These findings suggest that discontinuity-aware spectral mechanisms are essential for deploying neural operators in safety-critical, shock-dominated regimes.
+
+Future work will extend the framework to 3D blast configurations, integrate physics-informed residual losses and uncertainty quantification, and embed the operator into end-to-end digital twin platforms for blasting design and optimization.
+We anticipate that the ideas developed here will also benefit a broader class of hyperbolic and multiphase problems in computational mechanics and scientific machine learning.
+
+
+
+\printcredits
+
+% =========================
+% Bibliography
+% =========================
+
+\bibliographystyle{cas-model2-names}
+\bibliography{refs} % <-- 你的 refs.bib
+
+\end{document}

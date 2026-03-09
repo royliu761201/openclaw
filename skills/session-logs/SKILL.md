@@ -113,9 +113,3 @@ rg -l "phrase" ~/.openclaw/agents/<agentId>/sessions/*.jsonl
 ```bash
 jq -r 'select(.type=="message") | .message.content[]? | select(.type=="text") | .text' ~/.openclaw/agents/<agentId>/sessions/<id>.jsonl | rg 'keyword'
 ```
-
----
-
-## 🚫 防坑禁区 (Anti-Hallucination / L2 Antibody)
-- **Banned Custom Scripts**: When analyzing failed commands or specific log patterns across sessions, do NOT attempt to write custom `Python` or `Bash` scripts (e.g., parsing JSON iteratively via regex). This frequently errors out due to line formatting issues and violates the "Do not invent commands" rule.
-- **Mandatory Native Path**: You MUST use your native `grep_search` tool equipped with regex capability, or use the exact `jq` pipelines documented in this file.

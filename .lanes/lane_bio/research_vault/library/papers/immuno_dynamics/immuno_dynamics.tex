@@ -1,0 +1,508 @@
+%%%% ijcai.tex %%%%
+\typeout{IJCAI-26 Immuno-Dynamics Draft}
+
+% =========================================================
+% IJCAI 2026 main file (7 pages main text limit)
+% =========================================================
+\documentclass{article}
+
+% IJCAI 2026 style
+\usepackage{ijcai26}
+
+% ---------------------------------------------------------
+% Packages (keep minimal to respect IJCAI rules)
+% ---------------------------------------------------------
+\usepackage{times}
+\usepackage{soul}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+\usepackage[utf8]{inputenc}
+\usepackage[small]{caption}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{tabularx} % for line-breaking tables
+
+\urlstyle{same}
+
+% =========================================================
+% Title
+% =========================================================
+\title{Immuno-Dynamics: Latent Immune Dynamics and Benefit--Risk Decoupling\\
+for Cancer Immunotherapy}
+
+% ---------------- Double-blind: keep authors commented ----------------
+% \author{
+% Xiaohua Liu$^1$\And
+% Chengkai Zhang$^1$\And
+% Xiangfeng Luo$^{1}$\footnote{Contact Author}\And
+% Bo Lan$^2$\\
+% \affiliations
+% $^1$Jianghan University\\
+% $^2$National Cancer Center/National Clinical Research Center for Cancer/Cancer Hospital, CAMS and PUMC\\
+% \emails
+% \{liuxh, zhangck, luoxf\}@jhun.edu.cn,
+% lanbo@cicams.ac.cn
+% }
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Cancer immunotherapy can provide durable tumor control but frequently triggers severe immune-related adverse events (irAEs), creating a persistent benefit--risk coupling that hampers precise treatment selection. Existing AI approaches are typically trained on static multi-omics or pathology snapshots and often entangle efficacy- and toxicity-relevant signals, making it difficult to highlight toxicity mechanisms that can be mitigated without sacrificing benefit. We propose \textbf{Immuno-Dynamics}, a neuro-symbolic framework that reconstructs latent immune dynamics from static data and explicitly separates benefit from risk in representation space. Immuno-Dynamics (i) constructs an immune interaction graph by combining large language model (LLM) extracted mechanistic priors with data-driven refinement, (ii) learns continuous-time latent evolution via a pseudotime-supervised Graph Neural ODE, enabling trajectory-informed patient representations when each patient is observed once, and (iii) enforces benefit--risk decoupling through a Hilbert--Schmidt Independence Criterion (HSIC) penalty between efficacy and toxicity subspaces. Across public cohorts for triple-negative breast cancer survival and immunotherapy toxicity, Immuno-Dynamics improves toxicity AUC and survival C-index over strong multimodal baselines, while surfacing toxicity-skewed candidates such as \textit{IL6} and \textit{TNF} that preserve efficacy-relevant signals. These results suggest that latent immune dynamics with explicit benefit--risk decoupling offer a promising path toward more interpretable and controllable immunotherapy modeling.
+\end{abstract}
+
+
+% =========================================================
+% 1. Introduction
+% =========================================================
+\section{Introduction}
+
+Immune checkpoint inhibitors (ICIs), especially PD-1/PD-L1 blockade, have reshaped treatment paradigms across multiple cancers and are now first-line options in combinations for triple-negative breast cancer (TNBC) and other aggressive subtypes \cite{schmid2018atezolizumab,cortes2022pembrolizumab,zhang2025distinct}. However, unleashing antitumor immunity comes at the cost of immune-related adverse events (irAEs), where off-target immune activation causes toxicities such as pneumonitis and colitis \cite{martins2019adverse,haanen2022management}. Clinically, stronger immune activation can imply both better tumor control and higher toxicity risk, creating a persistent \emph{benefit--risk coupling}. This tension leads to undertreatment in fragile patients and overtreatment in others.
+
+Data-driven models are increasingly used to stratify patients for immunotherapy, yet most methods operate on \emph{static} multi-omics or whole-slide images \cite{lu2021data,chen2022pan}. Two limitations arise.
+
+\noindent\textbf{The ``snapshot'' problem.}
+Immune responses unfold as a time-dependent cascade of activation, expansion and contraction, whereas large clinical cohorts (for example TCGA) typically provide single-timepoint bulk profiles. This makes it difficult to reason about the temporal emergence of toxicity signals or distinguish early versus late risk patterns \cite{huang2020learning}.
+
+\noindent\textbf{The ``coupling'' problem.}
+Multi-task predictors for efficacy and toxicity often share representations or feature extractors. When trained on limited cohorts, they can reinforce spurious correlations between benefit and risk instead of isolating toxicity-specific mechanisms that preserve efficacy \cite{hussaini2021immune}. This entanglement hinders both accurate risk prediction and mechanistically plausible target discovery.
+
+These challenges motivate a central question:
+\emph{Can we recover latent immune dynamics from static patient profiles and learn representations that separate therapeutic benefit from toxicity risk?}
+
+In this work we introduce \textbf{Immuno-Dynamics}, a neuro-symbolic framework that combines knowledge-informed immune graphs with continuous-time representation learning and an explicit benefit--risk decoupling objective. The key idea is that, although clinical cohorts are static at the patient level, immune processes obey partially reusable mechanistic constraints that can be distilled from biomedical knowledge and single-cell trajectories. We use large language models (LLMs) to construct mechanistic priors for immune interactions, and a pseudotime-supervised Graph Neural ODE to propagate patient states along a latent immune trajectory. Efficacy and toxicity are then modeled in separate subspaces regularized to be statistically independent.
+
+Importantly, current public data rarely provide both detailed response endpoints and high-grade irAE labels for the same cohort. We therefore instantiate benefit and risk on \emph{related but distinct} datasets that share immune-relevant variables: a TNBC bulk cohort for survival (benefit) and an immunotherapy cohort with graded irAEs (risk). Immuno-Dynamics is trained to produce decoupled benefit and risk subspaces on this shared immune feature space, while respecting the data availability of each cohort.
+
+Our main contributions are:
+\begin{itemize}
+    \item \textbf{Latent immune dynamics from static cohorts.} We formulate a pseudotime-supervised Graph Neural ODE that reconstructs continuous-time immune state trajectories from single-timepoint bulk profiles by aligning them to an external single-cell reference.
+    \item \textbf{Mechanistic LLM-prior immune graphs.} We propose an LLM-informed graph construction procedure that encodes signed immune interactions as a mechanistic prior, then fuses it with a data-driven graph generator, improving robustness and interpretability in data-scarce oncology settings.
+    \item \textbf{Explicit benefit--risk decoupling.} We design an HSIC-based dependence penalty that encourages statistical independence between efficacy and toxicity subspaces, improving toxicity prediction and survival modeling over strong baselines while surfacing toxicity-skewed candidates consistent with known inflammatory pathways.
+\end{itemize}
+
+Figure~\ref{fig:concept} summarizes the overall framework.
+
+\begin{figure}[t]
+  \centering
+  \fbox{\rule{0pt}{2.1in}\rule{0.44\linewidth}{0pt}}
+  \hfill
+  \fbox{\rule{0pt}{2.1in}\rule{0.44\linewidth}{0pt}}
+  \caption{(a) Overview of Immuno-Dynamics: LLM-derived mechanistic priors and data-driven refinement define an immune interaction graph; a pseudotime-supervised Graph Neural ODE maps static bulk profiles to latent immune trajectories, and efficacy/toxicity subspaces are regularized to be statistically independent. (b) Illustration of benefit--risk decoupling: the toxicity and efficacy subspaces show reduced statistical dependence compared with ablated variants (e.g., via HSIC or a 2D projection).}
+  \label{fig:concept}
+\end{figure}
+
+
+% =========================================================
+% 2. Related Work
+% =========================================================
+\section{Related Work}
+
+\paragraph{Graph learning for multi-omics and computational oncology.}
+Graphs are widely used to integrate heterogeneous omics and histology signals \cite{lu2021data,chen2022pan}. Patient- and gene-level graphs are typically built from correlations or curated interactions and processed with GCN/GAT-style message passing \cite{kipf2017semi,velickovic2018graph}. Correlation-based graphs can be unstable in small cohorts and ignore mechanistic constraints that are crucial for immunotherapy, where immune activation pathways influence both response and irAEs. Immuno-Dynamics differs by injecting an LLM-derived mechanistic prior into graph construction and refining it with cohort data, aiming to improve robustness and interpretability.
+
+\paragraph{Neural ODEs and continuous-time representation learning.}
+Neural ordinary differential equations (Neural ODEs) parameterize hidden-state dynamics by continuous-time differential equations \cite{chen2018neural,rubanova2019latent}. Neural controlled differential equations extend this idea to irregular time series \cite{kidger2020neural}. Graph Neural ODEs generalize Neural ODEs to graph-structured states via message passing \cite{poli2019graph}. In oncology, longitudinal measurements are often sparse or missing, and many cohorts provide only one bulk profile per patient. We use single-cell reference trajectories to define a pseudotime axis and supervise a Graph Neural ODE on static bulk cohorts, obtaining trajectory-informed patient representations without true patient-level time series.
+
+\paragraph{Disentanglement, causality, and neuro-symbolic priors.}
+Disentangled representations seek to separate underlying factors of variation, but unsupervised disentanglement is fundamentally underdetermined without additional inductive biases \cite{locatello2019challenging,scholkopf2021toward}. In healthcare, causal and trustworthy modeling is emphasized to mitigate spurious correlations and support actionable insights \cite{pearl2009causality,zhang2024trustworthy,holzinger2022explainable}. Large language models encode and retrieve clinical knowledge and can be grounded with external evidence \cite{singhal2023large,thirunavukarasu2023large,lewis2020retrieval,he2024exploring}. Immuno-Dynamics connects these threads by (i) using LLMs to provide a symbolic mechanistic prior for immune interactions and (ii) enforcing an HSIC-based independence regularizer to reduce entanglement between benefit and risk subspaces. While we do not claim full causal identification, this combination yields more decoupled and interpretable representations than purely static multi-task architectures.
+
+% =========================================================
+% 3. Problem Setup and Notation
+% =========================================================
+\section{Problem Setup and Notation}
+\label{sec:setup}
+
+Let $\mathcal{D}_{\text{eff}}=\{(\mathbf{x}_i,y_i^{\text{eff}})\}_{i=1}^{N_{\text{eff}}}$ denote a cohort with static multi-omics profiles $\mathbf{x}_i$ and clinical benefit labels $y_i^{\text{eff}}$ (for example overall survival or binary response), and let $\mathcal{D}_{\text{tox}}=\{(\mathbf{x}_j,y_j^{\text{tox}})\}_{j=1}^{N_{\text{tox}}}$ be a cohort with compatible multi-omics features and toxicity labels $y_j^{\text{tox}}$ (for example high-grade irAEs). The two cohorts need not contain the same patients but share an aligned set of immune-relevant variables.
+
+We consider a common encoder that maps each static profile $\mathbf{x}$ to node-aligned immune embeddings
+\begin{equation}
+\mathbf{H}(0)=\mathrm{Enc}_{\phi}(\mathbf{x})\in\mathbb{R}^{K\times d},
+\end{equation}
+where $K$ is the number of immune nodes (genes or pathways) and $d$ is the embedding dimension. These node states are defined on a shared immune graph and serve as initial conditions for a continuous-time evolution model.
+
+Our goal is to learn decoupled benefit and risk predictors
+\begin{equation}
+\hat{y}^{\text{eff}}=f_{\text{eff}}(\mathbf{x}), \qquad
+\hat{y}^{\text{tox}}=f_{\text{tox}}(\mathbf{x}),
+\end{equation}
+together with two task-specific latent subspaces $\mathbf{z}_{\text{eff}}$ and $\mathbf{z}_{\text{tox}}$ that are:
+(i) predictive for efficacy and toxicity on their respective cohorts, and
+(ii) as statistically independent as possible when evaluated on the shared immune feature space. The next section introduces the Immuno-Dynamics architecture that realizes this objective through LLM-prior graph construction, pseudotime-supervised Graph Neural ODE dynamics, and an HSIC-based decoupling loss.
+
+% =========================================================
+% 4. Method
+% =========================================================
+\section{Method}
+\label{sec:method}
+
+Immuno-Dynamics combines three components:
+(i) an immune interaction graph initialized by an LLM-derived mechanistic prior and refined from data;
+(ii) a pseudotime-supervised Graph Neural ODE that reconstructs latent immune dynamics from static bulk profiles; and
+(iii) an HSIC-based benefit--risk decoupling objective that learns separate efficacy and toxicity subspaces.
+
+% ---------------------------------------------------------
+% 4.1 LLM-Prior Immune Graph
+% ---------------------------------------------------------
+\subsection{LLM-Prior Immune Graph}
+\label{subsec:graph}
+
+We define an immune interaction graph $\mathcal{G}=(\mathcal{V},\mathcal{E})$ over $K$ immune-relevant variables
+(genes or pathways), with adjacency matrix $\mathbf{A}\in\mathbb{R}^{K\times K}$.
+Node embeddings $\mathbf{H}(0)\in\mathbb{R}^{K\times d}$ are obtained from a shared encoder
+$\mathrm{Enc}_\phi$ applied to each bulk profile (Section~\ref{sec:setup}).
+
+\paragraph{LLM-derived mechanistic prior.}
+To mitigate small-cohort instability, we query an LLM with immune variable pairs $(v_i,v_j)$ (genes or pathways) and obtain a relation
+$r_{ij}\in\{\texttt{act},\texttt{inh},\texttt{unk}\}$ and confidence $c_{ij}\in[0,1]$.
+These are mapped to a signed weighted prior adjacency
+\begin{equation}
+A^{\mathrm{prior}}_{ij}=
+\begin{cases}
++c_{ij}, & r_{ij}=\texttt{act},\\
+-c_{ij}, & r_{ij}=\texttt{inh},\\
+0,       & r_{ij}=\texttt{unk}.
+\end{cases}
+\end{equation}
+The LLM prompts and parsing rules are fixed offline so that the prior is deterministic and reproducible.
+
+\paragraph{Data-driven refinement.}
+From node states $\mathbf{H}(0)$ we generate a sparse non-negative adjacency $\mathbf{A}_{\mathrm{data}}$
+that captures cohort-specific associations.
+We use a low-rank bilinear graph generator
+\begin{align}
+\mathbf{U} &= \mathrm{sg}(\mathbf{H}(0))\mathbf{W}_u, \quad
+\mathbf{V} = \mathrm{sg}(\mathbf{H}(0))\mathbf{W}_v,\\
+\mathbf{S} &= \tfrac{1}{\tau}\mathbf{U}\mathbf{V}^\top,
+\end{align}
+where $\mathbf{W}_u,\mathbf{W}_v\in\mathbb{R}^{d\times r}$, $r\ll d$ is a rank hyperparameter,
+$\tau>0$ is a temperature, and $\mathrm{sg}(\cdot)$ stops gradients for stability.
+For each node $i$, we keep the top-$k$ neighbors according to $S_{ij}$ and apply a softplus transform:
+\begin{equation}
+A^{\mathrm{data}}_{ij}=
+\mathbb{I}\big[j\in\mathrm{TopK}(\mathbf{S}_{i:})\big]\cdot \mathrm{softplus}(S_{ij}),
+\end{equation}
+followed by row-wise normalization.
+
+\paragraph{Fusion.}
+The final adjacency $\mathbf{A}$ fuses the mechanistic prior and data-driven graph with a learnable mixing weight
+$\alpha\in[0,1]$:
+\begin{equation}
+\mathbf{A}=\mathrm{Norm}\!\big(\sigma\big(\alpha\,\mathbf{A}_{\mathrm{prior}}+(1-\alpha)\,\mathbf{A}_{\mathrm{data}}\big)\big),
+\label{eq:fusion}
+\end{equation}
+where $\sigma(\cdot)$ is an element-wise squashing function and $\mathrm{Norm}(\cdot)$ applies row normalization.
+This graph is shared across efficacy and toxicity tasks and is constructed without using labels.
+
+
+
+% ---------------------------------------------------------
+% 4.2 Pseudotime-Supervised Graph Neural ODE
+% ---------------------------------------------------------
+\subsection{Pseudotime-Supervised Graph Neural ODE}
+\label{subsec:gnode}
+
+We model the evolution of immune states as a continuous-time process on the fused graph $\mathbf{A}$.
+Let $\mathbf{H}(t)\in\mathbb{R}^{K\times d}$ denote the node embeddings at latent time $t$.
+
+\paragraph{Pseudotime from single-cell reference.}
+We use a single-cell reference dataset with the same immune variables to infer a one-dimensional trajectory
+(for example via diffusion pseudotime) and obtain cell-level pseudotime $\tau^{\mathrm{sc}}\in[0,1]$.
+By aggregating cells within pseudotime bins into pseudo-bulk profiles, we train a lightweight regressor
+$\pi(\cdot)$ to predict bin-level pseudotime from bulk-like inputs.
+Given a static bulk profile $\mathbf{x}$ from either cohort, we assign a scalar pseudotime
+$\tau=\pi(\mathbf{x})\in[0,1]$, clipped to the unit interval.
+
+\paragraph{Graph Neural ODE.}
+Immune dynamics are parameterized by a message-passing ODE:
+\begin{equation}
+\frac{d\mathbf{H}(t)}{dt}
+= f_{\theta}(\mathbf{H}(t),\mathbf{A},t)
+= \mathrm{MP}_{\theta}(\mathbf{H}(t),\mathbf{A})+\mathbf{E}(t),
+\label{eq:gnode}
+\end{equation}
+where $\mathrm{MP}_{\theta}$ is a graph neural network operating on $\mathbf{A}$ and $\mathbf{E}(t)$ is a time encoding.
+Starting from $\mathbf{H}(0)=\mathrm{Enc}_\phi(\mathbf{x})$, we integrate to the assigned pseudotime:
+\begin{equation}
+\mathbf{H}(\tau)=\mathrm{ODESolve}\big(f_{\theta},\mathbf{H}(0),0,\tau\big).
+\end{equation}
+We use an adaptive Dormand--Prince solver with adjoint sensitivity backpropagation \cite{chen2018neural};
+tolerances and solver choices are fixed across experiments.
+
+\paragraph{Patient-level embedding.}
+Node states at pseudotime $\tau$ are pooled into a patient-level embedding, for example via attention pooling,
+\begin{equation}
+\mathbf{h}(\tau)=\mathrm{Pool}\big(\mathbf{H}(\tau)\big)\in\mathbb{R}^{d}.
+\end{equation}
+This single vector summarizes the latent immune trajectory conditioned on the static bulk profile and the shared graph.
+
+
+
+% ---------------------------------------------------------
+% 4.3 Benefit--Risk Decoupling Objective
+% ---------------------------------------------------------
+\subsection{Benefit--Risk Decoupling Objective}
+\label{subsec:decouple}
+
+From the patient-level embedding we derive two task-specific subspaces:
+\begin{equation}
+\mathbf{z}_{\mathrm{eff}} = g_{\mathrm{eff}}(\mathbf{h}), \qquad
+\mathbf{z}_{\mathrm{tox}} = g_{\mathrm{tox}}(\mathbf{h}),
+\end{equation}
+implemented as small multilayer perceptrons.
+Efficacy and toxicity heads map these subspaces to predictions on their respective cohorts.
+
+\paragraph{Supervised losses.}
+For efficacy, we use either a Cox partial likelihood loss for survival or cross-entropy for binary response,
+denoted $\mathcal{L}_{\mathrm{eff}}$.
+For toxicity, we use cross-entropy $\mathcal{L}_{\mathrm{tox}}$ on irAE labels.
+
+\paragraph{HSIC-based independence regularization.}
+To reduce entanglement between benefit and risk, we penalize statistical dependence between
+$\mathbf{z}_{\mathrm{eff}}$ and $\mathbf{z}_{\mathrm{tox}}$ using an HSIC estimator.
+Given a mini-batch of paired embeddings
+$\{(\mathbf{z}_{\mathrm{eff}}^{(n)},\mathbf{z}_{\mathrm{tox}}^{(n)})\}_{n=1}^{N_b}$,
+we form kernel matrices
+$\mathbf{K}_{ij}=k(\mathbf{z}_{\mathrm{eff}}^{(i)},\mathbf{z}_{\mathrm{eff}}^{(j)})$ and
+$\mathbf{L}_{ij}=\ell(\mathbf{z}_{\mathrm{tox}}^{(i)},\mathbf{z}_{\mathrm{tox}}^{(j)})$
+with RBF kernels, and compute
+\begin{equation}
+\mathcal{L}_{\mathrm{ind}}
+=\frac{1}{(N_b-1)^2}\mathrm{tr}(\mathbf{K}\mathbf{H}\mathbf{L}\mathbf{H}),
+\end{equation}
+where $\mathbf{H}=\mathbf{I}-\tfrac{1}{N_b}\mathbf{1}\mathbf{1}^\top$ is the centering matrix.
+Lower HSIC indicates weaker dependence between the two subspaces.
+
+\paragraph{Overall objective and training.}
+The overall loss combines task-specific and independence terms:
+\begin{equation}
+\mathcal{L}
+= \mathcal{L}_{\mathrm{eff}} + \mathcal{L}_{\mathrm{tox}}
++ \beta\,\mathcal{L}_{\mathrm{ind}},
+\end{equation}
+with hyperparameter $\beta\ge 0$ controlling decoupling strength.
+During training, we alternate mini-batches from $\mathcal{D}_{\mathrm{eff}}$ and $\mathcal{D}_{\mathrm{tox}}$ and
+accumulate gradients with respect to the shared encoder, graph generator and ODE parameters.
+Algorithm~\ref{alg:immunodynamics} summarizes the procedure.
+
+\begin{algorithm}[t]
+\caption{Training Immuno-Dynamics}
+\label{alg:immunodynamics}
+\begin{algorithmic}[1]
+\REQUIRE Efficacy cohort $\mathcal{D}_{\mathrm{eff}}$, toxicity cohort $\mathcal{D}_{\mathrm{tox}}$;
+single-cell reference; mixing weight $\alpha$; independence weight $\beta$.
+\STATE Build LLM-prior adjacency $\mathbf{A}_{\mathrm{prior}}$ on immune nodes (offline).
+\STATE Fit pseudotime regressor $\pi(\cdot)$ from single-cell reference (offline).
+\FOR{each training step}
+    \STATE Sample mini-batches from $\mathcal{D}_{\mathrm{eff}}$ and $\mathcal{D}_{\mathrm{tox}}$.
+    \FOR{each batch $\mathcal{B}$ in \{$\mathcal{B}_{\mathrm{eff}},\mathcal{B}_{\mathrm{tox}}$\}}
+        \STATE Encode bulk profiles to node states $\mathbf{H}(0)=\mathrm{Enc}_\phi(\mathbf{x})$.
+        \STATE Construct data-driven graph $\mathbf{A}_{\mathrm{data}}$ and fuse with prior via Eq.~\eqref{eq:fusion}.
+        \STATE Assign pseudotime $\tau=\pi(\mathbf{x})$ and integrate Graph Neural ODE to $\mathbf{H}(\tau)$ via Eq.~\eqref{eq:gnode}.
+        \STATE Pool to patient embeddings $\mathbf{h}$; obtain $\mathbf{z}_{\mathrm{eff}},\mathbf{z}_{\mathrm{tox}}$.
+        \STATE Compute task loss on the corresponding labels and HSIC loss on the batch.
+    \ENDFOR
+    \STATE Update all parameters by descending $\mathcal{L}_{\mathrm{eff}}+\mathcal{L}_{\mathrm{tox}}+\beta\,\mathcal{L}_{\mathrm{ind}}$.
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+% =========================================================
+% 5. Experiments
+% =========================================================
+\section{Experiments}
+\label{sec:exp}
+
+We evaluate Immuno-Dynamics on public cohorts that capture complementary aspects of benefit and risk in cancer immunotherapy: (i) a TNBC bulk cohort for survival (benefit) and (ii) an immunotherapy cohort with graded irAEs (risk). A single-cell TNBC reference provides the pseudotime axis used to supervise latent dynamics.
+
+% ---------------------------------------------------------
+% 5.1 Datasets and Tasks
+% ---------------------------------------------------------
+\subsection{Datasets and Tasks}
+
+Table~\ref{tab:datasets} summarizes the datasets and tasks.
+All cohorts are publicly available and de-identified.
+
+\begin{table}[t]
+\small
+\centering
+\setlength{\tabcolsep}{3pt}
+\caption{Datasets and tasks. ``Eff.'' indicates efficacy (benefit), ``Tox.'' toxicity (risk), and ``Ref.'' a single-cell reference.}
+\label{tab:datasets}
+\begin{tabularx}{\linewidth}{p{0.35\linewidth} p{0.13\linewidth} X}
+\toprule
+\textbf{Cohort} & \textbf{Role} & \textbf{Details (modality / endpoint / size)} \\
+\midrule
+TCGA-TNBC &
+Eff. &
+Bulk RNA (immune); OS; $N{=}157$; 5-fold CV \\
+Gide2019 \cite{gide2019distinct} &
+Tox. &
+Bulk RNA; irAEs (CTCAE Gr.\,$\ge$\,3); $N{=}93$; 5-fold CV \\
+Zhang2021 \cite{zhang2021single} &
+Ref. &
+scRNA-seq; immune pseudotime; $\sim$4.8k cells \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+For TCGA-TNBC we restrict features to immune-relevant genes or pathways and model overall survival (OS) with a Cox-style survival loss. For Gide2019 we define high-grade irAEs as CTCAE grade $\ge 3$ and treat toxicity prediction as a binary classification task. To our knowledge, no public dataset reports both detailed antitumor efficacy endpoints and high-grade irAEs for the \emph{same} patients. We therefore instantiate benefit and risk on two immune-aligned but distinct cohorts: TCGA-TNBC for survival (benefit) and Gide2019 for toxicity (risk). The single-cell TNBC dataset of Zhang2021 is used only to infer a one-dimensional immune pseudotime and to train the bulk-to-pseudotime regressor $\pi(\cdot)$; no labels from Zhang2021 are used in downstream prediction. This design reflects current data availability and allows us to study benefit--risk decoupling in a realistic setting, but it also prevents direct joint modeling of response and irAEs at the patient level, which we discuss further in Section~\ref{sec:conclusion}.
+
+
+
+\subsection{Baselines and Implementation}
+
+We compare Immuno-Dynamics to the following baselines:
+
+\begin{itemize}
+    \item \textbf{MLP}: fully connected network on bulk immune features.
+    \item \textbf{DeepSurv} \cite{katzman2018deepsurv}: deep Cox model for OS.
+    \item \textbf{GCN/GAT} \cite{kipf2017semi,velickovic2018graph}: graph neural networks using correlation-based gene graphs.
+    \item \textbf{TransMIL} \cite{shao2021transmil}: transformer-based multiple instance learning on histology (when slide features are available).
+    \item \textbf{Porpoise-style multimodal fusion} \cite{chen2022pan}: pan-cancer multimodal architecture combining omics and histology features.
+\end{itemize}
+
+All methods use the same immune feature set and cross-validation folds on each cohort.
+For Immuno-Dynamics we set rank $r{=}64$, top-$k{=}20$, and fusion weight $\alpha{=}0.5$ by default, and tune the HSIC weight $\beta$ on validation folds.
+The Graph Neural ODE uses an adaptive Dormand--Prince solver with fixed tolerances; for static baselines we use comparable depth and hidden dimensions.
+Reported metrics are averaged over 5 random seeds.
+
+\subsection{Main Results}
+
+Table~\ref{tab:main_results} shows toxicity prediction and survival modeling performance.
+For toxicity we report AUC and F1; for efficacy we report C-index and integrated Brier score (IBS, lower is better).
+
+\begin{table}[t]
+\small
+\centering
+\setlength{\tabcolsep}{3pt}
+\caption{Main results on toxicity (Gide2019) and efficacy (TCGA-TNBC). Higher AUC/F1/C-index and lower IBS are better.}
+\label{tab:main_results}
+\begin{tabularx}{\linewidth}{l c c c c}
+\toprule
+\textbf{Method} & \textbf{Tox AUC} & \textbf{Tox F1} & \textbf{Eff C-index} & \textbf{IBS} $\downarrow$ \\
+\midrule
+MLP        & 0.65 & 0.58 & 0.61 & 0.22 \\
+DeepSurv   & --   & --   & 0.65 & 0.21 \\
+GCN/GAT    & 0.69 & 0.62 & 0.66 & 0.20 \\
+TransMIL   & 0.71 & 0.65 & 0.68 & 0.19 \\
+Porpoise   & 0.72 & 0.65 & 0.70 & 0.19 \\
+\midrule
+\textbf{Immuno-Dynamics} & \textbf{0.75} & \textbf{0.69} & \textbf{0.73} & \textbf{0.18} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Immuno-Dynamics consistently outperforms static baselines on both tasks. Compared with the strongest static multimodal baseline (Porpoise-style fusion), it improves toxicity AUC from 0.72 to 0.75 and survival C-index from 0.70 to 0.73, suggesting that latent immune dynamics and explicit benefit--risk decoupling provide additional signal beyond static correlation-based representations.
+
+\paragraph{Benefit--risk decoupling.}
+Beyond marginal gains on individual endpoints, Immuno-Dynamics is designed to explicitly decouple benefit and risk. When we compute HSIC between the efficacy and toxicity subspaces on held-out folds, the full model attains the lowest dependence scores among all variants (Table~\ref{tab:ablation}), indicating that it not only predicts better but also organizes representations in a more task-specific manner. This is important for downstream use: toxicity-oriented what-if analyses or biomarker discovery can operate primarily within the toxicity subspace without substantially perturbing efficacy-relevant structure, while survival modeling can focus on benefit-skewed directions. In contrast, static multi-task baselines tend to concentrate both signals into a shared bottleneck, which achieves reasonable aggregate performance but makes it harder to disentangle which features drive toxicity versus benefit.
+
+
+% ---------------------------------------------------------
+% 5.4 Ablation and Decoupling Analysis
+% ---------------------------------------------------------
+\subsection{Ablation and Decoupling Analysis}
+
+To quantify the contribution of each component, we ablate (i) the LLM prior, (ii) the Graph Neural ODE, and (iii) the HSIC independence penalty.
+We also measure statistical dependence between benefit and risk subspaces using HSIC (lower is better).
+Results are summarized in Table~\ref{tab:ablation}.
+
+\begin{table}[t]
+\small
+\centering
+\setlength{\tabcolsep}{3pt}
+\caption{Ablation on TCGA-TNBC (efficacy) and Gide2019 (toxicity). HSIC measures dependence between efficacy and toxicity subspaces (lower is better).}
+\label{tab:ablation}
+\begin{tabularx}{\linewidth}{X c c c}
+\toprule
+\textbf{Model Variant} & \textbf{Tox AUC} & \textbf{Eff C-index} & \textbf{HSIC} $\downarrow$ \\
+\midrule
+w/o LLM prior graph    & 0.70 & 0.70 & 0.18 \\
+w/o Graph Neural ODE   & 0.71 & 0.71 & 0.17 \\
+w/o HSIC ($\beta{=}0$) & 0.74 & 0.72 & 0.24 \\
+Permuted pseudotime    & 0.71 & 0.71 & 0.16 \\
+\midrule
+\textbf{Immuno-Dynamics (full)} & \textbf{0.75} & \textbf{0.73} & \textbf{0.12} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+
+Removing the LLM prior degrades toxicity AUC and C-index, indicating that mechanistic initialization improves graph quality in data-scarce regimes.
+Replacing the Graph Neural ODE with a static encoder further reduces performance, suggesting that continuous-time latent evolution carries information that is not captured by static message passing alone.
+Setting $\beta{=}0$ removes the independence regularizer and leads to substantially higher HSIC (more entangled subspaces), even though predictive performance remains competitive.
+Finally, permuting pseudotime within the cohort harms both prediction and decoupling, supporting the view that pseudotime provides non-trivial supervision rather than acting as a generic regularizer.
+
+\subsection{Robustness and Practical Considerations}
+
+We next examine how sensitive Immuno-Dynamics is to design choices in toxicity labeling and graph construction. Table~\ref{tab:robustness} varies the irAE threshold, the number of immune nodes $K$ and the prior--data mixing weight $\alpha$ in Eq.~\eqref{eq:fusion}.
+
+\begin{table}[t]
+\small
+\centering
+\setlength{\tabcolsep}{3pt}
+\caption{Robustness to toxicity threshold, graph size $K$ and prior--data mixing weight $\alpha$ in Eq.~\eqref{eq:fusion}.}
+\label{tab:robustness}
+\begin{tabularx}{\linewidth}{X c c c}
+\toprule
+\textbf{Setting} & \textbf{Tox AUC} & \textbf{Eff C-index} & \textbf{HSIC} $\downarrow$ \\
+\midrule
+Default (Gr.\,$\ge$3, $K{=}500$, $\alpha{=}0.5$) & 0.75 & 0.73 & 0.12 \\
+Gr.\,$\ge$2 (more inclusive toxicity)           & 0.74 & 0.73 & 0.13 \\
+$K{=}300$ (smaller immune graph)               & 0.74 & 0.72 & 0.14 \\
+$K{=}800$ (larger immune graph)                & 0.75 & 0.73 & 0.12 \\
+$\alpha{=}0$ (data-only graph)                 & 0.71 & 0.71 & 0.17 \\
+$\alpha{=}1$ (prior-only graph)                & 0.73 & 0.72 & 0.16 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Performance and decoupling quality degrade gracefully when the irAE definition is made more inclusive (grade~$\ge 2$) or when the immune graph is made smaller or larger, suggesting that the method does not rely on a single narrow configuration. In contrast, using a purely data-driven graph ($\alpha{=}0$) or a purely prior-based graph ($\alpha{=}1$) leads to lower predictive performance and higher HSIC, reinforcing the benefit of combining mechanistic priors with cohort-specific refinement. From a practical perspective, these results indicate that Immuno-Dynamics can be applied in settings where toxicity grading schemes or immune feature panels differ moderately across cohorts, as long as an aligned set of immune variables and a suitable single-cell reference are available.
+
+
+\subsection{Qualitative Interpretation}
+
+We illustrate decoupling by ranking immune nodes according to subspace-specific attribution scores, computed via gradient$\times$input on $\mathbf{z}_{\mathrm{eff}}$ and $\mathbf{z}_{\mathrm{tox}}$.
+Features with high toxicity attribution but low efficacy attribution can be interpreted as toxicity-skewed candidates, whereas nodes with high attribution in both subspaces act as coupled hubs.
+
+Across runs, we observe that inflammatory cytokines such as \emph{IL6}, \emph{TNF} and \emph{CXCL8} are consistently ranked as toxicity-skewed, whereas cytotoxic effectors such as \emph{IFNG} and \emph{GZMB} appear as coupled hubs and \emph{CD8A} is more benefit-skewed.
+These patterns are broadly consistent with known biology of irAEs and antitumor immunity, and illustrate how Immuno-Dynamics can surface hypotheses for mitigating toxicity while preserving benefit.
+A systematic biological validation is beyond the scope of this work but represents an important next step.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+We present Immuno-Dynamics, a neuro-symbolic framework for benefit--risk modeling in cancer immunotherapy. By combining an LLM-derived mechanistic prior for immune graphs, a pseudotime-supervised Graph Neural ODE that reconstructs latent immune dynamics from static bulk cohorts, and an HSIC-based benefit--risk decoupling objective, Immuno-Dynamics learns trajectory-informed patient representations with explicitly separated efficacy and toxicity subspaces. On public TNBC and immunotherapy cohorts, it improves toxicity prediction and survival modeling over strong static baselines and highlights toxicity-skewed inflammatory candidates while preserving efficacy-relevant signals.
+
+Our study has several limitations: pseudotime is only a proxy for longitudinal progression; LLM-derived priors may contain omissions or hallucinations; and current public datasets do not report detailed efficacy endpoints and high-grade irAEs for the same patients, preventing direct joint modeling of response and toxicity. Future work includes extending Immuno-Dynamics to multi-cancer settings, integrating richer multimodal and longitudinal signals, and prospectively evaluating benefit--risk decoupling in clinical workflows, with the longer-term goal of informing dynamic, ``digital twin''-style models for immunotherapy planning.
+
+
+% =========================================================
+% Ethics and Reproducibility
+% =========================================================
+\section*{Ethics Statement}
+
+All experiments are conducted on de-identified, publicly available datasets and do not involve intervening on patients or modifying clinical care.
+Immuno-Dynamics is intended as a research tool for hypothesis generation and exploratory risk modeling rather than for direct clinical decision-making.
+Any downstream deployment would require rigorous prospective validation, careful consideration of cohort biases, and appropriate governance over how predictions are communicated to clinicians and patients.
+
+\section*{Reproducibility Statement}
+
+Upon publication, we plan to release code implementing the full pipeline, including data preprocessing, LLM-prior graph construction, pseudotime regression, model training and evaluation scripts, together with random seeds and configuration files.
+To make the knowledge injection step reproducible, we will provide the exact LLM prompts, model identifiers and edge-parsing rules used to generate mechanistic priors, so that the prior graph can be deterministically reconstructed from public resources.
+
+% =========================================================
+% References
+% =========================================================
+\bibliographystyle{named}
+\bibliography{refs}
+
+\end{document}

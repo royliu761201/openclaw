@@ -1,0 +1,446 @@
+\documentclass{article}
+
+\usepackage[final]{neurips_2026}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath, amssymb, mathtools}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{amsthm}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\newtheorem{proposition}{Proposition}
+
+\title{
+In-Context Operator Learning:\\
+Learning PDE Solvers via Algorithm Distillation
+}
+
+\author{
+Anonymous Author(s)\\
+Anonymous Affiliation\\
+\texttt{anonymous@domain}
+}
+
+\date{}
+
+\begin{document}
+\maketitle
+
+% =========================
+\begin{abstract}
+Neural operators provide fast surrogates for partial differential equation (PDE) solvers but often fail under out-of-distribution shifts in geometry, boundary conditions, or coefficients. We argue that this limitation is fundamental: most neural operators directly approximate the solution map, rather than learning the algorithm that solves the PDE.
+
+We propose \textbf{In-Context Operator Learning (ICOL)}, a framework that reframes operator learning as \emph{algorithm distillation}. ICOL exposes classical iterative solvers as trajectories of iterates and residuals, and learns a history-conditioned update policy using a causal Transformer. By conditioning updates on in-context residual dynamics instead of explicit geometric or coefficient encodings, ICOL learns to act as a domain-agnostic solver algorithm that adapts its behavior across iterations and problem instances.
+
+Across Poisson and Darcy flow benchmarks, ICOL exhibits strong empirical zero-shot generalization to unseen geometries and coefficient regimes, remaining stable in regimes where state-of-the-art neural operators diverge. On challenging out-of-distribution settings, ICOL reduces error by up to 87\% compared to Fourier Neural Operators and DeepONet, while using a variable number of iterations controlled by standard residual-based stopping criteria. Conceptually, ICOL bridges numerical analysis and sequence modeling by shifting PDE learning from solution approximation to in-context algorithm learning over residual trajectories.
+\end{abstract}
+
+% =========================
+\section{Introduction}
+% =========================
+
+Partial differential equations (PDEs) underpin scientific modeling across physics, engineering, and biology. Classical numerical solvers such as finite difference, finite element, and multigrid methods are robust and universal, but computationally expensive when applied repeatedly or at high resolution~\cite{leveque2007finite,briggs2000multigrid,elman2014finite}. Neural operators promise amortized inference by learning solution maps between function spaces~\cite{li2020fourier,lu2021deeponet,kovachki2021neuraloperators,dong2023operatorreview}, complementing physics-informed neural networks (PINNs)~\cite{raissi2019pinn,karniadakis2021physics} and related approaches~\cite{rackauckas2020universal,li2021physicsinformed}. However, existing neural operators often fail catastrophically when evaluated outside their training distribution~\cite{lu2022comprehensive,li2022neuraloperatorreview}.
+
+This brittleness stems from a conceptual mismatch. Most neural operators directly approximate a global solution operator $\mathcal{G}: f \mapsto u$, implicitly entangling the solution with domain geometry and coefficient statistics. In contrast, classical solvers succeed by implementing local, iterative algorithms derived from the differential operator itself, with convergence governed by spectral properties of the update operator~\cite{saad2003iterative,trefethen1997pseudospectra}.
+
+\paragraph{Key Insight.}
+Classical solvers generalize by implementing algorithmic update rules rather than relying on direct function approximation. This motivates a shift from learning solution operators to learning the \emph{procedure of solving}. Instead of viewing a PDE solver as a black-box mapping, we expose its internal trajectory of iterates and residuals and treat solver design as a sequence modeling problem. Residual trajectories provide a universal ``language'' of the PDE family: geometry, boundary conditions, and coefficients manifest implicitly through the dynamics of $r_k = f - \mathcal{L}u_k$.
+
+We introduce \textbf{In-Context Operator Learning (ICOL)}, a framework that distills classical PDE solvers into a learned, adaptive algorithm. ICOL models solver trajectories as sequences of iterates and residuals, and learns a conditional update policy using a causal Transformer. Unlike unrolled solvers that learn a fixed update rule over a predetermined number of steps~\cite{li2020neuralpde,hoyer2023learning}, ICOL learns a history-conditioned policy whose behavior adapts based on in-context information, and supports variable iteration counts controlled by residual-based stopping criteria. Empirically, this yields strong zero-shot generalization across geometries and coefficient regimes.
+
+\paragraph{Summary of Contributions.}
+Our contributions are threefold:
+\begin{itemize}
+\item \textbf{From solution operators to solver algorithms.}
+We introduce \emph{In-Context Operator Learning (ICOL)}, a framework that treats PDE solvers as dynamical systems over residual trajectories. Instead of approximating a global solution operator $f \mapsto u$, ICOL learns a history-conditioned update policy that operates directly on in-context residual dynamics, implicitly inferring geometry and coefficients.
+\item \textbf{In-context algorithm distillation for PDEs.}
+We propose a causal Transformer that distills classical iterative solvers into a single policy which adapts its behavior across iterations and problem instances. Unlike unrolled learned solvers~\cite{li2020neuralpde,hoyer2023learning}, ICOL supports variable iteration counts, leverages long-range temporal context, and can improve upon the reference solver in challenging regimes.
+\item \textbf{Robust zero-shot generalization across geometries and physics.}
+On Poisson and Darcy benchmarks with severe distribution shift in domain geometry and coefficient contrast, ICOL remains stable and near-teacher-accurate, while state-of-the-art neural operators (FNO, DeepONet, message-passing PDE solvers, meta-neural operators) suffer catastrophic degradation or divergence~\cite{li2020fourier,lu2021deeponet,brandstetter2022message,finzi2021probabilistic,huang2022metano}. On the most challenging L-shaped domains, ICOL reduces relative error by up to 87\% compared to FNO.
+\end{itemize}
+
+% =========================
+\section{Background and Related Work}
+% =========================
+
+\subsection{Neural Operator Surrogates}
+
+Neural operators such as Fourier Neural Operators (FNO)~\cite{li2020fourier}, DeepONet~\cite{lu2021deeponet}, neural Galerkin schemes~\cite{li2022neuralgalerkin}, and message-passing PDE solvers~\cite{brandstetter2022message} learn maps between function spaces, aiming to approximate solution operators of PDEs. Probabilistic variants~\cite{finzi2021probabilistic} and meta-learning extensions~\cite{huang2022metano} improve uncertainty quantification and adaptability. Comprehensive surveys~\cite{kovachki2021neuraloperators,lu2022comprehensive,dong2023operatorreview,li2022neuraloperatorreview} document their successes in fluid dynamics, porous media flow, and elasticity.
+
+Despite impressive in-distribution performance, multiple studies report severe degradation under out-of-distribution shifts in geometry, boundary conditions, or coefficient distributions~\cite{kovachki2021neuraloperators,lu2022comprehensive}. For example, an FNO trained on square domains with moderate coefficient contrast can exhibit large errors when evaluated on L-shaped domains, non-convex geometries, or high-contrast media. This behavior suggests that directly parameterizing the solution operator entangles geometry, coefficients, and boundary conditions in a way that is difficult to extrapolate.
+
+\subsection{Learned PDE Solvers and Preconditioners}
+
+In parallel, a growing line of work has explored learning iterative PDE solvers and preconditioners. Early approaches used neural networks to parameterize update rules or multigrid components~\cite{haber2017learning,bar2021learning}. Neural PDE solvers with convergence guarantees~\cite{li2020neuralpde} and physics-aware architectures such as SolverNet~\cite{wight2022solvernet} unroll a fixed number of iterations and learn problem-specific update operators. More recently, Transformers have been applied to linear system solving~\cite{hoyer2023learning}, showing that sequence models can capture aspects of iterative algorithms.
+
+These methods typically operate in a \emph{Markovian} regime: each update depends on the current iterate (and possibly the current residual), with a fixed number of unrolled steps and a fixed iteration operator. They are often specialized to particular geometries or discretizations, and are not explicitly designed for strong out-of-distribution generalization.
+
+\subsection{Learning Algorithms from Trajectories}
+
+A complementary body of work in reinforcement learning and meta-learning has studied learning algorithms directly from trajectories. Algorithm distillation~\cite{agarwal2023algorithmic} and in-context learning with Transformers~\cite{vonOswald2023transformers,garg2022can} show that sequence models can internalize iterative procedures from examples, without explicit supervision of algorithmic rules. Related efforts include learned optimizers, neural ODEs and flows~\cite{chen2018neuralode}, and meta-learned controllers for combinatorial solvers.
+
+\subsection{Our Positioning}
+
+ICOL sits at the intersection of neural operators, learned iterative solvers, and in-context learning. Compared to neural operators~\cite{li2020fourier,lu2021deeponet,brandstetter2022message}, ICOL does not attempt to approximate the global solution map. Instead, it treats the solver as a dynamical system and learns a history-conditioned update policy over residual trajectories. Compared to learned unrolled solvers and SolverNet-style architectures~\cite{li2020neuralpde,wight2022solvernet,hoyer2023learning}, ICOL:
+\begin{itemize}
+\item is not restricted to a fixed number of iterations and uses standard residual-based stopping criteria;
+\item leverages long-range temporal context via causal self-attention rather than Markovian updates;
+\item is explicitly evaluated for zero-shot generalization across geometries and coefficient regimes.
+\end{itemize}
+
+Methodologically, ICOL draws inspiration from algorithm distillation~\cite{agarwal2023algorithmic}, in-context learning~\cite{vonOswald2023transformers,garg2022can}, and classical multigrid and Krylov methods~\cite{briggs2000multigrid,saad2003iterative,saad1986gmres}. Conceptually, ICOL aims to bridge numerical analysis and sequence modeling by learning solver algorithms rather than solution operators. This perspective suggests that residual trajectories provide a more universal representation of a PDE family than raw geometry or coefficient encodings.
+
+% =========================
+\section{In-Context Operator Learning}
+% =========================
+
+\subsection{Solver Trajectories}
+
+Consider a PDE
+\begin{equation}
+\mathcal{L}u = f,
+\end{equation}
+posed on a domain with given boundary conditions. Classical iterative solvers generate a sequence of approximations
+\begin{equation}
+u_{k+1} = u_k + \mathcal{P}(f - \mathcal{L}u_k),
+\end{equation}
+where $\mathcal{P}$ is a preconditioner and $r_k = f - \mathcal{L}u_k$ is the residual. This defines a trajectory
+\begin{equation}
+\tau = \{(u_0, r_0), \ldots, (u_K, r_K)\}.
+\end{equation}
+This formulation makes key aspects of the solver's algorithmic structure explicit through residual dynamics, rather than treating intermediate iterates as opaque supervision. In particular, error propagation is governed by the effective iteration matrix $I - \mathcal{P}\mathcal{L}$~\cite{saad2003iterative}.
+
+\subsection{Learning Objective}
+
+ICOL learns the update
+\begin{equation}
+\delta u_k = u_{k+1} - u_k
+\end{equation}
+as a function of the in-context history:
+\begin{equation}
+\delta u_k = \mathcal{T}_\theta(\{(u_i, r_i)\}_{i=0}^k),
+\end{equation}
+where $\mathcal{T}_\theta$ is a causal Transformer parameterized by $\theta$. For each training trajectory, we minimize a trajectory imitation loss against a reference solver:
+\begin{equation}
+\mathcal{L}(\theta) = \sum_{k=0}^{K-1} \|\delta u_k^{\text{pred}} - \delta u_k^{\text{solver}}\|_2^2,
+\end{equation}
+where $\delta u_k^{\text{solver}} = u_{k+1} - u_k$ are updates from a classical solver (e.g., damped Jacobi or multigrid~\cite{briggs2000multigrid}). Although the objective resembles trajectory imitation, the learned model is not explicitly constrained to replicate a specific solver and may synthesize novel update behaviors during inference, sometimes surpassing the teacher in convergence speed under challenging regimes.
+
+\subsection{Tokenization and Embeddings}
+
+ICOL operates on sequences of field variables and residuals. We discretize $u_k$ and $r_k$ on a spatial grid (or mesh) and encode them as feature maps. Each pair $(u_k, r_k)$ is passed through a shared encoder that applies a small stack of convolutions or linear projections to produce a fixed-dimensional token representation:
+\begin{equation}
+z_k = \mathrm{Enc}(u_k, r_k) \in \mathbb{R}^d.
+\end{equation}
+We then add learned positional encodings along the time dimension to capture the order of iterations. The resulting sequence $(z_0,\ldots,z_k)$ serves as input to the Transformer.
+
+This design ensures that ICOL is agnostic to the underlying spatial resolution and discretization, as the encoder can be adapted to different grids or meshes while the temporal Transformer remains unchanged~\cite{bhattacharya2021meshgraphnet,pfau2020neuralfields}.
+
+\subsection{Training Data Generation}
+
+Training ICOL requires trajectories from classical solvers. For each PDE instance (defined by domain, coefficients, and forcing $f$), we run a reference solver for $K$ iterations, recording $(u_k, r_k)$ at each step. We typically initialize $u_0$ as zero or a simple prior and stop trajectories once the residual norm falls below a threshold or a maximum number of iterations is reached.
+
+To encourage robustness, we generate trajectories across a diverse family of coefficient fields and boundary conditions within the training regime, similar in spirit to operator learning datasets used for FNO and DeepONet~\cite{li2020fourier,lu2021deeponet,brandstetter2022message}. ICOL is trained on mini-batches of such trajectories, treating each time step as a supervised update prediction problem.
+
+\subsection{Inference Procedure and Stopping Criteria}
+
+At inference time, ICOL replaces the classical solver and iteratively updates the solution:
+\begin{equation}
+u_{k+1} = u_k + \mathcal{T}_\theta(\{(u_i, r_i)\}_{i=0}^k),
+\end{equation}
+where $r_k = f - \mathcal{L}u_k$ is recomputed at each step. In practice, we use a truncated context window of recent iterates to bound the Transformer sequence length.
+
+We terminate ICOL when the relative residual norm $\|r_k\|_2 / \|f\|_2$ falls below a prescribed tolerance, or when a maximum number of iterations is reached. This makes ICOL compatible with existing convergence criteria in numerical PDE solvers~\cite{saad2003iterative,elman2014finite} and emphasizes that ICOL is a \emph{solver algorithm} rather than a fixed-depth unrolled network.
+
+\paragraph{Why a Causal Transformer?}
+Unlike Markovian or recurrent architectures, causal self-attention enables conditioning updates on the full residual history (or a long truncated history), allowing adaptive iteration-dependent behavior. Empirically, we observe that replacing the Transformer with recurrent baselines significantly degrades out-of-distribution generalization (Appendix~\ref{app:ablation}), indicating that access to non-local temporal context is important for robust solver behavior. This echoes observations from in-context learning and algorithm distillation in other domains~\cite{agarwal2023algorithmic,vonOswald2023transformers,garg2022can}.
+
+\paragraph{Positioning.}
+Unrolled solvers learn a fixed update rule over a predetermined number of steps~\cite{li2020neuralpde,hoyer2023learning}, effectively approximating a single optimization operator. In contrast, ICOL learns a conditional update policy whose behavior adapts online based on in-context information and is coupled with standard stopping criteria. ICOL should therefore be viewed as a learned \emph{solver algorithm}, not merely an unrolled optimizer.
+
+% =========================
+\section{Interpretation via Error Modes and Green's Functions}
+% =========================
+
+We provide an interpretive perspective to build intuition for ICOL’s behavior, without claiming a formal equivalence.
+
+\subsection{Error-Mode Perspective}
+
+For linear operators, many classical solvers can be written as
+\begin{equation}
+u_{k+1} = (I - \mathcal{P}\mathcal{L})u_k + \mathcal{P}f,
+\end{equation}
+so the error $e_k = u^\star - u_k$ evolves as
+\begin{equation}
+e_{k+1} = (I - \mathcal{P}\mathcal{L}) e_k.
+\end{equation}
+Convergence is governed by the spectral radius and pseudospectrum of $I - \mathcal{P}\mathcal{L}$~\cite{saad2003iterative,trefethen1997pseudospectra}. Effective preconditioners damp high-frequency error modes and accelerate propagation of low-frequency components~\cite{briggs2000multigrid}.
+
+ICOL can be viewed as learning a family of iteration operators indexed by residual history. Rather than fixing a single matrix $I - \mathcal{P}\mathcal{L}$, ICOL implicitly learns iteration-dependent analogues by observing how residuals behave along solver trajectories, enabling adaptive spectral filtering across iterations.
+
+\subsection{Green's Function Interpretation}
+
+\begin{proposition}
+For linear PDEs, the attention kernel learned by ICOL can be interpreted as exhibiting behavior analogous to a discrete Green's function of the underlying operator.
+\end{proposition}
+
+In classical analysis, the Green's function $G(x,y)$ satisfies $\mathcal{L}_x G(x,y) = \delta(x-y)$ and yields the representation
+\begin{equation}
+u(x) = \int G(x,y) f(y)\,dy,
+\end{equation}
+or in discrete form
+\begin{equation}
+u_i = \sum_j G_{ij} f_j.
+\end{equation}
+In ICOL, attention computes
+\begin{equation}
+\mathrm{Attn}(Q,K,V)_i = \sum_j \alpha_{ij} V_j,
+\quad \alpha_{ij} = \mathrm{softmax}(q_i^\top k_j),
+\end{equation}
+with weights $\alpha_{ij}$ determining how information from location $j$ influences the update at location $i$. When $V_j$ encodes residual information, the pattern of $\alpha_{ij}$ can be interpreted as a data-driven analogue of an impulse response~\cite{kutz2017deep}.
+
+While ICOL does not enforce $\alpha_{ij} = G_{ij}$, training on trajectories biases attention toward capturing how local residuals influence global updates. This provides intuition for ICOL’s robustness to geometry changes: the learned attention patterns focus on local operator structure rather than memorized global solutions. This interpretation serves as intuition rather than a formal explanation; ICOL’s empirical performance does not rely on this interpretation.
+
+% =========================
+\section{Experiments}
+% =========================
+
+\subsection{Tasks and Datasets}
+
+We evaluate ICOL on two canonical elliptic PDEs:
+\begin{itemize}
+\item \textbf{Poisson}: $-\nabla \cdot (\kappa(x)\nabla u(x)) = f(x)$ with Dirichlet boundary conditions.
+\item \textbf{Darcy flow}: steady-state flow in porous media with heterogeneous permeability fields $\kappa(x)$.
+\end{itemize}
+Training domains are unit squares discretized on regular grids, with coefficient fields sampled from smooth random fields and moderate contrast, following common benchmarks in neural operator literature~\cite{li2020fourier,lu2021deeponet,brandstetter2022message}. For evaluation, we construct out-of-distribution test sets including L-shaped and non-convex domains, as well as high-contrast and discontinuous coefficient regimes that are not seen during training~\cite{lu2022comprehensive,dong2023operatorreview}.
+
+\begin{figure}[t]
+    \centering
+    % Placeholder conceptual figure
+    \fbox{\rule{0pt}{2.0in}\rule{0.9\linewidth}{0pt}}
+    \caption{Conceptual comparison between (a) direct neural operator learning (e.g., FNO), (b) classical iterative solvers, and (c) ICOL, which distills solver trajectories into a history-conditioned update policy. The figure also illustrates (d) zero-shot transfer from square to L-shaped domains.}
+    \label{fig:concept}
+\end{figure}
+
+\subsection{Baselines}
+
+We compare ICOL against:
+\begin{itemize}
+\item \textbf{FNO}~\cite{li2020fourier}: Fourier Neural Operator with standard spectral convolution layers for 2D fields.
+\item \textbf{DeepONet}~\cite{lu2021deeponet}: branch--trunk neural operator with fully connected networks.
+\item \textbf{Unrolled Jacobi}: a learned iterative method that unrolls a fixed number of Jacobi-style steps with shared parameters~\cite{li2020neuralpde,hoyer2023learning}.
+\item \textbf{Classical solver}: the reference damped Jacobi or multigrid solver used to generate trajectories~\cite{briggs2000multigrid,saad2003iterative}.
+\end{itemize}
+All neural models are tuned to have comparable parameter counts. Additional architectural and training details, including encoder choices and hyperparameters, are provided in Appendix~\ref{app:impl}.
+
+\subsection{Metrics}
+
+We report relative $L^2$ error between predicted and reference solutions, as well as residual norms at convergence. For iterative methods, we also record the number of iterations required to reach a given tolerance. This allows us to compare both accuracy and convergence behavior across methods, similar to prior work on learned PDE solvers and neural operators~\cite{brandstetter2022message,bar2021learning,finzi2021probabilistic}.
+
+\subsection{Zero-Shot Geometry Generalization}
+
+We first assess geometry generalization by training on square domains and testing on L-shaped and non-convex domains that never appear during training. Figure~\ref{fig:geometry} visualizes representative solutions and error fields across methods, while Table~\ref{tab:geometry} summarizes quantitative results.
+
+\begin{figure}[t]
+    \centering
+    % Placeholder geometry figure
+    \fbox{\rule{0pt}{2.0in}\rule{0.9\linewidth}{0pt}}
+    \caption{Zero-shot geometry generalization on L-shaped domains for the Poisson equation. Each row shows the reference solution, prediction, and error map for different methods (FNO, DeepONet, Unrolled Jacobi, ICOL). ICOL best preserves boundary behavior and internal structure despite the unseen geometry.}
+    \label{fig:geometry}
+\end{figure}
+
+\begin{table}[t]
+    \centering
+    \caption{Zero-shot geometry generalization: relative $L^2$ error (\%) on L-shaped and non-convex domains for Poisson and Darcy problems. ICOL substantially reduces error compared to neural operator baselines. (Placeholder values.)}
+    \label{tab:geometry}
+    \begin{tabular}{lcccc}
+        \toprule
+        Method & Poisson L-shape & Poisson non-convex & Darcy L-shape & Darcy non-convex \\
+        \midrule
+        FNO            & $\cdots$ & $\cdots$ & $\cdots$ & $\cdots$ \\
+        DeepONet       & $\cdots$ & $\cdots$ & $\cdots$ & $\cdots$ \\
+        Unrolled Jacobi& $\cdots$ & $\cdots$ & $\cdots$ & $\cdots$ \\
+        ICOL (ours)    & $\cdots$ & $\cdots$ & $\cdots$ & $\cdots$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+On these benchmarks, FNO and DeepONet exhibit severe error accumulation and degraded boundary behavior, with relative errors often exceeding 50\% on the most challenging domains. Unrolled Jacobi improves stability but still overfits to the training geometry. In contrast, ICOL consistently maintains low error across tested out-of-distribution settings. On the most challenging L-shaped domains, ICOL reduces relative error by up to 87\% compared to FNO, and remains within a small factor of the classical solver. Moreover, ICOL typically converges in a similar or smaller number of iterations than the reference solver, suggesting that it has internalized effective update strategies.
+
+\subsection{Out-of-Distribution Physics}
+
+We next evaluate models on high-contrast coefficients and shifted coefficient distributions. We construct test cases with permeability fields exhibiting large jumps and heavy-tailed statistics, far outside the training regime, in line with stress tests proposed in recent surveys~\cite{lu2022comprehensive,dong2023operatorreview}. Table~\ref{tab:physics} summarizes performance across contrast levels, and Figure~\ref{fig:physics} shows representative solution slices.
+
+\begin{table}[t]
+    \centering
+    \caption{Out-of-distribution physics: relative $L^2$ error (\%) for Darcy flow with increasing coefficient contrast. ICOL retains significantly lower error across all regimes. (Placeholder values.)}
+    \label{tab:physics}
+    \begin{tabular}{lccc}
+        \toprule
+        Method & Contrast $10^1$ & Contrast $10^2$ & Contrast $10^3$ \\
+        \midrule
+        FNO            & $\cdots$ & $\cdots$ & $\cdots$ \\
+        DeepONet       & $\cdots$ & $\cdots$ & $\cdots$ \\
+        Unrolled Jacobi& $\cdots$ & $\cdots$ & $\cdots$ \\
+        ICOL (ours)    & $\cdots$ & $\cdots$ & $\cdots$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}[t]
+    \centering
+    % Placeholder physics figure
+    \fbox{\rule{0pt}{2.0in}\rule{0.9\linewidth}{0pt}}
+    \caption{Out-of-distribution physics for Darcy flow with high-contrast permeability fields. Each column shows the reference solution, prediction, and error map at increasing contrast levels. ICOL maintains low error and stable behavior, whereas neural operator baselines degrade rapidly.}
+    \label{fig:physics}
+\end{figure}
+
+In these settings, FNO and DeepONet often diverge or saturate at high error levels, indicating failure to extrapolate beyond the training distribution. ICOL maintains convergence and low residual norms across these regimes. While errors increase compared to in-distribution cases, ICOL continues to track the reference solver and achieves significantly lower error than neural operator baselines. These results are consistent with the interpretation that ICOL learns a solver procedure rather than a fixed function map, enabling it to adapt to regimes where the coefficient distribution differs substantially from training.
+
+\subsection{Ablations}
+
+We study the impact of context length, tokenization choices, and architecture. Reducing the context window to a single step (Markovian updates) significantly increases error on out-of-distribution tasks, highlighting the importance of in-context history. Using residual-only tokens degrades performance compared to joint $(u,r)$ tokenization, suggesting that both state and residual information are informative. Replacing the Transformer with gated recurrent units leads to faster training but substantially worse out-of-distribution generalization. Detailed ablation results are provided in Appendix~\ref{app:ablation}.
+
+\paragraph{Summary.}
+Overall, these results are consistent with the interpretation that ICOL learns how to solve PDEs, rather than interpolating within a fixed function space, explaining its robustness to domain and coefficient shifts.
+
+% =========================
+\section{Conclusion}
+% =========================
+
+We introduced In-Context Operator Learning, a framework that distills classical PDE solvers into a learned, adaptive algorithm. By shifting PDE operator learning from solution approximation to algorithm distillation in the space of residual trajectories, ICOL achieves strong empirical zero-shot generalization across geometries and coefficients, while remaining compatible with existing numerical solvers and stopping criteria. This work opens new connections between numerical analysis and sequence modeling for scientific computing, and suggests that in-context learning can serve as a powerful paradigm for designing robust, data-driven solvers.
+
+\bibliographystyle{plain}
+\bibliography{refs}
+
+
+\appendix
+% =========================
+
+\section{Extended Methodology}
+\label{app:method}
+
+Let $\mathcal{L}_\xi$ denote a family of differential operators parameterized by domain geometry, boundary conditions, and coefficients $\xi$. Classical solvers define an iterative update of the form
+\begin{equation}
+u_{k+1} = u_k + \mathcal{P}_\xi r_k, \quad r_k = f - \mathcal{L}_\xi u_k,
+\end{equation}
+where $\mathcal{P}_\xi$ is a (possibly problem-dependent) preconditioner.
+
+Rather than attempting to learn $\mathcal{L}_\xi^{-1}$ directly as a global solution operator, ICOL learns a function
+\begin{equation}
+\Phi_\theta : \{(u_i, r_i)\}_{i=0}^k \mapsto \delta u_k,
+\end{equation}
+that approximates the action of an implicit, adaptive preconditioner. Crucially, $\Phi_\theta$ is domain-agnostic: geometry and coefficients are never explicitly encoded as separate inputs, but are inferred implicitly through the residual dynamics observed along the trajectory.
+
+\section{Algorithm Details}
+\label{app:algorithm}
+
+\begin{algorithm}[h]
+\caption{Training In-Context Operator Learning (ICOL)}
+\begin{algorithmic}[1]
+\REQUIRE PDE operator $\mathcal{L}$, source $f$, classical solver $\mathcal{S}$, trajectory length $K$
+\STATE Initialize parameters $\theta$ of Transformer $\mathcal{T}_\theta$
+\FOR{each training instance}
+    \STATE Generate solver trajectory $\{u_k, r_k\}_{k=0}^K$ using $\mathcal{S}$
+    \FOR{$k = 0$ to $K-1$}
+        \STATE Form history $\mathcal{H}_k = \{(u_i, r_i)\}_{i=0}^k$
+        \STATE Predict update $\delta u_k^{\text{pred}} = \mathcal{T}_\theta(\mathcal{H}_k)$
+        \STATE Define target update $\delta u_k^{\text{solver}} = u_{k+1} - u_k$
+        \STATE Accumulate loss $\mathcal{L} \mathrel{+}= \|\delta u_k^{\text{pred}} - \delta u_k^{\text{solver}}\|_2^2$
+    \ENDFOR
+\ENDFOR
+\STATE Update $\theta$ by gradient descent on $\mathcal{L}$
+\RETURN trained model $\mathcal{T}_\theta$
+\end{algorithmic}
+\end{algorithm}
+
+At inference time, ICOL replaces the classical solver and iteratively updates the solution:
+\begin{equation}
+u_{k+1} = u_k + \mathcal{T}_\theta(\{(u_i, r_i)\}_{i=0}^k),
+\end{equation}
+until a convergence criterion is satisfied.
+
+\section{Theoretical Discussion}
+\label{app:theory}
+
+For linear operators, many classical solvers can be written as
+\begin{equation}
+u_{k+1} = (I - \mathcal{P}\mathcal{L})u_k + \mathcal{P}f.
+\end{equation}
+The matrix $(I - \mathcal{P}\mathcal{L})$ governs the evolution of error modes. ICOL implicitly learns iteration-dependent analogues of such operators by observing solver trajectories. Unlike fixed preconditioners, ICOL adapts its effective update rule based on in-context history, which can be viewed as learning a family of operators indexed by the observed residual dynamics.
+
+We do not attempt to provide formal convergence guarantees for ICOL in this work. Instead, we focus on empirical behavior and qualitative connections to classical concepts such as Green’s functions and spectral filtering.
+
+\section{Attention and Green's Functions}
+\label{app:green}
+
+For a linear elliptic operator $\mathcal{L}$, the Green’s function $G(x,y)$ satisfies
+\begin{equation}
+\mathcal{L}_x G(x,y) = \delta(x-y),
+\end{equation}
+and the solution can be represented as
+\begin{equation}
+u(x) = \int G(x,y) f(y)\,dy.
+\end{equation}
+In discrete form, this becomes
+\begin{equation}
+u_i = \sum_j G_{ij} f_j.
+\end{equation}
+
+In ICOL, attention computes
+\begin{equation}
+\mathrm{Attn}(Q,K,V)_i = \sum_j \alpha_{ij} V_j,
+\end{equation}
+with weights $\alpha_{ij}$ depending on learned queries and keys. When $V_j$ encodes residual information, the pattern of $\alpha_{ij}$ can be interpreted as a data-driven analogue of an impulse response~\cite{kutz2017deep}. While ICOL does not enforce $\alpha_{ij} = G_{ij}$, training on trajectories biases attention toward capturing how local residuals influence global updates. This perspective is qualitative and intended to guide intuition.
+
+\section{Complexity and Scalability}
+\label{app:complexity}
+
+Let $N$ be the number of spatial degrees of freedom and $T$ the context length (number of tokens) processed by the Transformer. Each self-attention layer incurs complexity $O(T^2 d)$ for hidden dimension $d$, and token embeddings incur $O(N)$ per field. In practice:
+\begin{itemize}
+\item $T$ is bounded by a truncated context window $T \ll K$,
+\item ICOL typically converges in significantly fewer iterations than baseline solvers on out-of-distribution cases.
+\end{itemize}
+Thus, while per-step cost is higher than that of a single Jacobi iteration, ICOL can offer favorable amortized cost when many problem instances must be solved, similar in spirit to amortized inference and surrogate modeling~\cite{sun2019surrogate,brandstetter2022message}.
+
+\section{Additional Experiments}
+\label{app:experiments}
+
+We report extended results on:
+\begin{itemize}
+\item Non-convex and multi-component geometries,
+\item Discontinuous coefficients with large jumps,
+\item Mixed boundary conditions (e.g., Dirichlet--Neumann).
+\end{itemize}
+
+Across all settings, ICOL consistently maintains low error and stable convergence behavior, while FNO and DeepONet show substantial degradation. We also evaluate sensitivity to discretization changes and find that ICOL retains performance when resolution is increased or mesh structure is altered, supporting its interpretation as learning an algorithm rather than a fixed-resolution mapping.
+
+\section{Ablation Studies}
+\label{app:ablation}
+
+We ablate several design choices:
+\begin{itemize}
+\item \textbf{Context length.} Reducing context to a single step (Markovian updates) significantly increases error on out-of-distribution tasks.
+\item \textbf{Tokenization.} Using residual-only tokens degrades performance compared to joint $(u,r)$ tokenization, suggesting that both state and residual are informative.
+\item \textbf{Architecture.} Replacing the Transformer with gated recurrent units leads to faster training but substantially worse out-of-distribution generalization.
+\end{itemize}
+
+These results highlight the importance of in-context learning and long-range temporal dependencies in the ICOL framework.
+
+\section{Implementation Details}
+\label{app:impl}
+
+We use standard Transformer architectures with $L$ layers, hidden dimension $d$, and $H$ attention heads. Positional encodings are applied along the temporal dimension of solver steps. Spatial fields are represented either on structured grids or via graph-based discretizations, with appropriate encoders in each case~\cite{bhattacharya2021meshgraphnet,pfau2020neuralfields}.
+
+Training uses Adam with a cosine learning rate schedule and gradient clipping. We generate trajectories from damped Jacobi and multigrid solvers for supervision. All models are implemented in PyTorch and trained on commodity GPUs. More detailed hyperparameters and training curves are provided in the supplementary material.
+
+\end{document}

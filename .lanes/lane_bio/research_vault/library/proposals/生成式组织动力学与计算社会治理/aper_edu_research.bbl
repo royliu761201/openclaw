@@ -1,0 +1,158 @@
+\begin{thebibliography}{26}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{#1}
+\expandafter\ifx\csname urlstyle\endcsname\relax\else
+  \urlstyle{same}\fi
+\expandafter\ifx\csname href\endcsname\relax
+  \DeclareUrlCommand\doi{\urlstyle{rm}}
+  \def\eprint#1#2{#2}
+\else
+  \def\doi#1{\href{https://doi.org/#1}{\nolinkurl{#1}}}
+  \let\eprint\href
+\fi
+
+\bibitem[Zha(2011)]{zha2011understanding}
+ZHA Q.
+\newblock Understanding china's move to mass higher education\allowbreak[J].
+\newblock Comparative Education Review, 2011.
+
+\bibitem[潘懋元\ 等(2014)潘懋元 and 董立平]{pan2014transformation}
+潘懋元, 董立平.
+\newblock 地方本科院校转型发展:理论与实践\allowbreak[J].
+\newblock 教育研究, 2014.
+
+\bibitem[Mok(2005)]{mok2005globalization}
+MOK K~H.
+\newblock Globalization, decentralization and marketization: Education reforms
+  in china\allowbreak[J].
+\newblock Journal of Education Policy, 2005.
+
+\bibitem[钟秉林(2014)]{zhong2014applied}
+钟秉林.
+\newblock 关于地方本科院校转型发展的思考\allowbreak[J].
+\newblock 教育研究, 2014.
+
+\bibitem[DiMaggio et~al.(1983)DiMaggio and Powell]{dimaggio1983iron}
+DIMAGGIO P~J, POWELL W~W.
+\newblock The iron cage revisited: Institutional isomorphism and collective
+  rationality\allowbreak[J].
+\newblock American Sociological Review, 1983.
+
+\bibitem[Meyer et~al.(1977)Meyer and Rowan]{meyer1977institutionalized}
+MEYER J~W, ROWAN B.
+\newblock Institutionalized organizations: Formal structure as myth and
+  ceremony\allowbreak[J].
+\newblock American Journal of Sociology, 1977.
+
+\bibitem[Weick(1976)]{weick1976educational}
+WEICK K~E.
+\newblock Educational organizations as loosely coupled systems\allowbreak[J].
+\newblock Administrative Science Quarterly, 1976.
+
+\bibitem[Holland(1995)]{holland1995hidden}
+HOLLAND J~H.
+\newblock Hidden order: How adaptation builds complexity\allowbreak[M].
+\newblock Addison-Wesley, 1995.
+
+\bibitem[Miller et~al.(2007)Miller and Page]{miller2007complex}
+MILLER J~H, PAGE S~E.
+\newblock Complex adaptive systems: An introduction to computational models of
+  social life\allowbreak[M].
+\newblock Princeton University Press, 2007.
+
+\bibitem[Lazer et~al.(2009)]{lazer2009life}
+LAZER D, et~al.
+\newblock Computational social science\allowbreak[J].
+\newblock Science, 2009.
+
+\bibitem[Epstein(2006)]{epstein2006generative}
+EPSTEIN J~M.
+\newblock Generative social science: Studies in agent-based computational
+  modeling\allowbreak[M].
+\newblock Princeton University Press, 2006.
+
+\bibitem[张虹\ 等(2023)张虹 and 顾小清]{zhang2023computational}
+张虹, 顾小清.
+\newblock 计算教育学:内涵、框架与应用\allowbreak[J].
+\newblock 教育研究, 2023.
+
+\bibitem[Park et~al.(2023)Park, O'Brien, et~al.]{park2023generative}
+PARK J~S, O'BRIEN J~C, et~al.
+\newblock Generative agents: Interactive simulacra of human
+  behavior\allowbreak[C]//\allowbreak
+Proceedings of the 36th Annual ACM Symposium on User Interface Software and
+  Technology.
+\newblock 2023: 1-22.
+
+\bibitem[Hong et~al.(2023)]{hong2023metagpt}
+HONG S, et~al.
+\newblock Metagpt: Meta programming for a multi-agent collaborative
+  framework\allowbreak[A].
+\newblock 2023.
+
+\bibitem[Sumers et~al.(2023)Sumers, Yao, Narasimhan, and
+  Griffiths]{sumers2023cognitive}
+SUMERS T, YAO S, NARASIMHAN K, et~al.
+\newblock Cognitive architectures for language agents\allowbreak[A].
+\newblock 2023.
+
+\bibitem[Wang et~al.(2024)]{wang2024survey}
+WANG L, et~al.
+\newblock A survey on large language model based autonomous
+  agents\allowbreak[J].
+\newblock Frontiers of Computer Science, 2024.
+
+\bibitem[瞿振元(2014)]{qu2014connotation}
+瞿振元.
+\newblock 应用型大学的内涵与建设\allowbreak[J].
+\newblock 中国高等教育, 2014.
+
+\bibitem[Cai(2014)]{cai2014institutional}
+CAI Y.
+\newblock Institutional barriers to the transformation of local universities in
+  china\allowbreak[J].
+\newblock Higher Education Policy, 2014.
+
+\bibitem[吴岩(2019)]{wu2019evaluation}
+吴岩.
+\newblock 破“五唯”背景下高校科研评价体系重构\allowbreak[J].
+\newblock 中国高等教育, 2019.
+
+\bibitem[Arthur(1999)]{arthur1999complexity}
+ARTHUR W~B.
+\newblock Complexity and the economy\allowbreak[J].
+\newblock Science, 1999, 284\allowbreak (5411): 107-109.
+
+\bibitem[Scheffer et~al.(2009)]{scheffer2009early}
+SCHEFFER M, et~al.
+\newblock Early-warning signals for critical transitions\allowbreak[J].
+\newblock Nature, 2009, 461: 53-59.
+
+\bibitem[Wiener(1948)]{wiener1948cybernetics}
+WIENER N.
+\newblock Cybernetics: Or control and communication in the animal and the
+  machine\allowbreak[M].
+\newblock MIT press, 1948.
+
+\bibitem[石中英(2020)]{shi2020governance}
+石中英.
+\newblock 论教育治理体系和治理能力现代化\allowbreak[J].
+\newblock 教育研究, 2020.
+
+\bibitem[褚宏启(2016)]{chu2016governance}
+褚宏启.
+\newblock 教育治理:以共治求善治\allowbreak[J].
+\newblock 教育研究, 2016.
+
+\bibitem[Simon(1996)]{simon1996sciences}
+SIMON H~A.
+\newblock The sciences of the artificial\allowbreak[M].
+\newblock 3rd ed.
+\newblock MIT press, 1996.
+
+\bibitem[Weber(1978)]{weber1978economy}
+WEBER M.
+\newblock Economy and society\allowbreak[M].
+\newblock University of California Press, 1978.
+
+\end{thebibliography}

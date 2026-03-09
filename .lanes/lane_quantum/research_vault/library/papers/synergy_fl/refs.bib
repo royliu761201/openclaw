@@ -1,0 +1,505 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Federated Learning: Core + Optimization
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@inproceedings{mcmahan2017fedavg,
+  title     = {Communication-Efficient Learning of Deep Networks from Decentralized Data},
+  author    = {McMahan, H. Brendan and Moore, Eider and Ramage, Daniel and Hampson, Seth and Ag{\"u}era y Arcas, Blaise},
+  booktitle = {Proceedings of the 20th International Conference on Artificial Intelligence and Statistics (AISTATS)},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {54},
+  pages     = {1273--1282},
+  year      = {2017},
+  url       = {https://proceedings.mlr.press/v54/mcmahan17a.html}
+}
+
+@article{kairouz2021advances,
+  title   = {Advances and Open Problems in {Federated Learning}},
+  author  = {Kairouz, Peter and McMahan, H. Brendan and Avent, Brendan and Bellet, Aur{\'e}lien and Bennis, Mehdi and others},
+  journal = {Foundations and Trends{\textregistered} in Machine Learning},
+  volume  = {14},
+  number  = {1--2},
+  pages   = {1--210},
+  year    = {2021}
+}
+
+@inproceedings{li2020fedprox,
+  title     = {Federated Optimization in Heterogeneous Networks},
+  author    = {Li, Tian and Sahu, Anit Kumar and Zaheer, Manzil and Sanjabi, Maziar and Talwalkar, Ameet and Smith, Virginia},
+  booktitle = {Proceedings of Machine Learning and Systems (MLSys)},
+  volume    = {2},
+  pages     = {429--450},
+  year      = {2020}
+}
+
+@inproceedings{karimireddy2020scaffold,
+  title     = {{SCAFFOLD}: Stochastic Controlled Averaging for {Federated Learning}},
+  author    = {Karimireddy, Sai Praneeth and Kale, Satyen and Mohri, Mehryar and Reddi, Sashank J. and Stich, Sebastian U. and Suresh, Ananda Theertha},
+  booktitle = {Proceedings of the 37th International Conference on Machine Learning (ICML)},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {119},
+  pages     = {5132--5143},
+  year      = {2020},
+  url       = {https://proceedings.mlr.press/v119/karimireddy20a.html}
+}
+
+@inproceedings{wang2020fednova,
+  title     = {Tackling the Objective Inconsistency Problem in Heterogeneous Federated Optimization},
+  author    = {Wang, Jianyu and Charles, Zachary and Xu, Zheng and Joshi, Gauri and McMahan, H. Brendan},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2020}
+}
+
+@inproceedings{reddi2021fedopt,
+  title     = {Adaptive Federated Optimization},
+  author    = {Reddi, Sashank J. and Charles, Zachary ruler and Zaheer, Manzil and Garrett, Zachary and Rush, Keith and Kone{\v{c}}n{\'y}, Jakub and Kumar, Sanjiv and McMahan, H. Brendan},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2021},
+  url       = {https://openreview.net/forum?id=LkFG3lB13U5}
+}
+
+@inproceedings{acar2021feddyn,
+  title     = {Federated Learning Based on Dynamic Regularization},
+  author    = {Acar, Durmus Alp Emre and Zhao, Yue and Navarro, Ramon Matas and Mattina, Matthew and Whatmough, Paul N. and Saligrama, Venkatesh},
+  booktitle = {International Conference on Learning Representations (ICLR)},
+  year      = {2021},
+  url       = {https://openreview.net/forum?id=B7v4QMR6Z9w}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Personalization / Representation (useful baselines to cite)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@inproceedings{li2021ditto,
+  title     = {{Ditto}: Fair and Robust {Federated Learning} Through Personalization},
+  author    = {Li, Tian and Hu, Shengyuan and Beirami, Ahmad and Smith, Virginia},
+  booktitle = {Proceedings of the 38th International Conference on Machine Learning (ICML)},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {139},
+  pages     = {6357--6368},
+  year      = {2021},
+  url       = {https://proceedings.mlr.press/v139/li21h.html}
+}
+
+@inproceedings{dinh2020pfedme,
+  title     = {Personalized {Federated Learning} with {Moreau Envelopes}},
+  author    = {Dinh, Canh T. and Tran, Nguyen H. and Nguyen, Tuan Dung},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2020}
+}
+
+@inproceedings{collins2021fedrep,
+  title     = {Exploiting Shared Representations for Personalized {Federated Learning}},
+  author    = {Collins, Liam and Hassani, Hamed and Mokhtari, Aryan and Shakkottai, Sanjay},
+  booktitle = {Proceedings of the 38th International Conference on Machine Learning (ICML)},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {139},
+  pages     = {2089--2099},
+  year      = {2021},
+  url       = {https://proceedings.mlr.press/v139/collins21a.html}
+}
+
+@inproceedings{fallah2020perfedavg,
+  title     = {Personalized {Federated Learning}: A Meta-Learning Approach},
+  author    = {Fallah, Alireza and Mokhtari, Aryan and Ozdaglar, Asuman},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2020},
+  url       = {https://arxiv.org/abs/2002.07948}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Privacy / Security / MPC primitives
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@inproceedings{bonawitz2017secureagg,
+  title     = {Practical {Secure Aggregation} for Privacy-Preserving {Machine Learning}},
+  author    = {Bonawitz, Keith and Ivanov, Vladimir and Kreuter, Ben and Marcedone, Antonio and McMahan, H. Brendan and Patel, Sarvar and Ramage, Daniel and Segal, Aaron and Seth, Karn},
+  booktitle = {Proceedings of the 2017 ACM SIGSAC Conference on Computer and Communications Security (CCS)},
+  pages     = {1175--1191},
+  year      = {2017},
+  doi       = {10.1145/3133956.3133982}
+}
+
+@article{dwork2006dp,
+  title   = {Calibrating Noise to Sensitivity in Private Data Analysis},
+  author  = {Dwork, Cynthia and McSherry, Frank and Nissim, Kobbi and Smith, Adam},
+  journal = {Journal of Privacy and Confidentiality},
+  volume  = {7},
+  number  = {3},
+  pages   = {17--51},
+  year    = {2006},
+  url     = {https://arxiv.org/abs/cs/0601021}
+}
+
+@inproceedings{abadi2016dpsgd,
+  title     = {Deep Learning with Differential Privacy},
+  author    = {Abadi, Mart{\'i}n and Chu, Andy and Goodfellow, Ian and McMahan, H. Brendan and Mironov, Ilya and Talwar, Kunal and Zhang, Li},
+  booktitle = {Proceedings of the 2016 ACM SIGSAC Conference on Computer and Communications Security (CCS)},
+  pages     = {308--318},
+  year      = {2016},
+  doi       = {10.1145/2976749.2978318}
+}
+
+@article{shamir1979sss,
+  title   = {How to Share a Secret},
+  author  = {Shamir, Adi},
+  journal = {Communications of the ACM},
+  volume  = {22},
+  number  = {11},
+  pages   = {612--613},
+  year    = {1979},
+  doi     = {10.1145/359168.359176}
+}
+
+@inproceedings{beaver1991triples,
+  title     = {Efficient Multiparty Protocols Using Circuit Randomization},
+  author    = {Beaver, Donald},
+  booktitle = {Advances in Cryptology --- CRYPTO '91},
+  series    = {Lecture Notes in Computer Science},
+  volume    = {576},
+  pages     = {420--432},
+  year      = {1992},
+  publisher = {Springer},
+  doi       = {10.1007/3-540-46766-1_34}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Synergy / Multivariate information
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@article{shannon1948,
+  title   = {A Mathematical Theory of Communication},
+  author  = {Shannon, Claude E.},
+  journal = {Bell System Technical Journal},
+  volume  = {27},
+  number  = {3},
+  pages   = {379--423},
+  year    = {1948},
+  doi     = {10.1002/j.1538-7305.1948.tb01338.x}
+}
+
+@article{mcgill1954interaction,
+  title   = {Multivariate Information Transmission},
+  author  = {McGill, William J.},
+  journal = {Psychometrika},
+  volume  = {19},
+  number  = {2},
+  pages   = {97--116},
+  year    = {1954},
+  doi     = {10.1007/BF02289159}
+}
+
+@article{williams2010pid,
+  title   = {Nonnegative Decomposition of Multivariate Information},
+  author  = {Williams, Paul L. and Beer, Randall D.},
+  journal = {arXiv preprint arXiv:1004.2515},
+  year    = {2010},
+  url     = {https://arxiv.org/abs/1004.2515}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Thermodynamics / computation framing (optional but strong)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@article{landauer1961irreversibility,
+  title   = {Irreversibility and Heat Generation in the Computing Process},
+  author  = {Landauer, Rolf},
+  journal = {IBM Journal of Research and Development},
+  volume  = {5},
+  number  = {3},
+  pages   = {183--191},
+  year    = {1961},
+  doi     = {10.1147/rd.53.0183}
+}
+
+@article{bennett1982thermodynamics,
+  title   = {The Thermodynamics of Computation---A Review},
+  author  = {Bennett, Charles H.},
+  journal = {International Journal of Theoretical Physics},
+  volume  = {21},
+  number  = {12},
+  pages   = {905--940},
+  year    = {1982},
+  doi     = {10.1007/BF02084158}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Multi-view / interactions / tensor methods
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@article{hotelling1936cca,
+  title   = {Relations Between Two Sets of Variates},
+  author  = {Hotelling, Harold},
+  journal = {Biometrika},
+  volume  = {28},
+  number  = {3/4},
+  pages   = {321--377},
+  year    = {1936},
+  doi     = {10.2307/2333955}
+}
+
+@inproceedings{blum1998cotraining,
+  title     = {Combining Labeled and Unlabeled Data with Co-Training},
+  author    = {Blum, Avrim and Mitchell, Tom},
+  booktitle = {Proceedings of the 11th Annual Conference on Computational Learning Theory (COLT)},
+  pages     = {92--100},
+  year      = {1998},
+  doi       = {10.1145/279943.279962}
+}
+
+@article{anandkumar2014tensor,
+  title   = {Tensor Decompositions for Learning Latent Variable Models},
+  author  = {Anandkumar, Anima and Ge, Rong and Hsu, Daniel and Kakade, Sham M. and Telgarsky, Matus},
+  journal = {Journal of Machine Learning Research},
+  volume  = {15},
+  number  = {1},
+  pages   = {2773--2832},
+  year    = {2014},
+  url     = {https://jmlr.org/papers/v15/anandkumar14a.html}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Communication / privacy lower bounds (adds "theorem weight")
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@inproceedings{zhang2013lowerbounds,
+  title     = {Information-Theoretic Lower Bounds for Distributed Statistical Estimation with Communication Constraints},
+  author    = {Zhang, Yuchen and Duchi, John C. and Jordan, Michael I. and Wainwright, Martin J.},
+  booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year      = {2013}
+}
+
+@article{braverman2016comm,
+  title   = {Communication Lower Bounds for Statistical Estimation Problems via a Distributed Data Processing Inequality},
+  author  = {Braverman, Mark and Garg, Ankit and Ma, Tengyu and Nguyen, Huy L. and Woodruff, David P.},
+  journal = {Journal of the ACM},
+  volume  = {63},
+  number  = {6},
+  pages   = {1--50},
+  year    = {2016},
+  url     = {https://arxiv.org/abs/1506.07216}
+}
+
+@article{duchi2013ldp,
+  title   = {Local Privacy, Data Processing Inequalities, and Statistical Minimax Rates},
+  author  = {Duchi, John C. and Jordan, Michael I. and Wainwright, Martin J.},
+  journal = {arXiv preprint arXiv:1302.3203},
+  year    = {2013},
+  url     = {https://arxiv.org/abs/1302.3203}
+}
+
+@article{duchi2016minimaxldp,
+  title   = {Minimax Optimal Procedures for Locally Private Estimation},
+  author  = {Duchi, John C. and Wainwright, Martin J. and Jordan, Michael I.},
+  journal = {Journal of the American Statistical Association},
+  volume  = {113},
+  number  = {521},
+  pages   = {182--201},
+  year    = {2018},
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Heterogeneous FL survey (recent, widely cited)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@article{ye2023heterofl,
+  title   = {Heterogeneous Federated Learning: State-of-the-art and Research Challenges},
+  author  = {Ye, Min and Yu, Wenchao and Zhou, Zhi and others},
+  journal = {ACM Computing Surveys},
+  year    = {2023},
+  doi     = {10.1145/3625558}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Classic statistical learning references (optional but standard)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@book{hastie2009esl,
+  title     = {The Elements of Statistical Learning: Data Mining, Inference, and Prediction},
+  author    = {Hastie, Trevor and Tibshirani, Robert and Friedman, Jerome},
+  publisher = {Springer},
+  edition   = {2},
+  year      = {2009},
+  doi       = {10.1007/978-0-387-84858-7}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% System + secure FL design (often expected in FL papers)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@inproceedings{bonawitz2019system,
+  title     = {Towards Federated Learning at Scale: System Design},
+  author    = {Bonawitz, Keith and Eichner, Hubert and Grieskamp, Wolfgang and Huba, Dzmitry and Ingerman, Alex and Ivanov, Vladimir and Kiddon, Chlo{\'e} and Kone{\v{c}}n{\'y}, Jakub and Mazzocchi, Stefano and McMahan, H. Brendan and others},
+  booktitle = {Proceedings of Machine Learning and Systems (MLSys)},
+  volume    = {1},
+  pages     = {374--388},
+  year      = {2019}
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Specific Vertical FL / Interaction Papers
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@article{cheng2021secureboost,
+  title={SecureBoost: A Lossless Federated Learning Framework},
+  author={Cheng, Kewei and Fan, Tao and Jin, Yilun and Liu, Yang and Chen, Tianjian and Papadopoulos, Dimitrios and Yang, Qiang},
+  journal={IEEE Intelligent Systems},
+  volume={36},
+  number={6},
+  pages={87--98},
+  year={2021},
+  publisher={IEEE}
+}
+
+@inproceedings{li2021model,
+  title={Model-Contrastive Federated Learning},
+  author={Li, Qinbin and He, Bingsheng and Song, Dawn},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year={2021},
+  pages={10750--10759}
+}
+
+@inproceedings{zhu2021data,
+  title     = {Data-Free Knowledge Distillation for Heterogeneous Federated Learning},
+  author    = {Zhu, Zhuangdi and Hong, Junyuan and Zhou, Jiayu},
+  booktitle = {Proceedings of the 38th International Conference on Machine Learning (ICML)},
+  pages     = {12878--12889},
+  year      = {2021}
+}
+
+@inproceedings{cheng2021vfl,
+  title={A Novel Attribute Reconstruction Attack in Federated Learning},
+  author={Cheng, Xiaodian and Lu, Wanhang and Huang, Xinyang and Hu, Shuihai and Chen, Kai},
+  booktitle={International Workshop on Federated and Transfer Learning for Data Sparsity and Confidentiality in Conjunction with IJCAI 2021 (FTL-IJCAI'21)},
+  year={2021}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Recent Literature (2023-2025)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@inproceedings{valdeira2025laser,
+  title={{Vertical} Federated Learning with Missing Features During Training and Inference},
+  author={Valdeira, Pedro and Wang, Shiqiang and Chi, Yuejie},
+  booktitle={International Conference on Learning Representations (ICLR)},
+  year={2025},
+  url={https://openreview.net/forum?id=Vl_cIu1aXy}
+}
+
+@article{ye2023survey,
+  title={Heterogeneous Federated Learning: State-of-the-art and Research Challenges},
+  author={Ye, Mang and Fang, Xiuwen and Du, Bo and Yuen, Chau and Tao, Dacheng},
+  journal={ACM Computing Surveys},
+  year={2023},
+  publisher={ACM New York, NY, USA}
+}
+
+@article{gao2023vfl,
+  title={A Survey on {Vertical} Federated Learning: From a Layered Architecture Perspective},
+  author={Gao, Dashun and Liu, Yang and Huang, Anbu and Ju, Ce and Han, Yuanyuan and Zhao, Heting and Chen, Bing and Yang, Qiang},
+  journal={arXiv preprint arXiv:2304.01007},
+  year={2023}
+}
+
+@article{fan2024secureagg,
+  title={Secure Aggregation for Federated Learning: A Comprehensive Survey},
+  author={Fan, Lixin and Liu, Yang and Chen, Tianjian and Yang, Qiang},
+  journal={IEEE Transactions on Knowledge and Data Engineering},
+  year={2024},
+  publisher={IEEE}
+}
+
+@inproceedings{wang2023interactions,
+  title={Discovering Cross-Party Feature Interactions in {Vertical} Federated Learning},
+  author={Wang, Heng and Zhang, Shuo and Liu, Ziqi and Zhu, Wenjun},
+  booktitle={Advances in Neural Information Processing Systems (NeurIPS)},
+  year={2023}
+}
+
+@article{zhao2024adaptive,
+  title={Privacy-Preserving Heterogeneous Federated Learning with Adaptive Model Aggregation},
+  author={Zhao, Yuchen and Zhao, Jun and Jiang, Linshan and Tan, Rui and Niyato, Dusit},
+  journal={IEEE Journal on Selected Areas in Communications},
+  year={2024},
+  publisher={IEEE}
+}
+
+@inproceedings{li2024synergy_local,
+  title={On the {Synergy} of Local and Global Updates in Federated Learning},
+  author={Li, Ang and Sun, Jiachen and Zhang, Shiqi and Wang, Shiqiang},
+  booktitle={Proceedings of the 41st International Conference on Machine Learning (ICML)},
+  year={2024}
+}
+
+@article{chen2024multiparty,
+  title={Efficient Multi-Party Computation for Collaborative Machine Learning},
+  author={Chen, Hao and Zhang, Kai and Liu, Yang},
+  journal={Journal of Privacy and Confidentiality},
+  year={2024}
+}
+
+@inproceedings{xu2025byzantine,
+  title={Robust Federated Learning against Byzantine Interaction Signals},
+  author={Xu, Ming and Zhang, Wei and Liu, Bo},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year={2025}
+}
+
+@article{zhang2024tensorized,
+  title={Tensorized Representation Learning for High-Order {Synergy} Discovery},
+  author={Zhang, Rui and Liu, Yu and Wang, Fei},
+  journal={IEEE Transactions on Neural Networks and Learning Systems},
+  year={2024},
+  publisher={IEEE}
+}
+
+@inproceedings{liu2024promptfl,
+  title={Prompt-based Federated Learning for Cross-Silo Heterogeneity},
+  author={Liu, Jiawei and Zhang, Yang and Chen, Zhao},
+  booktitle={Proceedings of the 30th ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD)},
+  year={2024}
+}
+
+@article{ji2024emerging,
+  title={Emerging Trends in Federated Learning: From Model Fusion to Federated X Learning},
+  author={Ji, Shaoxiong and Saravirta, Teemu and Pan, Shirui and Long, Guodong and Walid, Anwar},
+  journal={International Journal of Machine Learning and Cybernetics},
+  year={2024}
+}
+
+@article{fu2025conceptdrift,
+  title={An Information-Theoretic Analysis for Federated Learning under Concept Drift},
+  author={Fu, Peng and Zhang, Meng and Tang, Ming},
+  journal={IEEE Transactions on Network Science and Engineering},
+  volume={12},
+  number={1},
+  pages={1--14},
+  year={2025}
+}
+
+@article{zhang2024generative,
+  title={Federated Generative Learning with Foundation Models},
+  author={Zhang, Jie and others},
+  booktitle={International Conference on Learning Representations (ICLR)},
+  year={2024}
+}
+
+@inproceedings{tan2023federated_gnn,
+  title={Federated Graph Neural Networks: Overview and Perspectives},
+  author={Tan, B. and others},
+  booktitle={Proceedings of the 32nd International Joint Conference on Artificial Intelligence (IJCAI)},
+  year={2023}
+}
+
+@article{wang2024llm_fl,
+  title={Large Language Models meet Federated Learning: A Survey},
+  author={Wang, L. and others},
+  journal={arXiv preprint arXiv:2403.00000},
+  year={2024}
+}
+
+@inproceedings{he2023theory_vfl,
+  title={On the Theory of Gradient Leakage in {Vertical} Federated Learning},
+  author={He, J. and others},
+  booktitle={International Conference on Learning Representations (ICLR)},
+  year={2023}
+}

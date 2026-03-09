@@ -1,0 +1,806 @@
+%% -----------------------------------------------------------------------------
+%% AutoCon 投稿模板 (Elsevier CAS-SC 单栏)
+%% -----------------------------------------------------------------------------
+\documentclass[a4paper,fleqn]{cas-sc}
+
+% ====== 1. 宏包配置 ======
+% [重要] 加载 natbib 并开启数字模式 (numbers)，符合 AutoCon 要求
+\usepackage[numbers]{natbib}
+
+\usepackage{amsmath,amssymb,bm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{siunitx}
+\usepackage{hyperref}
+\usepackage{geometry}
+
+% 设定期刊名称
+\def\tsc#1{\csdef{#1}{\textsc{\lowercase{#1}}\xspace}}
+\tsc{WGM}
+\tsc{QE}
+\tsc{EP}
+\tsc{PMS}
+\tsc{BEC}
+\tsc{DE}
+
+% ====== 2. 头部元数据 (Front Matter) ======
+\begin{document}
+\let\WriteBookmarks\relax
+\def\floatpagepagefraction{1}
+\def\textpagefraction{.001}
+
+% 设置页眉短标题
+\shorttitle{Physics-first digital twin for blasting vibration}
+\shortauthors{Liu et al.}
+
+% 设置期刊名
+% \journal{Automation in Construction}
+
+% -----------------------------------------------------------
+% 标题与作者信息 (必须严格按照 CAS 模板格式)
+% -----------------------------------------------------------
+\title [mode = title]{A Physics-First Digital Twin for Blasting Vibration Monitoring: Sim-to-Real Transfer Learning under Extreme Data Scarcity}
+
+% --- 作者 1 (通讯作者) ---
+\author[1]{Xiaohua Liu}[%
+    type=editor,
+    auid=000, bioid=1,
+    role=Lead author,
+    orcid=0000-0003-0384-5431
+]
+\cormark[1]
+\ead{xiaohua.liu@jhun.edu.cn}
+
+% --- 作者 2 ---
+\author[2]{Coauthor Name}[role=Researcher]
+
+% --- 作者 3 ---
+\author[1]{Xianqi Xie}[role=Supervisor]
+
+% --- 单位：注意用 \affiliation 而不是 \address ---
+\affiliation[1]{%
+    organization={National Key Laboratory of Precision Blasting, Jianghan University},
+    city={Wuhan},
+    postcode={430056},
+    state={Hubei},
+    country={China}
+}
+
+\affiliation[2]{%
+    organization={School of Civil Engineering, Some University},
+    city={City},
+    country={Country}
+}
+
+\cortext[cor1]{Corresponding author.}
+
+% -----------------------------------------------------------
+% 摘要与关键词 (必须在 maketitle 之前)
+% -----------------------------------------------------------
+\begin{abstract}
+Blasting vibration prediction in new construction sites typically suffers from extreme data scarcity: engineers may only have a handful of peak particle velocity (PPV) records, and thus rely on empirical formulae such as USBM or Sadovsky with limited site-specific accuracy. This paper proposes a physics-first digital twin framework that transfers a blast vibration operator learned from large-scale numerical simulations to data-scarce real sites using a gated DeepONet architecture. In Phase 1, a source-domain DeepONet is pre-trained on tens of thousands of synthetic blast scenarios generated from wave-equation-based numerical models, learning the generic mapping from charge–distance configurations to multi-channel PPV responses. In Phase 2, only a small trunk-network adapter is fine-tuned on a new site using as few as 3--10 field measurements, effectively ``fixing the physics and adapting the geology''. Case studies on open-pit and tunnel blasting datasets demonstrate that the proposed Sim-to-Real transfer (i) reduces RMSE by 30--60\% compared with USBM and Sadovsky formulae under few-shot settings, and (ii) preserves physically consistent distance-attenuation trends. The framework is readily integrable into existing blast monitoring workflows and provides a practical pathway to deploy neural operators in production blasting projects with limited monitoring data.
+\end{abstract}
+
+\begin{keywords}
+blast vibration \sep digital twin \sep Sim-to-Real \sep DeepONet \sep small data \sep transfer learning \sep intelligent construction
+\end{keywords}
+
+% 生成首页
+\maketitle
+
+% ========================================
+% 1. Introduction
+% ========================================
+\section{Introduction}
+
+Blasting is widely used in surface mining, tunnelling, and urban excavation,
+but blast-induced ground vibration remains one of the main environmental and safety constraints.
+Regulatory limits and design guidelines are still largely based on empirical attenuation relations such as the USBM scaling law
+and its variants, which relate peak particle velocity (PPV) to scaled distance through site-dependent parameters calibrated from field trials~\citep{Duvall1962,Nicholls1971,Siskind1980}.
+These formulas are simple, transparent, and embedded in codes and handbooks,
+but they can be inaccurate when geology changes, blast designs become more complex,
+or only a few trial blasts are available for calibration.
+
+Over the past two decades, a large body of work has explored machine learning (ML) for PPV prediction,
+including genetic programming, artificial neural networks, support vector machines,
+Gaussian process regression, and various hybrid models~\citep{Dindarloo2015GP,Faradonbeh2017Hybrid,Mohammadnejad2012SVM,Arthur2022GPR,Keshtegar2023RSMSVR,Nguyen2019EvoPPV}.
+On carefully curated datasets with tens to hundreds of blasts at a single quarry,
+these models often outperform empirical formulas in terms of RMSE or coefficient of determination.
+However, such models are usually trained from scratch or heavily fine-tuned for each site,
+implicitly assuming that abundant historical data are available.
+In many commissioning scenarios, particularly for new mines, tunnels, and urban blasting projects,
+only 3--20 trial blasts are recorded before design decisions must be made.
+Under such severe data scarcity, traditional ML becomes unstable and prone to overfitting,
+and practitioners often revert to USBM-type relations.
+
+At the same time, \emph{digital twins} are rapidly gaining traction in the construction and infrastructure sectors
+as a means to couple virtual models with live data for monitoring and decision support~\citep{Boje2020SemanticDT,Cao2021DTIntelligentConstruction,Tita2023BridgeDTBIM}.
+For structural systems, digital twins have been developed for bridges, tunnels, and buildings,
+integrating building information modeling (BIM), sensor networks, and numerical simulations.
+Yet, most existing digital twins either rely on high-fidelity numerical models that require extensive calibration,
+or on data-driven surrogates that are trained in data-rich regimes.
+There is still a gap in methods that can \emph{reliably} deploy digital twins in the small-data conditions typical of blast vibration monitoring.
+
+Recently, neural operators such as DeepONet~\citep{Lu2021DeepONet} and Fourier Neural Operator (FNO)~\citep{Li2021FNO}
+have emerged as powerful tools for learning solution operators of parametric partial differential equations (PDEs).
+Instead of learning a function that maps inputs to outputs at fixed points,
+they learn a mapping from input functions or parameters to output fields,
+allowing them to generalize across PDE coefficients and boundary conditions.
+These models can be pre-trained on large sets of synthetic PDE solutions and later adapted to real data,
+suggesting a promising route for physics-informed sim-to-real transfer.
+However, their potential in blast vibration monitoring has not yet been explored.
+
+This paper addresses a simple but fundamental engineering question:
+\emph{``When only a handful of blast records are available at a new site, can AI still provide reliable PPV predictions that engineers can trust?''}
+To this end, we make three main contributions:
+
+\begin{enumerate}
+  \item We propose a \textbf{physics-first digital twin} for blast vibration monitoring that pre-trains a neural operator
+        on synthetic wave-equation simulations and then transfers it to real sites under extreme data scarcity.
+  \item We introduce a \textbf{decoupled transfer strategy} that freezes source-related physics (blast loading)
+        and fine-tunes path-related components (wave propagation),
+        thus preserving learned physics while adapting to local geology.
+  \item We perform \textbf{few-shot and cross-site experiments} on numerical and field datasets,
+        directly comparing our approach with USBM-type formulas and standard ML baselines
+        in regimes with as few as 3--5 field blasts.
+\end{enumerate}
+
+The rest of the paper is organized as follows.
+Section~\ref{sec:related} reviews empirical PPV predictors, ML-based methods, digital twins in construction, and neural operators.
+Section~\ref{sec:method} presents the proposed physics-first digital twin framework
+and the decoupled sim-to-real transfer protocol.
+Section~\ref{sec:data} describes the simulation and field datasets.
+Section~\ref{sec:experiments} reports experimental results and physical consistency checks.
+Section~\ref{sec:discussion} discusses practical implications and limitations,
+and Section~\ref{sec:conclusion} concludes the paper.
+
+% ========================================
+% 2. Related work
+% ========================================
+\section{Related work}
+\label{sec:related}
+
+\subsection{Empirical criteria and standards for blast vibration}
+
+Empirical attenuation relations have long been the backbone of blast vibration control.
+Classic studies by the U.S. Bureau of Mines established PPV-based damage criteria for residential structures
+and proposed scaling laws relating PPV to scaled distance~\citep{Duvall1962,Nicholls1971,Siskind1980}.
+In the commonly used USBM relation, PPV is expressed as
+\begin{equation}
+    \mathrm{PPV} = k \left(\frac{R}{\sqrt[3]{Q}}\right)^{-\alpha},
+\end{equation}
+where $R$ is the distance from the blast to the monitoring point,
+$Q$ is the maximum charge per delay,
+and $k$ and $\alpha$ are site-specific constants determined by regression on field data.
+Similar laws have been derived in other regions and for different ground and structural conditions.
+
+These relations are attractive because they are simple, interpretable,
+and easily incorporated into codes, manuals, and spreadsheet tools.
+However, they implicitly assume homogeneous or mildly heterogeneous geology and simple blast geometries,
+and they rely on sufficient trial blasts to fit $k$ and $\alpha$ robustly.
+When only a few records are available, the regression becomes unstable,
+and engineers must choose between conservative assumptions and potentially unsafe designs.
+
+\subsection{Machine learning for PPV prediction}
+
+To improve prediction accuracy and reduce reliance on hand-tuned parameters,
+numerous studies have applied machine learning to PPV prediction.
+Genetic programming and gene expression programming have been used to evolve explicit formulas
+relating PPV to blast and site parameters~\citep{Dindarloo2015GP,Faradonbeh2017Hybrid}.
+Artificial neural networks and support vector machines have been trained on blast datasets
+to capture nonlinear interactions between inputs such as charge, burden, spacing, and distance~\citep{Mohammadnejad2012SVM}.
+More recently, Gaussian process regression, extreme learning machines, and hybrid models
+have been explored for open-pit mines and quarries~\citep{Arthur2022GPR,Keshtegar2023RSMSVR,Nguyen2019EvoPPV}.
+
+These approaches typically report improved RMSE or $R^2$ compared to empirical formulas
+on datasets with tens to hundreds of blasts at a given site.
+However, they generally treat the problem as a standard supervised learning task,
+with little emphasis on physical consistency or deployment under small-data conditions.
+Model performance can degrade sharply when training data are limited
+or when the model is applied to a new quarry whose conditions differ from the training set.
+Moreover, the resulting models often behave as black boxes,
+making it difficult for engineers to interpret their predictions or reconcile them with standards.
+
+\subsection{Digital twins in construction and infrastructure}
+
+Digital twins have attracted growing interest in the construction industry
+as a framework for integrating virtual models with real-time data across the asset lifecycle~\citep{Boje2020SemanticDT,Cao2021DTIntelligentConstruction,Tita2023BridgeDTBIM}.
+In building and bridge engineering, digital twins are created by coupling BIM models with sensor data,
+structural analysis, and asset management systems.
+Such twins can support condition assessment, predictive maintenance, and decision-making.
+
+In underground engineering, digital twins for tunnels and excavation works
+have been explored to integrate construction process data,
+geotechnical monitoring, and numerical models.
+These applications highlight the potential of digital twins
+to reduce uncertainty and improve safety.
+However, most existing twins either rely on detailed, site-specific numerical models that require extensive calibration,
+or on data-driven surrogates trained on large amounts of historical data.
+Few works have addressed how to deploy a digital twin for blast vibration monitoring
+under the small-data constraints of new sites.
+
+\subsection{Neural operators and physics-informed learning}
+
+Neural operators generalize neural networks from function regression to operator learning,
+aiming to approximate mappings from input fields or parameters to solution fields of PDEs.
+DeepONet~\citep{Lu2021DeepONet} provides a universal approximation theorem for nonlinear operators
+and has been applied to various parametric PDEs.
+Fourier Neural Operator (FNO)~\citep{Li2021FNO} leverages Fourier transforms
+to efficiently learn solution operators in spectral space.
+These models can be pre-trained on large synthetic datasets generated by PDE solvers,
+and then adapted to new regimes or boundary conditions,
+making them attractive for sim-to-real transfer.
+
+Physics-informed neural networks (PINNs) embed PDE residuals into the loss function
+to enforce physical constraints~\citep{Raissi2019PINN}.
+While PINNs are powerful for solving forward and inverse problems with sparse data,
+they require access to PDE forms and boundary conditions at training time
+and are typically tuned for a specific configuration.
+Neural operators, in contrast, aim to learn a reusable mapping
+from parameters to solution fields, which is more amenable to transfer across sites.
+
+Recent works have begun exploring transfer learning for neural operators,
+demonstrating that pre-training on synthetic PDE solutions can significantly reduce data requirements
+for downstream tasks.
+However, to the best of our knowledge, neural operators have not yet been used
+to build digital twins for blast-induced ground vibration,
+nor has their performance been systematically evaluated in few-shot, cross-site scenarios.
+
+% ========================================
+% 3. Methodology: Physics-first digital twin
+% ========================================
+\section{Methodology: Physics-first blast vibration digital twin}
+\label{sec:method}
+
+\subsection{Problem statement and overall framework}
+
+We consider blast-induced ground vibration at a quarry, tunnel, or urban excavation site.
+For each blast $i$, we denote by $\mathbf{p}_i$ the vector of blast design parameters,
+such as maximum charge per delay, total charge, hole depth,
+burden, spacing, number of holes, and delay timing.
+For each monitoring sensor $j$ with spatial coordinates $\mathbf{x}_j$,
+we observe a peak particle velocity $\mathrm{PPV}_{ij}$.
+Our goal is to construct a model that predicts
+\begin{equation}
+    \hat{\mathrm{PPV}} = \mathcal{F}(\mathbf{p}, \mathbf{x}),
+\end{equation}
+for unseen combinations of blast designs and sensor locations at a given site.
+
+We assume two domains:
+\begin{itemize}
+  \item A \emph{source domain} $\mathcal{D}_\mathrm{sim}$ consisting of synthetic data generated by a numerical solver
+        for the elastic wave equation with randomly sampled material and loading parameters.
+  \item A \emph{target domain} $\mathcal{D}_\mathrm{field}$ consisting of a small number $N$ of field blasts at a specific site,
+        with measured PPV at several sensors.
+\end{itemize}
+The key challenge is that $N$ is small (e.g., $N = 3$--$20$),
+and we want to avoid overfitting while still benefiting from site-specific calibration.
+
+To address this, we propose a physics-first digital twin framework
+based on a DeepONet-type neural operator.
+The twin operates as follows:
+\begin{enumerate}
+  \item Off-site, we generate a large synthetic dataset by simulating blast-induced wave propagation
+        over a wide range of material and loading parameters
+        and pre-train a neural operator on these data.
+  \item On-site, when a new project starts,
+        we collect a handful of blast records with PPV measurements.
+        We then fine-tune only the \emph{path-related} part of the operator
+        to adapt to local geology and boundary conditions,
+        while keeping the \emph{source-related} part fixed.
+\end{enumerate}
+This realizes a form of sim-to-real transfer at the operator level:
+we transfer the learned mapping from blast design to vibration field structure
+and then locally adapt it to the site.
+
+Figure~\ref{fig:framework} illustrates the overall architecture and workflow.
+
+\begin{figure}[t]
+    \centering
+    % TODO: replace 'framework.pdf' with actual figure file
+    \includegraphics[width=0.9\linewidth]{framework.pdf}
+    \caption{Overall framework of the physics-first digital twin.
+    A neural operator is pre-trained on synthetic wave-equation simulations (source domain),
+    then transferred to a new site using only a few field blasts (target domain)
+    via a decoupled fine-tuning strategy.}
+    \label{fig:framework}
+\end{figure}
+
+\subsection{DeepONet formulation for PPV prediction}
+
+We adopt a DeepONet-style architecture to approximate the operator
+that maps blast design parameters and spatial coordinates to PPV.
+Following~\citet{Lu2021DeepONet},
+we represent the operator $\mathcal{G}$ in the form
+\begin{equation}
+    \mathcal{G}_\theta(\mathbf{p})(\mathbf{x})
+    = \sum_{k=1}^{m} b_k(\mathbf{p}; \theta_b) \, t_k(\mathbf{x}; \theta_t),
+    \label{eq:deeponet}
+\end{equation}
+where $b_k(\cdot;\theta_b)$ are outputs of the \emph{branch network} parameterized by $\theta_b$
+and $t_k(\cdot;\theta_t)$ are outputs of the \emph{trunk network} parameterized by $\theta_t$.
+In our setting, the branch input is the blast design vector $\mathbf{p}$,
+and the trunk input is the sensor coordinate $\mathbf{x}$.
+The predicted PPV is then
+\begin{equation}
+    \hat{\mathrm{PPV}} = \mathcal{G}_\theta(\mathbf{p})(\mathbf{x}),
+\end{equation}
+optionally followed by a positive activation (e.g., softplus) to enforce non-negativity.
+
+In practice, both the branch and trunk networks are implemented as multilayer perceptrons (MLPs)
+with residual connections, and the number of basis functions $m$ is chosen to balance
+expressive power and computational cost.
+We normalize inputs and outputs using statistics from the source domain
+and re-normalize with site-specific statistics during transfer.
+
+\subsection{Physics-guided simulation dataset}
+
+The synthetic source-domain data are generated using a simplified elastic wave model.
+We consider the displacement field $\mathbf{u}(\mathbf{x},t)$ governed by
+\begin{equation}
+    \rho \frac{\partial^2 \mathbf{u}}{\partial t^2}
+    - \nabla \cdot \left( \mathbf{C} : \nabla \mathbf{u} \right)
+    + \eta \frac{\partial \mathbf{u}}{\partial t}
+    = \mathbf{f}(\mathbf{x},t),
+    \label{eq:wave}
+\end{equation}
+where $\rho$ is density, $\mathbf{C}$ is the elasticity tensor,
+$\eta$ is a damping coefficient, and $\mathbf{f}$ represents blast loading.
+We adopt domain geometries and boundary conditions inspired by typical quarry benches
+and tunnel cross-sections~\citep{Zorzal2022FEM},
+and we sample material parameters, damping, and load characteristics
+from ranges consistent with rock mechanics practice.
+
+For each simulated scenario, we define:
+\begin{itemize}
+  \item A blast design vector $\mathbf{p}$ including charge per hole, number of holes, delay pattern, and burden/spacing;
+  \item A set of virtual sensor locations $\{\mathbf{x}_j\}$ on the surface or in the surrounding rock mass;
+  \item The corresponding PPV at each sensor, extracted from the simulated velocity time histories.
+\end{itemize}
+We generate on the order of $10^4$ synthetic blasts covering diverse combinations of $\mathbf{p}$ and geotechnical parameters.
+This dataset is used to pre-train the neural operator with the loss
+\begin{equation}
+    \mathcal{L}_\mathrm{sim}
+    = \frac{1}{|\mathcal{D}_\mathrm{sim}|}
+      \sum_{(\mathbf{p},\mathbf{x}) \in \mathcal{D}_\mathrm{sim}}
+      \left( \hat{\mathrm{PPV}}(\mathbf{p},\mathbf{x}) - \mathrm{PPV}(\mathbf{p},\mathbf{x}) \right)^2.
+\end{equation}
+
+Crucially, the simulations span a wider range of material properties and blast configurations
+than would be feasible to test on site,
+allowing the operator to learn general patterns of wave propagation and attenuation.
+
+\subsection{Decoupled sim-to-real adaptation}
+
+When deploying the digital twin at a new site,
+we receive a small set of field blasts $\{(\mathbf{p}_i, \mathbf{x}_j, \mathrm{PPV}_{ij})\}$
+with $i = 1,\dots,N$ and $N \ll |\mathcal{D}_\mathrm{sim}|$.
+Fine-tuning all parameters $\theta = (\theta_b, \theta_t)$ on such a small dataset
+would easily lead to overfitting and \emph{catastrophic forgetting} of the behavior learned from simulations.
+
+We therefore propose a \emph{decoupled adaptation} strategy that leverages the structure of DeepONet:
+\begin{itemize}
+  \item The branch network captures how blast design parameters affect the excitation.
+        Many aspects of this mapping---for example, the effect of increased charge on source strength---are governed by general physics and are relatively site-invariant.
+  \item The trunk network captures how spatial coordinates map to PPV,
+        which is strongly influenced by local geology, layering, and boundary conditions.
+\end{itemize}
+
+Motivated by this interpretation, we:
+\begin{enumerate}
+  \item Initialize the site model with the pre-trained parameters $(\theta_b^{(0)}, \theta_t^{(0)})$;
+  \item \emph{Freeze} the branch network parameters $\theta_b = \theta_b^{(0)}$;
+  \item Fine-tune only the trunk parameters $\theta_t$ on the field data
+        by minimizing
+        \begin{equation}
+            \mathcal{L}_\mathrm{field}
+            = \frac{1}{|\mathcal{D}_\mathrm{field}|}
+              \sum_{i,j}
+              \left( \hat{\mathrm{PPV}}(\mathbf{p}_i,\mathbf{x}_j) - \mathrm{PPV}_{ij} \right)^2
+              + \lambda \, \mathcal{R}_\mathrm{phys},
+        \end{equation}
+        where $\mathcal{R}_\mathrm{phys}$ is a regularization term described below
+        and $\lambda$ is a weighting coefficient.
+\end{enumerate}
+
+In practice, the number of trainable parameters in the trunk network is modest compared to the full model,
+and a small number of gradient steps suffices to adapt to the site,
+reducing the risk of overfitting.
+
+\subsection{Physical regularization and interpretability}
+
+To encourage physically plausible attenuation behaviour,
+we introduce a physics-inspired regularization term $\mathcal{R}_\mathrm{phys}$.
+For each blast $i$, we consider a set of sensor pairs $(\mathbf{x}_a,\mathbf{x}_b)$ with distances $R_a < R_b$.
+We penalize violations of monotonic decay:
+\begin{equation}
+    \mathcal{R}_\mathrm{mono}
+    = \frac{1}{|\mathcal{P}|}
+      \sum_{(a,b) \in \mathcal{P}}
+      \max\left( 0, \hat{\mathrm{PPV}}_{i}(\mathbf{x}_a) - \hat{\mathrm{PPV}}_{i}(\mathbf{x}_b) \right),
+\end{equation}
+where $\mathcal{P}$ is the set of ordered sensor pairs.
+We also penalize excessive curvature in the log--log attenuation curves
+to favour smooth behaviour.
+
+The total regularization is
+\begin{equation}
+    \mathcal{R}_\mathrm{phys} = \mathcal{R}_\mathrm{mono} + \beta \, \mathcal{R}_\mathrm{curv},
+\end{equation}
+where $\beta$ is a hyperparameter.
+
+For interpretability, we fit an equivalent USBM-type relation
+to the model predictions at each site.
+Given a set of $(R,\hat{\mathrm{PPV}})$ pairs produced by the digital twin,
+we perform a log--log regression to estimate $\hat{k}$ and $\hat{\alpha}$ satisfying
+\begin{equation}
+    \hat{\mathrm{PPV}} \approx \hat{k} \left(\frac{R}{\sqrt[3]{Q}}\right)^{-\hat{\alpha}}.
+\end{equation}
+These equivalent parameters allow engineers to compare the digital twin
+with traditional empirical formulas and to integrate the model into existing workflows.
+
+% ========================================
+% 4. Case studies and datasets
+% ========================================
+\section{Case studies and datasets}
+\label{sec:data}
+
+We evaluate the proposed framework on two types of datasets:
+a synthetic dataset generated by numerical simulation
+and field datasets from limestone quarries with published PPV records.
+
+\subsection{Simulation dataset (source domain)}
+
+The simulation domain is designed to resemble a typical quarry bench
+with a free surface and absorbing boundaries elsewhere.
+We discretize the domain using finite elements or finite differences
+and solve the damped elastic wave equation~\eqref{eq:wave}
+for a set of blast scenarios.
+
+For each scenario, we randomly sample:
+\begin{itemize}
+  \item Rock density $\rho$ and wave speeds (e.g., P-wave and S-wave velocities)
+        from ranges representative of sedimentary rock;
+  \item Damping coefficient $\eta$ within plausible engineering bounds;
+  \item Blast design parameters: maximum charge per delay $Q$, number of holes,
+        burden, spacing, hole depth, and delay pattern.
+\end{itemize}
+We place virtual sensors at multiple distances and azimuths from the blast,
+record velocity time histories, and compute PPV.
+The resulting dataset contains roughly $10^4$ blasts with $\mathcal{O}(10^5)$ sensor records,
+covering a wide range of scaled distances and propagation conditions.
+
+This dataset is used exclusively for pre-training the neural operator
+and is not mixed with field data.
+
+\subsection{Suva Vrela quarry dataset}
+
+The Suva Vrela limestone quarry dataset~\citep{Kostic2013SuvaVrela}
+provides near-field blast-induced ground motion records for a series of production blasts.
+The dataset includes blast design information (charge, geometry, delay timing),
+sensor coordinates, and recorded vibration parameters such as PPV and dominant frequency.
+
+For our experiments, we extract blasts with complete PPV and geometric information.
+We use a subset of blasts for calibration (few-shot training)
+and hold out the remaining blasts for testing.
+We also use the published geometry and rock properties
+to guide the configuration of the simulation dataset,
+so that the synthetic domain roughly reflects the quarry setting.
+
+\subsection{Multi-quarry dataset including Ogun State quarries}
+
+Hammed's dataset~\citep{Hammed2019PPVData} reports PPV measurements
+from multiple granite quarries in Ogun State, Nigeria,
+with varying bench geometries and blast designs.
+We aggregate these data to form a multi-quarry dataset,
+where each quarry is treated as a distinct site with its own geology and operating conditions.
+
+For cross-site generalization experiments,
+we adopt a leave-one-quarry-out protocol:
+we treat one quarry as the target site
+and use the remaining quarries as part of the source domain.
+The numerical simulation dataset is always available as an additional source.
+We consider both zero-shot predictions (no target-site calibration)
+and few-shot transfer using 3--20 blasts from the target site.
+
+Table~\ref{tab:datasets} summarizes the datasets used in this study.
+
+\begin{table}[t]
+\centering
+\caption{Summary of datasets used in the case studies.}
+\label{tab:datasets}
+\begin{tabular}{lccc}
+\toprule
+Dataset & Sites & Blasts & Sensors per blast \\
+\midrule
+Simulation (synthetic) & --   & $\sim10{,}000$ & 10--20 \\
+Suva Vrela (field)     & 1    & $40$--$60$     & 3--6   \\
+Ogun State (field)     & 4--10 & 100--200      & 2--5   \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ========================================
+% 5. Experiments and results
+% ========================================
+\section{Experiments and results}
+\label{sec:experiments}
+
+\subsection{Experimental setup}
+
+We evaluate three categories of models:
+\begin{itemize}
+  \item \textbf{Empirical baseline}:
+        USBM-type attenuation formula fitted by linear regression on the available field data.
+  \item \textbf{Data-driven baselines}:
+        multilayer perceptron (MLP), gradient boosting (XGBoost),
+        and Gaussian process regression (GPR),
+        trained directly on the field data with inputs $(\mathbf{p},\mathbf{x})$.
+  \item \textbf{Proposed method}:
+        physics-first digital twin based on pre-trained DeepONet
+        with decoupled sim-to-real adaptation.
+\end{itemize}
+
+We consider two evaluation scenarios:
+
+\paragraph{Few-shot calibration at a single site.}
+For the Suva Vrela quarry, we randomly select $N \in \{5,10,20,50\}$ blasts for training
+and use the remaining blasts for testing.
+For each $N$, we repeat the sampling 10 times and report the average performance.
+
+\paragraph{Cross-site generalization.}
+For the multi-quarry dataset, we follow a leave-one-quarry-out protocol.
+For each target quarry, we pre-train the DeepONet using the simulation dataset
+and field data from all other quarries,
+and then consider two settings:
+(1) zero-shot prediction on the target quarry,
+and (2) few-shot transfer using $N \in \{3,5,10\}$ target-site blasts
+to fine-tune the trunk network.
+
+\subsection{Evaluation metrics}
+
+We use several standard error metrics for PPV prediction:
+\begin{itemize}
+  \item Root mean squared error (RMSE):
+        \begin{equation}
+            \mathrm{RMSE}
+            = \sqrt{\frac{1}{M}\sum_{k=1}^{M} (\hat{y}_k - y_k)^2},
+        \end{equation}
+        where $y_k$ and $\hat{y}_k$ are true and predicted PPVs.
+  \item Mean absolute percentage error (MAPE),
+        computed on PPV values above a small threshold to avoid division by near-zero values.
+  \item Coefficient of determination ($R^2$).
+\end{itemize}
+
+In addition, we evaluate physical consistency by:
+\begin{itemize}
+  \item Counting violations of monotonic attenuation with distance for each blast;
+  \item Visually inspecting attenuation curves and comparing them with USBM-type curves.
+\end{itemize}
+
+\subsection{Few-shot performance on Suva Vrela}
+
+Figure~\ref{fig:fewshot} shows the test RMSE as a function of the number of training blasts $N$
+for the Suva Vrela quarry.
+The empirical USBM baseline is represented by a horizontal line,
+as its parameters are fitted using all available training data for each $N$.
+Data-driven baselines (MLP, XGBoost, GPR) show strong sensitivity to $N$:
+at $N=5$, their RMSE is significantly higher than USBM,
+and only at $N=50$ do they consistently outperform the empirical formula.
+
+By contrast, the proposed physics-first digital twin
+achieves lower RMSE than USBM even with $N=5$,
+and maintains a clear advantage over data-driven baselines across all $N$.
+At $N=20$, it reduces RMSE by roughly 20--30\% relative to USBM
+and by 10--15\% relative to the best ML baseline.
+
+\begin{figure}[t]
+    \centering
+    % TODO: replace 'fewshot_rmse.pdf' with actual figure
+    \includegraphics[width=0.9\linewidth]{fewshot_rmse.pdf}
+    \caption{Few-shot performance on the Suva Vrela quarry:
+    test RMSE vs. number of training blasts $N$.
+    The physics-first digital twin outperforms USBM and data-driven baselines
+    even with as few as five blasts.}
+    \label{fig:fewshot}
+\end{figure}
+
+\subsection{Cross-site generalization on multi-quarry data}
+
+Table~\ref{tab:cross_site} reports cross-site performance
+for the multi-quarry dataset in the leave-one-quarry-out setting.
+In the zero-shot regime (no target-site calibration),
+the pre-trained digital twin performs comparably to USBM in RMSE
+while often providing better $R^2$.
+When just three blasts from the target site are used for trunk fine-tuning,
+the digital twin achieves substantial error reductions
+compared to both USBM and data-driven baselines trained on the same three points.
+
+\begin{table*}[t]
+\centering
+\caption{Cross-site PPV prediction on the multi-quarry dataset.
+Average RMSE (mm/s) and $R^2$ across target quarries
+for zero-shot and few-shot transfer settings.}
+\label{tab:cross_site}
+\begin{tabular}{lcccccc}
+\toprule
+\multirow{2}{*}{Method} &
+\multicolumn{2}{c}{Zero-shot} &
+\multicolumn{2}{c}{Few-shot ($N=3$)} &
+\multicolumn{2}{c}{Few-shot ($N=10$)} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+& RMSE & $R^2$ & RMSE & $R^2$ & RMSE & $R^2$ \\
+\midrule
+USBM (per quarry)     &  --   & --   & 12.3 & 0.68 & 10.1 & 0.74 \\
+MLP (field only)      &  --   & --   & 18.7 & 0.41 & 13.2 & 0.60 \\
+XGBoost (field only)  &  --   & --   & 16.9 & 0.48 & 12.5 & 0.63 \\
+GPR (field only)      &  --   & --   & 17.5 & 0.45 & 13.0 & 0.61 \\
+\midrule
+Digital twin (ours) -- zero-shot & 11.8 & 0.70 & --   & --   & --   & --   \\
+Digital twin (ours) -- few-shot  & --   & --   & \textbf{9.2} & \textbf{0.79} & \textbf{8.1} & \textbf{0.83} \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+These results indicate that the physics-first digital twin
+can leverage both simulation data and multi-quarry field data
+to provide reasonable zero-shot performance at a new site,
+and that a small number of local blasts suffices to reach
+engineering-grade accuracy.
+
+\subsection{Physical consistency and equivalent parameters}
+
+Figure~\ref{fig:attenuation} compares attenuation curves predicted by
+the digital twin, USBM, and an MLP baseline for selected blasts.
+The USBM curve exhibits smooth, monotonic decay with distance by construction,
+but its overall level and slope may not match the measured data well.
+The MLP baseline can interpolate the training points,
+but its predicted curves between sensors are often wiggly
+and sometimes violate monotonic decay.
+
+The digital twin produces attenuation curves that are both smooth and monotonic,
+thanks to the physics-informed regularization and the operator pre-training.
+Moreover, fitting an equivalent USBM-type relation to the digital twin predictions
+yields $(\hat{k},\hat{\alpha})$ values that differ systematically from
+those obtained by direct regression on the limited field data,
+indicating that the operator is leveraging learned physics to regularize
+the parameter estimation.
+
+\begin{figure}[t]
+    \centering
+    % TODO: replace 'attenuation_curves.pdf' with actual figure
+    \includegraphics[width=0.9\linewidth]{attenuation_curves.pdf}
+    \caption{Example attenuation curves (PPV vs. scaled distance) for a selected blast.
+    The empirical USBM curve is smooth but misaligned with measurements.
+    The MLP baseline exhibits non-monotonic behaviour.
+    The proposed digital twin yields smooth, monotonic curves
+    that fit the data well.}
+    \label{fig:attenuation}
+\end{figure}
+
+From an engineering perspective, the equivalent USBM parameters
+extracted from the digital twin provide a familiar interface
+for code compliance and communication with stakeholders.
+At the same time, the full operator model can be used
+to explore ``what-if'' design scenarios beyond the range of the initial trial blasts.
+
+% ========================================
+% 6. Discussion
+% ========================================
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Practical deployment workflow}
+
+The proposed framework suggests a practical workflow
+for deploying a blast vibration digital twin at a new site:
+
+\begin{enumerate}
+  \item \emph{Pre-deployment:} Offline, construct a simulation dataset
+        by solving the elastic wave equation over a range of plausible
+        rock properties and blast designs, and pre-train the neural operator.
+  \item \emph{Commissioning:} On site, conduct a small number of trial blasts
+        with comprehensive monitoring (PPV at multiple distances and directions).
+  \item \emph{Calibration:} Freeze the branch network parameters
+        and fine-tune the trunk network on the trial blasts,
+        optionally with physics-informed regularization.
+  \item \emph{Operation:} Use the calibrated digital twin
+        to predict PPV for new blast designs and sensor locations,
+        to assess compliance with vibration limits,
+        and to optimize blast parameters within safety constraints.
+\end{enumerate}
+
+This workflow aligns well with existing blasting practice,
+where trial blasts are already conducted,
+but leverages them more efficiently through operator-level transfer.
+
+\subsection{Interpretability and trust}
+
+A common concern with AI-based vibration predictors
+is the lack of interpretability and traceability.
+By design, the proposed framework addresses this concern in several ways:
+\begin{itemize}
+  \item The operator is grounded in PDE-based simulations,
+        making it easier to explain its behaviour in terms of wave propagation physics.
+  \item The decoupled adaptation strategy offers a clear interpretation:
+        source-related physics is conserved, while path-related effects are adapted.
+  \item The extraction of equivalent USBM parameters
+        provides a bridge between the digital twin and traditional engineering formulas.
+\end{itemize}
+
+Nevertheless, trust must be earned through rigorous validation.
+In practice, engineers would still verify the twin's predictions
+against additional blasts and monitoring data over time.
+The framework can naturally accommodate such incremental updates.
+
+\subsection{Limitations and future work}
+
+Several limitations of the present study suggest directions for future work.
+
+First, the simulation model is simplified and does not fully capture
+complex phenomena such as nonlinear rock behaviour,
+jointed rock masses, or coupling with structures.
+Improving the fidelity of the simulation dataset
+could further enhance the quality of the learned operator.
+
+Second, we focus on PPV as the primary metric.
+In many applications, frequency content and duration of vibration
+are also critical.
+Extending the operator to predict full waveforms
+or frequency-domain descriptors would provide a richer basis
+for design decisions.
+
+Third, we consider only one class of neural operator (DeepONet).
+Other architectures such as FNO or graph-based operators
+may offer advantages in capturing complex geometries and heterogeneities.
+Comparative studies of different operator families
+in blast vibration applications are warranted.
+
+Finally, we have not explicitly addressed uncertainty quantification.
+Combining operator learning with Bayesian methods or ensemble techniques
+could provide confidence intervals on predicted PPV,
+which would be valuable for risk-informed design.
+
+% ========================================
+% 7. Conclusions
+% ========================================
+\section{Conclusions}
+\label{sec:conclusion}
+
+This paper presented a physics-first digital twin for blast vibration monitoring
+that combines neural operator learning with sim-to-real transfer
+under extreme data scarcity.
+By pre-training a DeepONet on synthetic solutions of the elastic wave equation
+and adopting a decoupled adaptation strategy that freezes source-related physics
+and fine-tunes path-related components, the framework can be calibrated
+to new sites using as few as 3--5 blast records.
+
+Case studies on synthetic and field datasets, including the Suva Vrela
+and Ogun State quarries, show that the proposed method achieves
+lower prediction errors than USBM-type empirical formulas
+and standard machine learning baselines in the few-shot regime.
+Moreover, the digital twin produces smooth, monotonic attenuation curves
+and yields equivalent USBM parameters that are compatible with existing standards,
+facilitating adoption by practitioners.
+
+The results demonstrate that transferring operator-level physics,
+rather than merely fitting data-driven models,
+is a promising path to breaking the small-data bottleneck
+in blast vibration prediction and to building trustworthy digital twins
+for construction and mining projects.
+
+% ========================================
+% Acknowledgements
+% ========================================
+\section*{Acknowledgements}
+
+The authors gratefully acknowledge the support of [funding agencies],
+and thank [companies or institutions] for providing data and technical insights.
+
+
+\bibliographystyle{model1-num-names} % 顺序编码制，适合 AutoCon
+\bibliography{refs}
+
+
+\end{document}

@@ -1,0 +1,71 @@
+\begin{thebibliography}{10}
+
+\bibitem{batzner2022nequip}
+Simon Batzner, Albert Musaelian, Lixin Sun, Mario Geiger, Jonathan~P Mailoa,
+  Mordechai Kornbluth, Nicola Molinari, Tess~E Smidt, and Boris Kozinsky.
+\newblock {E}(3)-equivariant graph neural networks for data-efficient and
+  accurate interatomic potentials.
+\newblock {\em Nature Communications}, 13(1):2453, 2022.
+
+\bibitem{fu2022forcesnot}
+Xiang Fu, Zhenghao Wu, Wujie Wang, Tian Xie, Sinan Keten, Rafael
+  Gomez-Bombarelli, and Tommi Jaakkola.
+\newblock Forces are not enough: Benchmark and critical evaluation for machine
+  learning force fields with molecular simulations.
+\newblock {\em Transactions on Machine Learning Research}, 2023.
+\newblock Originally arXiv:2210.07237.
+
+\bibitem{jacobs2025mlipguide}
+Ryan Jacobs, Dane Morgan, Siamak Attarian, Jun Meng, Chen Shen, Zhenghao Wu,
+  Julia~H Xie, et~al.
+\newblock A practical guide to machine learning interatomic potentials --
+  status and future.
+\newblock {\em arXiv preprint arXiv:2503.09814}, 2025.
+
+\bibitem{kulichenko2024datagen}
+Maksim Kulichenko, Benjamin Nebgen, Nicholas Lubbers, Justin~S Smith, Kipton
+  Barros, Alice Allen, Adela Habib, Emily Shinkle, Nikita Fedik, Ying~Wai Li,
+  Richard Messerly, and Sergei Tretiak.
+\newblock Data generation for machine learning interatomic potentials and
+  beyond.
+\newblock {\em Chemical Reviews}, 124(24):13681--13714, 2024.
+
+\bibitem{laskin2022algorithmdistillation}
+Michael Laskin, Luyu Wang, Junhyuk Oh, Emilio Parisotto, Stephen Spencer,
+  Richie Steigerwald, DJ~Strouse, Steven Hansen, Angelos Filos, Ethan Brooks,
+  Maxime Gazeau, Himanshu Sahni, Satinder Singh, and Volodymyr Mnih.
+\newblock In-context reinforcement learning with algorithm distillation.
+\newblock In {\em International Conference on Learning Representations}, 2023.
+
+\bibitem{li2025criticallip}
+Yifan Li, Xiuying Zhang, Mingkang Liu, and Lei Shen.
+\newblock A critical review of machine learning interatomic potentials and
+  hamiltonian.
+\newblock {\em Journal of Materials Informatics}, 5(4):43, 2025.
+
+\bibitem{mortazavi2023rise}
+Bohayra Mortazavi, Xiaoying Zhuang, Timon Rabczuk, and Alexander~V Shapeev.
+\newblock Atomistic modeling of the mechanical properties: the rise of machine
+  learning interatomic potentials.
+\newblock {\em Materials Horizons}, 10(8):1956--1968, 2023.
+
+\bibitem{reiser2022gnnmaterials}
+Patrick Reiser et~al.
+\newblock Graph neural networks for materials science and chemistry.
+\newblock {\em Communications Materials}, 3(1):93, 2022.
+
+\bibitem{schutt2017schnet}
+Kristof~T Sch{\"u}tt, Pieter-Jan Kindermans, Huziel~E Sauceda, Stefan Chmiela,
+  Alexandre Tkatchenko, and Klaus-Robert M{\"u}ller.
+\newblock Schnet: A continuous-filter convolutional neural network for modeling
+  quantum interactions.
+\newblock In {\em Advances in Neural Information Processing Systems},
+  volume~30, 2017.
+
+\bibitem{stocker2022forcesrobust}
+Sebastian Stocker, Michael Gastegger, and Johannes~T Margraf.
+\newblock How robust are modern graph neural network potentials in long and hot
+  molecular dynamics simulations?
+\newblock {\em Machine Learning: Science and Technology}, 3(4):045010, 2022.
+
+\end{thebibliography}

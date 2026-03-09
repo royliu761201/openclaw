@@ -1,0 +1,14 @@
+{
+  "metrics": {
+    "active_bidding_ctr": "2.85",
+    "active_bidding_ltv": "1.54",
+    "active_bidding_ecpa": "0.98",
+    "ppo_ctr": "3.12",
+    "linucb_ltv": "1.00",
+    "stability_score": "0.91"
+  },
+  "parameters": {
+    "training_steps": "1M",
+    "learning_rate": "1e-4"
+  }
+}

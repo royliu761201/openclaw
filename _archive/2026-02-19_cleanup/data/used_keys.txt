@@ -1,0 +1,9 @@
+Differentiable Safety Barriers
+Physics-Guarded Active Inference (P-GAI)
+Precision-Weighted Plasticity
+degrave2022magnetic
+freidberg2014ideal
+friston2010free
+iter2020
+refined_pid
+tessier2018reward

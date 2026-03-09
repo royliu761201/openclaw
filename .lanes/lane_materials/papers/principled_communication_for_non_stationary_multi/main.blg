@@ -1,0 +1,106 @@
+This is BibTeX, Version 0.99d (TeX Live 2025)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: main.aux
+The style file: plain.bst
+Database file #1: refs.bib
+Repeated entry---line 15 of file refs.bib
+ : @misc{ref_new_ActiveInference
+ :                              ,
+I'm skipping whatever remains of this entry
+Warning--I didn't find a database entry for "papoudakis2021benchmarking"
+Warning--I didn't find a database entry for "gronauer2022multi"
+Warning--I didn't find a database entry for "yuan2023multi"
+Warning--I didn't find a database entry for "foerster2016learning"
+Warning--I didn't find a database entry for "sukhbaatar2016learning"
+Warning--I didn't find a database entry for "hu2021multi"
+Warning--I didn't find a database entry for "calvo2023survey"
+Warning--I didn't find a database entry for "friston2010free"
+Warning--I didn't find a database entry for "parrill2022active"
+Warning--I didn't find a database entry for "millidge2024sophisticated"
+Warning--I didn't find a database entry for "smith2022active"
+Warning--I didn't find a database entry for "rashid2018qmix"
+Warning--I didn't find a database entry for "lowe2017multi"
+Warning--I didn't find a database entry for "wei2022chain"
+Warning--I didn't find a database entry for "yu2022surprising"
+Warning--I didn't find a database entry for "zhao2024adaptive"
+Warning--I didn't find a database entry for "al-shedivat2018continuous"
+Warning--I didn't find a database entry for "xie2024learning"
+Warning--I didn't find a database entry for "calvano2020artificial"
+Warning--I didn't find a database entry for "schut2024collusion"
+Warning--I didn't find a database entry for "das2019tarmac"
+Warning--I didn't find a database entry for "wang2024survey"
+Warning--I didn't find a database entry for "shinn2024reflexion"
+Warning--I didn't find a database entry for "zhang2024proagent"
+Warning--I didn't find a database entry for "hu2024towards"
+Warning--I didn't find a database entry for "sharma2017learning"
+Warning--I didn't find a database entry for "parrill_epistemic_2023"
+Warning--I didn't find a database entry for "friston2024collective"
+Warning--I didn't find a database entry for "friston2017active"
+Warning--I didn't find a database entry for "safron2024active"
+Warning--I didn't find a database entry for "albarracin2023epistemic"
+Warning--I didn't find a database entry for "smith2024active"
+Warning--I didn't find a database entry for "stulp2024active"
+Warning--I didn't find a database entry for "friedman2024active"
+Warning--I didn't find a database entry for "yang2024foundation"
+Warning--I didn't find a database entry for "wang2021qplex"
+Warning--I didn't find a database entry for "peng2021facmac"
+Warning--I didn't find a database entry for "langosco2024goal"
+Warning--I didn't find a database entry for "mousavi2024comprehensive"
+Warning--I didn't find a database entry for "duan2024multiagent"
+Warning--I didn't find a database entry for "parr2022active"
+Warning--I didn't find a database entry for "da2020active"
+Warning--I didn't find a database entry for "zheng2022multiagent"
+Warning--I didn't find a database entry for "brown2020language"
+Warning--I didn't find a database entry for "friston2015active"
+Warning--I didn't find a database entry for "millidge2023mathematical"
+Warning--I didn't find a database entry for "hu2023language"
+Warning--I didn't find a database entry for "wang2024active"
+Warning--I didn't find a database entry for "fountas2020active"
+Warning--I didn't find a database entry for "Foerster2017"
+Warning--I didn't find a database entry for "Sukhbaatar2016"
+Warning--to sort, need author or key in ref_new_Largelanguagemo
+Warning--to sort, need author or key in ref_new_TheMissingRewar
+Warning--to sort, need author or key in ref_new_ActiveInference
+Warning--to sort, need author or key in ref_new_FreeEnergyEquil
+You've used 4 entries,
+            2118 wiz_defined-function locations,
+            567 strings with 5584 characters,
+and the built_in function-call counts, 694 in all, are:
+= -- 68
+> -- 4
+< -- 0
++ -- 5
+- -- 0
+* -- 22
+:= -- 85
+add.period$ -- 12
+call.type$ -- 4
+change.case$ -- 12
+chr.to.int$ -- 0
+cite$ -- 8
+duplicate$ -- 28
+empty$ -- 93
+format.name$ -- 0
+if$ -- 169
+int.to.chr$ -- 0
+int.to.str$ -- 4
+missing$ -- 0
+newline$ -- 23
+num.names$ -- 0
+pop$ -- 40
+preamble$ -- 1
+purify$ -- 8
+quote$ -- 0
+skip$ -- 20
+stack$ -- 0
+substring$ -- 21
+swap$ -- 4
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 16
+warning$ -- 4
+while$ -- 0
+width$ -- 5
+write$ -- 38
+(There was 1 error message)

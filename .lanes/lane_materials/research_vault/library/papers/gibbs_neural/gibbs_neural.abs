@@ -1,0 +1,13 @@
+Data-driven surrogate models based on neural operators such as DeepONet and Fourier Neural Operators (FNO) have recently emerged as powerful tools for accelerating simulations of parametric partial differential equations (PDEs).
+However, when applied to hyperbolic conservation laws with strong shocks, these models inherit the classical \emph{Gibbs phenomenon} from spectral methods, leading to spurious oscillations near discontinuities and severe underestimation of peak overpressure---a critical metric in blast engineering.
+Standard remedies, such as global spectral filtering or total variation (TV) penalties, tend to smear the shock front and degrade the prediction of engineering quantities of interest.
+
+Motivated by the requirements of intelligent blasting (``digital and intelligent blasting'') and blast-wave safety assessment, we propose a \emph{discontinuity-gated spectral DeepONet} that explicitly targets Gibbs oscillations in neural operators for blast-driven shocks.
+Our architecture decomposes the operator output into a \emph{mollified backbone} and a \emph{viscous detail} term.
+The backbone is trained to fit a Gaussian-blurred target field, while the detail branch employs SIREN-like periodic activations with learnable spectral viscosity to recover sharp gradients.
+A data-driven discontinuity gate, constructed from Sobel-type gradient indicators on the backbone prediction, acts as a neural analogue of a shock sensor and activates the viscous detail only near shock and contact discontinuities.
+The final loss couples mean-squared error with a gate-weighted TV regularization and a sparsity prior on the gate, thereby suppressing oscillations outside shocks while preserving physically meaningful peaks.
+
+We evaluate the proposed model on a family of blast-relevant benchmark problems including one-dimensional Riemann problems (Sod, Lax, and strong blast waves) and two-dimensional blast-wave propagation in confined geometries.
+Compared with baseline DeepONet and FNO surrogates, our method significantly reduces overshoot/undershoot near shocks, recovers peak overpressure with higher fidelity, and exhibits a more physical high-wavenumber energy spectrum.
+These results demonstrate that discontinuity-aware spectral mechanisms are essential for deploying neural operators in safety-critical blast simulation pipelines and lay a foundation for integrating operator learning into intelligent blasting platforms.

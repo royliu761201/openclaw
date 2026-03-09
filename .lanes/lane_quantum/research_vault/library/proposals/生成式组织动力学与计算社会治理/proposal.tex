@@ -1,0 +1,154 @@
+\documentclass[12pt,a4paper,fontset=mac]{ctexart}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{Heiti SC}
+\usepackage{gbt7714}
+
+% --- 基础宏包 ---
+\usepackage{geometry}
+\usepackage{titlesec}
+\usepackage{setspace}
+\usepackage{xcolor}
+% \usepackage{cite}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{tcolorbox}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{caption}
+
+% --- 页面布局 ---
+\geometry{left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+\onehalfspacing 
+
+% =================================================================
+% 核心修改：标题编号样式定义
+% =================================================================
+
+% 1. 设置一级标题（Section）样式为：一、标题
+% \chinese{section} 会自动把 1 变成 一
+\titleformat{\section}
+  {\Large\bfseries\sffamily\color{black}} % 字体格式：大号、加粗、黑体
+  {\chinese{section}、}                   % 编号格式：一、
+  {0em}                                   % 编号与标题的间距
+  {}
+
+% 2. 设置二级标题（Subsection）样式为：1. 标题
+% \arabic{subsection} 会显示阿拉伯数字 1, 2, 3
+\titleformat{\subsection}
+  {\large\bfseries\sffamily\color{darkgray}} % 字体格式：中号、加粗、深灰
+  {\arabic{subsection}.}                     % 编号格式：1. (去掉前面的章节号)
+  {0.5em}                                    % 编号与标题的间距
+  {}
+
+% =================================================================
+
+% --- 页眉页脚 ---
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{\small \textit{江汉大学学科交叉前沿方向建设行动纲要 (2025-2028)}}
+\rhead{\small \textit{GOD-CSG Action Plan}}
+\cfoot{\thepage}
+
+\begin{document}
+
+% --- 封面 ---
+\begin{titlepage}
+    \centering
+    \vspace*{1.5cm}
+    {\Large \textbf{江汉大学学科交叉前沿方向建设行动纲要}}\\[0.8cm]
+    \rule{0.8\textwidth}{2pt}\\[0.5cm]
+    {\huge \bfseries 生成式组织动力学与计算社会治理}\\[0.3cm]
+    {\large \textbf{Generative Organizational Dynamics and Computational Social Governance}}\\[0.5cm]
+    \rule{0.8\textwidth}{2pt}\\[2cm]
+    
+    \begin{tcolorbox}[colback=gray!5,colframe=black,width=0.95\textwidth,arc=2mm,boxrule=1pt, title=\textbf{战略愿景}]
+        \vspace{0.2cm}
+        \parbox{0.95\textwidth}{\small
+        \onehalfspacing
+        本纲要旨在确立“生成式组织动力学与计算社会治理”这一新兴交叉学科范式。依托江汉大学国家级课题资源与人工智能优势，融合\textbf{复杂适应系统理论}与\textbf{生成式智能体技术}，构建高保真、可解释、具备历史一致性的社会组织数字孪生系统。本行动计划致力于将“地方高校转型”的治理经验转化为可计算的科学模型，打造具有国际影响力的“人工智能+教育治理”江大样本，抢占计算社会科学的第四范式高地。}
+    \end{tcolorbox}
+    \vspace{3.5cm}
+    \textbf{牵头负责人：} 覃道明（研究员）、刘晓华（教授）\\
+    \textbf{依托单位：} 江汉大学\\
+    \textbf{执行周期：} 2025 -- 2028\\
+    \textbf{制定日期：} \today
+\end{titlepage}
+
+% --- 正文 (注意：这里去掉了手动写的“一、”和“1.”，让系统自动生成) ---
+
+\section{战略必要性：从“经验治理”到“计算治理”}
+
+\subsection{填补复杂系统治理的理论真空}
+传统管理学往往将高校视为静态的机械系统，忽视了其作为\textbf{复杂适应系统 (CAS)} 的本质特征\cite{holland1995hidden, miller2007complex}。在应用型转型等重大改革中，微观个体的认知博弈如何涌现为宏观的“制度同形”或“政策阻滞”\cite{dimaggio1983iron}，是传统方法无法解析的黑箱。我们需要一种能够捕捉\textbf{“非线性涌现”}与\textbf{“临界相变”}的新型科学工具。
+
+\subsection{抢占生成式仿真 (Generative Simulation) 的技术高地}
+随着 \textbf{MetaGPT} 等多智能体协作框架的成熟\cite{hong2023metagpt}，人工智能已具备模拟复杂科层组织的能力。利用大语言模型 (LLM) 重构社会组织，不仅是技术的升级，更是社会科学研究范式的代际跃迁\cite{epstein2006generative}。江汉大学有责任利用在研国家课题的先发优势，率先建立该领域的中国标准。
+
+\section{建设内涵：定义 GOD-CSG 范式}
+
+\subsection{核心定义}
+\textbf{生成式组织动力学与计算社会治理 (GOD-CSG)} 是指：利用领域知识增强的生成式智能体，在“数字平行世界”中重构科层组织的\textbf{结构 (Structure)}、\textbf{认知 (Cognition)} 与 \textbf{动力 (Dynamics)}，实现对治理策略的科学推演。
+
+\subsection{建设目标：打造“一库一模一平台”}
+\begin{itemize}
+    \item \textbf{一库（隐性知识语料库）}：建成包含千余份深度访谈与十年政策演变的高校治理专用 RAG 知识库，沉淀“体制内思维”图谱。
+    \item \textbf{一模（组织演化大模型）}：训练出融合 \textbf{CoALA 认知架构}与 \textbf{MetaGPT 协作流}的专用 Agent 模型，通过“组织图灵测试”。
+    \item \textbf{一平台（政策风洞系统）}：开发具备\textbf{“历史回溯验证”}与\textbf{“因果推断”}能力的仿真推演平台，实现对教育评价改革的压力测试。
+\end{itemize}
+
+\section{实施路径：四层架构技术路线}
+
+本行动纲要采取“结构仿真-认知对齐-动力演化-因果验证”的纵深技术路线：
+
+\subsection*{第一层：结构仿真 (Structural Layer) —— 复刻科层制}
+\textbf{任务}：解决组织“没规矩”的问题。
+\begin{itemize}
+    \item 借鉴 \textbf{MetaGPT} \cite{hong2023metagpt} 的 SOP (标准作业程序) 思想，将高校治理体系映射为 Agent 协作流。
+    \item 定义角色（如：校党委、职能部门、学院、教师），固化“红头文件流转”与“绩效考核”的刚性流程，模拟科层制的\textbf{制度约束}。
+\end{itemize}
+
+\subsection*{第二层：认知对齐 (Cognitive Layer) —— 注入潜规则}
+\textbf{任务}：解决智能体“不像人”的问题。
+\begin{itemize}
+    \item 基于 \textbf{CoALA 架构} \cite{sumers2023cognitive}，引入“程序性记忆”与“情景记忆”。
+    \item 利用国家课题积累的访谈数据，通过 SFT (监督微调) 注入\textbf{“隐性知识”}（如：教师对“非升即走”的焦虑、对“帽子”的路径依赖），使 Agent 具备真实的社会学属性\cite{granovetter1985economic}。
+\end{itemize}
+
+\subsection*{第三层：动力演化 (Dynamics Layer) —— 涌现相变}
+\textbf{任务}：解决系统“不动”的问题。
+\begin{itemize}
+    \item 引入\textbf{演化博弈论} \cite{nowak2006evolutionary}，构建教师在“教学-科研-社会服务”之间的精力分配矩阵。
+    \item 监测系统的\textbf{序参量}（如：应用型成果占比），捕捉改革过程中的\textbf{“临界点” (Tipping Points)} \cite{scheffer2009early}，预警改革失败的风险。
+\end{itemize}
+
+\subsection*{第四层：验证与归因 (Validation \& Attribution) —— 科学决策}
+\textbf{任务}：解决结果“不可信”的问题。
+\begin{itemize}
+    \item \textbf{历史回溯验证}：输入 2015 年数据，要求模型推演至 2024 年。只有与真实历史轨迹 KL 散度小于阈值的模型才被采信。
+    \item \textbf{神经符号归因}：引入 \textbf{Causal Graphs (因果图)} \cite{pearl2018book}，不只输出建议，更输出“政策 A $\to$ 心理变化 B $\to$ 行为 C”的因果链条，消除 AI 黑箱。
+\end{itemize}
+
+\section{资源依托与保障}
+
+\subsection{顶层设计与理论支撑}
+\textbf{覃道明研究员（党委书记）}作为学科带头人，全面统筹本方向的顶层设计。覃书记对高等教育规律的深刻把握及对国家课题的统筹，为模型提供了\textbf{顶层政治站位}与\textbf{现实效度保障}。本行动方案是\textbf{在研国家社科基金项目“地方高校应用型转型困境及治理策略研究”（批准号：B1A250166）}的数字化升维与方法论突破。
+
+\subsection{技术力量与算法储备}
+\textbf{刘晓华教授团队}负责技术攻关，掌握大模型微调、多智能体协同及复杂网络建模的核心算法，负责将社会学理论转化为可计算的代码逻辑。
+
+\subsection{核心数据资产 (Strategic Data Assets)}
+依托国家课题，团队掌握了极具壁垒的\textbf{独家数据资源}：
+\begin{itemize}
+    \item \textbf{长周期纵向监测数据}：覆盖转型关键期的全要素数据，为模型的“历史回溯验证”提供了 Ground Truth。
+    \item \textbf{治理专家知识库}：包含大量决策博弈、教师心态的深度记录，这是通用大模型无法获取的\textbf{“领域暗知识”}。
+\end{itemize}
+
+\subsection{平台保障}
+依托江汉大学建设\textbf{“生成式智能与教育治理实验室”}，整合全校算力资源与社科研究力量，形成“理论研究-技术开发-决策咨询”的闭环创新生态。
+
+\vspace{1cm}
+\bibliographystyle{gbt7714-numerical}
+\bibliography{refs} 
+
+\end{document}

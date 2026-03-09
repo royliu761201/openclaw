@@ -1,0 +1,31 @@
+{
+    "default_author": {
+        "name_en": "Xiaohua Liu",
+        "name_zh": "刘晓华",
+        "email": "xiaohualiu@jhun.edu.cn",
+        "affiliation_en": "School of Artificial Intelligence, Jianghan University, Wuhan, Hubei, 430056, China",
+        "affiliation_zh": "江汉大学人工智能学院，湖北省武汉市，430056",
+        "orcid": "0000-0003-0384-5431"
+    },
+    "roles": {
+        "first_author": true,
+        "corresponding_author": true
+    },
+    "funding": {
+        "physdiff_nature": {
+            "national_key_rd": {
+                "id": "024ZD0520100",
+                "title_zh": "结直肠癌及癌前病变的风险识别、筛查早诊及干预研究",
+                "title_en": "Risk identification, screening, early diagnosis, and intervention research of colorectal cancer and precancerous lesions",
+                "program_zh": "癌症、心脑血管、呼吸和代谢性疾病防治研究",
+                "budget": "13.8M RMB"
+            },
+            "xiongan_rd": {
+                "id": "2024HBQZYCSB046",
+                "title_zh": "智能癌症防治平台研发及产业化",
+                "title_en": "R&D and Industrialization of Intelligent Cancer Prevention and Control Platform",
+                "budget": "2M RMB"
+            }
+        }
+    }
+}

@@ -1,0 +1,146 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[heading=true, fontset=mac]{ctex}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{xcolor}
+
+% 页面设置
+\geometry{left=2.5cm, right=2.5cm, top=2.5cm, bottom=2.5cm}
+\setlength{\parindent}{2em}
+\onehalfspacing
+
+% 页眉页脚配置
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[C]{[项目名称] 专利交底书 (Internal Ref: [编号])}
+\fancyfoot[C]{\thepage}
+
+% 标题信息
+\title{\textbf{[发明名称：一种基于...的方法/系统]}}
+\author{发明人：AI4S 团队}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{著录项目}
+\begin{itemize}
+    \item \textbf{发明名称：} [全称]
+    \item \textbf{技术领域：} [具体领域1]、[具体领域2]
+    \item \textbf{关键词：} [关键词1]，[关键词2]，[关键词3]
+\end{itemize}
+
+\section{背景技术与技术问题}
+
+\subsection{现有技术}
+\textit{（简述当前主流的解决方案，例如 SFT, RLHF, 传统数值求解器等）}
+\begin{enumerate}
+    \item \textbf{[方案一]：} ...
+    \item \textbf{[方案二]：} ...
+\end{enumerate}
+
+\subsection{技术缺陷}
+\textit{（客观描述现有技术无法解决的具体痛点，避免主观贬低）}
+现有技术在处理 [特定场景] 时，存在以下缺陷：
+\begin{itemize}
+    \item \textbf{缺陷一（[命名]）：} ...
+    \item \textbf{缺陷二（[命名]）：} ...
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.8\textwidth}{\centering \vspace{1.5cm} [示意图 1：现有技术的缺陷/问题场景] \vspace{1.5cm}}}
+    \caption{现有技术的问题示意图}
+    \label{fig:problem}
+\end{figure}
+
+\subsection{技术问题}
+本发明要解决的核心技术问题是：\textbf{如何在 [约束条件] 下，实现 [核心目标]（例如：逻辑一致性、物理守恒性）。}
+
+\section{技术方案}
+
+\subsection{总体思路}
+本发明提出了一种 \textbf{[架构名称]}。其核心思路在于 [一句话核心机制]（例如：引入可微一致性层，将逻辑约束转化为训练损失）。
+
+\subsection{与现有技术的区别}
+\begin{itemize}
+    \item \textbf{对比 [现有技术A]：} [现有技术A] 侧重于 ...，而本发明侧重于 ...（本质区别）。
+    \item \textbf{机制差异：} 本发明通过 [具体手段] 避免了 [常见问题]（例如：无需重训练、解耦设计）。
+\end{itemize}
+
+\subsection{系统架构图}
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.9\textwidth}{\centering \vspace{2cm} [示意图 2：本发明的总体系统架构图] \vspace{2cm}}}
+    \caption{系统架构图}
+    \label{fig:architecture}
+\end{figure}
+
+\subsection{核心模块详解}
+
+\subsubsection{模块一：[名称] ($\mathcal{M}_1$)}
+\begin{itemize}
+    \item \textbf{功能：} ...
+    \item \textbf{输入/输出：} 输入 $X$，输出 $Y$。
+    \item \textbf{处理逻辑：} ...
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.8\textwidth}{\centering \vspace{1.5cm} [示意图 3：核心模块/算法流程图] \vspace{1.5cm}}}
+    \caption{核心模块工作原理图}
+    \label{fig:module1}
+\end{figure}
+
+\subsubsection{模块二：[名称] ($\mathcal{M}_2$)}
+\begin{itemize}
+    \item \textbf{功能：} ...
+    \item \textbf{核心算法：} ...
+\end{itemize}
+
+\section{有益效果}
+
+\begin{enumerate}
+    \item \textbf{[效果一]：}
+    通过 [技术手段]，实现了 [量化指标提升]（例如：F1 分数提升至 XX\%）。
+    
+    \item \textbf{[效果二]：}
+    解决了 [具体缺陷]，使得 [应用场景] 成为可能。
+\end{enumerate}
+
+\begin{figure}[H]
+    \centering
+    \fbox{\parbox{0.6\textwidth}{\centering \vspace{1.5cm} [示意图 4：性能对比/效果展示图] \vspace{1.5cm}}}
+    \caption{本发明与现有技术的性能对比}
+    \label{fig:performance}
+\end{figure}
+
+\section{具体实施方式}
+
+\subsection{实施例 1：[场景名称]}
+\begin{itemize}
+    \item 步骤 1：...
+    \item 步骤 2：...
+\end{itemize}
+
+\section{权利要求书草案}
+
+\begin{enumerate}
+    \item 一种[发明名称]方法，其特征在于，包括：
+    \begin{itemize}
+        \item 步骤 S1：...
+        \item 步骤 S2：...
+        \item 步骤 S3：...
+    \end{itemize}
+    \item 如权利要求 1 所述的方法，其特征在于，所述步骤 S2 包括...
+    \item 一种系统，包括处理器，配置为执行权利要求 1 所述的方法。
+\end{enumerate}
+
+\end{document}

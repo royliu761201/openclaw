@@ -1,0 +1,30 @@
+
+# ResearchBot Configuration
+
+model_pool:
+  gemini-3:
+    provider: "google"
+    id: "gemini-2.0-flash-exp"  # Updated to real model ID or user's specific preview ID
+  gemini-2.5:
+    provider: "google"
+    id: "gemini-2.0-flash-lite-preview-02-05" # Updated to likely real ID or kept as user specified
+
+# Task Routing Table
+# Maps task_type to model_alias
+task_routing:
+  # High Cognitive Load (Flash)
+  idea_generation: "gemini-3"
+  literature_review: "gemini-3"
+  code_generation: "gemini-3"
+  paper_polishing: "gemini-3"
+  
+  # Low Cognitive Load (Lite)
+  status_monitoring: "gemini-2.5"
+  git_commit_msg: "gemini-2.5"
+  error_log_summary: "gemini-2.5"
+  format_conversion: "gemini-2.5"
+
+paths:
+  ideas: "ideas"
+  templates: "templates"
+  memory: "shared_knowledge"

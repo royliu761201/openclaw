@@ -1,0 +1,273 @@
+\documentclass[11pt,a4paper]{article}
+
+% ======================================================
+% 基础宏包
+% ======================================================
+\usepackage[UTF8,fontset=mac]{ctex}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{Heiti SC}
+\usepackage{amsmath,amssymb,amsthm,bm}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{cite}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{gbt7714}
+
+% ======================================================
+% 页面与样式
+% ======================================================
+\geometry{margin=1.1in}
+
+\definecolor{linkblue}{RGB}{0,51,153}
+\definecolor{citegreen}{RGB}{0,120,80}
+\definecolor{urlblack}{RGB}{30,30,30}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=linkblue,
+    citecolor=citegreen,
+    urlcolor=urlblack,
+    pdfauthor={刘晓华},
+    pdftitle={分布式认知动力学的物理极限}
+}
+
+\titleformat{\section}
+  {\Large\bfseries}
+  {\thesection}
+  {1em}
+  {}
+
+\titleformat{\subsection}
+  {\large\bfseries}
+  {\thesubsection}
+  {1em}
+  {}
+
+% ======================================================
+% 定理环境（定律级）
+% ======================================================
+\newtheorem{law}{定律}
+\newtheorem{theorem}{定理}
+\newtheorem{proposition}{命题}
+\newtheorem{definition}{定义}
+\newtheorem{conjecture}{猜想}
+
+% ======================================================
+% 数学符号
+% ======================================================
+\newcommand{\thetaGT}{\theta^{\star}}
+\newcommand{\syn}{\Delta_{\mathrm{syn}}}
+\newcommand{\config}{\bm{h}}
+\newcommand{\manifold}{\mathcal{M}}
+\newcommand{\proj}{\mathcal{P}}
+\newcommand{\protocol}{\Pi}
+
+% ======================================================
+% 标题信息
+% ======================================================
+\title{\Huge\bfseries
+分布式认知动力学的物理极限\\[0.6em]
+\Large
+——碎片化观测、隐私边界与协同知识的不可恢复性
+}
+
+\author{\Large 刘晓华}
+\date{\Large \today}
+
+\begin{document}
+\maketitle
+
+% ======================================================
+\begin{abstract}
+\noindent
+在隐私保护与物理隔离成为常态的分布式智能系统中，
+协同知识是否\emph{在物理上可被恢复}仍缺乏统一理论。
+本文提出“分布式认知动力学”（Distributed Cognitive Dynamics, DCD）
+作为一项长期研究纲领，
+旨在刻画碎片化观测、隐私边界与能量约束下
+协同信息的可达极限。
+我们提出三条基本定律与两项不可恢复性定理，
+指出线性聚合协议在一类本质协同任务上具有结构性失效，
+并引入“信息视界”与“协同容量”概念，
+将分布式学习问题提升为
+受热力学与信息论双重约束的自然定律问题。
+\end{abstract}
+
+% ======================================================
+\section{引言：从算法改进到自然定律}
+% ======================================================
+
+自 Shannon 建立通信容量理论以来，
+信息处理逐渐被视为一类受自然定律约束的过程~\cite{shannon1948}。
+在计算物理层面，
+Landauer 与 Bennett 进一步揭示了
+信息擦除与能量耗散之间不可规避的联系~\cite{landauer1961irreversibility,bennett1982thermodynamics}。
+
+近年来，联邦学习与隐私计算试图在
+\emph{不共享原始数据}的前提下实现协同建模~\cite{mcmahan2017communication}。
+然而，现有研究大多关注算法收敛性、
+通信效率与经验性能，
+而较少触及如下根本问题：
+
+\begin{quote}
+\emph{在隐私边界与碎片化观测同时存在的条件下，
+协同知识是否在物理与信息论意义上仍然可恢复？}
+\end{quote}
+
+本文的核心主张是：
+在某些条件下，
+协同信息并非“难以学习”，
+而是\textbf{在自然意义上不可恢复}。
+这种不可恢复性并不依赖于模型规模、
+优化策略或训练技巧，
+而是由信息投影、隐私阻尼与能量耗散共同决定。
+
+% ======================================================
+\section{问题设定与协同信息}
+% ======================================================
+
+设存在 $N$ 个主体，
+每个主体仅能观测真相 $\thetaGT$ 在其观测子空间上的投影：
+\[
+x_i = \proj_i(\thetaGT), \quad i=1,\dots,N.
+\]
+
+\begin{definition}[协同信息]
+基于偏信息分解（Partial Information Decomposition, PID）理论~\cite{williams2010nonnegative}，
+我们将协同信息 $\syn$ 定义为：
+仅在联合观测中出现，
+且无法由任何单方或子集线性重构的信息成分。
+\end{definition}
+
+典型实例包括 XOR / parity 类任务，
+其中任意单方观测与标签条件独立，
+但联合观测可完全确定真相。
+这类任务构成了研究协同不可恢复性的最小反例族。
+
+% ======================================================
+\section{三条基本定律}
+% ======================================================
+
+\begin{law}[协同容量定律]
+在给定隐私强度 $\epsilon$、
+通信预算 $B$ 与能量预算 $W$ 的条件下，
+任意分布式协议 $\protocol$
+可提取的协同信息满足上界：
+\[
+\syn(\protocol)
+\;\le\;
+\mathsf{Cap}_{\mathrm{syn}}(\epsilon,B,W;\{\proj_i\}).
+\]
+\end{law}
+
+该定律将协同学习问题
+从算法设计提升为容量问题，
+其地位类似于 Shannon 信道容量~\cite{shannon1948}。
+
+\begin{law}[信息视界定律]
+存在信息视界函数 $\mathcal{H}$，
+使得当
+\[
+\gamma(\epsilon) > \mathcal{H}(B,W,N),
+\]
+系统中协同信息在统计意义下不可识别，
+即 $\syn \rightarrow 0$。
+\end{law}
+
+该现象体现为
+\textbf{认知相变}，
+类似物理系统中的相干—退相干转变。
+
+\begin{law}[非线性相干必要性定律]
+若协议 $\protocol$ 的全局更新算子
+仅依赖于各方消息的一阶线性组合，
+则在一类本质协同任务族上，
+其协同容量严格为零。
+\end{law}
+
+% ======================================================
+\section{不可恢复性定理}
+% ======================================================
+
+\begin{theorem}[碎片化协同不可恢复定理]
+存在任务族 $\mathcal{T}_{\mathrm{syn}}$
+与观测投影族 $\{\proj_i\}$，
+满足：
+\begin{enumerate}[leftmargin=1.6em]
+\item 对任意主体 $i$，有 $I(Y;X_i)=0$；
+\item 联合观测下 $\syn>0$；
+\item 对任意满足隐私约束且线性可分的协议 $\protocol$，
+协同信息的估计误差存在严格下界。
+\end{enumerate}
+\end{theorem}
+
+该定理表明，
+线性聚合在协同任务上的失败是
+\textbf{结构性且不可避免的}，
+与模型复杂度或优化技巧无关。
+
+\begin{theorem}[隐私—能量协同上界定理]
+在 Markov 毯约束~\cite{friston2010free}
+与 Landauer 原理~\cite{landauer1961irreversibility,bennett1982thermodynamics}下，
+任意协议对协同信息的增益满足：
+\[
+\syn
+\;\le\;
+\min\!\left\{
+I(\thetaGT;B_{1:N}),
+\;\frac{W_{\mathrm{diss}}}{kT\ln 2}
+\right\}.
+\]
+\end{theorem}
+
+该结果表明，
+分布式学习能力直接受热力学第二定律制约。
+
+% ======================================================
+\section{可达机制：最小非线性相干}
+% ======================================================
+
+不可恢复性并不否认协同的可能性，
+而是限定了其\emph{必要结构条件}。
+
+恢复协同所需的最小机制是
+对交互统计的显式建模，
+例如二阶相干矩：
+\[
+C_{ij}
+=
+\mathbb{E}[z_i \otimes z_j]
+-
+\mathbb{E}[z_i]\otimes\mathbb{E}[z_j].
+\]
+
+该思想与信息场论中
+对高阶相关的系统建模一致~\cite{ensslin2009information}，
+并构成张量相干提取
+（Tensor Coherence Extraction, TCE）的理论基础。
+
+% ======================================================
+\section{研究路线与长期愿景}
+% ======================================================
+
+本文并非提出单一算法，
+而是试图奠定一套关于
+\textbf{分布式知识可达性的自然定律体系}。
+
+短期研究将聚焦于：
+\begin{itemize}
+\item 不可恢复性定理的严格化证明；
+\item 协同容量上界的可计算表达；
+\item 多中心医疗与社会协作系统中的信息视界实证。
+\end{itemize}
+
+从长远看，
+该理论有望为群体智能、生物协同与社会认知
+提供统一的物理与信息论基础。
+
+\bibliographystyle{gbt7714-numerical}
+\bibliography{refs}
+
+\end{document}

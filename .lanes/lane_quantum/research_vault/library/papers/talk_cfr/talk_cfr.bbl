@@ -1,0 +1,403 @@
+\begin{thebibliography}{58}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Aumann(1974)]{aumann1974subjectivity}
+Robert~J Aumann.
+\newblock Subjectivity and correlation in randomized strategies.
+\newblock \emph{Journal of mathematical Economics}, 1\penalty0 (1):\penalty0
+  67--96, 1974.
+
+\bibitem[Bai et~al.(2022)]{anthropic2022constitutional}
+Yuntao Bai et~al.
+\newblock Constitutional ai: Harmlessness from ai feedback.
+\newblock \emph{arXiv preprint arXiv:2212.08073}, 2022.
+
+\bibitem[Bakhtin et~al.(2022)Bakhtin, Wu, Lerer, et~al.]{bakhtin2022mastering}
+Anton Bakhtin, David~J Wu, Adam Lerer, et~al.
+\newblock Mastering the game of diplomacy with strategic cooperative ai.
+\newblock \emph{Science}, 378\penalty0 (6624):\penalty0 1067--1074, 2022.
+
+\bibitem[Bard et~al.(2013)Bard, Johanson, Burch, and Bowling]{bard2013online}
+Nolan Bard, Michael Johanson, Neil Burch, and Michael Bowling.
+\newblock Online implicit agent modelling.
+\newblock In \emph{Proceedings of the 2013 international conference on
+  Autonomous agents and multi-agent systems}, pages 255--262, 2013.
+
+\bibitem[Bowling et~al.(2015)Bowling, Burch, Johanson, and
+  Tammelin]{bowling2015heads}
+Michael Bowling, Neil Burch, Michael Johanson, and Oskari Tammelin.
+\newblock Heads-up limit hold’em poker is solved.
+\newblock \emph{Science}, 347\penalty0 (6218):\penalty0 145--149, 2015.
+
+\bibitem[Brown(1951)]{brown1951iterative}
+George~W Brown.
+\newblock Iterative solution of games by fictitious play.
+\newblock \emph{Activity analysis of production and allocation}, 13\penalty0
+  (1):\penalty0 374--376, 1951.
+
+\bibitem[Brown and Sandholm(2018)]{brown2018superhuman}
+Noam Brown and Tuomas Sandholm.
+\newblock Superhuman ai for heads-up no-limit poker: Libratus beats top
+  professionals.
+\newblock In \emph{Science}, volume 359, pages 418--424, 2018.
+
+\bibitem[Brown and Sandholm(2019)]{brown2019superhuman}
+Noam Brown and Tuomas Sandholm.
+\newblock Superhuman ai for multiplayer poker.
+\newblock \emph{Science}, 365\penalty0 (6456):\penalty0 885--890, 2019.
+
+\bibitem[Brown et~al.(2019)Brown, Lerer, Gross, and Sandholm]{brown2019deep}
+Noam Brown, Adam Lerer, Sam Gross, and Tuomas Sandholm.
+\newblock Deep counterfactual regret minimization.
+\newblock In \emph{International Conference on Machine Learning (ICML)}, pages
+  793--802. PMLR, 2019.
+
+\bibitem[Brown et~al.(2020{\natexlab{a}})Brown, Bakhtin, Lerer, and
+  Gong]{brown2020combining}
+Noam Brown, Anton Bakhtin, Adam Lerer, and Qucheng Gong.
+\newblock Combining deep reinforcement learning and search for
+  imperfect-information games.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+  volume~33, pages 17057--17069, 2020{\natexlab{a}}.
+
+\bibitem[Brown et~al.(2020{\natexlab{b}})Brown, Mann, Ryder, Subbiah, Kaplan,
+  Dhariwal, Neelakantan, Shyam, Sastry, Askell, et~al.]{brown2020language}
+Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared~D Kaplan, Prafulla
+  Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell,
+  et~al.
+\newblock Language models are few-shot learners.
+\newblock \emph{Advances in neural information processing systems},
+  33:\penalty0 1877--1901, 2020{\natexlab{b}}.
+
+\bibitem[Burns et~al.(2022)Burns, Ye, Klein, and
+  Steinhardt]{burns2022discovering}
+Collin Burns, Haotian Ye, Dan Klein, and Jacob Steinhardt.
+\newblock Discovering latent knowledge in language models without supervision.
+\newblock In \emph{International Conference on Learning Representations}, 2022.
+
+\bibitem[Cobbe et~al.(2021)Cobbe, Kosaraju, Bavarian, Chen, Jun, Kaiser,
+  Plappert, Tworek, Hilton, Nakano, et~al.]{cobbe2021training}
+Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz
+  Kaiser, Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano,
+  et~al.
+\newblock Training verifiers to solve math word problems.
+\newblock \emph{arXiv preprint arXiv:2110.14168}, 2021.
+
+\bibitem[Crawford and Sobel(1982)]{crawford1982strategic}
+Vincent~P Crawford and Joel Sobel.
+\newblock Strategic information transmission.
+\newblock \emph{Econometrica: Journal of the Econometric Society}, pages
+  1431--1451, 1982.
+
+\bibitem[Deng et~al.(2023)Deng, Gu, Zheng, Chen, Stevens, Wang, Sun, and
+  Su]{deng2023mind2web}
+Xiang Deng, Yu~Gu, Boyuan Zheng, Shijie Chen, Samuel Stevens, Boshi Wang, Huan
+  Sun, and Yu~Su.
+\newblock Mind2web: Towards a generalist agent for the web.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2023.
+
+\bibitem[Foerster et~al.(2016)Foerster, Assael, De~Freitas, and
+  Whiteson]{foerster2016learning}
+Jakob Foerster, Ioannis~Yannis Assael, Nando De~Freitas, and Shimon Whiteson.
+\newblock Learning to communicate with deep multi-agent reinforcement learning.
+\newblock In \emph{Advances in neural information processing systems},
+  volume~29, 2016.
+
+\bibitem[Grice(1975)]{grice1975logic}
+H~Paul Grice.
+\newblock Logic and conversation.
+\newblock \emph{Speech acts}, pages 41--58, 1975.
+
+\bibitem[Hao et~al.(2023)Hao, Gu, Ma, Hong, Wang, Wang, and
+  Hu]{hao2023reasoning}
+Shibo Hao, Yi~Gu, Haodi Ma, Joshua~J Hong, Zhen Wang, Daisy~Zhe Wang, and
+  Zhiting Hu.
+\newblock Reasoning with language model is planning with world model.
+\newblock \emph{arXiv preprint arXiv:2305.14992}, 2023.
+
+\bibitem[Harsanyi(1967)]{harsanyi1967games}
+John~C Harsanyi.
+\newblock Games with incomplete information played by “bayesian” players,
+  i--iii.
+\newblock \emph{Management science}, 14\penalty0 (3):\penalty0 159--182, 1967.
+
+\bibitem[Heinrich and Silver(2016)]{heinrich2016deep}
+Johannes Heinrich and David Silver.
+\newblock Deep reinforcement learning from self-play in imperfect-information
+  games.
+\newblock In \emph{arXiv preprint arXiv:1603.01121}, 2016.
+
+\bibitem[Hong et~al.(2023)Hong, Zheng, Chen, Cheng, Zhang, Wang, Yau, Lin,
+  Zhou, Ran, et~al.]{hong2023metagpt}
+Sirui Hong, Xiawu Zheng, Jonathan Chen, Yuheng Cheng, Ceyao Zhang, Ziyang Wang,
+  Steven~K Yau, Zijuan Lin, Liyang Zhou, Chenyu Ran, et~al.
+\newblock Metagpt: Meta programming for a multi-agent collaborative framework.
+\newblock \emph{arXiv preprint arXiv:2308.00352}, 2023.
+
+\bibitem[Hu et~al.(2021)Hu, Shen, Wallis, Allen-Zhu, Li, Wang, Wang, and
+  Chen]{hu2021lora}
+Edward~J Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean
+  Wang, Lu~Wang, and Weizhu Chen.
+\newblock Lora: Low-rank adaptation of large language models.
+\newblock In \emph{International Conference on Learning Representations}, 2021.
+
+\bibitem[Hubinger et~al.(2019)Hubinger, van Merwijk, Mikulik, Skalse, and
+  Garrabrant]{hubinger2019risks}
+Evan Hubinger, Chris van Merwijk, Vladimir Mikulik, Joar Skalse, and Scott
+  Garrabrant.
+\newblock Risks from learned optimization in advanced machine learning systems.
+\newblock \emph{arXiv preprint arXiv:1906.01820}, 2019.
+
+\bibitem[Kenton et~al.(2021)Kenton, Everitt, Weidinger, Gabriel, Mikulik, and
+  Irving]{kenton2021alignment}
+Zachary Kenton, Tom Everitt, Laura Weidinger, Iason Gabriel, Vladimir Mikulik,
+  and Geoffrey Irving.
+\newblock Alignment of language agents.
+\newblock \emph{arXiv preprint arXiv:2103.14659}, 2021.
+
+\bibitem[Kuhn(1953)]{kuhn1953extensive}
+Harold~W Kuhn.
+\newblock Extensive games and the problem of information.
+\newblock \emph{Contributions to the Theory of Games}, 2\penalty0
+  (28):\penalty0 193--216, 1953.
+
+\bibitem[Lanctot et~al.(2019)Lanctot, Lockhart, Lespiau, Zambaldi, Upadhyay,
+  P{\'e}rolat, Srinivasan, et~al.]{lanctot2019openspiel}
+Marc Lanctot, Edward Lockhart, Jean-Baptiste Lespiau, Vinicius Zambaldi,
+  Satyaki Upadhyay, Julien P{\'e}rolat, Sriram Srinivasan, et~al.
+\newblock Openspiel: A framework for reinforcement learning in games.
+\newblock \emph{arXiv preprint arXiv:1908.09453}, 2019.
+
+\bibitem[Lewis et~al.(2017)Lewis, Yarats, Dauphin, Parikh, and
+  Batra]{lewis2017deal}
+Mike Lewis, Denis Yarats, Yann~N Dauphin, Devi Parikh, and Dhruv Batra.
+\newblock Deal or no deal? end-to-end learning of negotiation dialogues.
+\newblock In \emph{Proceedings of the 2017 Conference on Empirical Methods in
+  Natural Language Processing}, pages 2443--2453, 2017.
+
+\bibitem[Li et~al.(2023)Li, Hammoud, Itani, Khizanishvili, and
+  Ghanem]{li2023camel}
+Guohao Li, Hasan Abed Al~Kader Hammoud, Hani Itani, Dmitrii Khizanishvili, and
+  Bernard Ghanem.
+\newblock Camel: Communicative agents for" mind" exploration of large scale
+  language model society.
+\newblock \emph{arXiv preprint arXiv:2303.17760}, 2023.
+
+\bibitem[Liu et~al.(2023)Liu, Yu, Zhang, Xu, Lei, Lai, Gu, Ding, Men, Yang,
+  et~al.]{liu2023agentbench}
+Xiao Liu, Hao Yu, Hanchen Zhang, Yifan Xu, Xuanyu Lei, Hanyu Lai, Yu~Gu,
+  Hangliang Ding, Kaiwen Men, Kejuan Yang, et~al.
+\newblock Agentbench: Evaluating llms as agents.
+\newblock \emph{arXiv preprint arXiv:2308.03688}, 2023.
+
+\bibitem[Mialon et~al.(2023)Mialon, Dess{`\i}, Lomeli, Nalmpantis, Pasunuru,
+  Raileanu, Rozi{`e}re, Schick, Dwivedi-Yu, Celikyilmaz,
+  et~al.]{mialon2023augmented}
+Gr{\'e}goire Mialon, Roberto Dess{`\i}, Maria Lomeli, Christoforos Nalmpantis,
+  Ram Pasunuru, Roberta Raileanu, Baptiste Rozi{`e}re, Timo Schick, Jane
+  Dwivedi-Yu, Asli Celikyilmaz, et~al.
+\newblock Augmented language models: a survey.
+\newblock \emph{arXiv preprint arXiv:2302.07842}, 2023.
+
+\bibitem[Mnih et~al.(2015)Mnih, Kavukcuoglu, Silver, Rusu, Veness, Bellemare,
+  Graves, Riedmiller, et~al.]{mnih2015human}
+Volodymyr Mnih, Koray Kavukcuoglu, David Silver, Andrei~A Rusu, Joel Veness,
+  Marc~G Bellemare, Alex Graves, Martin Riedmiller, et~al.
+\newblock Human-level control through deep reinforcement learning.
+\newblock \emph{nature}, 518\penalty0 (7540):\penalty0 529--533, 2015.
+
+\bibitem[Morav{\v{c}}{\'\i}k et~al.(2017)Morav{\v{c}}{\'\i}k, Schmid, Burch,
+  Lis{\`y}, Morrill, Bard, Davis, Waugh, Johanson, and
+  Bowling]{moravcik2017deepstack}
+Matej Morav{\v{c}}{\'\i}k, Martin Schmid, Neil Burch, Viliam Lis{\`y}, Dustin
+  Morrill, Nolan Bard, Trevor Davis, Kevin Waugh, Michael Johanson, and Michael
+  Bowling.
+\newblock Deepstack: Expert-level artificial intelligence in heads-up no-limit
+  poker.
+\newblock \emph{Science}, 356\penalty0 (6337):\penalty0 508--513, 2017.
+
+\bibitem[Nash(1950)]{nash1950equilibrium}
+John Nash.
+\newblock Equilibrium points in n-person games.
+\newblock \emph{Proceedings of the national academy of sciences}, 36\penalty0
+  (1):\penalty0 48--49, 1950.
+
+\bibitem[Nye et~al.(2021)Nye, Andreassen, Gur-Ari, Michalewski, Austin, Bieber,
+  Dohan, Lewkowycz, Bosma, Luan, et~al.]{nye2021show}
+Maxwell Nye, Anders~Johan Andreassen, Guy Gur-Ari, Henryk Michalewski, Jacob
+  Austin, David Bieber, David Dohan, Aitor Lewkowycz, Maarten Bosma, David
+  Luan, et~al.
+\newblock Show your work: Scratchpads for intermediate computation with
+  language models.
+\newblock In \emph{arXiv preprint arXiv:2112.00114}, 2021.
+
+\bibitem[OpenAI(2023)]{openai2023gpt4}
+OpenAI.
+\newblock Gpt-4 technical report.
+\newblock \emph{arXiv preprint arXiv:2303.08774}, 2023.
+
+\bibitem[Ouyang et~al.(2022)Ouyang, Wu, Jiang, Almeida, Wainwright, Mishkin,
+  Zhang, Agarwal, Slama, Ray, et~al.]{ouyang2022training}
+Long Ouyang, Jeffrey Wu, Xu~Jiang, Diogo Almeida, Carroll Wainwright, Pamela
+  Mishkin, Chong Zhang, Sandhini Agarwal, Katarina Slama, Alex Ray, et~al.
+\newblock Training language models to follow instructions with human feedback.
+\newblock \emph{Advances in Neural Information Processing Systems},
+  35:\penalty0 27730--27744, 2022.
+
+\bibitem[Park et~al.(2023)Park, O'Brien, Cai, Morris, Liang, and
+  Bernstein]{park2023generative}
+Joon~Sung Park, Joseph~C O'Brien, Carrie~J Cai, Meredith~Ringel Morris, Percy
+  Liang, and Michael~S Bernstein.
+\newblock Generative agents: Interactive simulacra of human behavior.
+\newblock \emph{Proceedings of the 36th Annual ACM Symposium on User Interface
+  Software and Technology}, pages 1--22, 2023.
+
+\bibitem[Qian et~al.(2023)Qian, Cong, Yang, Chen, Su, Xu, Liu, and
+  Sun]{qian2023communicative}
+Chen Qian, Xin Cong, Cheng Yang, Weize Chen, Yusheng Su, Juyuan Xu, Zhiyuan
+  Liu, and Maosong Sun.
+\newblock Communicative agents for software development.
+\newblock \emph{arXiv preprint arXiv:2307.07924}, 2023.
+
+\bibitem[Schulman et~al.(2017)Schulman, Wolski, Dhariwal, Radford, and
+  Klimov]{schulman2017proximal}
+John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov.
+\newblock Proximal policy optimization algorithms.
+\newblock In \emph{arXiv preprint arXiv:1707.06347}, 2017.
+
+\bibitem[Sharma et~al.(2023)]{sharma2023understanding}
+Mrinank Sharma et~al.
+\newblock Understanding and preventing deceptive alignment in reinforcement
+  learning.
+\newblock \emph{arXiv preprint arXiv:2308.11432}, 2023.
+
+\bibitem[Shinn et~al.(2023)Shinn, Cassano, Gopinath, Narasimhan, and
+  Yao]{shinn2023reflexion}
+Noah Shinn, Federico Cassano, Ashwin Gopinath, Karthik Narasimhan, and Shunyu
+  Yao.
+\newblock Reflexion: Language agents with verbal reinforcement learning.
+\newblock \emph{arXiv preprint arXiv:2303.11366}, 2023.
+
+\bibitem[Shoham and Leyton-Brown(2008)]{shoham2008multiagent}
+Yoav Shoham and Kevin Leyton-Brown.
+\newblock Multiagent systems: Algorithmic, game-theoretic, and logical
+  foundations.
+\newblock 2008.
+
+\bibitem[Shridhar et~al.(2020)Shridhar, Yuan, C{\^o}t{\'e}, Bisk, Trischler,
+  and Hausknecht]{shridhar2020alfworld}
+Mohit Shridhar, Xingdi Yuan, Marc-Alexandre C{\^o}t{\'e}, Yonatan Bisk, Adam
+  Trischler, and Matthew Hausknecht.
+\newblock Alfworld: Aligning robot and language representations.
+\newblock In \emph{International Conference on Learning Representations}, 2020.
+
+\bibitem[Silver et~al.(2016)Silver, Huang, Maddison, Guez, Sifre, Van
+  Den~Driessche, Schrittwieser, Antonoglou, Panneershelvam, Lanctot,
+  et~al.]{silver2016mastering}
+David Silver, Aja Huang, Chris~J Maddison, Arthur Guez, Laurent Sifre, George
+  Van Den~Driessche, Julian Schrittwieser, Ioannis Antonoglou, Veda
+  Panneershelvam, Marc Lanctot, et~al.
+\newblock Mastering the game of go with deep neural networks and tree search.
+\newblock \emph{nature}, 529\penalty0 (7587):\penalty0 484--489, 2016.
+
+\bibitem[Sutskever et~al.(2014)Sutskever, Vinyals, and
+  Le]{sutskever2014sequence}
+Ilya Sutskever, Oriol Vinyals, and Quoc~V Le.
+\newblock Sequence to sequence learning with neural networks.
+\newblock \emph{Advances in neural information processing systems}, 27, 2014.
+
+\bibitem[Team et~al.(2023)]{team2023gemini}
+Gemini Team et~al.
+\newblock Gemini: a family of highly capable multimodal models.
+\newblock \emph{arXiv preprint arXiv:2312.11805}, 2023.
+
+\bibitem[Touvron et~al.(2023)Touvron, Lavril, Izacard, Martinet, Lachaux,
+  Lacroix, Rozi{`e}re, Goyal, Hambro, Azhar, et~al.]{touvron2023llama}
+Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne
+  Lachaux, Timoth{\'e}e Lacroix, Baptiste Rozi{`e}re, Naman Goyal, Eric Hambro,
+  Faisal Azhar, et~al.
+\newblock Llama: Open and efficient foundation language models.
+\newblock \emph{arXiv preprint arXiv:2302.13971}, 2023.
+
+\bibitem[Vaswani et~al.(2017)Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez,
+  Kaiser, and Polosukhin]{vaswani2017attention}
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones,
+  Aidan~N Gomez, {\L}ukasz Kaiser, and Illia Polosukhin.
+\newblock Attention is all you need.
+\newblock In \emph{Advances in neural information processing systems},
+  volume~30, 2017.
+
+\bibitem[Wang et~al.(2023{\natexlab{a}})Wang, Xie, Jiang, Mandlekar, Xiao, Zhu,
+  Fan, and Anandkumar]{wang2023voyager}
+Guanzhi Wang, Yiqi Xie, Yunfan Jiang, Ajay Mandlekar, Chaowei Xiao, Yuke Zhu,
+  Linxi Fan, and Anima Anandkumar.
+\newblock Voyager: An open-ended embodied agent with large language models.
+\newblock In \emph{arXiv preprint arXiv:2305.16291}, 2023{\natexlab{a}}.
+
+\bibitem[Wang et~al.(2023{\natexlab{b}})Wang, Ma, Feng, Zhang, Yang, Zhang,
+  Chen, Tang, Chen, Lin, et~al.]{wang2023survey}
+Lei Wang, Chen Ma, Xueyang Feng, Zeyu Zhang, Hao Yang, Jingsen Zhang, Zhiyuan
+  Chen, Jiakai Tang, Xu~Chen, Yankai Lin, et~al.
+\newblock A survey on large language model based autonomous agents.
+\newblock \emph{arXiv preprint arXiv:2308.11432}, 2023{\natexlab{b}}.
+
+\bibitem[Wang et~al.(2022)]{wang2022self}
+Xuezhi Wang et~al.
+\newblock Self-consistency improves chain of thought reasoning in language
+  models.
+\newblock In \emph{ICLR}, 2022.
+
+\bibitem[Wei et~al.(2022)Wei, Wang, Schuurmans, Bosma, Chi, Le, and
+  Zhou]{wei2022chain}
+Jason Wei, Xuezhi Wang, Dale Schuurmans, Maarten Bosma, Ed~Chi, Quoc Le, and
+  Denny Zhou.
+\newblock Chain-of-thought prompting elicits reasoning in large language
+  models.
+\newblock \emph{Advances in Neural Information Processing Systems},
+  35:\penalty0 24824--24837, 2022.
+
+\bibitem[Wu et~al.(2023)Wu, Bansal, Zhang, Wu, Li, Peng, et~al.]{wu2023autogen}
+Qingyun Wu, Gagan Bansal, Jieyu Zhang, Yiran Wu, Beibin Li, Erkang Peng, et~al.
+\newblock Autogen: Enabling next-gen llm applications.
+\newblock \emph{arXiv preprint arXiv:2308.08155}, 2023.
+
+\bibitem[Xi et~al.(2023)Xi, Chen, Guo, He, Ding, Hong, Zhang, Wang, Jin, Zhou,
+  et~al.]{xi2023rise}
+Zhiheng Xi, Wenxiang Chen, Xin Guo, Wei He, Yiwen Ding, Boyang Hong, Ming
+  Zhang, Junzhe Wang, Senjie Jin, Enyu Zhou, et~al.
+\newblock The rise and potential of large language model based agents: A
+  survey.
+\newblock \emph{arXiv preprint arXiv:2309.07864}, 2023.
+
+\bibitem[Yao et~al.(2022)Yao, Zhao, Yu, Du, Shafran, Narasimhan, and
+  Cao]{yao2022react}
+Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan,
+  and Yuan Cao.
+\newblock React: Synergizing reasoning and acting in language models.
+\newblock In \emph{International Conference on Learning Representations}, 2022.
+
+\bibitem[Yao et~al.(2024)Yao, Yu, Zhao, Shafran, Griffiths, Cao, and
+  Narasimhan]{yao2024tree}
+Shunyu Yao, Dian Yu, Jeffrey Zhao, Izhak Shafran, Thomas~L Griffiths, Yuan Cao,
+  and Karthik Narasimhan.
+\newblock Tree of thoughts: Deliberate problem solving with large language
+  models.
+\newblock \emph{Advances in Neural Information Processing Systems}, 36, 2024.
+
+\bibitem[Zhao et~al.(2024)]{zhao2024qwen}
+W~Zhao et~al.
+\newblock Qwen2.5 technical report.
+\newblock \emph{arXiv preprint}, 2024.
+
+\bibitem[Zinkevich et~al.(2007)Zinkevich, Johanson, Bowling, and
+  Piccione]{zinkevich2007regret}
+Martin Zinkevich, Michael Johanson, Michael Bowling, and Carmelo Piccione.
+\newblock Regret minimization in games with incomplete information.
+\newblock In \emph{Advances in neural information processing systems},
+  volume~20, 2007.
+
+\end{thebibliography}

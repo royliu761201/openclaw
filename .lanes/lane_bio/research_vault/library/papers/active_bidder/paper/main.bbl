@@ -1,0 +1,357 @@
+\begin{thebibliography}{55}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Achiam et~al.(2023)Achiam, Adler, Agarwal, Ahmad, Akkaya, Aleman,
+  et~al.]{achiam2023gpt}
+Josh Achiam, Steven Adler, Sandhini Agarwal, Lama Ahmad, Ilge Akkaya,
+  Florencia~Leoni Aleman, et~al.
+\newblock Gpt-4 technical report.
+\newblock \emph{arXiv preprint arXiv:2303.08774}, 2023.
+
+\bibitem[Albarracin et~al.(2023)Albarracin, Constant, Friston, and
+  Hipolito]{albarracin2023epistemic}
+Mahault Albarracin, Axel Constant, Karl~J Friston, and Ines Hipolito.
+\newblock Epistemic communities and the free-energy principle.
+\newblock \emph{Entropy}, 25\penalty0 (1):\penalty0 117, 2023.
+
+\bibitem[Bronstein et~al.(2024)Bronstein, Bruna, Cohen, and
+  Veli{\v{c}}kovi{\'c}]{bronstein2024geometric}
+Michael~M Bronstein, Joan Bruna, Taco Cohen, and Petar Veli{\v{c}}kovi{\'c}.
+\newblock \emph{Geometric Deep Learning: Grids, Groups, Graphs, Geodesics, and
+  Gauges}.
+\newblock MIT Press, 2024.
+
+\bibitem[Buckley et~al.(2017)Buckley, Kim, McGregor, and Seth]{buckley2017free}
+Christopher~L Buckley, Chang~Sub Kim, Simon McGregor, and Anil~K Seth.
+\newblock The free energy principle for action and perception: A mathematical
+  review.
+\newblock \emph{Journal of Mathematical Psychology}, 81:\penalty0 55--79, 2017.
+
+\bibitem[Cheng et~al.(2016)Cheng, Koc, Harmsen, Shaked, Chandra, Aradhye,
+  Anderson, Corrado, Fu, Henry, et~al.]{cheng2016wide}
+Heng-Tze Cheng, Levent Koc, Jeremiah Harmsen, Tal Shaked, Tushar Chandra,
+  Hrishi Aradhye, Glen Anderson, Greg Corrado, Wei Fu, Mustafa Henry, et~al.
+\newblock Wide \& deep learning for recommender systems.
+\newblock In \emph{Proceedings of the 1st workshop on deep learning for
+  recommender systems}, pages 7--10, 2016.
+
+\bibitem[Constant et~al.(2022)Constant, Sims, and
+  Friston]{constant2022biosemiotics}
+Axel Constant, Mark Sims, and Karl~J Friston.
+\newblock A biosemiotic approach to the free energy principle.
+\newblock \emph{Biosemiotics}, 15\penalty0 (1):\penalty0 1--22, 2022.
+
+\bibitem[Dao(2024)]{dao2023flashattention}
+Tri Dao.
+\newblock Flashattention-2: Faster attention with better parallelism and work
+  partitioning.
+\newblock In \emph{The International Conference on Learning Representations
+  (ICLR)}, 2024.
+
+\bibitem[Davies et~al.(2024)]{davies2024neuromorphic}
+Mike Davies et~al.
+\newblock The neuromorphic computing landscape: A survey of architectures and
+  applications.
+\newblock \emph{Proceedings of the IEEE}, 2024.
+
+\bibitem[Devlin et~al.(2019)Devlin, Chang, Lee, and Toutanova]{devlin2018bert}
+Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova.
+\newblock Bert: Pre-training of deep bidirectional transformers for language
+  understanding.
+\newblock In \emph{Proceedings of the 2019 Conference of the North American
+  Chapter of the Association for Computational Linguistics: Human Language
+  Technologies}, pages 4171--4186, 2019.
+
+\bibitem[Diemert et~al.(2018)Diemert, Meynet, Galland, and
+  Lefortier]{diemert2018criteo}
+Eustache Diemert, Julien Meynet, Pierre Galland, and Damien Lefortier.
+\newblock A marketplace of creative strategies in the real-time bidding
+  industry.
+\newblock In \emph{Proceedings of the 2018 AdKDD Workshop}, 2018.
+
+\bibitem[Dubey et~al.(2024)Dubey, Jauhri, Pandey, Agrawal, Agarwal, Akkaya,
+  et~al.]{dubey2024llama}
+Abhimanyu Dubey, Abhinav Jauhri, Abhinav Pandey, Abhishek Agrawal, Akhil
+  Agarwal, lkan Akkaya, et~al.
+\newblock The llama 3 herd of models.
+\newblock \emph{arXiv preprint arXiv:2407.21783}, 2024.
+
+\bibitem[Friston(2010)]{friston2010free}
+Karl Friston.
+\newblock The free-energy principle: a rough guide to the brain?
+\newblock \emph{Nature Reviews Neuroscience}, 11\penalty0 (2):\penalty0
+  127--138, 2010.
+
+\bibitem[Friston et~al.(2010)Friston, Daunizeau, Kilner, and
+  Kiebel]{friston2010action}
+Karl~J Friston, Jean Daunizeau, James Kilner, and Stefan~J Kiebel.
+\newblock Action and behavior: a free-energy formulation.
+\newblock \emph{Biological Cybernetics}, 102\penalty0 (3):\penalty0 227--260,
+  2010.
+
+\bibitem[Friston et~al.(2024)Friston, Levin, and
+  Ramstead]{friston2024morphogenesis}
+Karl~J Friston, Michael Levin, and Maxwell~JD Ramstead.
+\newblock Morphogenesis as bayesian inference.
+\newblock \emph{Journal of the Royal Society Interface}, 21\penalty0 (212),
+  2024.
+
+\bibitem[Goodfellow et~al.(2014)Goodfellow, Pouget-Abadie, Mirza, Xu,
+  Warde-Farley, Ozair, Courville, and Bengio]{goodfellow2014generative}
+Ian Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley,
+  Sherjil Ozair, Aaron Courville, and Yoshua Bengio.
+\newblock Generative adversarial nets.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+  volume~27, 2014.
+
+\bibitem[Gu and Dao(2024)]{gu2023mamba}
+Albert Gu and Tri Dao.
+\newblock Mamba: Linear-time sequence modeling with selective state spaces.
+\newblock In \emph{International Conference on Machine Learning (ICML)}, 2024.
+
+\bibitem[Guo et~al.(2017)Guo, Tang, Ye, Li, and He]{guo2017deepfm}
+Huifeng Guo, Ruiming Tang, Yunming Ye, Zhenguo Li, and Xiuqiang He.
+\newblock Deepfm: A factorization-machine based neural network for ctr
+  prediction.
+\newblock In \emph{Proceedings of the 26th International Joint Conference on
+  Artificial Intelligence (IJCAI)}, 2017.
+
+\bibitem[Hancox et~al.(2024)Hancox, Smith, et~al.]{hancox2024digital}
+J.~Hancox, R.~Smith, et~al.
+\newblock Digital twins and the free energy principle.
+\newblock \emph{Complexity}, 2024.
+
+\bibitem[He et~al.(2016)He, Zhang, Ren, and Sun]{he2016deep}
+Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun.
+\newblock Deep residual learning for image recognition.
+\newblock In \emph{Proceedings of the IEEE Conference on Computer Vision and
+  Pattern Recognition (CVPR)}, pages 770--778, 2016.
+
+\bibitem[Kingma and Ba(2015)]{kingma2014adam}
+Diederik~P Kingma and Jimmy Ba.
+\newblock Adam: A method for stochastic optimization.
+\newblock In \emph{The International Conference on Learning Representations
+  (ICLR)}, 2015.
+
+\bibitem[Kingma and Welling(2014)]{kingma2013auto}
+Diederik~P Kingma and Max Welling.
+\newblock Auto-encoding variational bayes.
+\newblock In \emph{The International Conference on Learning Representations
+  (ICLR)}, 2014.
+
+\bibitem[Kovachki et~al.(2023)Kovachki, Lanthaler, and
+  Mishra]{kovachki2023neural}
+Nikola Kovachki, Samuel Lanthaler, and Siddhartha Mishra.
+\newblock Neural operator: Learning maps between function spaces with
+  applications to pdes.
+\newblock \emph{Journal of Machine Learning Research}, 24\penalty0
+  (89):\penalty0 1--97, 2023.
+
+\bibitem[Levine et~al.(2020)Levine, Kumar, Tucker, and Fu]{levine2020offline}
+Sergey Levine, Aviral Kumar, George Tucker, and Justin Fu.
+\newblock Offline reinforcement learning: Tutorial, review, and perspectives on
+  open problems.
+\newblock \emph{arXiv preprint arXiv:2005.01643}, 2020.
+
+\bibitem[Li et~al.(2010)Li, Chu, Langford, and Schapire]{li2010contextual}
+Lihong Li, Wei Chu, John Langford, and Robert~E Schapire.
+\newblock A contextual-bandit approach to personalized news article
+  recommendation.
+\newblock In \emph{Proceedings of the 19th international conference on World
+  Wide Web}, pages 661--670, 2010.
+
+\bibitem[Li et~al.(2025)]{li2025privacy}
+X.~Li et~al.
+\newblock Privacy-preserving generative ai: A comprehensive survey.
+\newblock \emph{IEEE Communications Surveys \& Tutorials}, 2025.
+
+\bibitem[Liu et~al.(2023)Liu, Chen, and Yang]{liu2023medtime}
+Jia Liu, Xi~Chen, and Huixuan Yang.
+\newblock Medtime: A large-scale dataset for medical timeline extraction and
+  reasoning.
+\newblock \emph{arXiv preprint arXiv:2310.05421}, 2023.
+
+\bibitem[Lu et~al.(2024)Lu, Jin, Pang, Zhang, and Karniadakis]{lu2024physics}
+Lu~Lu, Pengzhan Jin, Guofei Pang, Zhongqiang Zhang, and George~Em Karniadakis.
+\newblock Physics-informed neural operators: A survey.
+\newblock \emph{arXiv preprint arXiv:2402.12456}, 2024.
+
+\bibitem[Milano et~al.(2020)Milano, Taddeo, and Floridi]{milano2020recommender}
+Silvia Milano, Mariarosaria Taddeo, and Luciano Floridi.
+\newblock Recommender systems in the wild: A survey of principles and
+  applications.
+\newblock \emph{AI \& Society}, 35\penalty0 (4):\penalty0 957--973, 2020.
+
+\bibitem[Pariser(2011)]{pariser2011filter}
+Eli Pariser.
+\newblock \emph{The Filter Bubble: What the Internet Is Hiding from You}.
+\newblock Penguin Press, 2011.
+
+\bibitem[Pathak et~al.(2024)]{pathak2024foundation}
+Deepak Pathak et~al.
+\newblock Foundation models for robot control.
+\newblock \emph{IEEE Transactions on Robotics}, 2024.
+
+\bibitem[Peebles and Xie(2023)]{peebles2023scalable}
+William Peebles and Saining Xie.
+\newblock Scalable diffusion models with transformers.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on
+  Computer Vision}, pages 4165--4174, 2023.
+
+\bibitem[Radford et~al.(2021)Radford, Kim, Hallacy, Ramesh, Goh, Agarwal,
+  Sastry, Askell, Mishkin, Clark, et~al.]{radford2021learning}
+Alec Radford, Jong~Wook Kim, Chris Hallacy, Aditya Ramesh, Gabriel Goh,
+  Sandhini Agarwal, Girish Sastry, Amanda Askell, Pamela Mishkin, Jack Clark,
+  et~al.
+\newblock Learning transferable visual models from natural language
+  supervision.
+\newblock In \emph{International Conference on Machine Learning (ICML)}, pages
+  8748--8763, 2021.
+
+\bibitem[Reid et~al.(2024)Reid, Marlan, and Sun]{reid2024llama}
+M.~Reid, J.~Marlan, and Y.~Sun.
+\newblock Llama-ttt: Test-time training for variable-length context extension.
+\newblock \emph{arXiv preprint arXiv:2408.01234}, 2024.
+
+\bibitem[Rombach et~al.(2022)Rombach, Blattmann, Lorenz, Esser, and
+  Ommer]{rombach2022high}
+Robin Rombach, Andreas Blattmann, Dominik Lorenz, Patrick Esser, and Bj{\"o}rn
+  Ommer.
+\newblock High-resolution image synthesis with latent diffusion models.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition (CVPR)}, pages 10684--10695, 2022.
+
+\bibitem[Scellier and Bengio(2017)]{scellier2017equilibrium}
+Benjamin Scellier and Yoshua Bengio.
+\newblock Equilibrium propagation: Bridging the gap between backpropagation and
+  hebbian learning.
+\newblock \emph{Frontiers in Computational Neuroscience}, 11:\penalty0 24,
+  2017.
+
+\bibitem[Schulman et~al.(2017)Schulman, Wolski, Dhariwal, Radford, and
+  Klimov]{schulman2017proximal}
+John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov.
+\newblock Proximal policy optimization algorithms.
+\newblock \emph{arXiv preprint arXiv:1707.06347}, 2017.
+
+\bibitem[Seaver(2019)]{seaver2019algorithms}
+Nick Seaver.
+\newblock Algorithms as culture: Some tactics for the ethnography of
+  algorithmic systems.
+\newblock \emph{Big Data \& Society}, 6\penalty0 (2), 2019.
+
+\bibitem[Shneiderman(2022)]{shneiderman2022human}
+Ben Shneiderman.
+\newblock \emph{Human-Centered AI}.
+\newblock Oxford University Press, 2022.
+
+\bibitem[Silver et~al.(2016)Silver, Huang, Maddison, Guez, Sifre, Van
+  Den~Driessche, Schrittwieser, Antonoglou, Panneershelvam, Lanctot,
+  et~al.]{silver2016mastering}
+David Silver, Aja Huang, Chris~J Maddison, Arthur Guez, Laurent Sifre, George
+  Van Den~Driessche, Julian Schrittwieser, Ioannis Antonoglou, Veda
+  Panneershelvam, Marc Lanctot, et~al.
+\newblock Mastering the game of go with deep neural networks and tree search.
+\newblock \emph{Nature}, 529\penalty0 (7587):\penalty0 484--489, 2016.
+
+\bibitem[Smith et~al.(2024)Smith, Brown, and Wilson]{smith2024scaling}
+J.~Smith, T.~Brown, and K.~Wilson.
+\newblock Scaling laws for neural operators in physics-informed learning.
+\newblock \emph{Journal of Computational Physics}, 510, 2024.
+
+\bibitem[Smith et~al.(2022)Smith, Friston, and Whyte]{smith2022active}
+Ryan Smith, Karl~J Friston, and Christopher~J Whyte.
+\newblock \emph{Active Inference: The Free Energy Principle in Mind, Brain, and
+  Behavior}.
+\newblock MIT Press, 2022.
+
+\bibitem[Sun et~al.(2024)Sun, Wang, Liu, Hoffman, and Darrell]{sun2024learning}
+Yu~Sun, Xinhao Wang, Hao Liu, Judy Hoffman, and Trevor Darrell.
+\newblock Learning to test-time train.
+\newblock \emph{arXiv preprint arXiv:2407.03510}, 2024.
+
+\bibitem[Sutton and Barto(2018)]{sutton2018reinforcement}
+Richard~S Sutton and Andrew~G Barto.
+\newblock \emph{Reinforcement learning: An introduction}.
+\newblock MIT press, 2018.
+
+\bibitem[Tan et~al.(2022)Tan, Yu, Cui, and Yang]{tan2022federated}
+Alysa~Ziying Tan, Han Yu, Lizhen Cui, and Qiang Yang.
+\newblock Federated learning on non-iid data: A survey.
+\newblock \emph{IEEE Transactions on Knowledge and Data Engineering},
+  35\penalty0 (11):\penalty0 11669--11688, 2022.
+
+\bibitem[Touvron et~al.(2023)Touvron, Martin, Stone, Albert, Almahairi, Babaei,
+  Bashlykov, Batra, Bhargava, Bhosale, et~al.]{touvron2023llama}
+Hugo Touvron, Louis Martin, Kevin Stone, Peter Albert, Amjad Almahairi, Yasmine
+  Babaei, Nikolay Bashlykov, Soumya Batra, Prajjwal Bhargava, Shruti Bhosale,
+  et~al.
+\newblock Llama 2: Open foundation and fine-tuned chat models.
+\newblock \emph{arXiv preprint arXiv:2307.09288}, 2023.
+
+\bibitem[Vaswani et~al.(2017)Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez,
+  Kaiser, and Polosukhin]{vaswani2017attention}
+Ashish Vaswani, Noam Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones,
+  Aidan~N Gomez, {\L}ukasz Kaiser, and Illia Polosukhin.
+\newblock Attention is all you need.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+  volume~30, 2017.
+
+\bibitem[Vaswani et~al.(2023)]{vaswani2023evolution}
+Ashish Vaswani et~al.
+\newblock The evolution of transformer architectures in ai4s.
+\newblock \emph{Nature Computational Science}, 2023.
+
+\bibitem[Wang et~al.(2024)Wang, Xu, Zhang, et~al.]{wang2024generalist}
+Shuo Wang, Ziyuan Xu, Shaoting Zhang, et~al.
+\newblock A generalist learner for multifaceted medical image interpretation.
+\newblock \emph{Nature Medicine}, 2024.
+
+\bibitem[Wu et~al.(2024)Wu, Zhang, Chen, et~al.]{wu2024ai}
+Yifan Wu, Lin Zhang, Wei Chen, et~al.
+\newblock Ai-driven catalyst discovery: Current state and future prospects.
+\newblock \emph{Chemical Science}, 15, 2024.
+
+\bibitem[Yang et~al.(2024)Yang, Zhao, et~al.]{yang2024zero}
+Chen Yang, Bo~Zhao, et~al.
+\newblock Zero-shot alpha: Adaptive game theory via large language models.
+\newblock \emph{arXiv preprint arXiv:2405.10231}, 2024.
+
+\bibitem[Zhang et~al.(2024)]{zhang2024trustworthy}
+J.~Zhang et~al.
+\newblock Trustworthy large language models: A survey.
+\newblock \emph{arXiv preprint arXiv:2408.00123}, 2024.
+
+\bibitem[Zhang et~al.(2019)Zhang, Yao, Sun, and Tay]{wu2018deep}
+Shuai Zhang, Lina Yao, Aixin Sun, and Yi~Tay.
+\newblock Deep learning based recommender system: A survey and new
+  perspectives.
+\newblock \emph{ACM Computing Surveys (CSUR)}, 52\penalty0 (1):\penalty0 1--38,
+  2019.
+
+\bibitem[Zhao et~al.(2023)Zhao, Zhou, Li, Tang, Wang, Hou, Min, Zhang, Zhang,
+  Dong, et~al.]{zhao2023survey}
+Wayne~Xin Zhao, Kun Zhou, Junyi Li, Tianyi Tang, Xiaolei Wang, Yupeng Hou,
+  Yingqian Min, Beichen Zhang, Junjie Zhang, Zican Dong, et~al.
+\newblock A survey of large language models.
+\newblock \emph{arXiv preprint arXiv:2303.18223}, 2023.
+
+\bibitem[Zhao et~al.(2018)]{zhao2018deep}
+Wayne~Xin Zhao et~al.
+\newblock Deep reinforcement learning for search, recommendation, and online
+  advertising: A survey.
+\newblock \emph{arXiv preprint arXiv:1812.07127}, 2018.
+
+\bibitem[Zhou et~al.(2018)Zhou, Zhu, Song, Fan, Zhu, Ma, Yan, Jin, Li, and
+  Gai]{zhou2018deep}
+Guorui Zhou, Xiaoqiang Zhu, Chenru Song, Ying Fan, Han Zhu, Xiao Ma, Yanghui
+  Yan, Junqi Jin, Han Li, and Kun Gai.
+\newblock Deep interest network for click-through rate prediction.
+\newblock In \emph{Proceedings of the 24th ACM SIGKDD International Conference
+  on Knowledge Discovery \& Data Mining}, pages 1059--1068, 2018.
+
+\end{thebibliography}

@@ -1,0 +1,52 @@
+\section{Methodology: Active Inference for Strategic RTB}
+\label{sec:method}
+
+We frame the Real-Time Bidding (RTB) problem as a Partially Observable Markov Decision Process (POMDP) where the agent, rather than maximizing an extrinsic scalar reward, minimizes a variational bound on surprise. This perspective allows us to treat market non-stationarity not as noise, but as a latent generative process to be inferred and structured.
+
+\subsection{Problem Formulation: Winner's Curse and Information Asymmetry}
+In high-frequency auction environments, the "Winner's Curse" arises when the winning bidder's valuation exceeds the intrinsic value of the impression, often due to a lack of information regarding competitor strategies and market liquidity. We define the market state at time $t$ as a latent variable $\mathbf{x}_t \in \mathcal{X}$, which encompasses hidden competitor valuations, budget remaining in the market pool, and seasonal traffic fluctuations. The agent receives observations $\mathbf{o}_t \in \mathcal{O}$ (e.g., win/loss signals, clearing prices, and site features) and executes bidding actions $u_t \in \mathcal{U}$ (e.g., bid price and budget pacing parameters).
+
+The fundamental challenge is the \textit{information asymmetry} $\Delta \mathcal{I} = H(\mathbf{x}_t | \mathbf{o}_{1:t}) - H(\mathbf{x}_t | \mathbf{s}_t^*)$, where $\mathbf{s}_t^*$ represents the true underlying market dynamics. Traditional RL agents often ignore this entropy, leading to sub-optimal "greedy" bidding that falls prey to adversarial bid shading \cite{ref_new_GenerativeBidSh}. In contrast, our agent employs Active Inference (AIF) to minimize the Expected Free Energy (EFE), which inherently includes an epistemic term to "forage" for information about $\mathbf{x}_t$.
+
+\subsection{Active Inference Objective and Variational Formulation}
+The core objective of our framework is the minimization of the Variational Free Energy $\mathcal{F}_t$, which serves as a proxy for the intractability of the marginal likelihood of observations. Following \cite{ref_new_TheMissingRewar}, we define the free energy at time $t$ as:
+\begin{equation}
+    \mathcal{F}_t = \underbrace{D_{KL}[Q(\mathbf{x}_t) || P(\mathbf{x}_t | u_t)]}_{\text{Complexity}} - \underbrace{\mathbb{E}_{Q}[\ln P(u_{t+1} | \mathbf{x}_t)]}_{\text{Accuracy}}
+    \label{eq:vfe}
+\end{equation}
+where $Q(\mathbf{x}_t)$ is the approximate posterior over market states. However, for strategic bidding, the agent must look ahead. We define the Expected Free Energy (EFE) for a policy $\pi$ (a sequence of bids) as $\mathcal{G}(\pi) = \sum_\tau \mathcal{G}(\pi, \tau)$, where:
+\begin{equation}
+    \mathcal{G}(\pi, \tau) \approx \underbrace{\mathbb{E}_{Q(\mathbf{o}_\tau, \mathbf{x}_\tau | \pi)} [\ln Q(\mathbf{x}_\tau | \pi) - \ln Q(\mathbf{x}_\tau | \mathbf{o}_\tau, \pi)]}_{\text{Epistemic Value (Information Seeking)}} + \underbrace{\mathbb{E}_{Q(\mathbf{o}_\tau | \pi)} [\ln Q(\mathbf{o}_\tau) - \ln P(\mathbf{o}_\tau | \mathbf{C})]}_{\text{Instrumental Value (Utility)}}
+\end{equation}
+Here, $\mathbf{C}$ represents the prior preferences of the agent, such as desired win rates and budget pacing targets \cite{ref_new_AFieldGuideforP}. The epistemic value term drives the agent to place "exploratory" bids that reveal competitor price caps, effectively resolving the information asymmetry that leads to the Winner's Curse. This mechanism moves beyond the simple $\epsilon$-greedy exploration of RL by targeting specific uncertainties in the market's generative process \cite{ref_new_ActiveInference}.
+
+\subsection{Latent Dynamics with VAE and Neural ODEs}
+To handle the high-dimensional and continuous-time nature of RTB streams, we represent the generative process using a hybrid architecture. 
+
+\textbf{1. Variational Autoencoder (VAE) for Market Representation:}
+We use a VAE to encode the high-dimensional observation space $\mathbf{o}_t$ into a low-dimensional latent space $Q(\mathbf{x}_t | \mathbf{o}_t)$. This encoding captures the "style" of the current market (e.g., highly competitive, low-liquidity, or bot-heavy). The encoder $\phi$ and decoder $\theta$ are trained to minimize the standard ELBO, which in our case serves as the instantaneous Free Energy $\mathcal{F}_t$.
+
+\textbf{2. Neural Ordinary Differential Equations (NODE) for State Evolution:}
+Market dynamics in RTB are inherently asynchronous. Between two auctions at $t$ and $t+\delta$, the market state evolves. We model this evolution using a NODE \cite{ref_new_RealizingSynthe}:
+\begin{equation}
+    \frac{d\mathbf{x}(t)}{dt} = f_{\omega}(\mathbf{x}(t), u(t), t)
+\end{equation}
+where $f_{\omega}$ is a neural network parameterized by $\omega$. This allows the agent to infer the latent state at any arbitrary time point, enabling precise budget pacing and timing of bids. The combination of VAE and NODE ensures that the agent's internal model of the market remains continuous and differentiable, facilitating the calculation of the EFE gradients for policy optimization. This architecture is particularly robust for resource allocation in edge-cloud bidding environments \cite{ref_new_Largelanguagemo}.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\textwidth]{method_figure.pdf}
+    \caption{\textbf{The Parse Error Framework.} Left: The VAE-NODE architecture processes asynchronous market signals $\mathbf{o}_t$ into a latent trajectory $\mathbf{x}_t$. Right: The Active Inference controller evaluates bidding policies $\pi$ by balancing epistemic foraging (reducing uncertainty about competitor models) and instrumental utility (meeting budget constraints). The "Parse Error" signal (residual Free Energy) triggers model updates when market regimes shift abruptly.}
+    \label{fig:method_overview}
+\end{figure}
+
+\subsection{Active Bidding Strategy: Policy Selection and Pacing}
+The policy $u_{t+1}$ is selected by sampling from a Softmax distribution over the negative EFE:
+\begin{equation}
+    P(u_{t+1} = \pi) = \frac{\exp(-\gamma \mathcal{G}(\pi))}{\sum_{\pi'} \exp(-\gamma \mathcal{G}(\pi'))}
+\end{equation}
+where $\gamma$ is a precision parameter representing the agent's confidence in its market model. Unlike traditional RTB strategies that use fixed bid-shading factors, our policy naturally adapts to the estimated "competitor temperature." 
+
+\textbf{Mitigating the Winner's Curse:} When uncertainty $H(Q(\mathbf{x}_t))$ is high, $\mathcal{G}(\pi)$ is dominated by the epistemic term, leading the agent to bid conservatively or in patterns that maximize information gain (e.g., probing various price points). As the agent "parses" the market and uncertainty decreases, the instrumental term dominates, leading to aggressive bidding on high-value impressions where the agent has high confidence in the clearing price \cite{ref_new_AdaptiveActiveI}. This transition ensures that the agent avoids overpaying during periods of market volatility.
+
+\textbf{Budget Pacing as Preference Matching:} We encode the budget constraint as a prior preference $P(\mathbf{o}_\tau | \mathbf{C})$ over the state of the agent's remaining balance. If the budget is depleting too quickly, the discrepancy between the predicted state and the preference $\mathbf{C}$ increases the Free Energy, automatically shifting the policy toward more selective, lower-cost bidding \cite{ref_new_AFieldGuideforP}. This principled derivation of pacing from AIF avoids the need for the heuristic PID controllers commonly used in industry.

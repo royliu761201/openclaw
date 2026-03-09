@@ -1,0 +1,65 @@
+\section{Methodology}
+
+The \texttt{Active-Bidder} framework re-conceptualizes the automated bidding process through the lens of Active Inference and the Free Energy Principle (FEP). Unlike traditional reinforcement learning (RL) approaches that maximize an external reward signal $R$ \citep{sutton2018reinforcement}, our method seeks to minimize the \textit{Variational Free Energy} (VFE), a bound on the ``surprise'' or ``evidence'' of observations given a system's internal world model \citep{friston2010free}. This formulation allows the bidding agent to maintain a robust internal state of user behavior, balancing the immediate goal of ad conversion with the long-term objective of maintaining an accurate predictive model of the market environment.
+
+\subsection{The Active Inference Bidding Objective}
+
+In our framework, the bidding agent maintains a belief $Q(s)$ about the hidden state of a user $s \in \mathcal{S}$ (e.g., latent intent, price sensitivity) given a set of historical observations $o \in \mathcal{O}$. The environment provides observations $o$ consisting of ad relevance scores, click-through signals, and conversion events. The agent's goal is to minimize the VFE, denoted as $\mathcal{F}$, which serves as a proxy for the intractability of the marginal likelihood of the data.
+
+Formally, we define the VFE as the sum of a complexity term and an accuracy term:
+\begin{equation}
+\mathcal{F} = \underbrace{D_{KL}\left[Q(s) \parallel P(s)\right]}_{\text{Complexity}} - \underbrace{\mathbb{E}_{Q(s)} \left[\ln P(o|s)\right]}_{\text{Accuracy}}
+\end{equation}
+where $P(s)$ is the prior belief (or the agent's world model of the user) and $P(o|s)$ is the generative likelihood (the relevance of an ad given the hidden state). In the context of digital advertising, this loss function ensures that the agent's latent representations do not deviate excessively from its established user personas (Complexity) while remaining highly predictive of the user's actual behavior (Accuracy).
+
+\subsection{Complexity vs. Accuracy: The Informational Trade-off}
+
+A central innovation of \texttt{Active-Bidder} is the explicit management of the complexity-accuracy trade-off via a scaling parameter $\beta$. This allows the system to differentiate between ``expected'' interactions and ``surprising'' shifts in user behavior.
+
+\subsubsection{Accuracy: Maximizing Relevance}
+The accuracy term, $-\mathbb{E}_{Q(s)} [\ln P(o|s)]$, measures the predictive power of the latent state. In our implementation, we approximate this using Binary Cross-Entropy (BCE) for discrete interactions (clicks/conversions) or Mean Squared Error (MSE) for continuous relevance scores. Given a hidden state representation $s$ sampled from $Q(s)$, and an observation $o$, the accuracy term ensures that the agent correctly identifies whether a specific advertisement will resonate with the user's current latent state. High accuracy implies that the agent's internal model can perfectly reconstruct the user's interaction history.
+
+\subsubsection{Complexity: Regularizing Belief Updates}
+The complexity term, $D_{KL}[Q(s) \parallel P(s)]$, represents the informational cost of updating the agent's belief from the prior $P(s)$ to the posterior $Q(s)$. Within the FEP framework, this acts as a regularizer that prevents the model from ``overfitting'' to a single observation. It enforces a degree of ``epistemic humility,'' ensuring that the agent does not radically alter its perception of a user's intent based on a single outlier click. As noted in recent developments in test-time training \citep{sun2024learning}, maintaining a stable yet adaptable internal state is crucial for generalization in non-stationary environments. By penalizing high-complexity updates, \texttt{Active-Bidder} maintains a more resilient user profile that filters out stochastic noise in bidding streams.
+
+\subsection{Neural Implementation and Latent Space Dynamics}
+
+We implement the variational posterior $Q(s|o)$ and the prior $P(s)$ using deep neural networks parameterized by $\phi$ and $\theta$, respectively. Following the architecture of Variational Autoencoders (VAEs), the posterior is assumed to follow a multivariate Gaussian distribution $\mathcal{N}(\mu, \sigma^2 \mathbf{I})$.
+
+The total loss function used for training the \texttt{Active-Bidder} agent is:
+\begin{equation}
+\mathcal{L}_{total} = \beta \cdot D_{KL}\left(\mathcal{N}(\mu_q, \text{diag}(\sigma_q^2)) \parallel \mathcal{N}(\mu_p, \text{diag}(\sigma_p^2))\right) + \mathcal{L}_{relevance}(y, \hat{y})
+\end{equation}
+where $\mu_q, \sigma_q$ are the parameters of the system's current belief, and $\mu_p, \sigma_p$ represent the long-term world model. This structure allows the model to leverage recent advances in transformer-based architectures for sequence modeling \citep{vaswani2017attention}, where the attention mechanism helps distill the prior $P(s)$ from long-term user interaction histories.
+
+\subsection{The Bidding Algorithm}
+
+The operational loop of \texttt{Active-Bidder} involves three distinct phases: \textit{Perception}, \textit{Valuation}, and \textit{Action}. During perception, the agent receives an ad auction request and updates its posterior $Q(s)$ using the current observation. In the valuation phase, it calculates the expected free energy for potential actions (bid amounts). Finally, in the action phase, it executes the bid that minimizes the predicted future surprise.
+
+The pseudocode for the training and inference cycle is provided in Algorithm 1.
+
+\begin{algorithm}
+\caption{Active-Bidder: Variational Free Energy Minimization}
+\begin{algorithmic}[1]
+\STATE \textbf{Input:} User observation sequence $\mathcal{O} = \{o_1, \dots, o_T\}$, prior model $P_\theta$, posterior model $Q_\phi$, complexity weight $\beta$
+\STATE \textbf{Initialize:} Model parameters $\theta, \phi$
+\FOR{each auction $t$}
+    \STATE Receive observation $o_t$ (Ad context, user features)
+    \STATE Compute prior parameters: $(\mu_p, \log\sigma_p^2) \leftarrow P_\theta(\text{history}_{t-1})$
+    \STATE Compute posterior parameters: $(\mu_q, \log\sigma_q^2) \leftarrow Q_\phi(o_t, \text{history}_{t-1})$
+    \STATE Sample latent state: $s_t \sim \mathcal{N}(\mu_q, \text{diag}(\exp(\log\sigma_q^2)))$
+    \STATE Predict relevance score: $\hat{y}_t = \text{Decoder}(s_t)$
+    \STATE Calculate Accuracy: $\mathcal{A} = \text{BinaryCrossEntropy}(\hat{y}_t, y_t)$
+    \STATE Calculate Complexity: $\mathcal{C} = -0.5 \sum (1 + \log\sigma_q^2 - \log\sigma_p^2 - \frac{(\mu_q - \mu_p)^2 + \exp(\log\sigma_q^2)}{\exp(\log\sigma_p^2)})$
+    \STATE Update $\theta, \phi$ by minimizing $\mathcal{L} = \mathcal{A} + \beta \mathcal{C}$
+    \STATE Determine Bid: $B_t = f(\hat{y}_t, \text{budget})$
+\ENDFOR
+\STATE \textbf{Return} Optimized models $P_\theta, Q_\phi$
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Connection to Existing Paradigms}
+
+The \texttt{Active-Bidder} framework bridges the gap between purely discriminative CTR models and fully generative user simulators. While standard models like BERT-based click predictors \citep{devlin2018bert} focus exclusively on the accuracy term (likelihood), they often fail to capture the uncertainty inherent in the user's state. By incorporating the complexity term, our method naturally handles uncertainty: when the KL divergence is high, the agent recognizes that the current observation is significantly different from its prior, signaling a need for a more cautious bidding strategy or an increase in exploration.
+
+This approach is particularly relevant for high-frequency bidding environments where data distribution shifts are common. The VFE objective provides a principled way to perform ``test-time adaptation'' without the risk of catastrophic forgetting, as the prior $P(s)$ acts as a tether to the agent's learned knowledge base. This aligns with modern trends in foundational models where robustness to distribution shift is achieved through continuous state-space updates \citep{gu2023mamba}. In the following section, we demonstrate how this mathematical formulation translates into superior performance across various real-world advertising benchmarks.

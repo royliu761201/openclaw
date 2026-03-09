@@ -1,0 +1,215 @@
+\begin{thebibliography}{28}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Amari(2016)]{amari2016information}
+Shun-ichi Amari.
+\newblock \emph{Information Geometry and Its Applications}.
+\newblock Springer, 2016.
+
+\bibitem[Amari and Nagaoka(2000)]{amari2000information}
+Shun-ichi Amari and Hiroshi Nagaoka.
+\newblock \emph{Methods of Information Geometry}.
+\newblock American Mathematical Society, 2000.
+
+\bibitem[Amodei et~al.(2016)Amodei, Olah, Steinhardt, Christiano, Schulman, and
+  Mane]{amodei2016concrete}
+Dario Amodei, Chris Olah, Jacob Steinhardt, Paul Christiano, John Schulman, and
+  Dan Mane.
+\newblock Concrete problems in {AI} safety.
+\newblock \emph{arXiv preprint arXiv:1606.06565}, 2016.
+
+\bibitem[Bai et~al.(2022{\natexlab{a}})Bai, Jones, Ndousse, Askell,
+  et~al.]{bai2022helpful}
+Yuntao Bai, Andy Jones, Kamal Ndousse, Amanda Askell, et~al.
+\newblock Training a helpful and harmless assistant with reinforcement learning
+  from human feedback.
+\newblock \emph{arXiv preprint arXiv:2204.05862}, 2022{\natexlab{a}}.
+
+\bibitem[Bai et~al.(2022{\natexlab{b}})Bai, Kadavath, Kundu, Askell,
+  et~al.]{bai2022constitutional}
+Yuntao Bai, Saurav Kadavath, Sandipan Kundu, Amanda Askell, et~al.
+\newblock Constitutional {AI}: Harmlessness from {AI} feedback.
+\newblock \emph{arXiv preprint arXiv:2212.08073}, 2022{\natexlab{b}}.
+
+\bibitem[Cui et~al.(2024)Cui, Yuan, Ding, Yao, He, Zhu, Ni, Xie, Xie, Lin, Liu,
+  and Sun]{cui2024ultrafeedback}
+Ganqu Cui, Lifan Yuan, Ning Ding, Guanming Yao, Bingxiang He, Wei Zhu, Yuan Ni,
+  Guotong Xie, Ruobing Xie, Yankai Lin, Zhiyuan Liu, and Maosong Sun.
+\newblock Ultrafeedback: Boosting language models with scaled ai feedback.
+\newblock In \emph{Proceedings of the 41st International Conference on Machine
+  Learning}, 2024.
+\newblock Large-scale multi-aspect preference dataset for alignment and reward
+  modeling.
+
+\bibitem[Dathathri et~al.(2020)Dathathri, Madotto, Lan, Hung, Frank, Molino,
+  Yosinski, and Liu]{dathathri2020plug}
+Sumanth Dathathri, Andrea Madotto, Janice Lan, Jane Hung, Eric Frank, Piero
+  Molino, Jason Yosinski, and Rosanne Liu.
+\newblock Plug and play language models: A simple approach to controlled text
+  generation.
+\newblock In \emph{International Conference on Learning Representations}, 2020.
+
+\bibitem[Davis et~al.(2024)Davis, Kessler, Petrache, Ceylan, Bronstein, and
+  Bose]{davis2024fisherflow}
+Oscar Davis, Samuel Kessler, Mircea Petrache, {\.I}smail~{\.I}lkan Ceylan,
+  Michael~M. Bronstein, and Avishek~Joey Bose.
+\newblock Fisher flow matching for generative modeling over discrete data.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2024.
+
+\bibitem[Hazra et~al.(2024)Hazra, Layek, Banerjee, and Poria]{hazra2024safety}
+Rima Hazra, Sayan Layek, Somnath Banerjee, and Soujanya Poria.
+\newblock Safety arithmetic: A framework for test-time safety alignment of
+  language models by steering parameters and activations.
+\newblock In \emph{Proceedings of the 2024 Conference on Empirical Methods in
+  Natural Language Processing}, 2024.
+
+\bibitem[Huang et~al.(2025)Huang, Sengupta, Bonadiman, Lai, Gupta, Pappas,
+  Mansour, Kirchhoff, and Roth]{huang2025deal}
+James~Y. Huang, Sailik Sengupta, Daniele Bonadiman, Yi-An Lai, Arshit Gupta,
+  Nikolaos Pappas, Saab Mansour, Katrin Kirchhoff, and Dan Roth.
+\newblock Deal: Decoding-time alignment for large language models.
+\newblock In \emph{Proceedings of the 63rd Annual Meeting of the Association
+  for Computational Linguistics (ACL 2025)}, 2025.
+
+\bibitem[Hung et~al.(2025)Hung, Majumder, Mehrish, and
+  Sporia]{hung2025rewardtree}
+Chia-Yu Hung, Navonil Majumder, Ambuj Mehrish, and Saurabh Sporia.
+\newblock Reward-guided tree search for inference time alignment of large
+  language models.
+\newblock In \emph{Proceedings of the 2025 Conference of the North American
+  Chapter of the Association for Computational Linguistics (NAACL 2025)}, 2025.
+
+\bibitem[Im and Li(2025)]{im2025ksteering}
+Shawn Im and Yixuan Li.
+\newblock Unified multi-attribute control for language models.
+\newblock In \emph{Findings of the Association for Computational Linguistics:
+  EMNLP 2025}, 2025.
+\newblock K-Steering; unified framework for multi-attribute activation steering
+  and benchmarks TONEBANK / DEBATEMIX.
+
+\bibitem[Jaynes(1957)]{jaynes1957information}
+Edwin~T Jaynes.
+\newblock Information theory and statistical mechanics.
+\newblock \emph{Physical review}, 106\penalty0 (4):\penalty0 620, 1957.
+
+\bibitem[Khanov et~al.(2024)Khanov, Burapacheep, and Li]{khanov2024args}
+Maxim Khanov, Jiraphan Burapacheep, and Yao Li.
+\newblock Args: Alignment as reward-guided search.
+\newblock In \emph{International Conference on Learning Representations (ICLR
+  2024)}, 2024.
+
+\bibitem[Krause et~al.(2021)Krause, Gotmare, McCann, Keskar, Joty, Socher, and
+  Rajani]{krause2021gedi}
+Ben Krause, Akhilesh~Deepak Gotmare, Bryan McCann, Nitish~Shirish Keskar,
+  Shafiq Joty, Richard Socher, and Nazneen~Fatema Rajani.
+\newblock {GeDi}: Generative discriminator guided sequence generation.
+\newblock In \emph{Findings of the Association for Computational Linguistics:
+  EMNLP 2021}, 2021.
+
+\bibitem[Li et~al.(2023)Li, Patel, Vi{\'e}gas, Pfister, and
+  Wattenberg]{li2023inference}
+Kenneth Li, Oam Patel, Fernanda Vi{\'e}gas, Hanspeter Pfister, and Martin
+  Wattenberg.
+\newblock Inference-time intervention: Eliciting truthful answers from a
+  language model.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2023.
+
+\bibitem[Liu et~al.(2021)Liu, Sap, Lu, Swayamdipta, Bhagavatula, Smith, and
+  Choi]{liu2021dexperts}
+Alisa Liu, Maarten Sap, Ximing Lu, Swabha Swayamdipta, Chandra Bhagavatula,
+  Noah~A. Smith, and Yejin Choi.
+\newblock {DExperts}: Decoding-time controlled text generation with experts and
+  anti-experts.
+\newblock In \emph{Proceedings of the 59th Annual Meeting of the Association
+  for Computational Linguistics}, pages 6691--6706, 2021.
+
+\bibitem[Liu et~al.(2024)Liu, Guo, Bianco, Calandriello, Berthet, Llinares,
+  Hoffmann, Dixon, Valko, and Blondel]{liu2024dera}
+Tianlin Liu, Shangmin Guo, Leonardo Bianco, Daniele Calandriello, Quentin
+  Berthet, Felipe Llinares, Jessica Hoffmann, Lucas Dixon, Michal Valko, and
+  Mathieu Blondel.
+\newblock Decoding-time realignment of language models.
+\newblock In \emph{Proceedings of the 41st International Conference on Machine
+  Learning (ICML 2024)}, 2024.
+
+\bibitem[Ouyang et~al.(2022)Ouyang, Wu, Jiang, Almeida, Wainwright, Mishkin,
+  Zhang, Agarwal, Slama, Ray, et~al.]{ouyang2022training}
+Long Ouyang, Jeff Wu, Xu~Jiang, Diogo Almeida, Carroll Wainwright, Pamela
+  Mishkin, Chong Zhang, Sandhini Agarwal, Katarina Slama, Alex Ray, et~al.
+\newblock Training language models to follow instructions with human feedback.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2022.
+
+\bibitem[Parekh et~al.(2025)Parekh, Khayatan, Shukor, Dapogny, Newson, and
+  Cord]{parekh2025learningsteer}
+Jayneel Parekh, Pegah Khayatan, Mustafa Shukor, Arnaud Dapogny, Alasdair
+  Newson, and Matthieu Cord.
+\newblock Learning to steer: Input-dependent steering for multimodal large
+  language models.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2025.
+
+\bibitem[Peyr{\'e} and Cuturi(2019)]{peyre2019computational}
+Gabriel Peyr{\'e} and Marco Cuturi.
+\newblock \emph{Computational Optimal Transport}.
+\newblock Now Publishers, 2019.
+
+\bibitem[Rafailov et~al.(2023)Rafailov, Sharma, Mitchell, and
+  Finn]{rafailov2023dpo}
+Raf Rafailov, Nikhil Sharma, Eric Mitchell, and Chelsea Finn.
+\newblock Direct preference optimization: Your language model is secretly a
+  reward model.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2023.
+
+\bibitem[Shi et~al.(2024)Shi, Chen, Hu, Liu, Hajishirzi, Smith, and
+  Du]{shi2024mod}
+Ruizhe Shi, Yifang Chen, Yushi Hu, Alisa Liu, Hannaneh Hajishirzi, Noah~A.
+  Smith, and Simon~S. Du.
+\newblock Decoding-time language model alignment with multiple objectives.
+\newblock In \emph{Advances in Neural Information Processing Systems}, 2024.
+\newblock Multi-Objective Decoding (MOD) for multi-reward decoding-time
+  alignment.
+
+\bibitem[Soo et~al.(2025)Soo, Guang, Teng, Balaganesh, Guoxian, and
+  Ming]{soo2025fgaa}
+Samuel Soo, Chen Guang, Wesley Teng, Chandrasekaran Balaganesh, Tan Guoxian,
+  and Yan Ming.
+\newblock Interpretable steering of large language models with feature guided
+  activation additions.
+\newblock \emph{arXiv preprint arXiv:2501.09929}, 2025.
+\newblock FGAA; uses sparse autoencoders to build interpretable steering
+  vectors.
+
+\bibitem[Villani(2008)]{villani2008optimal}
+C{\'e}dric Villani.
+\newblock \emph{Optimal Transport: Old and New}.
+\newblock Springer, 2008.
+
+\bibitem[Wang et~al.(2025)Wang, Pan, Ding, Wang, Jiang, Li, and
+  Biemann]{wang2025cogsteer}
+Xintong Wang, Jingheng Pan, Liang Ding, Longyue Wang, Longqin Jiang, Xingshan
+  Li, and Chris Biemann.
+\newblock Cogsteer: Cognition-inspired selective layer intervention for
+  efficiently steering large language models.
+\newblock In \emph{Findings of the Association for Computational Linguistics:
+  ACL 2025}, 2025.
+
+\bibitem[Zhao et~al.(2025)Zhao, Sun, Kong, Li, Wang, Jiang, Zhu, Abdelzaher,
+  Choi, Li, and Shao]{zhao2025bodes}
+Hongjue Zhao, Haosen Sun, Jiangtao Kong, Xiaochang Li, Qineng Wang, Liwei
+  Jiang, Qi~Zhu, Tarek~F. Abdelzaher, Yejin Choi, Manling Li, and Huajie Shao.
+\newblock Activation steering for {LLM} alignment via a unified ode-based
+  framework.
+\newblock \emph{arXiv preprint}, 2025.
+\newblock Proposes BODES; views activation steering as solving an ODE with
+  barrier functions.
+
+\bibitem[Zhou et~al.(2025)Zhou, Jin, Shi, and Li]{zhou2025steeringconf}
+Ziang Zhou, Tianyuan Jin, Jieming Shi, and Qing Li.
+\newblock Calibrating {LLM} confidence with semantic steering: A multi-prompt
+  aggregation framework.
+\newblock \emph{arXiv preprint arXiv:2503.02863}, 2025.
+
+\end{thebibliography}

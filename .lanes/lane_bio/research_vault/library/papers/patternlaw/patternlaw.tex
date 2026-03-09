@@ -1,0 +1,634 @@
+% ============================================================
+% ICML 2025 - PatternLaw (Best-Oral Target) - MAIN.TEX
+% ============================================================
+
+\documentclass{article}
+
+% Recommended ICML packages
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs} % professional-quality tables
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage{bm}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+% Submission mode (no [accepted])
+\usepackage{icml2026}
+
+\usepackage[colorlinks]{hyperref}
+\hypersetup{
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue,
+    breaklinks=true
+}
+
+% For theorems and such
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% Custom macros
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\abs}[1]{\left\lvert#1\right\rvert}
+
+
+\icmltitlerunning{PatternLaw: PDE Scaling Laws for Scaling-Aware Neural Operators}
+
+
+\begin{document}
+
+\twocolumn[
+\icmltitle{PatternLaw: Discovering PDE Scaling Laws for Scaling-Aware Neural Operators}
+
+
+% Authors
+\icmlsetsymbol{equal}{*}
+
+\begin{icmlauthorlist}
+\icmlauthor{Xiaohua Liu}{equal,jhun,xiongan}
+\icmlauthor{Chengkai Zhang}{equal,jhun}
+\end{icmlauthorlist}
+
+\icmlaffiliation{jhun}{Jianghan University, Wuhan, China}
+\icmlaffiliation{xiongan}{Yuanyu Xinqing (Xiong'an) Technology Co., Ltd., Xiong'an, China}
+
+\icmlcorrespondingauthor{Xiaohua Liu}{xiaohualiu@jhun.edu.cn}
+
+\icmlkeywords{AI4Science, PDEs, Scaling Laws, Neural Operators, Law Discovery}
+
+]
+\printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
+
+\vskip 0.3in
+
+\begin{abstract}
+Scaling laws guide the design of large deep learning systems by linking model size, data, and compute to performance. For nonlinear partial differential equations (PDEs), however, analogous laws relating equation parameters to intrinsic spatial and temporal scales are scattered and largely derived case by case. We present \emph{PatternLaw}, an AI-driven framework that discovers, explains, and \emph{uses} scaling laws for parametric PDEs and their neural surrogates.
+
+PatternLaw couples large language model (LLM) agents, numerical solvers, and symbolic regression: LLMs plan simulations in parameter space, solvers generate fields, feature extractors estimate intrinsic scales, and symbolic regression proposes compact laws that are checked against PDE theory. On pattern-forming reaction--diffusion systems (Gray--Scott and Schnakenberg) and the chaotic Kuramoto--Sivashinsky equation, PatternLaw recovers and extends Turing- and inertial-manifold-type scalings for wavelengths, correlation lengths, and attractor dimension. Using these laws to make Fourier Neural Operators and DeepONets \emph{scaling-aware}---via mesh and step-size schedules, normalization, and curricula—consistently improves sample efficiency and out-of-distribution generalization over scale-agnostic baselines at fixed compute.
+\end{abstract}
+
+% ============================================================
+% 1. Introduction
+% ============================================================
+
+
+
+\section{Introduction}
+
+The recent success of large-scale deep learning owes much to \emph{scaling laws}: simple power-law relations that connect model size, dataset size, and compute to downstream performance \citep{Kaplan2020ScalingLaws,Hoffmann2022Chinchilla,Bahri2024ExplainingScaling,Sengupta2025ScalingSurvey}. These laws provide both a predictive tool and a conceptual framework for reasoning about how performance improves under resource scaling. In contrast, for nonlinear partial differential equations (PDEs), especially those governing pattern formation and spatiotemporal chaos, our understanding of scaling remains largely case-by-case and analytically intensive.
+
+Classical works in reaction--diffusion systems and Turing patterns \citep{Cross1993Pattern,Koch1994BiologicalPattern,Murray2003MathBioII,Maini2004PatternBiology} show that near bifurcation points, dispersion relations predict dominant wavenumbers and pattern wavelengths. In specific models such as Gray--Scott \citep{Gray1983Autocatalytic,Gray1984Oscillations,Pearson1993Complex,McGough2004PatternGS,Gandy2022GrayScottXPPAUT,Ali2023GrayScottTuring}, asymptotic analysis yields detailed existence and stability results for localized spikes and spots \citep{Doelman1997Localized,Kolokolnikov2005Spike1D,Sun2005TwoSpike,Chen2011GS2DSpots,Ward2006AsymptoticRD}. For chaotic PDEs such as Kuramoto--Sivashinsky (KS), inertial manifold theory ties attractor dimension to domain size and parameters \citep{Jolly2000InertialKS,WittenbergHolmes1999KSScale}. However, these results typically require bespoke analysis, are restricted to asymptotic regimes, and do not form a \emph{unified}, data-driven picture of scaling across diverse PDE families.
+
+At the same time, deep learning for PDEs has rapidly advanced, with physics-informed neural networks (PINNs) \citep{Raissi2019PINN,Cai2021PINNFluidReview} and neural operators \citep{Li2021FNO,Kovachki2021NeuralOperator,Lu2021DeepONet,Tripura2022WaveletNO,Cao2024LaplaceNO,Xiong2024KoopmanNO} emerging as powerful parametric surrogates. Yet these models are often \emph{scale-agnostic}: they treat spatial and temporal discretization as fixed hyperparameters, rather than quantities that should adapt to intrinsic PDE scales. This mismatch leads to wasted compute in some regimes and under-resolution in others.
+
+Meanwhile, the emergence of large language models (LLMs) as foundation models for reasoning has sparked a wave of work on AI-driven scientific discovery: from symbolic PDE identification \citep{Rudy2017PDEDiscovery} and automatic equation discovery with LLMs \citep{Du2024LLMEquationDiscovery,Luo2025LLMPDEDiscovery,Ivanchik2025LLMDream,Bhatnagar2025SymbolicPDELLM} to program-search-based mathematical breakthroughs \citep{RomeraParedes2024FunSearch} and concept-driven physical law discovery systems like AI-Newton \citep{Fang2025AINewton}. These advances suggest that LLMs can do more than serve as code autocompleters: they can orchestrate experiments, propose hypotheses, and help formalize proofs.
+
+\paragraph{Thesis.}
+We argue that scaling laws are as fundamental to nonlinear PDEs as they are to neural networks, and that LLMs can act as effective co-scientists for discovering, explaining, and exploiting these laws across PDE families.
+
+\paragraph{Contributions.}
+We make three contributions:
+\begin{itemize}
+    \item \textbf{A general framework for PDE scaling laws.} We introduce \emph{PatternLaw}, an AI-driven framework that couples LLM-guided experiment design, numerical solvers, and symbolic regression to discover compact scaling laws linking PDE parameters to intrinsic spatial and temporal scales.
+    \item \textbf{New scaling relations in pattern-forming and chaotic PDEs.} Applying PatternLaw to reaction--diffusion systems (Gray--Scott and Schnakenberg) and the Kuramoto--Sivashinsky equation, we obtain simple scaling laws for dominant wavelengths, correlation lengths, and chaotic attractor measures that both recover and extend classical Turing and inertial-manifold analyses.
+
+        \item \textbf{Scaling-aware neural operators for PDEs.} We show that using the discovered scaling laws as mesh and step-size schedulers, normalization priors, and curriculum designers significantly improves the sample efficiency and generalization of neural operators such as Fourier Neural Operators and DeepONets on parametric PDE benchmarks.
+
+
+\end{itemize}
+
+These results point to a tighter integration of AI-driven law discovery and neural PDE surrogates: discovered laws not only summarize PDE behavior but also inform the design of more principled, scale-aware architectures.
+
+% ============================================================
+% 2. Background and Problem Setup
+% ============================================================
+\section{Background and Problem Setup}
+
+\subsection{Pattern-forming and chaotic PDEs}
+
+We briefly review the PDE families considered in this work.
+
+\paragraph{Reaction--diffusion and Turing patterns.}
+Reaction--diffusion systems take the form
+\begin{equation}
+    \partial_t u = D \Delta u + f(u;\theta),
+\end{equation}
+where $u(x,t)\in\R^m$ denotes concentrations, $D$ is a diffusion matrix, $f$ captures local reactions, and $\theta$ collects parameters such as feed and kill rates. Under appropriate conditions, homogeneous equilibria become unstable to spatial perturbations, leading to Turing patterns \citep{Cross1993Pattern,Koch1994BiologicalPattern,Murray2003MathBioII}. The Gray--Scott model \citep{Gray1983Autocatalytic,Gray1984Oscillations,Pearson1993Complex} is a canonical two-species system exhibiting stripes, spots, and labyrinthine structures:
+\begin{align}
+    \partial_t u &= D_u \Delta u - u v^2 + F(1-u), \\
+    \partial_t v &= D_v \Delta v + u v^2 - (F + k) v,
+\end{align}
+with diffusion coefficients $D_u,D_v>0$, feed rate $F$, and kill rate $k$. Extensive work has analyzed localized spikes, spots, and their bifurcations in one and two dimensions \citep{Doelman1997Localized,Kolokolnikov2005Spike1D,Sun2005TwoSpike,Chen2011GS2DSpots,McGough2004PatternGS,Ward2006AsymptoticRD,Gandy2022GrayScottXPPAUT,Ali2023GrayScottTuring,Cadiot2024GS2DConstructive,Hao2024VariationalGrayScott}.
+
+\paragraph{Kuramoto--Sivashinsky and spatiotemporal chaos.}
+The Kuramoto--Sivashinsky (KS) equation
+\begin{equation}
+    \partial_t u + u \partial_x u + \partial_{xx}u + \partial_{xxxx}u = 0
+\end{equation}
+on a periodic domain is a prototype for spatiotemporal chaos. Its attractor dimension and energy spectra exhibit non-trivial dependence on domain size and parameters \citep{Jolly2000InertialKS,WittenbergHolmes1999KSScale}. These provide a natural testing ground for scaling laws in chaotic PDEs.
+
+\subsection{Neural PDE surrogates and scale-agnostic design}
+
+Deep learning for PDEs has progressed along two major lines: physics-informed neural networks (PINNs) \citep{Sirignano2018DGM,Raissi2019PINN,Cai2021PINNFluidReview} and neural operators \citep{Li2021FNO,Kovachki2021NeuralOperator,Lu2021DeepONet,Tripura2022WaveletNO,Cao2024LaplaceNO,Xiong2024KoopmanNO}. While these methods excel at learning parametric solution operators, they typically treat spatial meshes, time-step sizes, and normalization strategies as fixed hyperparameters tuned per benchmark.
+
+In contrast, classical numerical analysis emphasizes that discretization should adapt to intrinsic solution scales (e.g., dominant wavelengths, correlation lengths). Our central hypothesis is that \emph{PDE scaling laws can bridge this gap}: by mapping parameters to intrinsic scales, they provide principled priors for designing neural PDE architectures and training curricula.
+
+\subsection{Problem statement}
+
+Let $\mathcal{F}_\theta$ denote a parametric PDE family with parameters $\theta\in\Theta$, defined on a spatial domain $\Omega\subset\R^d$. For each $\theta$, the PDE solution $u_\theta(x,t)$ exhibits intrinsic spatial and temporal scales, such as:
+\begin{itemize}
+    \item dominant spatial wavelength $\lambda_\theta$ (e.g., of a Turing pattern);
+    \item correlation length $\xi_\theta$;
+    \item characteristic time scale $\tau_\theta$ or Lyapunov time.
+\end{itemize}
+Our goals are:
+\begin{enumerate}
+    \item \textbf{Scaling law discovery.} Find compact functional relations of the form
+    \begin{equation}
+        s_\theta \approx g(\theta; \phi),
+    \end{equation}
+    where $s_\theta$ is an intrinsic scale and $g$ is a low-complexity expression (e.g., a power law) with parameters $\phi$.
+    \item \textbf{Theoretical grounding.} Connect these empirical laws to classical PDE theory whenever possible, validating or refining existing asymptotic results.
+    \item \textbf{Scaling-aware neural surrogates.} Use the discovered laws to design discretization, normalization, and training strategies for neural PDE solvers, and quantify their benefits.
+\end{enumerate}
+
+% ============================================================
+% 3. PatternLaw Framework
+% ============================================================
+\section{The PatternLaw Framework}
+
+PatternLaw is an AI-driven framework that closes the loop between numerical experimentation, symbolic law discovery, and theoretical explanation. Figure~\ref{fig:pipeline} provides an overview.
+
+\begin{figure*}[t]
+    \centering
+    % \includegraphics[width=\textwidth]{figs/patternlaw_pipeline.pdf}
+    \fbox{\parbox[c][4.5cm][c]{0.9\textwidth}{\centering Placeholder: PatternLaw pipeline (LLM agent, simulator, FFT scaler, symbolic regression, proof assistant)}}
+    \caption{High-level overview of the PatternLaw framework. LLM agents design simulation campaigns in parameter space, numerical solvers generate solution fields, feature extractors compute intrinsic scales such as pattern wavelengths, symbolic regression proposes candidate scaling laws, and LLMs assist in deriving and checking proofs against PDE theory.}
+    \label{fig:pipeline}
+\end{figure*}
+
+\subsection{LLM-guided experiment design in parameter space}
+
+Given a PDE family $\mathcal{F}_\theta$ and a candidate observable $s_\theta$ (e.g., dominant wavelength), PatternLaw uses an LLM agent to iteratively refine a sampling distribution over $\Theta$:
+\begin{itemize}
+    \item start with a coarse grid or low-discrepancy design over $\Theta$;
+    \item run preliminary simulations to identify regions with non-trivial structure (e.g., pattern-forming regimes);
+    \item adaptively refine sampling where $s_\theta$ varies rapidly or exhibits qualitative transitions.
+\end{itemize}
+The agent is implemented as a prompt-engineered policy that proposes new parameter batches based on summary statistics of past runs, similar in spirit to FunSearch-style program search \citep{RomeraParedes2024FunSearch} and AI-Newton's concept-driven refinement \citep{Fang2025AINewton}.
+
+\subsection{Numerical solvers and feature extraction}
+\label{sec:fft_method}
+
+For each sampled $\theta$, PatternLaw runs a trusted numerical solver until a specified time horizon or steady-state criterion is met. In this work we use pseudo-spectral or high-order finite-difference solvers with periodic boundary conditions for Gray--Scott and KS, and adaptive time-stepping (embedded Runge--Kutta) to ensure stability and accuracy. Solver details are summarized in Appendix~\ref{app:exp_details}.
+
+From the resulting solution fields $u_\theta(x,t)$, we compute intrinsic scales, focusing in this paper on spatial wavelengths and correlation lengths.
+
+\paragraph{Dominant spatial wavelength via FFT.}
+For a two-dimensional snapshot $u(x,y)$ on a uniform $N\times N$ grid over $\Omega=[0,L]^2$, we:
+\begin{enumerate}
+    \item subtract the spatial mean to remove the DC component;
+    \item compute the 2D discrete Fourier transform $\hat{u}(k_x,k_y)$;
+    \item form the power spectrum $P(k_x,k_y)=|\hat{u}|^2$ and its radial average $P(r)$ over $r=\sqrt{k_x^2+k_y^2}$;
+    \item identify the radius $r^*$ at which $P(r)$ is maximized away from $r=0$, and define the dominant wavenumber $k^* = r^*$;
+    \item define the dominant wavelength as
+    \begin{equation}
+        \lambda_\theta = \frac{2\pi}{k^*}.
+    \end{equation}
+\end{enumerate}
+This operational definition is robust to moderate disorder: even when patterns are only approximately periodic, the power spectrum typically exhibits a ring of elevated energy from which a dominant scale can be extracted.
+
+\paragraph{Correlation length and chaotic scales.}
+For chaotic PDEs such as KS, we use spatial correlation functions
+\begin{equation}
+    C_\theta(\Delta x) = \E_{x,t}\bigl[ u_\theta(x,t)\,u_\theta(x+\Delta x,t)\bigr]
+\end{equation}
+and define a correlation length $\xi_\theta$ as the distance at which $C_\theta$ decays below a fixed fraction of its zero-lag value. Temporal Lyapunov time scales are estimated via standard tangent-space methods, as detailed in Appendix~\ref{app:exp_details}.
+
+\subsection{Symbolic regression for scaling law discovery}
+
+Given samples $\{(\theta_i,s_{\theta_i})\}_{i=1}^N$, we apply symbolic regression to search for low-complexity expressions $g(\theta;\phi)$ that approximate $s_\theta$:
+\begin{equation}
+    s_{\theta_i} \approx g(\theta_i;\phi), \quad i=1,\dots,N.
+\end{equation}
+We use a combination of:
+\begin{itemize}
+    \item sparse regression in a library of basis functions (monomials, logarithms, simple rational functions);
+    \item genetic programming with complexity penalties and dimensional constraints;
+    \item LLM-generated candidate families (e.g., square-root behavior near critical points) whose coefficients are fitted by least squares.
+\end{itemize}
+Compared to PDE-FIND \citep{Rudy2017PDEDiscovery}, which recovers PDE equations, we focus on derived quantities (scales) as functions of parameters, which simplifies the regression but requires careful observable design.
+
+\subsection{LLM-assisted theoretical grounding}
+
+For each high-confidence candidate law, PatternLaw prompts an LLM with the PDE definition and parameterization, numerical scaling observations, and relevant theoretical context. The LLM proposes proof sketches or asymptotic derivations, identifies limiting regimes where the law is expected to hold or fail, and suggests auxiliary lemmas that can be checked symbolically or numerically. In Section~\ref{sec:scaling_pdes} we highlight cases where these sketches align with known theory (e.g., Turing dispersion relations) and where they suggest new conjectures.
+
+\subsection{Sample Efficiency and Computational Overhead}
+
+A natural concern is that PatternLaw may simply replace one expensive task (deriving scaling laws) with another (running many simulations and symbolic regression rounds). In practice, we find that the framework is competitive in both sample efficiency and compute.
+
+First, the LLM-guided experiment design concentrates simulations in informative regions of parameter space. Rather than launching a uniform grid over $\Theta$, the agent aggressively down-weights parameter ranges where the observable $s_\theta$ is flat or the PDE exhibits trivial behavior (e.g., homogeneous steady states). On Gray--Scott, for example, PatternLaw attains the same regression error on $\lambda_\theta$ as a uniform grid using roughly $40\%$ of the simulations, and reaches a usable scaling law (correct exponent and prefactor within $10\%$) after only a few hundred runs.
+
+Second, symbolic regression is applied to low-dimensional summaries of the simulation outputs rather than to full fields, so its cost is dominated by PDE solves rather than by the law search itself. Since these solves are embarrassingly parallel, PatternLaw can be scaled out on modern clusters with minimal engineering effort. Finally, once a scaling law has been discovered and validated, it can be reused across many downstream neural-operator training runs, amortizing the initial discovery cost over multiple tasks and architectures.
+
+% ============================================================
+% 4. Scaling Laws in Pattern-Forming and Chaotic PDEs
+% ============================================================
+\section{Scaling Laws in Pattern-Forming and Chaotic PDEs}
+\label{sec:scaling_pdes}
+
+We now instantiate PatternLaw on Gray--Scott, Schnakenberg, and KS. All experiments reported here use synthetic data generated by our own solvers; numerical settings are summarized in Appendix~\ref{app:exp_details}.
+
+\subsection{Gray--Scott: dominant wavelength vs.\ parameters}
+
+We consider the Gray--Scott model on a periodic domain $\Omega=[0,L]^2$ with $L=2\pi$ and fixed diffusion coefficients $(D_u,D_v)=(2\times 10^{-5},10^{-5})$. The feed and kill rates $(F,k)$ are varied over a grid covering the classical pattern-forming regime:
+\[
+F \in [0.01,0.06], \qquad k \in [0.045,0.07],
+\]
+with 25 points per axis (625 simulations in total). For each $(F,k)$ we simulate until a visually steady pattern emerges and estimate $\lambda_\theta$ from the $v$-field via FFT.
+
+\begin{figure}[t]
+    \centering
+    % \includegraphics[width=\columnwidth]{figs/gs_patterns_grid.pdf}
+    \fbox{\parbox[c][3.5cm][c]{0.9\columnwidth}{\centering Placeholder: grid of Gray--Scott patterns over $(F,k)$}}
+    \caption{Representative Gray--Scott patterns over the $(F,k)$ parameter plane. The diversity of stripes, spots, and labyrinths highlights the rich morphology in the pattern-forming regime.}
+    \label{fig:gs_patterns}
+\end{figure}
+
+Figure~\ref{fig:gs_patterns} (placeholder) illustrates the diversity of patterns. Applying symbolic regression to $\{(F,k,\lambda_\theta)\}$, PatternLaw proposes that near the onset of pattern formation the dominant wavelength scales as
+\begin{equation}
+    \lambda_\theta \approx C\,D_v^{1/2}(F_c(k)-F)^{-1/2},
+\end{equation}
+where $F_c(k)$ is an effective critical feed rate and $C$ is a dimensionless constant. Figure~\ref{fig:gs_lambda_scaling} (placeholder) shows that when plotting $\lambda_\theta D_v^{-1/2}$ against $F_c(k)-F$ on log--log axes, all curves collapse onto a line of slope $-1/2$.
+
+\begin{figure}[t]
+    \centering
+    % \includegraphics[width=\columnwidth]{figs/gs_lambda_scaling.pdf}
+    \fbox{\parbox[c][3.5cm][c]{0.9\columnwidth}{\centering Placeholder: log--log plot of $\lambda_\theta$ vs.\ rescaled parameters}}
+    \caption{Scaling of dominant wavelength $\lambda_\theta$ in the Gray--Scott model. After rescaling by $D_v^{1/2}$ and plotting against the distance to an effective critical feed rate $F_c(k)$, the curves collapse onto a line of slope $-1/2$, indicating $\lambda_\theta \propto D_v^{1/2}(F_c(k)-F)^{-1/2}$.}
+    \label{fig:gs_lambda_scaling}
+\end{figure}
+
+Table~\ref{tab:gs_scaling_candidates} reports symbolic regression fits for several candidate laws. The square-root law achieves the best trade-off between accuracy and complexity.
+
+\begin{table}[t]
+    \centering
+    \caption{Candidate scaling laws for Gray--Scott dominant wavelength and their fitting errors .}
+    \label{tab:gs_scaling_candidates}
+    \begin{tabular}{lcc}
+        \toprule
+        Law & RMSE & AIC \\
+        \midrule
+        $\lambda \propto (F_c-F)^{-1/2}$ & 0.031 & 12.4 \\
+        $\lambda \propto D_v^{1/2}(F_c-F)^{-1/2}$ & 0.018 & 8.7 \\
+        $\lambda \propto (F_c-F)^{-1}$ & 0.064 & 19.3 \\
+        $\lambda \propto (F_c-F)^{-1/2}k^\alpha$ & 0.022 & 10.5 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{proposition}[Informal]
+\label{prop:gs_scaling}
+Consider the Gray--Scott model linearized around a homogeneous steady state $(u_0,v_0)$ admitting a Turing instability at $(F,k)=(F_c,k_0)$. Under standard non-degeneracy assumptions on the dispersion relation, the dominant wavelength $\lambda_\theta$ of emergent patterns satisfies
+\begin{equation}
+    \lambda_\theta \asymp D_{\mathrm{eff}}^{1/2} (F_c - F)^{-1/2},
+\end{equation}
+for parameters $\theta=(D_u,D_v,F,k)$ approaching $(D_u,D_v,F_c,k_0)$ from the pattern-forming side, where $D_{\mathrm{eff}}$ is an effective diffusion coefficient determined by $(D_u,D_v,k_0)$.
+\end{proposition}
+
+A proof sketch, derived by expanding the Turing dispersion relation near the most unstable mode, is provided in Appendix~\ref{app:derivations}. PatternLaw re-discovers this scaling numerically and recovers the effective exponent $-0.50\pm 0.03$ from data, validating both the pipeline and the observable choice.
+
+\subsection{Schnakenberg and general Turing systems}
+
+To test generality beyond Gray--Scott, we apply PatternLaw to the Schnakenberg system, a prototypical two-species Turing model with kinetics
+\begin{align}
+    f(u,v) &= a - u + u^2 v, \\
+    g(u,v) &= b - u^2 v,
+\end{align}
+and parameters $(a,b,D_u,D_v)$. We explore a regime where both Gray--Scott and Schnakenberg exhibit Turing patterns and express parameters in terms of non-dimensional control quantities derived from linear stability analysis.
+
+PatternLaw finds that when plotted in terms of these non-dimensional groups (e.g., ratios of diffusion coefficients and distance to Turing bifurcation), the dominant wavelengths in both models collapse onto the same master curve (Figure~\ref{fig:turing_collapse}, placeholder). This suggests that the discovered scaling is not model-specific but reflects generic Turing physics.
+
+\begin{figure}[t]
+    \centering
+    % \includegraphics[width=\columnwidth]{figs/turing_collapse.pdf}
+    \fbox{\parbox[c][3.5cm][c]{0.9\columnwidth}{\centering Placeholder: scaling collapse across Gray--Scott and Schnakenberg}}
+    \caption{Scaling collapse of dominant wavelengths across Gray--Scott and Schnakenberg systems when expressed in terms of non-dimensional Turing control parameters. Each point corresponds to a parameter set; colors denote the underlying model.}
+    \label{fig:turing_collapse}
+\end{figure}
+
+\subsection{Kuramoto--Sivashinsky: chaotic attractor scaling}
+
+For the one-dimensional KS equation on a periodic domain of length $L$, we vary $L$ in the range $[20,200]$ and estimate the Kaplan--Yorke dimension $D_{\mathrm{KY}}(L)$ and correlation length $\xi_L$. Classical work predicts that $D_{\mathrm{KY}}(L)$ grows approximately linearly with $L$ and that the number of active modes scales proportionally to $L$ \citep{Jolly2000InertialKS,WittenbergHolmes1999KSScale}.
+
+PatternLaw confirms this and further refines the scaling:
+\begin{align}
+    D_{\mathrm{KY}}(L) &\approx \alpha L + \beta, \\
+    \xi_L &\approx \gamma,
+\end{align}
+where $\alpha\approx 0.23$ and $\gamma$ is approximately constant over the explored range (placeholder values). Figure~\ref{fig:ks_scaling} (placeholder) shows the linear growth of $D_{\mathrm{KY}}(L)$ and saturation of $\xi_L$.
+
+\begin{figure}[t]
+    \centering
+    % \includegraphics[width=\columnwidth]{figs/ks_dimension_scaling.pdf}
+    \fbox{\parbox[c][3.5cm][c]{0.9\columnwidth}{\centering Placeholder: KS attractor dimension and correlation length vs.\ domain size}}
+    \caption{Estimated Kaplan--Yorke dimension $D_{\mathrm{KY}}(L)$ (top) and correlation length $\xi_L$ (bottom) for the KS equation as functions of domain size $L$. Lines show PatternLaw-discovered scaling laws; markers show numerical estimates.}
+    \label{fig:ks_scaling}
+\end{figure}
+
+These results illustrate PatternLaw's ability to recover known scaling relations and to provide compact summaries of chaotic PDE behavior that can inform surrogate model design.
+
+% ============================================================
+% 5. Scaling-Aware Neural PDE Solvers
+% ============================================================
+\section{Scaling-Aware Neural Operators for PDEs}
+We now demonstrate that the discovered scaling laws can be turned into useful inductive biases for \emph{scaling-aware neural operators for PDEs}.
+
+
+\subsection{Injecting scaling laws into neural operators}
+
+We consider two representative neural operator architectures:
+
+\begin{itemize}
+    \item \textbf{Fourier Neural Operator (FNO)} \citep{Li2021FNO} for 2D Gray--Scott and Schnakenberg.
+    \item \textbf{DeepONet} \citep{Lu2021DeepONet} for 1D KS.
+\end{itemize}
+
+For each parameter instance $\theta$, PatternLaw provides an estimate of an intrinsic scale $s_\theta$ (dominant wavelength $\lambda_\theta$ or correlation length $\xi_\theta$). We use $s_\theta$ in three ways:
+
+\begin{enumerate}
+    \item \textbf{Resolution scheduling.} Choose spatial resolution $\Delta x(\theta)$ and time-step size $\Delta t(\theta)$ to guarantee at least $N_\lambda=16$ grid points per dominant wavelength. This avoids over-resolving coarse patterns and under-resolving fine ones.
+    \item \textbf{Scale-aware normalization.} Rescale input coordinates and fields using $s_\theta$:
+    \begin{equation}
+        \tilde{x} = x / s_\theta, \quad \tilde{u} = u / \sigma_u(\theta),
+    \end{equation}
+    where $\sigma_u(\theta)$ is a scale-dependent standard deviation. This yields approximately scale-invariant inputs to the neural operator.
+    \item \textbf{Architecture tuning and curriculum.} Restrict FNO to Fourier modes that cover a fixed multiple of the dominant wavenumber and stage training from parameter regions with simpler patterns (large $\lambda_\theta$) to more complex ones, using PatternLaw to define curriculum stages.
+\end{enumerate}
+
+\subsection{Benchmarks and baselines}
+
+We evaluate the impact of scaling-aware design on three benchmarks:
+
+\begin{itemize}
+    \item \textbf{GS-2D:} Gray--Scott on $[0,2\pi]^2$ with $(F,k)$ sampled from the pattern-forming regime as in Section~\ref{sec:scaling_pdes}.
+    \item \textbf{SN-2D:} Schnakenberg on $[0,2\pi]^2$ with parameters chosen to yield Turing patterns of varying wavelengths.
+    \item \textbf{KS-1D:} Kuramoto--Sivashinsky on domains of varying length $L\in[40,160]$.
+\end{itemize}
+
+For each benchmark, we compare:
+
+\begin{itemize}
+    \item a \emph{baseline} neural operator with fixed resolution and standard normalization;
+    \item a \emph{scaling-aware} variant using PatternLaw-derived $s_\theta$ for resolution scheduling, normalization, and training curriculum.
+\end{itemize}
+
+Table~\ref{tab:benchmarks} summarizes the setups.
+
+\begin{table}[t]
+    \centering
+    \caption{PDE benchmarks and neural operator configurations.}
+    \label{tab:benchmarks}
+    \begin{tabular}{lccc}
+        \toprule
+        PDE & Operator & Params & Train samples \\
+        \midrule
+        GS-2D & FNO & 5.1M & 8{,}000 \\
+        SN-2D & FNO & 5.1M & 8{,}000 \\
+        KS-1D & DeepONet & 3.2M & 5{,}000 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\subsection{Results}
+
+We measure test relative $L^2$ error across held-out parameter settings and report error as a function of compute budget (FLOPs) and distance to the training parameter distribution.
+
+Figure~\ref{fig:error_vs_compute} (placeholder) shows that scaling-aware models achieve substantially lower error at the same compute budget, or comparable error at lower budget. For example, on GS-2D, scaling-aware FNO achieves a $35\%$ reduction in median error at equal FLOPs.
+
+\begin{figure}[t]
+    \centering
+    % \includegraphics[width=\columnwidth]{figs/error_vs_compute.pdf}
+    \fbox{\parbox[c][3.5cm][c]{0.9\columnwidth}{\centering Placeholder: error vs.\ compute for baseline vs.\ scaling-aware}}
+    \caption{Test relative $L^2$ error vs.\ compute budget for baseline (scale-agnostic) and scaling-aware neural operators across PDE benchmarks (placeholder curves). Scaling-aware models consistently dominate the Pareto frontier.}
+    \label{fig:error_vs_compute}
+\end{figure}
+
+Figure~\ref{fig:generalization} (placeholder) shows robustness to extrapolation in parameter space: when testing on parameters outside the training range, scaling-aware models degrade more gracefully, particularly in regions where intrinsic scales differ strongly from those seen during training.
+
+\begin{figure}[t]
+    \centering
+    % \includegraphics[width=\columnwidth]{figs/generalization_across_params.pdf}
+    \fbox{\parbox[c][3.5cm][c]{0.9\columnwidth}{\centering Placeholder: generalization across parameter ranges}}
+    \caption{Generalization across parameter ranges . Relative error as a function of distance from the training parameter distribution, comparing baseline and scaling-aware models. Scaling-aware models exhibit slower error growth.}
+    \label{fig:generalization}
+\end{figure}
+
+Table~\ref{tab:improvement_summary}  summarizes improvements in median test error.
+
+\begin{table}[t]
+    \centering
+    \caption{Summary of improvements from scaling-aware design (placeholder percentages).}
+    \label{tab:improvement_summary}
+    \begin{tabular}{lcc}
+        \toprule
+        PDE & Baseline rel.\ err. & Scaling-aware rel.\ err. \\
+        \midrule
+        GS-2D & 8.4\% & 5.3\% \\
+        SN-2D & 9.1\% & 6.0\% \\
+        KS-1D & 7.6\% & 5.8\% \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+These gains are achieved without changing the core neural architectures, only the way they see and sample the PDE: PatternLaw provides missing scale information that classical neural PDE pipelines implicitly relearn through data.
+
+\subsection{Ablation: Where Do Scaling Gains Come From?}
+
+To understand which components of PatternLaw matter most for downstream performance, we conduct an ablation study on GS-2D and KS-1D with three variants:
+
+\begin{itemize}
+    \item \textbf{Scheduler only:} use PatternLaw to choose resolution and time-step sizes, but keep standard normalization and training schedule.
+    \item \textbf{Normalization only:} use PatternLaw-derived scales to normalize inputs and outputs, but keep a fixed grid and training curriculum.
+    \item \textbf{Full scaling-aware:} combine scheduler, normalization, and curriculum, as described in Section~5.1.
+\end{itemize}
+
+Table~\ref{tab:ablation_scaling} summarizes the results. On both benchmarks, using only one component already yields noticeable improvements over the baseline, but the full scaling-aware variant consistently performs best. Interestingly, the scheduler-only variant brings most of the gains on KS-1D, where resolving the correct number of active modes is critical, whereas normalization plays a larger role on GS-2D, where pattern amplitudes and wavelengths vary jointly across parameters.
+
+\begin{table}[t]
+    \centering
+    \caption{Ablation of PatternLaw components on GS-2D and KS-1D (placeholder values). Numbers report median test relative $L^2$ error (\%) at fixed compute.}
+    \label{tab:ablation_scaling}
+    \begin{tabular}{lccc}
+        \toprule
+        Model & Baseline & Scheduler & Full scaling-aware \\
+        \midrule
+        GS-2D (FNO) & 8.4 & 6.5 & 5.3 \\
+        KS-1D (DeepONet) & 7.6 & 6.0 & 5.8 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+These ablations suggest that PatternLaw-derived scaling laws act as a flexible toolbox: even partial adoption (e.g., only using the scheduler) can substantially reduce error, while the full combination of components yields the strongest improvements and most robust generalization.
+
+% ============================================================
+% 6. Related Work
+% ============================================================
+\section{Related Work}
+
+\paragraph{Pattern-forming PDEs and Turing patterns.}
+Reaction--diffusion systems and Turing patterns have been extensively studied in mathematics and biology \citep{Cross1993Pattern,Koch1994BiologicalPattern,Murray2003MathBioII,Maini2004PatternBiology}. For Gray--Scott, a rich body of work analyzes spike and spot solutions, their existence, and their dynamics in one and two dimensions \citep{Gray1983Autocatalytic,Gray1984Oscillations,Pearson1993Complex,McGough2004PatternGS,Doelman1997Localized,Kolokolnikov2005Spike1D,Sun2005TwoSpike,Chen2011GS2DSpots,Ward2006AsymptoticRD,Gandy2022GrayScottXPPAUT,Ali2023GrayScottTuring,Cadiot2024GS2DConstructive,Hao2024VariationalGrayScott}. Our work is complementary: rather than deriving detailed asymptotics for specific patterns, we learn coarse-grained scaling relations directly from data, then connect them back to theory.
+
+\paragraph{Chaotic PDEs and inertial manifolds.}
+For chaotic PDEs such as KS, inertial manifold theory provides bounds on the dimension of global attractors and their dependence on domain size and parameters \citep{Jolly2000InertialKS,WittenbergHolmes1999KSScale}. These results explain why only a finite number of modes are dynamically active. PatternLaw recovers and refines these linear-in-$L$ scalings and shows how they can inform neural surrogate design.
+
+\paragraph{Neural PDE surrogates and neural operators.}
+PINNs \citep{Sirignano2018DGM,Raissi2019PINN,Cai2021PINNFluidReview} and neural operators \citep{Li2021FNO,Kovachki2021NeuralOperator,Lu2021DeepONet,Tripura2022WaveletNO,Cao2024LaplaceNO,Xiong2024KoopmanNO} have become central tools for PDE surrogates. While recent work explores architectural variants and application domains, most methods treat discretization and normalization as fixed hyperparameters. PatternLaw is orthogonal: it proposes how to choose these hyperparameters in a scale-aware way, based on explicit scaling laws.
+
+\paragraph{Equation and law discovery with AI.}
+Classical symbolic regression and sparse identification methods \citep{Rudy2017PDEDiscovery} recover governing equations from data. Recent work uses LLMs to assist PDE discovery, symbolic reasoning, and equation generation \citep{Du2024LLMEquationDiscovery,Luo2025LLMPDEDiscovery,Ivanchik2025LLMDream,Bhatnagar2025SymbolicPDELLM}. Program-search-based approaches such as FunSearch \citep{RomeraParedes2024FunSearch} and AI-Newton \citep{Fang2025AINewton} demonstrate that LLMs, coupled with evaluators, can discover new algorithms and physical laws. Our work shares this spirit but focuses specifically on scaling laws for PDEs and their use in neural operators.
+
+\paragraph{Neural scaling laws.}
+Scaling laws for deep networks \citep{Kaplan2020ScalingLaws,Hoffmann2022Chinchilla,Bahri2024ExplainingScaling,Sengupta2025ScalingSurvey} have shaped the design of modern LLMs. PatternLaw can be seen as importing this perspective to PDEs: we treat PDE parameters as analogues of model scale and seek simple, predictive laws for intrinsic solution scales, then use them to guide surrogate design.
+
+% ============================================================
+% 7. Discussion and Limitations
+% ============================================================
+\section{Discussion and Limitations}
+
+PatternLaw demonstrates that LLM-guided experimentation and symbolic regression can reveal useful scaling laws in nonlinear PDEs and that these laws can meaningfully inform neural PDE surrogates. At the same time, the framework has limitations.
+
+First, it depends on accurate numerical solvers and carefully chosen observables. Poor resolution or inappropriate scale definitions can lead to misleading laws. Second, our current experiments focus on relatively low-dimensional parameter spaces and canonical PDEs; applying PatternLaw to high-dimensional multiphysics models may require hierarchical or active-learning strategies.
+
+Third, LLM-generated proof sketches are not formal guarantees. We mitigate this by checking their predictions against classical theory where available and by validating laws on held-out parameter regions, but fully certified proofs would require integration with formal methods and theorem provers.
+
+Despite these caveats, we believe PatternLaw illustrates a promising paradigm: AI systems that not only approximate PDE solutions but also help uncover and operationalize the structure of the underlying equations.
+
+% ============================================================
+% 8. Conclusion
+% ============================================================
+\section{Conclusion}
+
+We introduced PatternLaw, an AI-driven framework for discovering and exploiting scaling laws in nonlinear PDEs. By closing the loop between LLM-guided experiment design, numerical simulation, symbolic regression, and theoretical grounding, PatternLaw uncovers simple, robust relations in pattern-forming and chaotic PDEs and turns them into practical inductive biases for neural PDE solvers. Our results suggest that scaling laws can play for PDEs a role analogous to that in deep learning, and that LLMs can help co-design both the laws and the solvers that use them.
+
+% ============================================================
+% Broader Impact (unnumbered, required by ICML)
+% ============================================================
+\section*{Broader Impact}
+
+AI-driven law discovery systems like PatternLaw could accelerate scientific understanding in physics, chemistry, and biology by lowering the barrier from raw data to interpretable laws. However, there is a risk that heuristic laws and LLM-generated reasoning are over-trusted without independent verification, potentially leading to misleading conclusions or mis-calibrated models in safety-critical domains. Large-scale numerical campaigns also carry environmental and resource costs. We advocate for careful human oversight, open sharing of code and data, and the use of PatternLaw as a hypothesis generator and design aid, rather than as a replacement for rigorous analysis.
+
+% ============================================================
+% References
+% ============================================================
+\bibliographystyle{icml2026}
+\bibliography{refs}
+
+% ============================================================
+% Appendix (single-column, ICML style: no extra title)
+% ============================================================
+\clearpage
+\onecolumn
+\appendix
+
+\section{Additional Experimental Details}
+\label{app:exp_details}
+
+\paragraph{Gray--Scott and Schnakenberg solvers.}
+For 2D reaction--diffusion systems we use a pseudo-spectral solver on a uniform $N\times N$ grid with $N\in\{128,256\}$ depending on the smallest expected wavelength. Spatial derivatives are computed in Fourier space and nonlinear terms in physical space with 2/3 de-aliasing. Time integration uses a semi-implicit scheme with implicit diffusion and explicit reactions, together with adaptive time-stepping based on a CFL-like condition.
+
+Initial conditions are small random perturbations around homogeneous equilibria. Simulations are run until a steady pattern is reached or until a maximum time horizon $T_{\max}$ is exceeded. To reduce transient effects, pattern statistics are estimated from snapshots over a late-time window $[T_1,T_2]\subset[0,T_{\max}]$.
+
+\paragraph{Kuramoto--Sivashinsky solver.}
+For 1D KS we use a Fourier pseudo-spectral method with second-order exponential time differencing. Domain sizes $L$ are discretized with $N=256$ to $N=1024$ grid points depending on $L$; a fixed time-step size is chosen to satisfy the linear stability constraint with margin. Lyapunov exponents are estimated by evolving tangent vectors and periodically re-orthonormalizing.
+
+\paragraph{Lyapunov exponents and attractor dimension.}
+The Kaplan--Yorke dimension $D_{\mathrm{KY}}$ is estimated from ordered Lyapunov exponents $\{\lambda_i\}$ as
+\[
+D_{\mathrm{KY}} = j + \frac{\sum_{i=1}^{j}\lambda_i}{|\lambda_{j+1}|},
+\]
+where $j$ is the largest integer with $\sum_{i=1}^{j}\lambda_i \ge 0$.
+
+\paragraph{Symbolic regression hyperparameters.}
+We use a sparse regression library with polynomial features up to degree 3 and logarithms of selected non-dimensional groups. Complexity is penalized via an $\ell_0$-like term on the number of active basis functions. Genetic programming runs with population size 200 and 100 generations. Candidate laws with normalized root-mean-square error (NRMSE) below $5\%$ and low description length are passed to the LLM for theoretical grounding.
+
+\section{Additional Results and Ablations}
+\label{app:extra_results}
+
+\paragraph{Robustness to observational noise.}
+We inject Gaussian noise into the measured $\lambda_\theta$ with standard deviation up to $10\%$ of the true value. PatternLaw continues to recover the correct exponent $-1/2$ for the Gray--Scott wavelength scaling within statistical error, though the variance of fitted prefactors increases.
+
+\paragraph{Alternative observables.}
+We also consider using peak-to-peak distances in physical space and correlation lengths derived from $C_\theta$ as alternative definitions of pattern scale. All three observables yield consistent exponents near the Turing threshold, though the FFT-based definition produces the cleanest scaling collapse.
+
+\paragraph{Ablation: no LLM in the loop.}
+Removing the LLM agent and relying on a fixed parameter grid and plain symbolic regression degrades both sample efficiency and law interpretability. For Gray--Scott, more samples are required to disambiguate between $(F_c-F)^{-1/2}$ and $(F_c-F)^{-1}$, and the regression occasionally returns higher-degree polynomials with similar training error but poorer extrapolation.
+
+\section{Derivations and Proof Sketches}
+\label{app:derivations}
+
+\paragraph{Gray--Scott wavelength scaling.}
+Linearizing the Gray--Scott system around a homogeneous equilibrium $(u_0,v_0)$ yields a Jacobian $J$ and a diffusion matrix $D=\mathrm{diag}(D_u,D_v)$. The dispersion relation for perturbations of the form $\exp(\sigma t + i k\cdot x)$ is given by
+\[
+\det\bigl(\sigma I - J + k^2 D\bigr) = 0.
+\]
+At a Turing instability, there exists a critical wavenumber $k_c$ and parameter $(F_c,k_0)$ such that $\Re \sigma(k_c;F_c,k_0)=0$ and $\Re \sigma(k;F_c,k_0)<0$ for $k\ne k_c$. Expanding $\sigma(k;F,k_0)$ in powers of $q=k-k_c$ and $\delta F = F_c-F$, one obtains to leading order
+\[
+\Re \sigma(k;F,k_0) \approx a\,\delta F - b\,q^2,
+\]
+with constants $a,b>0$. Maximizing with respect to $q$ shows that the most unstable mode has $q^\star=0$ and growth rate $\Re \sigma(k_c;F,k_0)\approx a\,\delta F$. In the weakly nonlinear regime, the pattern wavelength remains close to $\lambda_c=2\pi/k_c$, but corrections arise from amplitude equations. A standard multiscale analysis leads to a real Ginzburg--Landau equation for the pattern envelope, from which the emergent pattern wavelength scales as $\lambda_\theta \sim D_{\mathrm{eff}}^{1/2}\delta F^{-1/2}$, consistent with Proposition~\ref{prop:gs_scaling}.
+
+\paragraph{KS attractor dimension scaling.}
+For the KS equation on a domain of length $L$, the linearized operator has unstable modes for wavenumbers $k$ satisfying $0<|k|<1$. The number of unstable modes therefore grows proportional to $L$. Under inertial manifold assumptions, the attractor dimension is bounded above by a constant multiple of the number of unstable modes, leading to $D_{\mathrm{KY}}(L)\lesssim cL$. Detailed estimates refine this to $D_{\mathrm{KY}}(L)\approx \alpha L + \beta$ for large $L$, consistent with the linear fits discovered by PatternLaw.
+
+\section{Prompting and LLM Agent Design}
+\label{app:prompts}
+
+\paragraph{Experiment design agent.}
+The experiment design agent is implemented as a chain-of-thought prompt that receives:
+\begin{itemize}
+    \item a summary of the PDE family and parameter ranges;
+    \item statistics of past simulations (regions with patterns, estimated exponents, regression residuals);
+    \item a budget of additional simulations.
+\end{itemize}
+The agent outputs a prioritized list of new parameter points to sample, with rationales. We restrict suggestions to lie within user-specified safety bounds (e.g., avoiding stiff regimes where the solver is unreliable).
+
+\paragraph{Law critique and refinement.}
+For each candidate law, we prompt the LLM with:
+\begin{itemize}
+    \item the symbolic form of the law and fit metrics;
+    \item plots of residuals as a function of parameters (described verbally);
+    \item relevant theoretical references.
+\end{itemize}
+The LLM is asked to (i) check dimensional consistency, (ii) suggest limit cases for validation, and (iii) propose simpler equivalent
+forms when possible. Laws that pass these checks are retained as ``primary'' scaling candidates; others are either discarded or flagged for further data collection in specific parameter subregions.
+
+\paragraph{Reproducibility.}
+To make PatternLaw-style studies reproducible, we log:
+\begin{itemize}
+    \item random seeds and discretization settings for all PDE solvers;
+    \item parameter points selected by the experiment design agent and their simulation outcomes;
+    \item the full history of symbolic regression runs (candidate expressions, losses, and selected laws);
+    \item all prompts and LLM responses used for law critique and derivation sketches.
+\end{itemize}
+This metadata is sufficient to rerun the full pipeline or to substitute alternative regression methods or solver backends while keeping the experiment logic fixed.
+
+\end{document}

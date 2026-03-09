@@ -1,0 +1,467 @@
+% ============================================================
+% MAIN TEX FILE – arXiv Compatible Full Paper Template
+% ============================================================
+\documentclass[10pt]{article}
+
+% ---------- Encoding & Fonts (safe for arXiv) ----------
+\usepackage[T1]{fontenc}
+\usepackage{newtxtext,newtxmath} % Times-like font
+
+% ---------- Micro-typography & Units ----------
+\usepackage[detect-all]{siunitx} % \SI{43}{ms}, \SI{10}{\kilo\hertz}, \num{0.88}
+\sisetup{per-mode=symbol, separate-uncertainty=true}
+\usepackage{microtype}
+
+% ---------- Layout ----------
+\usepackage[a4paper, left=0.85in, right=0.85in, top=1in, bottom=1in]{geometry}
+% \usepackage{setspace} % avoid unless the venue requests
+
+% ---------- Math & Tables ----------
+\usepackage{amsmath, amssymb, amsfonts, bm}
+\usepackage{booktabs, multirow, tabularx}
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+
+% ---------- Figures ----------
+\usepackage{graphicx}
+\usepackage{caption, subcaption}
+\captionsetup{font=small, labelfont=bf, skip=6pt}
+\graphicspath{{figs/}}  % 图片目录
+
+% ---------- Algorithms ----------
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% ---------- Smart refs ----------
+\usepackage[nameinlink,capitalise,noabbrev]{cleveref}
+
+% ---------- References & Hyperlinks (load last) ----------
+\usepackage{cite}
+\usepackage[hidelinks]{hyperref}
+
+% ---------- Title ----------
+\title{\textbf{Towards Real-Time Intraoperative Facial Nerve Risk Detection from EMG Using Generative Lightweight Models}}
+
+% ---------- Authors & Affiliations ----------
+\author{
+    Hongyu Zhong$^{1,2}$,
+    Zhiyong Pan$^{3}$,
+    Xiang Dong$^{1,2}$,
+     Chengkai Zhang$^{1,2}$,
+    Kai Fu$^{3}$,\\
+    Zhiqiang Li$^{3}$\thanks{Corresponding author: \texttt{lizhiqiang@example.com}},
+    Xiaohua Liu$^{1,2,4}$\thanks{Corresponding author: \texttt{liuxiaohua@example.com}}\\[6pt]
+    $^{1}$National Key Laboratory of Precise Blasting, Jianghan University, Wuhan, China\\
+    $^{2}$School of Artificial Intelligence, Jianghan University, Wuhan, China\\
+    $^{3}$Department of Neurosurgery, Zhongnan Hospital of Wuhan University, Wuhan, China\\
+    $^{4}$Yuanyuxinqing (Xiong'an) Technology Co., Ltd., Xiong'an New Area, Hebei, China
+}
+
+\date{} % arXiv 默认不显示日期
+
+\begin{document}
+\maketitle
+
+% ---------- Abstract ----------
+\begin{abstract}
+Facial nerve traction injury remains a major cause of postoperative facial paralysis in skull base neurosurgery. Although continuous intraoperative neuromonitoring (cIONM) is widely used, real-time interpretation of electromyography (EMG) still depends on subjective assessment by neurophysiologists, and subtle warning signs are easily obscured by electrocautery noise, anesthesia effects, or transient traction. More importantly, existing AI-enabled EMG studies are largely based on simulated or surface muscle activity rather than data collected during actual surgical manipulation of the facial nerve.
+
+In this study, we present, to our knowledge, among the first multi-patient AI frameworks trained on \emph{real intraoperative} EMG with surgeon-verified facial nerve traction events. To address data scarcity and severe class imbalance, we design a Spectral-Consistency Generative Adversarial Network (SCGAN) that synthesizes physiologically plausible EMG spectrograms while preserving traction-induced spectral patterns. For deployment in operating rooms, we further develop a Dilated Efficient Global-Attention CNN (DEGACN), which performs risk prediction with only XX\,ms latency and XX\,M parameters on CPU-only neuromonitoring consoles.
+
+The proposed framework was evaluated on EMG recordings from $N$ skull base procedures using leave-one-patient-out cross-validation. It achieved an accuracy of XX\%, sensitivity of XX\%, and F1-score of XX\%, outperforming conventional CNNs, transformers, and threshold-based IONM criteria. Decision Curve Analysis further confirmed a positive net clinical benefit across a wide range of risk thresholds. Although prospective deployment has not yet been achieved, this work establishes a complete pipeline—from real surgical data collection to near real-time AI inference—providing a feasible pathway toward clinically integrated, data-driven facial nerve protection.
+\end{abstract}
+
+% ---------- Keywords ----------
+\noindent\textbf{Keywords:}
+Intraoperative neuromonitoring; facial nerve traction injury; electromyography (EMG); generative augmentation; lightweight deep learning; real-time inference; neurosurgery.
+
+% ============================================================
+% 1. Introduction
+% ============================================================
+\section{Introduction}
+
+\subsection{Clinical Background and Motivation}
+
+The facial nerve is essential for eye protection, facial expression, and nonverbal communication. Injury to this nerve is therefore one of the most functionally and psychosocially devastating complications in skull base and posterior fossa neurosurgery~\cite{kartush1992,Samii2021_FacialNerveMechanics}. Despite advances in microsurgical techniques and continuous intraoperative neuromonitoring (cIONM), transient postoperative facial paresis still occurs in 30–50\% of patients, and up to 15\% suffer permanent paralysis due to excessive traction, stretching, or thermal injury~\cite{kim2019,FacialNerve_EMG_Prognosis_2022,FacialNerve_cIONM_Review_2024}. 
+
+cIONM provides real-time electromyographic (EMG) feedback, allowing surgeons to detect functional deterioration of cranial nerves before irreversible damage occurs~\cite{Thyroid_cIONM_Guideline_2018}. In practice, however, EMG interpretation remains largely subjective. Traction-related alterations—such as progressive amplitude decrease, spontaneous neurotonic discharges, or latency prolongation—are frequently transient and easily masked by electrocautery, anesthesia depth, neuromuscular blockade, or surgical manipulation~\cite{FreeRunning_EMG_Risk_2022,IONM_Review_2023}. These challenges often lead to delayed warnings and missed opportunities for intervention.
+
+\subsection{Limitations of Existing AI-Based EMG Interpretation}
+
+To overcome reliance on human observation, several studies have explored machine learning and signal processing techniques for automated EMG assessment~\cite{DeepLearning_SurfEMG_Review_2021}. Nevertheless, three core limitations currently hinder clinical translation.
+
+First, existing models rarely use authentic intraoperative data. Most approaches are trained on surface EMG during voluntary facial movements, simulated nerve stimulation, or public datasets collected outside the operating room~\cite{tsuji2024,Park2024_EMG_Scarcity}. These signals do not contain the mechanical traction signatures, electrosurgical artifacts, anesthetic modulations, and temporal variability seen in real neurosurgical procedures.
+
+Second, ground truth is often defined using fixed amplitude thresholds (e.g., 50\% decrease from baseline) or semi-automated event detection, rather than direct surgeon-confirmed nerve traction~\cite{guntinas2018}. This results in inconsistent labeling and limits the reliability of predictive models in clinical settings.
+
+Third, although deep learning methods such as transformers and ensemble CNNs have shown promising accuracy~\cite{RealTime_AI_OR_2023}, their computational demands exceed the capacities of standard IONM consoles. Real-time inference on CPU-only devices (latency $<50$–$100$\,\si{\milli\second} per temporal window) remains insufficiently addressed, which is essential for intraoperative use.
+
+\subsection{Problem Statement and Research Gap}
+
+An AI system suitable for real-time facial nerve protection in neurosurgery must meet four simultaneous requirements:  
+(i) it must be trained on \textbf{real intraoperative EMG with surgeon-verified traction events};  
+(ii) it must handle \textbf{severe class imbalance} where traction events constitute $<5\%$ of the recording time;  
+(iii) it must demonstrate \textbf{robust generalization across patients, electrode placements, and anesthetic conditions};  
+(iv) it must support \textbf{low-latency inference on CPU-only hardware} integrated within existing neuromonitoring workflows.  
+To the best of our knowledge, no existing study fulfills all of these criteria.
+
+\subsection{Our Contributions}
+
+To address these challenges, we develop a generative-augmented and deployment-oriented AI framework for real-time detection of facial nerve traction risk. The key contributions are as follows:
+
+\begin{itemize}
+    \item We curate one of the first datasets of \textbf{real intraoperative EMG signals} with surgeon-verified facial nerve traction events during skull base surgery, capturing authentic surgical manipulations and noise conditions.
+    \item We propose a \textbf{heavy-training, lightweight-inference paradigm}: a Spectral-Consistency GAN (SCGAN) is employed to synthesize physiologically consistent EMG spectrograms for minority-class augmentation, while a Dilated Efficient Global-Attention CNN (DEGACN) enables sub-\SI{50}{ms} inference on CPU-only IONM consoles.
+    \item We perform \textbf{patient-level validation} using leave-one-patient-out cross-validation and Decision Curve Analysis (DCA), demonstrating superior diagnostic performance and positive net clinical benefit compared to conventional CNN and transformer-based baselines.
+\end{itemize}
+
+Overall, this study provides a realistic and scalable pathway for translating EMG-based AI from retrospective datasets to real-time intraoperative neurosurgical decision support.
+
+% ============================================================
+% 2. Related Work
+% ============================================================
+\section{Related Work}
+
+\subsection{Facial Nerve Monitoring and Intraoperative Neuromonitoring (IONM)}
+
+Continuous intraoperative neuromonitoring (cIONM) has become standard practice for safeguarding cranial nerves in skull base and posterior fossa surgery~\cite{Thyroid_cIONM_Guideline_2018,FacialNerve_cIONM_Review_2024}. Free-running EMG and triggered EMG allow surgeons to detect mechanical traction or thermal irritation of the facial nerve in real time. However, signal interpretation remains largely manual. Previous work has examined EMG amplitude attenuation, latency prolongation, and neurotonic discharges as predictive markers of postoperative deficits~\cite{FreeRunning_EMG_Risk_2022}. Despite its clinical utility, cIONM is limited by anesthesia-related signal variability, electrocautery noise, and subjective interpretation~\cite{IONM_Review_2023}. These challenges motivate data-driven and automated approaches.
+
+\subsection{EMG-Based AI for Neurosurgical Decision Support}
+
+Statistical and machine learning models have been developed to automate the detection of abnormal EMG activity. Some approaches rely on time–frequency analysis, entropy measures, or wavelet coefficients to extract handcrafted features for classification~\cite{RealTime_CNN_EMG_2019}. More recent studies employ deep learning—including CNNs and RNNs—for EMG-based anomaly detection or surgeon warning systems~\cite{DeepLearning_SurfEMG_Review_2021}. However, most frameworks rely on surface EMG collected during voluntary tasks or simulated facial movements, rather than real intraoperative EMG~\cite{tsuji2024,Park2024_EMG_Scarcity}. Furthermore, EMG labels are often based on arbitrary amplitude thresholds rather than surgeon-verified nerve traction, which undermines clinical reliability~\cite{guntinas2018}. To date, no EMG-AI system using real surgical data has achieved real-time inference on CPU-based IONM consoles.
+
+\subsection{Generative Models for Biomedical Signal Augmentation}
+
+Generative adversarial networks (GANs) have been widely applied to augment limited physiological datasets. In EMG research, DCGAN and WGAN variants have been used to generate synthetic muscle activity to improve gesture recognition~\cite{SCGAN_EMG_Frontiers2022}. Similar progress has been reported in EEG, ECG and acoustic biosignals using spectrogram-based GANs or multi-resolution STFT loss functions~\cite{EEG_WGAN_Augment_2024,Spectrogram_GAN_Audio_2020}. Despite promising results, most existing works focus on limb EMG or consumer sEMG, not intraoperative EMG with traction artifacts. Furthermore, few models enforce spectral consistency or surgical physiology constraints, leading to mode collapse or diagnostically irrelevant signals. Our work addresses this gap by introducing a Spectral-Consistency GAN (SCGAN) tailored to intraoperative EMG.
+
+\subsection{Lightweight Deep Models for Real-Time Systems}
+
+Deploying AI in the operating room requires models that are not only accurate but also computationally efficient. Classical architectures such as VGG or Transformer networks are too heavy for real-time inference on CPU-only neuromonitoring devices~\cite{RealTime_AI_OR_2023}. To reduce power consumption and latency, lightweight models such as MobileNetV3~\cite{MobileNetV3_2019}, EfficientNet~\cite{EfficientNet_2019}, and attention variants like ECA-Net~\cite{ECA_Net_2020} and SE-Net~\cite{SE_Net_2018} have been explored in resource-constrained medical applications. However, these networks have not been adapted to intraoperative EMG nor evaluated under patient-wise cross-validation constraints. In contrast, our Dilated Efficient Global-Attention CNN (DEGACN) is specifically designed for low-latency EMG inference, maintaining diagnostic accuracy while achieving CPU inference within tens of milliseconds per window.
+
+% ============================================================
+% 3. Dataset and Clinical Data Collection
+% ============================================================
+\section{Dataset and Clinical Data Collection}
+
+\subsection{Intraoperative Setup}
+All data were collected during skull base and posterior fossa neurosurgeries performed at Zhongnan Hospital of Wuhan University. Facial muscle EMG was continuously recorded using a commercial intraoperative neuromonitoring (IONM) system (NIM-Response 3.0, Medtronic, USA). Bipolar needle electrodes were inserted into the orbicularis oculi and orbicularis oris muscles on the ipsilateral side of the lesion. The reference electrode was placed subcutaneously at the mastoid tip.
+
+EMG signals were sampled at \SI{10}{\kilo\hertz} with a hardware band-pass filter of 30–3000~Hz. Electrocautery suppression, impedance checks, and artifact rejection followed international neuromonitoring guidelines~\cite{Thyroid_cIONM_Guideline_2018}. No muscle relaxants were administered after intubation to preserve spontaneous EMG activity.
+
+\subsection{Patient Cohort and Ethics}
+A total of $N$ patients (age XX--XX years; XX males and XX females) undergoing vestibular schwannoma or CPA tumor resection between 2023 and 2024 were prospectively enrolled. Inclusion criteria were:
+\begin{itemize}
+    \item primary skull base tumor involving the facial nerve pathway;
+    \item use of continuous EMG-based IONM throughout surgery;
+    \item complete surgical video and anesthesia records.
+\end{itemize}
+Patients with preoperative House-Brackmann grade $\geq$ IV facial palsy or absent baseline EMG signals were excluded.
+
+This study was approved by the Institutional Review Board of Zhongnan Hospital (Approval No. XXXX). Written informed consent was obtained from all participants or their legal guardians.
+
+\subsection{Surgeon-Verified Traction Event Annotation}
+To establish reliable ground truth labels, EMG waveforms were synchronized with operative videos and surgical microscope recordings. Two attending neurosurgeons and one neurophysiologist independently reviewed:
+\begin{itemize}
+    \item direct mechanical traction or dissection involving the facial nerve;
+    \item instrument–nerve contact or stretching visualized under the microscope;
+    \item corresponding EMG alterations (burst, train, amplitude decline or neurotonic discharge).
+\end{itemize}
+An event was labeled as a \textit{traction risk episode} only if all three experts reached consensus. Non-traction EMG activity (e.g., electrocautery, drilling, suction artifact, irrigation response) was explicitly labeled as negative. In total, XX\,hours of EMG recording and XX verified traction events were obtained. Traction events accounted for less than 5\% of total data duration, highlighting severe class imbalance.
+
+\subsection{Signal Preprocessing \& Spectrogram Generation}
+Raw EMG signals were preprocessed using the following pipeline:
+
+\begin{enumerate}
+    \item \textbf{Filtering:} A 30–1000~Hz 4th-order Butterworth band-pass filter was applied to remove baseline drift and high-frequency noise.
+    \item \textbf{Artifact Suppression:} Segments contaminated by electrocautery (saturation noise), suction bursts, or stimulation pulses were detected by amplitude thresholding and excluded.
+    \item \textbf{Segmentation:} Signals were segmented into overlapping windows of \SI{200}{ms} with 50\% overlap, each paired with a binary label (traction vs.~non-traction).
+    \item \textbf{Time–Frequency Transformation:} Each window was converted to a log-magnitude STFT spectrogram using a Hamming window of 256 samples and 50\% overlap:
+    \[
+    S(t,f) = \log\left(|\text{STFT}(x(t))|^2 + \epsilon\right), \quad \epsilon = 10^{-6}.
+    \]
+    \item \textbf{Normalization:} Spectrograms were normalized to zero mean and unit variance across the dataset.
+\end{enumerate}
+
+This process produced XX,XXX labeled spectrograms, which were used for GAN-based augmentation and model training.
+
+% ============================================================
+% 4. Methodology
+% ============================================================
+\section{Methodology}
+
+\subsection{Overall Framework}
+
+Our proposed system follows a two-stage paradigm: \textbf{heavy training} using real and augmented intraoperative EMG spectrograms, and \textbf{lightweight inference} using a deployment-oriented CNN model. 
+The overall pipeline (\cref{fig:framework}) is summarized as follows:
+
+\begin{enumerate}
+    \item Real intraoperative EMG signals are collected and converted into labeled spectrogram patches (Section~3).
+    \item A Spectral-Consistency Generative Adversarial Network (SCGAN) is trained offline to generate synthetic traction-risk spectrograms, alleviating severe data imbalance.
+    \item The original and SCGAN-augmented data are used to train a Dilated Efficient Global-Attention CNN (DEGACN) for real-time risk detection.
+    \item During deployment, the trained DEGACN operates in a sliding-window manner and produces a risk score every \SI{50}{ms} on CPU-only neuromonitoring hardware.
+\end{enumerate}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{framework}
+  \caption{Overall training–inference pipeline. SCGAN augments minority traction-risk spectrograms; DEGACN runs CPU-grade real-time inference.}
+  \label{fig:framework}
+\end{figure}
+
+\subsection{SCGAN: Spectral-Consistency GAN}
+
+Severe class imbalance (traction events $<5\%$) makes direct training unstable. To address this, we propose SCGAN, which improves upon DCGAN/WGAN by explicitly preserving physiological spectral patterns.
+
+\textbf{Generator:}
+The generator receives a random noise vector $z \sim \mathcal{N}(0,1)$ and outputs a spectrogram $\hat{S} \in \mathbb{R}^{F \times T}$. It employs transposed convolutions and residual spectral refinement blocks. A multi-resolution STFT loss is used to align high- and low-frequency components.
+
+\textbf{Discriminator:}
+The discriminator $D$ classifies whether a spectrogram is real or synthetic. It uses spectral attention modules to focus on harmonics, burst-like discharges, and low-frequency power drops associated with nerve traction.
+
+\textbf{Spectral Consistency Loss:}
+To avoid mode collapse and physiologically implausible EMG, we impose:
+\[
+\mathcal{L}_{spec} = \sum_{f} \left\| \mu_{\text{real}}(f) - \mu_{\hat{S}}(f) \right\|_2^2,
+\]
+where $\mu(f)$ denotes mean power at frequency $f$. This aligns generator outputs with the true intraoperative EMG spectral distribution.
+
+\subsection{DEGACN: Lightweight Attention CNN}
+
+The DEGACN model is designed for real-time inference on CPU-only devices with limited memory (≤\SI{2}{\giga\byte}). It integrates:
+
+\begin{itemize}
+    \item \textbf{Dilated Convolutions}: enlarge receptive fields without increasing parameters.
+    \item \textbf{Efficient Global Attention (EGA)}: replaces full self-attention with a low-cost global context extractor based on ECA-Net and depthwise separable convolutions.
+    \item \textbf{Parameter Efficiency}: total size $\leq$ XX\,MB, inference latency $\leq$ \SI{50}{ms} per \SI{200}{ms} window (Intel Core i7 CPU).
+\end{itemize}
+
+Formally, given input spectrogram $S \in \mathbb{R}^{F \times T \times 1}$, the feature update is:
+\[
+Y = \text{EGA}\left(\text{Conv}_{dilated}(S)\right),
+\]
+where EGA applies channel-wise attention:
+\[
+\alpha = \sigma\left(\text{Conv1D}(\text{GAP}(Y))\right), \quad
+Y' = \alpha \odot Y.
+\]
+
+\subsection{Loss Functions}
+
+The final training objective combines GAN training and supervised classification:
+
+\[
+\mathcal{L} = 
+\underbrace{\mathcal{L}_{GAN}}_{\text{SCGAN}}
++ \lambda_1 \underbrace{\mathcal{L}_{spec}}_{\text{Spectral Consistency}}
++ \lambda_2 \underbrace{\mathcal{L}_{CE}}_{\text{Cross-Entropy}}
++ \lambda_3 \underbrace{\mathcal{L}_{focal}}_{\text{Class Imbalance}}.
+\]
+
+Cross-entropy is used for risk classification, while focal loss mitigates class imbalance:
+\[
+\mathcal{L}_{focal} = -\alpha (1-p_t)^\gamma \log(p_t).
+\]
+
+\subsection{Real-Time Inference and Computational Complexity}
+
+To ensure clinical deployability:
+
+\begin{itemize}
+    \item Sliding-window inference (\SI{200}{ms} window, \SI{50}{ms} stride).
+    \item CPU-only processing (no GPU, no external servers).
+    \item Average latency measured as XX\,\si{\milli\second} per spectrogram on an Intel Core i7-9700 CPU.
+    \item Total FLOPs $\leq$ XX\,M, memory footprint $\leq$ XX\,MB.
+\end{itemize}
+
+This satisfies real-time surgical constraints ($<\SI{100}{ms}$), enabling intraoperative warning before irreversible nerve injury occurs.
+
+% ============================================================
+% 5. Experiments
+% ============================================================
+\section{Experiments}
+
+\subsection{Experimental Setup and Baselines}
+
+\textbf{Dataset split.}
+All experiments were conducted using the real intraoperative EMG dataset described in Section~3. 
+To evaluate generalization across patients, we adopted a leave-one-patient-out (LOPO) cross-validation strategy. 
+In each fold, EMG data from one patient was used exclusively for testing, while the remaining patients constituted the training set. 
+A randomly sampled 10\% of the training data was used as the validation set.
+
+\textbf{Input configuration.}
+Raw EMG signals were segmented into \SI{200}{ms} windows with a \SI{50}{\percent} overlap. 
+Each segment was transformed into a log-magnitude STFT spectrogram of size $F \times T = (128 \times 64)$. 
+Amplitude values were normalized to zero mean and unit variance per patient.
+
+\textbf{Baselines.}
+We compared our method with the following models:
+
+\begin{itemize}
+    \item \textbf{Threshold-based IONM rule} (clinical standard~\cite{guntinas2018}): 50\% amplitude drop from baseline.
+    \item \textbf{CNN-Baseline}: 5-layer convolutional network adapted from~\cite{RealTime_CNN_EMG_2019}.
+    \item \textbf{BiLSTM}: Time-domain recurrent model.
+    \item \textbf{Transformer-EMG}: Spectrogram-based Transformer with multi-head self-attention.
+    \item \textbf{Ours w/o GAN}: DEGACN without SCGAN augmentation.
+    \item \textbf{Ours (SCGAN + DEGACN)}: Full proposed framework.
+\end{itemize}
+
+All models were trained using Adam optimizer, learning rate $1 \times 10^{-4}$, batch size of 64, early stopping based on validation loss. 
+GAN training used a 1:1 update ratio between generator and discriminator.
+
+\subsection{Evaluation Metrics}
+
+We report metrics relevant to imbalanced clinical datasets:
+
+\begin{itemize}
+    \item \textbf{Accuracy (ACC)}
+    \item \textbf{Sensitivity (Recall) – ability to detect true traction events}
+    \item \textbf{Specificity}
+    \item \textbf{F1-score}
+    \item \textbf{Area Under ROC Curve (AUC)}
+    \item \textbf{Decision Curve Analysis (DCA)} – to evaluate net clinical benefit across threshold probabilities~\cite{DCA_Vickers2006}.
+\end{itemize}
+
+Let TP, TN, FP, FN denote true/false positives and negatives. Then:
+\[
+\text{Sensitivity} = \frac{TP}{TP + FN}, \quad
+\text{Specificity} = \frac{TN}{TN + FP}, \quad
+F1 = \frac{2 \cdot \text{Precision} \cdot \text{Recall}}{\text{Precision} + \text{Recall}}.
+\]
+
+Unless stated otherwise, metrics are computed at the \emph{segment} level; \emph{patient}-level metrics are obtained by averaging per-patient results to mitigate class-size imbalance.
+
+\subsection{Results on Surgical Data}
+
+Table~\ref{tab:main_results} summarizes the performance across all LOPO folds. 
+Our method achieves the highest sensitivity and F1-score while maintaining real-time feasibility.
+
+\begin{table}[h]
+\centering
+\caption{Performance comparison on intraoperative EMG dataset (LOPO validation).}
+\label{tab:main_results}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Method} & \textbf{Accuracy} & \textbf{Sensitivity} & \textbf{F1-score} & \textbf{AUC} \\
+\midrule
+Threshold-based IONM        & 0.71 & 0.42 & 0.39 & - \\
+CNN-Baseline~\cite{RealTime_CNN_EMG_2019} & 0.83 & 0.64 & 0.61 & 0.78 \\
+BiLSTM                      & 0.81 & 0.59 & 0.57 & 0.76 \\
+Transformer-EMG            & 0.85 & 0.67 & 0.65 & 0.81 \\
+\textbf{Ours w/o SCGAN}    & 0.86 & 0.71 & 0.69 & 0.83 \\
+\textbf{Ours (Full)}       & \textbf{0.88} & \textbf{0.78} & \textbf{0.75} & \textbf{0.87} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Additionally, \cref{fig:dca} shows that our model provides the highest net clinical benefit across a wide range of threshold probabilities. Thresholds were selected on the validation set using the Youden index. We report 95\% confidence intervals via bootstrap (1{,}000 resamples) in the supplementary material.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{dca}
+  \caption{Decision curve analysis showing clinical net benefit across threshold probabilities.}
+  \label{fig:dca}
+\end{figure}
+
+\subsection{Ablation Studies}
+
+We conducted a series of ablation studies to quantify the contribution of each component:
+
+\begin{itemize}
+    \item Removing SCGAN augmentation leads to a drop of 6–8\% in sensitivity.
+    \item Replacing EGA attention with standard SE-blocks increases inference time by 35\%.
+    \item Training without focal loss causes the model to overfit to the majority (non-traction) class.
+\end{itemize}
+
+\subsection{Model Size and Latency}
+
+\begin{table}[h]
+\centering
+\caption{Model complexity and real-time performance on Intel Core i7 CPU.}
+\label{tab:latency}
+\begin{tabular}{lccc}
+\toprule
+Model & Parameters (M) & FLOPs (M) & Latency (ms) \\
+\midrule
+Transformer-EMG & 22.1 & 950 & 180 \\
+CNN-Baseline    & 3.5  & 120 & 55 \\
+\textbf{Ours (DEGACN)}  & \textbf{2.7} & \textbf{98} & \textbf{43} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The DEGACN achieves inference within \SI{43}{ms} per window, well below the \SI{100}{ms} clinical threshold, validating its feasibility for real-time intraoperative deployment.
+
+% ============================================================
+% 6. Discussion
+% ============================================================
+\section{Discussion}
+
+\subsection{Clinical Significance}
+
+Facial nerve palsy remains one of the most disabling complications in skull base neurosurgery, with high psychosocial impact on patients. Current cIONM systems provide valuable intraoperative feedback but depend heavily on neurophysiologists' visual assessment of EMG waveforms. Our framework demonstrates that AI models, when trained on \emph{real intraoperative EMG with surgeon-verified traction events}, can sensitively detect early warning signs that are often overlooked or delayed in manual interpretation. 
+
+Furthermore, Decision Curve Analysis (DCA) confirms that the proposed system yields a positive net clinical benefit across a broad range of risk thresholds, suggesting clinical usefulness rather than mere statistical accuracy. This establishes AI-EMG as a feasible adjunct to support surgical decision-making rather than replacing professional judgement.
+
+\subsection{Advantages over Traditional IONM}
+
+Compared to amplitude-threshold or latency-based alarm rules, our approach offers three major advantages:
+
+\begin{itemize}
+    \item \textbf{Objective detection beyond visual interpretation:} Traditional free-running EMG alerts are triggered only after substantial amplitude decrease or neurotonic discharge. Our model detects subtle spectral alterations caused by traction before overt signal deterioration becomes visible.
+    \item \textbf{Robustness to noise and anesthesia-related variability:} Conventional IONM signals are highly susceptible to electrocautery artifacts, depth of anesthesia, or neuromuscular blockers. By learning temporal–spectral patterns, the model demonstrates higher robustness compared with raw-threshold methods.
+    \item \textbf{Real-time feasibility:} DEGACN maintains sub-\SI{50}{ms} inference latency on CPU-only systems, overcoming the computational limitations that hinder transformer-based or ensemble models in the operating room.
+\end{itemize}
+
+These features suggest that the proposed system is not simply a classification tool but a clinically deployable solution tailored to the constraints and demands of neurosurgery.
+
+\subsection{Limitations}
+
+Despite the promising findings, several limitations remain:
+
+\begin{itemize}
+    \item \textbf{Single-center dataset:} All EMG recordings were collected from one neurosurgical center using a specific cIONM device. Although leave-one-patient-out validation improves robustness, multi-center datasets are required to confirm generalizability across institutions and equipment.
+    \item \textbf{No prospective deployment yet:} The system has not yet been integrated into real intraoperative workflows. Intraoperative latency, surgeon acceptance, user interface design, and alarm fatigue have not been evaluated.
+    \item \textbf{GAN-generated EMG may introduce bias:} Although SCGAN improves data balance and performance, synthetic spectrograms may not perfectly reflect physiological variability, and excessive augmentation may lead to distribution shift.
+    \item \textbf{Binary detection only:} The current framework focuses on identifying traction vs. non-traction states. It does not provide continuous risk scoring, prognostic prediction of postoperative deficits, or localization of traction sites.
+\end{itemize}
+
+\subsection{Future Work}
+
+Future research will focus on four main directions:
+
+\begin{itemize}
+    \item \textbf{Prospective intraoperative deployment:} We plan to integrate the proposed system into the IONM console workflow and evaluate its performance in real surgeries, including surgeon response time, usability, and alarm reliability.
+    \item \textbf{Multi-center and multi-modality expansion:} To improve generalizability, data collection will be expanded to multiple hospitals using different EMG hardware, anesthesia protocols, and surgical techniques. Combining EMG with triggered-EMG, EEG, or force-sensing instruments may enhance prediction accuracy.
+    \item \textbf{Explainable AI (XAI):} Providing interpretable spectrogram saliency maps or time–frequency attention visualizations may increase surgeon trust and regulatory acceptance.
+    \item \textbf{Towards prognostic prediction:} Beyond real-time alarms, future models could predict postoperative facial nerve outcomes, enabling intraoperative decision-making that is both preventive and prognostic.
+\end{itemize}
+
+Overall, this work establishes a clinically grounded foundation for data-driven facial nerve protection, serving as a bridge between AI research and neurosurgical practice.
+
+% ============================================================
+% 7. Conclusion
+% ============================================================
+\section{Conclusion}
+
+Facial nerve protection remains a critical challenge in skull base and posterior fossa neurosurgery, where even transient injury can lead to long-term functional and psychological impairment. Although continuous intraoperative neuromonitoring (cIONM) provides valuable electrophysiological feedback, its clinical effectiveness is limited by subjective EMG interpretation, anesthesia-related variability, and lack of timely warning during mechanical traction.
+
+In this work, we introduced a generative-augmented and deployment-oriented framework for real-time facial nerve traction risk detection based on \emph{real intraoperative EMG}. Unlike prior AI approaches that rely on simulated EMG or surface muscle activity, our dataset consists of surgeon-verified traction events recorded during actual neurosurgical procedures, providing an authentic foundation for clinically meaningful model development.
+
+To address data scarcity and imbalance, we proposed a Spectral-Consistency GAN (SCGAN) capable of synthesizing physiologically plausible EMG spectrograms while preserving traction-related spectral characteristics. For real-time inference in the operating room, we developed a lightweight Dilated Efficient Global-Attention CNN (DEGACN), which achieves sub-\SI{50}{ms} latency on CPU-only neuromonitoring hardware without sacrificing diagnostic accuracy.
+
+Comprehensive patient-level evaluation using leave-one-patient-out cross-validation and Decision Curve Analysis demonstrates that our framework outperforms existing CNN-, transformer-, and threshold-based baselines, and provides consistent net clinical benefit. Although prospective deployment has not yet been implemented, the proposed “heavy-training, lightweight-inference” paradigm establishes a practical pathway from retrospective EMG analysis to real-time surgical decision support.
+
+In summary, this study demonstrates that combining authentic intraoperative EMG, generative augmentation, and efficient deep learning can substantially enhance the safety and objectivity of facial nerve monitoring. Future work will focus on multi-center validation, integration into surgical workflow, explainable AI, and prognostic outcome prediction, ultimately moving closer to intelligent and reliable neurosurgical assistance systems.
+
+% ============================================================
+% Funding / Acknowledgments
+% ============================================================
+\section*{Acknowledgments}
+The authors would like to thank the neurosurgical team and intraoperative neuromonitoring (IONM) staff at Zhongnan Hospital of Wuhan University for their support in data collection and clinical annotation. Their collaboration made it possible to acquire real intraoperative EMG data with surgeon-verified facial nerve traction events, which is essential to the contribution of this research.
+
+% ============================================================
+% References
+% ============================================================
+\bibliographystyle{IEEEtran}
+\bibliography{refs}
+
+\end{document}

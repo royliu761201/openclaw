@@ -1,0 +1,49 @@
+This is BibTeX, Version 0.99d (TeX Live 2025)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: main.aux
+The style file: plainnat.bst
+Database file #1: refs.bib
+Warning--can't use both volume and number fields in brown2018superhuman
+Warning--empty journal in shoham2008multiagent
+You've used 58 entries,
+            2773 wiz_defined-function locations,
+            881 strings with 16453 characters,
+and the built_in function-call counts, 34854 in all, are:
+= -- 2795
+> -- 3092
+< -- 30
++ -- 1044
+- -- 984
+* -- 3087
+:= -- 5571
+add.period$ -- 175
+call.type$ -- 58
+change.case$ -- 482
+chr.to.int$ -- 56
+cite$ -- 118
+duplicate$ -- 1306
+empty$ -- 2221
+format.name$ -- 1057
+if$ -- 7084
+int.to.chr$ -- 3
+int.to.str$ -- 1
+missing$ -- 58
+newline$ -- 298
+num.names$ -- 232
+pop$ -- 1007
+preamble$ -- 1
+purify$ -- 424
+quote$ -- 0
+skip$ -- 1143
+stack$ -- 0
+substring$ -- 757
+swap$ -- 159
+text.length$ -- 13
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 638
+warning$ -- 2
+while$ -- 226
+width$ -- 0
+write$ -- 732
+(There were 2 warnings)

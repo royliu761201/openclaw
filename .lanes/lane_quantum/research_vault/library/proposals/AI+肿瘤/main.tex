@@ -1,0 +1,213 @@
+% !TEX program = xelatex
+% Proposal Template (LaTeX)
+% Style: formal, external-facing, paradigm-driven oncology AI+bdata proposal
+% Language: Chinese (ctexart)
+% Compile: XeLaTeX
+
+\documentclass[12pt,a4paper,fontset=mac]{ctexart}
+\setCJKmainfont{Songti SC}
+\setCJKsansfont{Heiti SC}
+\usepackage{gbt7714}
+
+% ---------------- Page & Style ----------------
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.6cm,right=2.6cm]{geometry}
+\usepackage{setspace}
+\usepackage{indentfirst}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+}
+
+\setstretch{1.25}
+\setlength{\parskip}{0.35em}
+
+% ---------------- Section Formatting ----------------
+\titleformat{\section}{\Large\bfseries}{\thesection}{0.8em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{0.6em}{}
+
+% ---------------- Document ----------------
+\begin{document}
+
+\begin{center}
+  {\LARGE \textbf{肿瘤机制驱动的可推理精准医学新范式}}\\[0.35em]
+  {\Large \textbf{AI 与多模态大数据的机制图谱与干预推导}}\\[0.7em]
+  {\large \textbf{作者：刘晓华}}\\[0.4em]
+
+\end{center}
+
+\vspace{0.8em}
+
+% =================================================
+\section{WHY：研究背景、科学意义与范式目标}
+
+\subsection{研究背景}
+肿瘤是典型的多尺度复杂系统，其发生发展、治疗响应与耐药复发由分子结构扰动、
+通路网络重构、细胞状态转变与克隆演化、肿瘤微环境及空间互作等多尺度因素共同决定。
+现行肿瘤学研究与临床实践仍主要基于器官/病理分类及有限标志物分层，
+难以解释同癌种患者疗效差异的机制根源，亦缺乏对耐药演化路径的可推理预判，
+从而导致治疗策略长期依赖经验筛选与试验迭代。
+
+\subsection{技术与数据窗口}
+近年来，多组学、单细胞与空间组学、病理影像以及真实世界临床数据在规模与覆盖上迅速增长，
+为系统刻画肿瘤全周期机制提供了前所未有的证据基础。
+同时，多模态基础模型、结构预测、图学习、生成式设计与因果推断等 AI 技术成熟，
+具备跨尺度统一建模、多源证据融合推理与不确定性评估的能力。
+当前亟需在上述数据与技术窗口下建立可检验、可迁移的肿瘤学新范式。
+
+\subsection{范式级科学命题（可检验假说）}
+\begin{quote}
+\noindent
+\textbf{核心假说：}
+存在跨癌种稳定存在的\emph{多尺度机制亚型}，其在结构—通路—细胞—微环境—临床层面具有一致定义；
+机制亚型决定治疗响应与耐药演化的主导方向；
+\emph{干预空间}可在机制图谱约束下被系统推导与排序并形成最优治疗路径；
+在真实世界证据回流驱动下，该体系可持续自我更新并跨癌种迁移。
+\end{quote}
+
+% =================================================
+\section{WHAT：总体目标、关键科学问题与预期成果}
+
+\subsection{总体目标}
+构建并验证“\textbf{多尺度机制图谱—干预空间推导—学习型临床闭环}”的一体化体系，
+实现跨癌种机制亚型稳定识别、机制驱动治疗策略生成与排序、
+以及临床证据持续回流更新，形成可迁移的精准肿瘤学新范式。
+
+\subsection{关键科学问题}
+\begin{enumerate}[leftmargin=2em]
+  \item \textbf{多尺度机制亚型的存在性与稳定性：}
+        是否存在跨癌种稳定存在且可由多尺度证据一致定义的机制亚型？
+        如何量化其跨队列迁移性与可干预性，并建立一致判别准则？
+  \item \textbf{机制到干预空间的可推导性：}
+        如何从机制图谱中系统识别驱动轴、旁路补偿与耐药必经路径，
+        并推导新靶点、新疗法、老药新用、抗体/ADC/细胞治疗、联合与序列策略的可排序干预空间？
+  \item \textbf{机制—干预—临床闭环的可持续进化：}
+        如何将复杂模型蒸馏为临床可落地的最小检测 panel 与判读规范，
+        并在真实世界回流下持续更新机制图谱与干预空间以实现跨癌种长期进化？
+\end{enumerate}
+
+\subsection{预期成果}
+\begin{itemize}[leftmargin=2em]
+  \item \textbf{Mechanism Atlas：} 肿瘤多尺度可推理机制图谱与患者级机制表征体系。
+  \item \textbf{Intervention Space：} 面向机制亚型的靶点/疗法/组合/序列候选及证据等级排序图谱。
+  \item \textbf{Learning Oncology System：} 机制判读—干预推荐—临床回流—持续迭代的学习型闭环系统。
+  \item 机制驱动的最小检测 panel、判读规则与临床报告规范（在示范癌种形成可用原型）。
+  \item 多中心回顾性与前瞻性验证证据链，以及跨癌种迁移的通用框架。
+\end{itemize}
+
+% =================================================
+\section{HOW：研究内容、技术路线与实施方案}
+
+\subsection{总体技术路线}
+本研究遵循以下逻辑链条：
+AI-Ready 多模态数据底座构建
+$\rightarrow$ 多尺度机制建模与可推理图谱生成
+$\rightarrow$ 机制一致性约束下的跨癌种机制亚型识别
+$\rightarrow$ 干预空间推导、证据排序与策略生成
+$\rightarrow$ 临床可落地蒸馏（panel/规则/CDSS）
+$\rightarrow$ 真实世界回流驱动的学习型闭环与跨癌种迁移。
+
+\subsection{研究任务与关键内容}
+\begin{enumerate}[leftmargin=2em]
+  \item \textbf{研究任务一：AI-Ready 多模态肿瘤全周期数据底座构建}\\
+        汇聚多组学、单细胞/空间组学、病理影像与真实世界临床数据，
+        形成统一患者时间轴、事件体系与可复用标准化/治理流程。
+  \item \textbf{研究任务二：多尺度机制图谱构建（结构—通路—细胞—微环境）}\\
+        结合结构预测与对接、通路/网络推断、单细胞演化建模与空间微环境互作分析，
+        构建跨尺度可推理机制知识图及患者级机制表征。
+  \item \textbf{研究任务三：跨癌种机制亚型体系建立}\\
+        在表征学习中引入跨尺度机制一致性约束与临床结局校准，
+        获得稳定、可迁移、可干预的通用机制亚型集合及其癌种特异组合。
+  \item \textbf{研究任务四：干预空间的机制推导与证据排序}\\
+        从机制亚型出发，系统枚举新靶点/新疗法、老药新用、
+        生物大分子与 ADC/细胞治疗靶点、联合与序列策略，
+        并在结构、网络与临床证据约束下形成可排序干预空间图谱。
+  \item \textbf{研究任务五：临床可落地蒸馏与决策支持原型}\\
+        通过稀疏化与蒸馏获得机制驱动最小检测 panel 与可解释判读规则，
+        开发标准化临床报告与决策支持原型（CDSS）。
+  \item \textbf{研究任务六：学习型临床闭环验证与持续进化}\\
+        开展多中心回顾性与嵌入式前瞻验证，
+        以真实世界回流持续更新机制图谱、干预排序与面板体系，
+        完成可迁移学习闭环的标准化实现。
+\end{enumerate}
+
+\subsection{阶段目标与里程碑}
+\begin{itemize}[leftmargin=2em]
+  \item \textbf{阶段 I（0--24 个月）：}
+        完成 AI-Ready 数据底座与多尺度机制图谱 v1.0；
+        在示范癌种建立机制亚型与干预空间 v1.0；
+        形成最小 panel 原型与回顾性证据链。
+  \item \textbf{阶段 II（24--60 个月）：}
+        迁移至多个癌种并提炼通用机制亚型定律第一版；
+        推导跨癌种干预空间；
+        完成多中心嵌入式/前瞻验证与闭环迭代。
+  \item \textbf{阶段 III（60--120 个月）：}
+        建立机制亚型驱动的临床试验设计与新疗法发现范式；
+        学习型闭环系统规模化推广；
+        形成国际可复用的精准肿瘤学基础设施与标准。
+\end{itemize}
+
+% =================================================
+\section{WITH WHAT：研究基础、资源条件与团队组织}
+
+\subsection{数据与样本资源}
+\begin{itemize}[leftmargin=2em]
+  \item 公共多模态队列与知识库：多组学、单细胞/空间组学、病理影像、临床试验与药物/通路数据库等。
+  \item 合作医院真实世界队列：覆盖诊疗全周期的方案、疗效、毒性、耐药与随访数据。
+  \item 隐私合规与多中心协作机制：数据治理、联邦/隐私计算与跨中心对齐规范。
+\end{itemize}
+
+\subsection{计算平台与工具链}
+\begin{itemize}[leftmargin=2em]
+  \item GPU/异构高性能计算与分布式训练平台，支持大规模多模态建模与推理。
+  \item 结构预测/对接/动力学与生成式药物设计流水线，支持结构级机制与靶点验证。
+  \item 多模态基础模型、图学习、因果推断与强化学习框架，用于机制表征与干预空间推导。
+  \item 临床端 CDSS 部署环境与结果回流接口，实现闭环更新。
+\end{itemize}
+
+\subsection{团队与组织结构}
+\begin{itemize}[leftmargin=2em]
+  \item 临床肿瘤学团队：研究场景与问题定义、队列建设、多中心回顾/前瞻验证与临床转化。
+  \item 结构/机制/通路与实验团队：机制锚定、生物学解释、实验对照与靶点验证。
+  \item AI+大数据团队：多尺度建模、机制一致性约束学习、机制亚型识别、干预空间推导与蒸馏。
+  \item 药物与转化团队：候选靶点/疗法与组合策略的转化评估、试验衔接与产业化路径。
+\end{itemize}
+
+% =================================================
+\section{创新点与风险对策}
+
+\subsection{创新点}
+\begin{enumerate}[leftmargin=2em]
+  \item 提出多尺度一致性约束下的跨癌种机制亚型体系，推动肿瘤从器官分类向机制分类的基础跃迁。
+  \item 建立“机制图谱$\rightarrow$干预空间”系统推导与证据排序框架，实现治疗策略生成的计算化与可解释化。
+  \item 实现真实世界回流驱动的学习型临床闭环，使机制、干预与疗效可持续自我更新并跨癌种迁移。
+  \item 打通宏大多模态体系向临床最小 panel+规则/CDSS 的可落地蒸馏路径，形成可推广的临床基础设施。
+\end{enumerate}
+
+\subsection{风险与对策}
+\begin{itemize}[leftmargin=2em]
+  \item \textbf{跨中心数据异构与偏倚：}
+        采用统一数据规范、批次/缺失建模与因果校正，
+        以多中心复现与迁移性评估作为关键门槛。
+  \item \textbf{机制亚型稳定性不足：}
+        引入跨尺度一致性损失与临床结局校准，
+        建立亚型稳定性与可干预性的定量判据。
+  \item \textbf{干预空间推导可验证性：}
+        优先聚焦高证据机制节点，
+        并行开展结构、网络与临床多维证据验证。
+  \item \textbf{临床落地复杂度：}
+        以蒸馏与最小 panel 路线降低门槛，
+        通过嵌入式验证迭代临床报告规范与CDSS流程。
+\end{itemize}
+
+% =================================================
+% \bibliographystyle{gbt7714-numerical}
+% \bibliography{refs}
+
+\end{document}

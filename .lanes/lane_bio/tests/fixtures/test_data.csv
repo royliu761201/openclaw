@@ -1,0 +1,3 @@
+Experiment,Accuracy,Loss
+Baseline,85.4,0.45
+Proposed,92.1,0.21

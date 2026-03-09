@@ -1,0 +1,54 @@
+This is BibTeX, Version 0.99d (TeX Live 2025)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: zero_shot_alpha.aux
+The style file: plainnat.bst
+Database file #1: refs.bib
+You're missing a field name---line 304 of file refs.bib
+ : 
+ : %  number={12},
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+Warning--empty year in zhou2021informer
+Warning--empty year in zhou2021informer
+You've used 24 entries,
+            2773 wiz_defined-function locations,
+            731 strings with 9601 characters,
+and the built_in function-call counts, 14149 in all, are:
+= -- 1228
+> -- 958
+< -- 14
++ -- 321
+- -- 297
+* -- 1216
+:= -- 2114
+add.period$ -- 73
+call.type$ -- 24
+change.case$ -- 169
+chr.to.int$ -- 24
+cite$ -- 50
+duplicate$ -- 598
+empty$ -- 1078
+format.name$ -- 327
+if$ -- 2978
+int.to.chr$ -- 1
+int.to.str$ -- 1
+missing$ -- 25
+newline$ -- 128
+num.names$ -- 96
+pop$ -- 361
+preamble$ -- 1
+purify$ -- 146
+quote$ -- 0
+skip$ -- 486
+stack$ -- 0
+substring$ -- 632
+swap$ -- 104
+text.length$ -- 9
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 259
+warning$ -- 2
+while$ -- 113
+width$ -- 0
+write$ -- 316
+(There was 1 error message)

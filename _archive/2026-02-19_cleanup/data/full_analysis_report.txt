@@ -1,0 +1,72 @@
+[ConfigManager] Loaded secrets from: /Users/roy-jd/Documents/MyAI/ai4s/secrets.json
+✅ W&B API Connected (Project: lxh5147-jianghan-university/medtime)
+🔍 Querying W&B API...
+   ✅ Fetched 57 recent runs from W&B.
+
+=== 🧪 MEDTIME W&B METRICS (Single Source) ===
+|    | run_name                               | wandb_state    |   wandb_f1 |   wandb_trigger_f1 |   wandb_mae |
+|----|----------------------------------------|----------------|------------|--------------------|-------------|
+|  0 | medtime_few_shot_cn_no_topo_0208_1902  | finished       |     0.2358 |             0.3493 |     46.0750 |
+|  1 | medtime_few_shot_cn_no_align_0208_1902 | finished       |     0.3133 |             0.3564 |     31.2000 |
+|  2 | medtime_few_shot_cn_0208_1854          | finished       |     0.4257 |             0.5023 |     33.6085 |
+|  3 | medtime_few_shot_sft_0208_1854         | finished       |     0.4110 |             0.5061 |     31.5535 |
+|  4 | medtime_few_shot_cn_no_align_0208_1902 | finished       |     0.0000 |             0.0000 |      0.0000 |
+|  5 | medtime_few_shot_cn_no_topo_0208_1902  | finished       |     0.0000 |             0.0000 |      0.0000 |
+|  6 | medtime_few_shot_sft_0208_1854         | finished       |     0.0000 |             0.0000 |      0.0000 |
+|  7 | medtime_few_shot_cn_0208_1854          | finished       |     0.0000 |             0.0000 |      0.0000 |
+|  8 | medtime_few_shot_cn_no_align_0208_1648 | finished       |     0.3447 |             0.3557 |     27.3165 |
+|  9 | medtime_few_shot_cn_no_topo_0208_1648  | finished       |     0.2642 |             0.3535 |     27.8500 |
+| 10 | medtime_few_shot_cn_0208_1648          | finished       |     0.2402 |             0.3418 |     44.4330 |
+| 11 | medtime_few_shot_sft_0208_1648         | finished       |     0.2706 |             0.2721 |     33.2250 |
+| 12 | medtime_zeroshot_14b_cn_0208_1648      | failed (saved) |     0.4207 |             0.4978 |     33.3285 |
+| 13 | medtime_few_shot_cn_no_align_0208_1648 | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 14 | medtime_few_shot_cn_no_topo_0208_1648  | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 15 | medtime_few_shot_sft_0208_1648         | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 16 | medtime_few_shot_cn_0208_1648          | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 17 | medtime_few_shot_sft_0208_1639         | crashed        |     0.0000 |             0.0000 |      0.0000 |
+| 18 | medtime_few_shot_cn_0208_1639          | crashed        |     0.0000 |             0.0000 |      0.0000 |
+| 19 | medtime_few_shot_cn_no_topo_0208_1639  | crashed        |     0.0000 |             0.0000 |      0.0000 |
+| 20 | medtime_few_shot_cn_no_align_0208_1639 | crashed        |     0.0000 |             0.0000 |      0.0000 |
+| 21 | medtime_gvp_cn_0208_1516               | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 22 | medtime_gvp_cn_0208_1516               | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 23 | medtime_gvp_cn_0208_1454               | crashed        |     0.0000 |             0.0000 |      0.0000 |
+| 24 | medtime_gvp_cn_0208_1446_smoke         | failed         |     0.0000 |             0.0000 |      0.0000 |
+| 25 | medtime_gvp_cn_0208_1443_smoke         | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 26 | medtime_gvp_cn_0208_1443_smoke         | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 27 | medtime_gvp_cn_0208_1439_smoke         | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 28 | medtime_gvp_cn_0208_1439_smoke         | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 29 | medtime_gvp_cn_0208_1431_smoke         | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 30 | medtime_gvp_cn_0208_1431_smoke         | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 31 | medtime_gvp_cn_0208_0340_smoke         | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 32 | medtime_gvp_cn_0208_0340_smoke         | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 33 | medtime_gvp_cn_0208_0338_smoke         | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 34 | medtime_gvp_cn_0208_0332_smoke         | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 35 | medtime_gvp_cn_0208_0329_smoke         | crashed        |     0.0000 |             0.0000 |      0.0000 |
+| 36 | medtime_gvp_cn_0208_0318_smoke         | crashed        |     0.0000 |             0.0000 |      0.0000 |
+| 37 | medtime_gvp_cn_0208_0312_smoke         | crashed        |     0.0000 |             0.0000 |      0.0000 |
+| 38 | medtime_gvp_cn_0208_0307_smoke         | failed         |     0.0000 |             0.0000 |      0.0000 |
+| 39 | medtime_few_shot_en_0201_1405          | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 40 | medtime_few_shot_syn_0201_0338         | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 41 | medtime_few_shot_syn_0201_0326         | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 42 | medtime_few_shot_syn_0201_0317         | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 43 | medtime_few_shot_syn_0201_0140         | failed         |     0.0000 |             0.0000 |      0.0000 |
+| 44 | medtime_few_shot_en_0201_0140          | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 45 | medtime_few_shot_en_0131_1524          | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 46 | medtime_few_shot_cn_no_topo_0131_0519  | failed         |     0.0000 |             0.0000 |      0.0000 |
+| 47 | medtime_gvp_pure_syn_cn_0131_0509      | failed         |     0.0000 |             0.0000 |      0.0000 |
+| 48 | medtime_gvp_en_0128_1345               | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 49 | medtime_gvp_en_0128_1340               | failed         |     0.0000 |             0.0000 |      0.0000 |
+| 50 | medtime_few_shot_real_32b_0126_0402    | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 51 | medtime_few_shot_real_32b_0126_0226    | failed         |     0.0000 |             0.0000 |      0.0000 |
+| 52 | medtime_few_shot_real_14b_0126_0226    | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 53 | medtime_few_shot_real_14b_0126_0000    | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 54 | medtime_few_shot_real_0125_2304        | finished       |     0.0000 |             0.0000 |      0.0000 |
+| 55 | medtime_gvp_cn_0125_1900               | crashed        |     0.0000 |             0.0000 |      0.0000 |
+| 56 | medtime_gvp_en_0125_1900               | failed         |     0.0000 |             0.0000 |      0.0000 |
+
+📈 Analyzing Training Dynamics (W&B History)...
+   No training data found.
+
+💡 NOTE: Runs marked 'crashed (saved)' encountered an error during cleanup
+   (e.g., UnboundLocalError), but successfully logged their metrics first.
+   The data for these runs is VALID.

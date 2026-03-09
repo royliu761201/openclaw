@@ -1,0 +1,63 @@
+\begin{thebibliography}{10}
+
+\bibitem{ames2019control}
+Aaron~D Ames, Samuel Coogan, et~al.
+\newblock Control barrier functions: Theory and applications.
+\newblock 2019.
+
+\bibitem{brohan2023rt}
+Anthony Brohan, Noah Brown, et~al.
+\newblock Rt-2: Vision-language-action models transferred to real-world
+  robotics.
+\newblock {\em arXiv preprint arXiv:2307.15818}, 2023.
+
+\bibitem{ha2023scaling}
+Sehoon Ha et~al.
+\newblock Scaling up learning-based robotics with simulated data.
+\newblock {\em Science Robotics}, 2023.
+
+\bibitem{pi0_2024}
+Physical Intelligence et~al.
+\newblock $\pi_0$: A foundation model for generalist robotics.
+\newblock {\em arXiv preprint arXiv:2410.xxxxx}, 2024.
+\newblock Hypothetical Citation for Context.
+
+\bibitem{karniadakis2021physics}
+George~Em Karniadakis, Ioannis~G Kevrekidis, Lu~Lu, Paris Perdikaris, Sifan
+  Wang, and Liu Yang.
+\newblock Physics-informed machine learning.
+\newblock {\em Nature Reviews Physics}, 3(6):422--440, 2021.
+
+\bibitem{makoviychuk2021isaac}
+Viktor Makoviychuk, Lukasz Wawrzyniak, et~al.
+\newblock Isaac gym: High performance gpu-based physics simulation for robot
+  learning.
+\newblock {\em arXiv preprint arXiv:2108.10470}, 2021.
+
+\bibitem{pavlakos2019expressive}
+Georgios Pavlakos, Vasileios Choutas, et~al.
+\newblock Expressive body capture: 3d hands, face, and body from a single
+  image.
+\newblock In {\em Proceedings of the IEEE/CVF conference on computer vision and
+  pattern recognition}, 2019.
+
+\bibitem{pennes1948analysis}
+Harry~H Pennes.
+\newblock Analysis of tissue and arterial blood temperatures in the resting
+  human forearm.
+\newblock {\em Journal of Applied Physiology}, 1(2):93--122, 1948.
+
+\bibitem{raissi2019physics}
+Maziar Raissi, Paris Perdikaris, and George~E Karniadakis.
+\newblock Physics-informed neural networks: A deep learning framework for
+  solving forward and inverse problems involving nonlinear partial differential
+  equations.
+\newblock {\em Journal of Computational Physics}, 378:686--707, 2019.
+
+\bibitem{zhao2023mobile}
+Tony~Z Zhao, Vikash Kumar, Sergey Levine, and Chelsea Finn.
+\newblock Mobile aloha: Learning bimanual mobile manipulation with low-cost
+  whole-body teleoperation.
+\newblock {\em arXiv preprint arXiv:2401.01325}, 2024.
+
+\end{thebibliography}

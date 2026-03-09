@@ -1,0 +1,127 @@
+\begin{thebibliography}{21}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Cao et~al.(2024)]{cao2024phyICNet}
+Cao, R. et~al.
+\newblock Phyicnet.
+\newblock \emph{Electronic Research Archive}, 2024.
+
+\bibitem[Chen et~al.(2018)Chen, Rubanova, Bettencourt, and
+  Duvenaud]{chen2018neuralode}
+Chen, R. T.~Q., Rubanova, Y., Bettencourt, J., and Duvenaud, D.
+\newblock Neural ordinary differential equations.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+  volume~31, 2018.
+
+\bibitem[Franco et~al.(2023)]{franco2023gnnSurrogate}
+Franco, N.~R. et~al.
+\newblock Deep learning-based surrogate models for parametrized pdes.
+\newblock \emph{Chaos}, 2023.
+
+\bibitem[Gu \& Dao(2023)Gu and Dao]{gu2023mamba}
+Gu, A. and Dao, T.
+\newblock {Mamba}: Linear-time sequence modeling with selective state spaces.
+\newblock \emph{arXiv preprint arXiv:2312.00752}, 2023.
+
+\bibitem[Gu et~al.(2020)Gu, Dao, Ermon, Atzmon, and Re]{gu2021hippo}
+Gu, A., Dao, T., Ermon, S., Atzmon, N., and Re, C.
+\newblock {HiPPO}: Recurrent memory with optimal polynomial projections.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+  volume~33, 2020.
+
+\bibitem[Hu et~al.(2024)]{hu2024ssmNeuralOperator}
+Hu, Z. et~al.
+\newblock State-space models are accurate and efficient neural operators for
+  dynamical systems.
+\newblock \emph{Neural Networks}, 2024.
+
+\bibitem[Li et~al.(2021)Li, Kovachki, et~al.]{li2020fno}
+Li, Z., Kovachki, N., et~al.
+\newblock Fourier neural operator for parametric partial differential
+  equations.
+\newblock \emph{International Conference on Learning Representations}, 2021.
+
+\bibitem[Li et~al.(2023{\natexlab{a}})]{li2023geoFNO}
+Li, Z. et~al.
+\newblock Fourier neural operator with learned deformations.
+\newblock \emph{Journal of Machine Learning Research}, 2023{\natexlab{a}}.
+
+\bibitem[Li et~al.(2023{\natexlab{b}})]{li2023pdeTransformer}
+Li, Z. et~al.
+\newblock Scalable transformers for {PDE} surrogate modeling.
+\newblock \emph{arXiv preprint arXiv:2310.01728}, 2023{\natexlab{b}}.
+
+\bibitem[Liu et~al.(2025)]{liu2025neuralOperatorSurvey}
+Liu, S. et~al.
+\newblock Architectures, variants, and performance of neural operators: A
+  comparative review.
+\newblock \emph{Neurocomputing}, 2025.
+
+\bibitem[Lu et~al.(2021{\natexlab{a}})Lu, Jin, Pang, Zhang, and
+  Karniadakis]{lu2021deeponet}
+Lu, L., Jin, P., Pang, G., Zhang, Z., and Karniadakis, G.~E.
+\newblock Learning nonlinear operators via {DeepONet} based on the universal
+  approximation theorem.
+\newblock \emph{Nature Machine Intelligence}, 3\penalty0 (3):\penalty0
+  218--229, 2021{\natexlab{a}}.
+
+\bibitem[Lu et~al.(2021{\natexlab{b}})]{lu2021hPINN}
+Lu, L. et~al.
+\newblock Physics-informed neural networks with hard constraints.
+\newblock \emph{SIAM Journal on Scientific Computing}, 2021{\natexlab{b}}.
+
+\bibitem[Oh et~al.(2025)]{oh2025ndeReview}
+Oh, Y. et~al.
+\newblock Comprehensive review of neural differential equations for time series
+  analysis.
+\newblock \emph{arXiv preprint arXiv:2502.09885}, 2025.
+
+\bibitem[Raissi et~al.(2019)Raissi, Perdikaris, and
+  Karniadakis]{raissi2019pinn}
+Raissi, M., Perdikaris, P., and Karniadakis, G.~E.
+\newblock Physics-informed neural networks: A deep learning framework for
+  solving forward and inverse problems involving nonlinear partial differential
+  equations.
+\newblock \emph{Journal of Computational Physics}, 378, 2019.
+
+\bibitem[Rao et~al.(2021)]{rao2021percenn}
+Rao, C. et~al.
+\newblock Hard encoding of physical constraints for learning spatiotemporal
+  dynamics.
+\newblock \emph{arXiv preprint arXiv:2105.00557}, 2021.
+
+\bibitem[Ren et~al.(2022)]{ren2022phyCRNet}
+Ren, P. et~al.
+\newblock Phycrnet.
+\newblock \emph{Computer Methods in Applied Mechanics and Engineering}, 2022.
+
+\bibitem[Ren et~al.(2025{\natexlab{a}})]{ren2025mtsPercnn}
+Ren, R. et~al.
+\newblock {MtS-PeRCNN}.
+\newblock 2025{\natexlab{a}}.
+
+\bibitem[Ren et~al.(2025{\natexlab{b}})]{ren2025tawPercnn}
+Ren, R. et~al.
+\newblock {TaW-PeRCNN}.
+\newblock 2025{\natexlab{b}}.
+
+\bibitem[Wan et~al.(2025)]{wan2025pesanet}
+Wan, H. et~al.
+\newblock Physics-encoded spectral attention networks.
+\newblock \emph{arXiv preprint arXiv:2505.01736}, 2025.
+
+\bibitem[Wang et~al.(2025)]{wang2025pecan}
+Wang, X. et~al.
+\newblock Physics-encoded convolutional attention network.
+\newblock \emph{Computer Methods in Applied Mechanics and Engineering}, 2025.
+
+\bibitem[Yu et~al.(2024)]{yu2024dynSysIntro}
+Yu, R. et~al.
+\newblock Learning dynamical systems from data: An introduction.
+\newblock \emph{Proceedings of the National Academy of Sciences}, 2024.
+
+\end{thebibliography}

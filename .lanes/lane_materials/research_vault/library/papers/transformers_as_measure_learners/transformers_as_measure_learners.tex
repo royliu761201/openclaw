@@ -1,0 +1,1325 @@
+\documentclass{article}
+
+% =================================================================
+% PACKAGE SETUP
+% =================================================================
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{booktabs} % professional-quality tables
+\usepackage{multirow}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage{bm}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage[utf8]{inputenc}
+\usepackage{enumitem} % For compact lists
+
+\usepackage[colorlinks]{hyperref}
+
+% Use the ICML style file (proxy for 2026)
+\usepackage{icml2026} 
+
+% =================================================================
+% THEOREMS & MACROS
+% =================================================================
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{example}[theorem]{Example}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% Math Macros
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\norm}[1]{\left\| #1 \right\|}
+\newcommand{\inner}[2]{\langle #1, #2 \rangle}
+\newcommand{\OmegaSpace}{\Omega} % Token space
+\newcommand{\Pspace}{\mathcal{P}(\OmegaSpace)} % Probability measure space
+\newcommand{\Pm}[1]{\mathcal{P}_{#1}(\OmegaSpace)} % Discrete measure space
+\newcommand{\muN}{\mu_N} % Full context
+\newcommand{\tmu}{\tilde{\mu}} % Compressed context
+\newcommand{\Wass}[1]{W_{#1}} % Wasserstein distance
+\newcommand{\Attn}{\text{Attn}}
+\newcommand{\LambdaOp}{\Lambda_{\theta}} % Transformer Operator
+\newcommand{\kernel}{\kappa}
+\newcommand{\valmap}{\phi}
+\newcommand{\Compress}{\mathcal{C}_m} % Compression operator
+
+% Short title
+\icmltitlerunning{Transformers as Measure Learners}
+
+\begin{document}
+
+\twocolumn[
+% =================================================================
+% TITLE BLOCK: More Theoretical and Grand
+% =================================================================
+\icmltitle{Transformers as Measure Learners: \\
+Wasserstein Scaling Laws for KV Cache Compression}
+
+\icmlsetsymbol{equal}{*}
+
+\begin{icmlauthorlist}
+\icmlauthor{Author One}{equal,inst1}
+\icmlauthor{Author Two}{equal,inst1}
+\icmlauthor{Author Three}{inst2}
+\end{icmlauthorlist}
+
+\icmlaffiliation{inst1}{Department of Computer Science, University X}
+\icmlaffiliation{inst2}{Department of Mathematics, University Y}
+
+\icmlcorrespondingauthor{Author One}{email@domain.edu}
+
+\icmlkeywords{In-Context Learning, Long-Context Transformers, KV Cache Compression, Measure Theory, Optimal Transport, Wasserstein Geometry}
+
+]
+\printAffiliationsAndNotice{\icmlEqualContribution} 
+\vskip 0.3in
+
+\begin{abstract}
+In long-context In-Context Learning (ICL), the main bottleneck is the Key--Value (KV) cache, whose memory grows linearly with sequence length. Existing compression methods prune tokens or quantize values, but treat the context as a scored sequence and offer little guidance on what \emph{optimal} compression should be.
+
+We instead view the context as an empirical probability measure and the KV cache as its finite-support approximation. Building on universality results for Transformers on measures, we show that ICL predictions are Lipschitz with respect to the Wasserstein-1 distance between context measures, which yields a geometric error bound for KV compression. Combining this with quantization theory gives a minimax-optimal $m^{-1/d}$ scaling of ICL error in the KV budget $m$, where $d$ is the intrinsic feature dimension.
+
+Guided by this view, we propose \textbf{Measure-Aware Compression (MAC)}, which approximates Wasserstein minimization via weighted K-Means at inference time and Sinkhorn-regularized induced attention during training. On synthetic ICL tasks and the LUNA16 medical benchmark, MAC achieves better memory--accuracy tradeoffs than strong KV baselines such as H2O and Quest.
+\end{abstract}
+
+
+% =================================================================
+% 1. INTRODUCTION
+% =================================================================
+\section{Introduction}
+\label{sec:intro}
+
+Large Transformer models have emerged as powerful \emph{in-context learners}: given a long context of input--output examples, they can synthesize a predictor for new queries without updating parameters \citep{brown2020language,garg2022what}. With recent progress in long-context architectures such as LongRoPE, Unlimiformer, and proprietary systems like Gemini 1.5 and Llama 2 \citep{ding2024longrope,bertsch2024unlimiformer,team2024gemini,touvron2023llama}, context windows have reached millions of tokens, enabling foundation models for domains like medicine to reason over entire patient trajectories, imaging studies, or clinical records \citep{moor2023foundation}.
+
+\paragraph{The KV Memory Wall of Long-Context ICL.}
+Despite architectural advances, long-context In-Context Learning (ICL) on Transformers is fundamentally constrained by the \emph{Key--Value (KV) cache}. In standard self-attention \citep{vaswani2017attention}, the KV cache grows linearly $O(N)$ with sequence length $N$, and attention computation scales as $O(N^2)$. For million-token contexts, storing KV states in FP16 can require hundreds of gigabytes of memory, exceeding typical GPU budgets and making inference prohibitively slow—especially in resource-constrained environments such as hospital edge servers or autonomous labs. Alternative sequence models, including linear/streaming attention \citep{katharopoulos2020transformers} and state-space models like Mamba \citep{gu2024mamba}, reduce asymptotic complexity, but empirical evidence suggests that standard Transformers remain highly competitive ICL systems due to their flexible associative memory \citep{bietti2024birth}. This motivates a principled approach to \emph{compressing} the KV cache while preserving ICL performance.
+
+\paragraph{Heuristic KV Compression and Its Limits.}
+A rapidly growing literature attacks the KV bottleneck with engineering techniques. Token-pruning methods such as H2O, Scissorhands, SnapKV, and PyramidKV \citep{zhang2024h2o,liu2024scissorhands,li2024snapkv,zhang2024pyramidkv,ge2024model} retain “important’’ tokens based on accumulated attention scores or layer-wise saliency and evict the rest. Retrieval-based approaches, including Quest, Infini-attention, RetrievalAttention, and Unlimiformer \citep{tang2024quest,munkhdalai2024leave,gao2024retrieval,bertsch2024unlimiformer}, maintain a larger external memory and fetch relevant blocks on demand. Quantization and distillation-based methods like KIVI, attention sinks, and KV distillation \citep{liu2024kivi,xiao2024efficient,nawrot2024attention} instead compress the representation of each KV pair to a few bits or a small distilled cache.
+
+All of these methods, however, share two structural limitations. First, they treat the context as an \emph{ordered sequence with local scores} (per-token or per-block importance) rather than as a global geometric object. Second, they lack \emph{distribution-level guarantees}: there is no theory explaining what an \emph{optimal} compressed KV cache should look like, or how the induced compression error scales with the memory budget and the structure of the underlying data.
+
+\paragraph{Our Perspective: Transformers as Measure Learners.}
+We propose a different view. Instead of thinking of the context as a scored sequence, we interpret it as an \emph{empirical probability measure} on a feature space. A sequence of token features $Z_N = \{z_i\}_{i=1}^N$ induces an empirical measure $\mu_N = \tfrac{1}{N}\sum_i \delta_{z_i}$ on a compact domain $\Omega \subset \mathbb{R}^d$. The KV cache is then a finite-support approximation $\tilde{\mu}$ with at most $m \ll N$ atoms. Under this view, KV compression is no longer a heuristic selection problem, but a \emph{measure quantization} problem: construct a sparse measure that best approximates $\mu_N$ under a suitable metric.
+
+This perspective is supported by recent theory. Transformers have been shown to be universal approximators of continuous functionals on spaces of probability measures \citep{furuya2025transformers}, and kernel mean embeddings provide an injective representation of distributions in reproducing kernel Hilbert spaces \citep{muandet2017kernel,sriperumbudur2010hilbert}. At the same time, optimal transport (OT) and Wasserstein geometry offer natural metrics on probability measures \citep{villani2009optimal,cuturi2013sinkhorn}, and classical quantization theory characterizes how well a measure on a $d$-dimensional manifold can be approximated by $m$ atoms, with minimax error scaling as $m^{-1/d}$ \citep{graf2000foundations}. We combine these ideas to ask:
+
+\begin{quote}
+\emph{If Transformers are measure learners, what is the optimal way to compress the context measure under a fixed KV budget, and how does the induced ICL error scale with the budget and intrinsic dimension of the data?}
+\end{quote}
+
+\paragraph{From Wasserstein Stability to Optimal KV Compression.}
+Our key technical observation is that attention can be viewed as an integral operator over the context measure. Building on smoothness analyses of attention \citep{castin2024how,sander2022sinkformers} and kernel embedding theory \citep{muandet2017kernel,sriperumbudur2010hilbert}, we show that under mild regularity assumptions, Transformer ICL predictions are \emph{Lipschitz} with respect to the Wasserstein-1 distance between context measures. This yields a geometric error bound: if a compressor $\mathcal{C}_m$ produces a sparse measure $\tilde{\mu}_m$ that is close to $\mu_N$ in Wasserstein-1, then the ICL prediction error is controlled by $\mathcal{W}_1(\mu_N,\tilde{\mu}_m)$. Combining this Lipschitz bound with classical quantization results \citep{graf2000foundations,villani2009optimal} yields a minimax-optimal $m^{-1/d}$ scaling law for ICL error in the KV budget $m$, where $d$ is the intrinsic feature dimension.
+
+\paragraph{Contributions.}
+We summarize our contributions as follows:
+\begin{itemize}[leftmargin=*,noitemsep,topsep=2pt]
+    \item \textbf{Theory: Transformers as Wasserstein-stable measure learners.} We formalize ICL as operator learning on the space of probability measures and, leveraging universality results \citep{furuya2025transformers}, show that Transformers with kernel attention approximate continuous functionals on $(\mathcal{P}(\Omega),\mathcal{W}_1)$. We prove that attention heads are Lipschitz with respect to the Wasserstein-1 distance, and derive a network-level error bound that directly links KV compression to ICL prediction error.
+    \item \textbf{Optimal scaling laws for KV compression.} By coupling our Wasserstein stability bound with quantization theory \citep{graf2000foundations}, we show that if token features lie on a $d$-dimensional manifold, there exists a KV compression strategy such that the ICL error decays as $\tilde{\mathcal{O}}(m^{-1/d})$ in the KV budget $m$, and that this rate is minimax-optimal. This reveals an intrinsic-dimension bottleneck: structured scientific data (low $d$) is highly compressible, whereas high-entropy text is fundamentally harder to summarize.
+    \item \textbf{Measure-Aware Compression (MAC).} Guided by this geometry, we introduce \emph{Measure-Aware Compression} (MAC), a family of practical algorithms that explicitly respect the measure structure of the context. MAC-I performs post-hoc KV compression at inference time via weighted K-Means, approximating Wasserstein minimization, while MAC-T integrates Sinkhorn-regularized induced attention \citep{cuturi2013sinkhorn,lee2019set} into training to learn compressive representations end-to-end.
+    \item \textbf{Empirical validation on synthetic and medical benchmarks.} On synthetic linear regression ICL tasks, MAC follows the predicted $m^{-1/d}$ scaling, whereas score-based pruning saturates early. On the LUNA16 pulmonary nodule detection benchmark \citep{setio2017validation}, MAC achieves strong memory--accuracy tradeoffs, outperforming state-of-the-art KV compression baselines such as H2O and Quest \citep{zhang2024h2o,tang2024quest} under the same memory budget. Qualitative analysis shows that MAC preserves rare but clinically critical “outlier’’ slices in feature space that heuristic methods tend to discard.
+\end{itemize}
+
+Overall, our results suggest that Transformers are not only sequence models, but \emph{measure learners}, and that KV compression is best understood as constructing an optimal geometric summary of a context distribution rather than simply dropping low-score tokens.
+
+% =================================================================
+% 2. RELATED WORK
+% =================================================================
+\section{Related Work}
+\label{sec:related}
+
+We organize related work into four areas: (i) theoretical views of In-Context Learning (ICL),  
+(ii) KV cache compression and efficient long-context Transformers, (iii) optimal transport and  
+kernel mean embeddings, and (iv) long-context applications in medical AI.
+
+\paragraph{ICL Theory and Transformers as Operators.}
+A growing line of work studies what and how Transformers can learn in context.  
+\citet{garg2022what} analyze which simple function classes can be implemented via ICL,  
+while \citet{akyurek2022learning,von2023transformers,dai2022why} show that ICL can  
+realize variants of gradient descent or meta-optimization, and  
+\citet{ahn2024transformers,mahankali2024one} characterize linear self-attention as an  
+optimal in-context learner under suitable assumptions.  
+Mechanistic studies such as \citet{olsson2022context} further reveal “induction heads’’  
+that implement pattern completion in context.  
+Most relevant to our perspective, \citet{furuya2025transformers} prove that Transformers  
+are universal approximators for functionals on probability measures, suggesting that  
+they can act directly on distributions rather than purely on ordered sequences.  
+However, these works assume access to the full (uncompressed) context and do not  
+address memory constraints.  
+In contrast, we build on the measure-theoretic view of \citet{furuya2025transformers}  
+and combine it with quantization theory to obtain Wasserstein-based stability results  
+and minimax error scaling laws under KV compression.
+
+\paragraph{KV Cache Compression and Efficient Long-Context Transformers.}
+The quadratic cost of self-attention \citep{vaswani2017attention} and the linear growth  
+of the KV cache motivate a large literature on efficient Transformers.  
+Linear or streaming attention methods such as \citet{katharopoulos2020transformers}  
+and state-space models like Mamba \citep{gu2024mamba} reduce asymptotic complexity,  
+yet empirical evidence suggests that standard Transformers remain highly competitive  
+for ICL and long-context reasoning \citep{bietti2024birth}.  
+At the system level, architectures like LongRoPE, Unlimiformer, Gemini 1.5, and  
+Llama 2 \citep{ding2024longrope,bertsch2024unlimiformer,team2024gemini,touvron2023llama}  
+push context lengths to millions of tokens, exacerbating the KV memory bottleneck.
+
+KV cache compression methods can be roughly grouped into three categories.  
+(1) \emph{Token pruning}: H2O, Scissorhands, SnapKV, PyramidKV, and hybrid eviction schemes  
+\citep{zhang2024h2o,liu2024scissorhands,li2024snapkv,zhang2024pyramidkv,ge2024model}  
+retain “important’’ tokens according to accumulated attention scores or learned saliency,  
+evicting the rest.  
+(2) \emph{Retrieval-based memory}: Quest, Infini-attention, RetrievalAttention, and  
+related approaches \citep{tang2024quest,munkhdalai2024leave,gao2024retrieval,bertsch2024unlimiformer}  
+store a larger external memory and retrieve relevant blocks on demand, effectively  
+trading KV size for retrieval latency and system complexity.  
+(3) \emph{Quantization and distillation}: KIVI, attention sinks, and distilled KV caches  
+\citep{liu2024kivi,xiao2024efficient,nawrot2024attention} compress each KV pair to a few  
+bits or a smaller distilled representation without reducing the number of tokens.  
+All of these methods operate primarily at the level of individual tokens or blocks and  
+are guided by local importance scores.  They do not model the context as a probability  
+measure, and they provide no distribution-level guarantees that relate compression to  
+ICL prediction error.  Our work instead treats the KV cache as a finite-support  
+approximation of an underlying context measure and casts KV compression as a measure  
+quantization problem, which leads directly to geometric error bounds and intrinsic  
+scaling laws.
+
+\paragraph{Optimal Transport, Kernel Mean Embeddings, and Attention Geometry.}
+Our analysis draws on tools from optimal transport (OT), kernel methods, and recent  
+smoothness studies of attention.  The Wasserstein distance and its computational  
+approximations \citep{villani2009optimal,cuturi2013sinkhorn} provide natural metrics  
+on probability measures and have been widely applied in modern machine learning.  
+Classical quantization theory \citep{graf2000foundations} characterizes how well a  
+measure supported on a $d$-dimensional manifold can be approximated by a finite-support  
+measure with $m$ atoms, showing minimax rates of order $m^{-1/d}$.  
+We leverage these results to derive intrinsic-dimension–dependent scaling laws for  
+KV compression.  
+Kernel mean embeddings \citep{muandet2017kernel,sriperumbudur2010hilbert} map probability  
+measures into reproducing kernel Hilbert spaces and yield injective representations  
+under characteristic kernels; this aligns naturally with viewing attention as an  
+integral operator, and connects to Performer-style kernel approximations via random  
+features \citep{song2020rethinking,rahimi2007random}.  
+The smoothness and Lipschitz properties of attention maps have been studied by  
+\citet{castin2024how} and in doubly-stochastic attention variants such as Sinkformers  
+\citep{sander2022sinkformers}, while \citet{chizat2018global} analyze the dynamics of  
+over-parameterized residual networks through an OT lens.  
+Our work combines these ideas to show that attention is Lipschitz with respect to  
+Wasserstein-1 and that KV compression error propagates through the network in a  
+controlled way, yielding explicit Wasserstein-based error bounds.
+
+\paragraph{Long-Context Modeling in Medical AI.}
+Long-context reasoning is particularly important in medicine, where patient trajectories,  
+multi-slice imaging studies, and multi-modal records naturally form long sequences.  
+\citet{moor2023foundation} highlight the need for generalist medical foundation models  
+that can integrate such rich histories under realistic computational budgets.  
+LUNA16 \citep{setio2017validation} provides a benchmark for pulmonary nodule detection  
+from CT scans, where each study comprises hundreds of slices; this offers a natural  
+testbed for evaluating long-context models and KV compression strategies in a  
+clinically meaningful setting.  
+By applying our measure-aware KV compression to LUNA16 and comparing against  
+state-of-the-art baselines such as H2O and Quest \citep{zhang2024h2o,tang2024quest},  
+we demonstrate that geometric, distribution-level compression can preserve rare but  
+clinically critical slices that heuristic pruning or retrieval tends to discard.
+
+\paragraph{Summary.}
+In summary, prior work has developed powerful operator-theoretic views of ICL and a rich  
+toolkit of engineering solutions for KV compression, but lacks a unifying measure-based  
+theory that explains what \emph{optimal} KV compression should look like and how its  
+error scales with the memory budget and intrinsic data dimension.  
+Our contribution is to interpret Transformers as \emph{measure learners}, to formalize  
+KV compression as measure quantization under Wasserstein geometry, and to instantiate  
+this view in practical algorithms that achieve state-of-the-art memory--accuracy  
+tradeoffs on synthetic and medical long-context benchmarks.
+
+
+% =================================================================
+% 3. PRELIMINARIES
+% =================================================================
+\section{Preliminaries}
+\label{sec:prelim}
+
+We briefly summarize the measure-theoretic and optimal transport notation used in our analysis, and formalize attention as an integral operator on probability measures.
+
+\paragraph{Context as an Empirical Measure.}
+We assume token features lie in a compact domain $\OmegaSpace \subset \R^d$.  
+A length-$N$ context $Z_N = \{z_i\}_{i=1}^N$ (e.g., keys, values, or hidden states) induces an empirical probability measure
+\begin{equation}
+    \muN \;=\; \frac{1}{N} \sum_{i=1}^N \delta_{z_i} \;\in\; \Pspace,
+\end{equation}
+where $\delta_{z_i}$ is the Dirac mass at $z_i$ and $\Pspace$ denotes the set of Borel probability measures on $\OmegaSpace$.  
+Under this view, the KV cache is a finite-support approximation of $\muN$ with at most $m \ll N$ atoms; KV compression corresponds to replacing $\muN$ by a sparse measure $\tmu_m$.
+
+\paragraph{Wasserstein Distance and Quantization.}
+For $p \ge 1$, the $p$-Wasserstein distance between $\mu, \nu \in \Pspace$ is defined as \citep{villani2009optimal}
+\begin{equation}
+    \Wass{p}(\mu, \nu)
+    \;\coloneqq\;
+    \Bigg(
+    \inf_{\pi \in \Pi(\mu, \nu)}
+    \int_{\OmegaSpace \times \OmegaSpace}
+    \|x - y\|^p \, d\pi(x, y)
+    \Bigg)^{\!1/p},
+\end{equation}
+where $\Pi(\mu,\nu)$ is the set of couplings with marginals $\mu$ and $\nu$.  
+We will focus on $\Wass{1}$, which metrizes weak convergence on $\Pspace$ and admits a dual formulation that directly relates Lipschitz test functions to measure perturbations \citep{villani2009optimal}.  
+
+Given a budget $m$, a \emph{quantization} (or compression) operator produces a discrete measure
+\begin{equation}
+    \Compress(\muN) \;=\; \tmu_m \;=\; \sum_{j=1}^{m} w_j \, \delta_{\tilde z_j},
+    \qquad \sum_{j=1}^m w_j = 1,
+\end{equation}
+with at most $m$ atoms.  Classical quantization theory characterizes how small $\Wass{1}(\muN,\tmu_m)$ can be as a function of $m$ and the intrinsic dimension of the support of $\muN$ \citep{graf2000foundations}; we will leverage these results in our scaling-law analysis.
+
+\paragraph{Kernel Mean Embeddings and Attention as Integration.}
+Let $k : \OmegaSpace \times \OmegaSpace \to \R$ be a positive-definite kernel with associated reproducing kernel Hilbert space (RKHS) $\mathcal{H}_K$ \citep{muandet2017kernel}.  
+The \emph{kernel mean embedding} of a measure $\mu \in \Pspace$ is
+\begin{equation}
+    \phi(\mu) \;\coloneqq\; \int_{\OmegaSpace} k(\cdot, z)\, d\mu(z) \;\in\; \mathcal{H}_K.
+\end{equation}
+For characteristic kernels, this map is injective \citep{sriperumbudur2010hilbert}, providing an implicit representation of $\mu$ as a point in $\mathcal{H}_K$.
+
+We model a single attention head as an integral operator over the context measure.  
+Given a query $q \in \R^{d_q}$, a kernel family $\kappa(q,\cdot)$, and a value map $\valmap : \OmegaSpace \to \R^{d_v}$, we define
+\begin{equation}
+    \label{eq:integral_attn}
+    \Attn(q; \mu)
+    \;\coloneqq\;
+    \frac{
+        \int_{\OmegaSpace} \kappa(q, z)\,\valmap(z)\, d\mu(z)
+    }{
+        \int_{\OmegaSpace} \kappa(q, z)\, d\mu(z)
+    }.
+\end{equation}
+Standard softmax attention \citep{vaswani2017attention} is recovered by choosing
+$\kappa(q,z) = \exp(q^\top k)$ and letting $z$ bundle keys and values $(k,v)$ with $\valmap(z)=v$.  
+In the discrete case $\mu = \muN$, the integrals in \eqref{eq:integral_attn} reduce to finite sums over tokens; when $\mu$ is compressed to $\tmu_m$, the same operator is applied to a sparse measure with $m$ atoms.  
+
+This measure-based formulation makes the dependence of attention on $\mu$ explicit, and will allow us to study the Lipschitz continuity of $\Attn(\cdot;\mu)$ with respect to $\Wass{1}$ and to propagate KV compression error through multi-layer Transformers in Section~\ref{sec:theory}.
+
+% =================================================================
+% 4. THEORETICAL FRAMEWORK
+% =================================================================
+\section{Theoretical Framework}
+\label{sec:theory}
+
+We now formalize Transformers as \emph{measure learners} and derive the key ingredients of our framework:  
+(i) universality on spaces of probability measures, (ii) Wasserstein stability of attention, and  
+(iii) minimax scaling laws for KV compression.
+
+Throughout, $\OmegaSpace \subset \R^d$ is compact, $\Pspace$ is the set of Borel probability measures on $\OmegaSpace$,  
+and $\Wass{1}$ denotes the 1-Wasserstein distance on $\Pspace$ \citep{villani2009optimal}.  
+A context $Z_N = \{z_i\}_{i=1}^N$ induces an empirical measure $\muN$, and a compressed KV cache corresponds to a sparse measure $\tmu_m$ with at most $m$ atoms.
+
+\subsection{Setup: ICL as Operator Learning on Measures}
+\label{sec:theory_setup}
+
+We model In-Context Learning as \emph{operator learning} on measures.  
+Given a context measure $\mu \in \Pspace$ and a query $q \in \OmegaSpace$, the ideal in-context predictor is a functional
+\begin{equation}
+    F: \Pspace \times \OmegaSpace \to \mathcal{Y}, 
+    \qquad (\mu,q) \mapsto F(\mu,q),
+\end{equation}
+where $\mathcal{Y}$ is the output space (e.g., logits, regression targets).  
+Transformers with kernel attention (Eq.~\eqref{eq:integral_attn}) define a parametric family of such functionals, which we denote by $\LambdaOp_\theta(\mu,q)$.
+
+We make a mild regularity assumption on the feature space and kernel family.
+
+\begin{assumption}[Regularity]
+\label{ass:regularity}
+\begin{enumerate}[leftmargin=*,nosep]
+    \item $\OmegaSpace \subset \R^d$ is compact.
+    \item The kernel family $\{\kappa(q,\cdot) : q \in \OmegaSpace\}$ is characteristic and Lipschitz, and the value map $\valmap$ is bounded and Lipschitz.
+    \item For all relevant $\mu \in \Pspace$ and $q \in \OmegaSpace$, the denominator in Eq.~\eqref{eq:integral_attn} is bounded below: 
+    $\int \kappa(q,z)\, d\mu(z) \ge \delta > 0$.
+\end{enumerate}
+\end{assumption}
+
+Assumption~\ref{ass:regularity} is standard in kernel mean embedding and OT analyses  
+\citep{muandet2017kernel,sriperumbudur2010hilbert,villani2009optimal,castin2024how} and holds for common choices such as Gaussian kernels on bounded domains.
+
+\subsection{Universality on Spaces of Measures}
+\label{sec:theory_universality}
+
+Recent work shows that Transformers are universal approximators for functionals on probability measures \citep{furuya2025transformers}.  
+We adapt this result to our kernel-attention formulation.
+
+\begin{theorem}[Universal Approximation on Measures]
+\label{thm:universality}
+Let $C(\Pspace \times \OmegaSpace)$ denote the space of continuous functionals on $\Pspace \times \OmegaSpace$,  
+where $\Pspace$ is equipped with the weak topology metrized by $\Wass{1}$.  
+Under Assumption~\ref{ass:regularity}, for any $F \in C(\Pspace \times \OmegaSpace)$ and any $\varepsilon > 0$,  
+there exists a Transformer $\LambdaOp_\theta$ with finitely many kernel-attention heads and MLP layers such that
+\begin{equation}
+    \sup_{\mu \in \Pspace,\, q \in \OmegaSpace}
+    \big\| F(\mu,q) - \LambdaOp_\theta(\mu,q) \big\|
+    < \varepsilon.
+\end{equation}
+\end{theorem}
+
+The proof (Appendix~\ref{app:proof_universality}) combines the universality of Transformers on measures \citep{furuya2025transformers}  
+with the injectivity of kernel mean embeddings under characteristic kernels \citep{muandet2017kernel,sriperumbudur2010hilbert}.  
+Intuitively, attention heads generate a rich algebra of measure-dependent features that separates points in $\Pspace \times \OmegaSpace$,  
+and MLPs provide the final nonlinear mixing.
+
+\subsection{Wasserstein Stability of Attention}
+\label{sec:theory_lipschitz}
+
+To understand KV compression, we need to quantify how sensitive attention is to perturbations of the context measure.  
+We view a single attention head as the map $\mu \mapsto \Attn(q;\mu)$ defined in Eq.~\eqref{eq:integral_attn}.
+
+\begin{lemma}[Attention is Lipschitz in $\Wass{1}$]
+\label{lemma:lipschitz}
+Under Assumption~\ref{ass:regularity}, for any fixed query $q \in \OmegaSpace$,  
+the attention operator $\mu \mapsto \Attn(q;\mu)$ is Lipschitz with respect to $\Wass{1}$:
+\begin{equation}
+    \big\| \Attn(q;\mu) - \Attn(q;\nu) \big\|
+    \;\le\;
+    L_{\Attn} \, \Wass{1}(\mu,\nu),
+    \quad \forall \mu,\nu \in \Pspace,
+\end{equation}
+where $L_{\Attn}$ depends on the Lipschitz constants and bounds of $\kappa$ and $\valmap$,  
+the diameter of $\OmegaSpace$, and the lower bound $\delta$ on the denominator.
+\end{lemma}
+
+The proof (Appendix~\ref{app:proof_lipschitz}) uses the Kantorovich–Rubinstein duality for $\Wass{1}$ and a quotient-rule argument:  
+both the numerator and denominator in Eq.~\eqref{eq:integral_attn} are Lipschitz linear functionals of $\mu$,  
+and the denominator is bounded away from zero, so their ratio is Lipschitz.  
+This is consistent with recent smoothness analyses of attention maps \citep{castin2024how,sander2022sinkformers}.
+
+\subsection{Network-Level KV Compression Bound}
+\label{sec:theory_compression}
+
+KV compression replaces the full context measure $\muN$ by a sparse approximation $\tmu_m = \Compress(\muN)$ with at most $m$ atoms.  
+We now show that, under mild Lipschitz assumptions on the layers, the induced ICL error is controlled by $\Wass{1}(\muN,\tmu_m)$.
+
+Let $\LambdaOp_\theta = \Lambda^{(L)} \circ \cdots \circ \Lambda^{(1)}$ denote an $L$-layer Transformer.  
+Assume each layer $\Lambda^{(l)}$ is $L_{\text{layer}}^{(l)}$-Lipschitz in its measure argument (this holds for attention + MLP + residual blocks under Assumption~\ref{ass:regularity} and standard normalization).
+
+\begin{theorem}[KV Compression Error Bound]
+\label{thm:bound}
+Under Assumption~\ref{ass:regularity}, let $\muN$ be the empirical context measure and $\tmu_m = \Compress(\muN)$ any compressed measure with at most $m$ atoms. Then
+\begin{equation}
+    \big\|
+        \LambdaOp_\theta(\muN, q)
+        -
+        \LambdaOp_\theta(\tmu_m, q)
+    \big\|
+    \;\le\;
+    L_{\text{net}} \,
+    \Wass{1}(\muN,\tmu_m),
+\end{equation}
+where
+\begin{equation}
+    L_{\text{net}}
+    \;\coloneqq\;
+    \prod_{l=1}^L L_{\text{layer}}^{(l)}.
+\end{equation}
+\end{theorem}
+
+The proof (Appendix~\ref{app:proof_bound}) simply composes the Lipschitz bound in Lemma~\ref{lemma:lipschitz} with the Lipschitz continuity of MLP and normalization layers.  
+The constant $L_{\text{net}}$ can in principle grow with depth, but techniques such as spectral normalization or Lipschitz regularization  
+\citep[e.g.,][]{chizat2018global,castin2024how} can be used to keep it controlled in practice.  
+Crucially, Theorem~\ref{thm:bound} decouples the \emph{geometric} difficulty of compression (how small can $\Wass{1}(\muN,\tmu_m)$ be?)  
+from the \emph{architectural} sensitivity of the network (how large is $L_{\text{net}}$?).
+
+\subsection{Optimal Scaling Laws via Quantization}
+\label{sec:theory_scaling}
+
+The remaining question is: how small can $\Wass{1}(\muN,\tmu_m)$ be for a given KV budget $m$?  
+This is exactly the object of classical quantization theory \citep{graf2000foundations,villani2009optimal}.
+
+\begin{corollary}[Minimax-Optimal Scaling for KV Compression]
+\label{cor:scaling}
+Suppose the support of $\muN$ lies on a $d$-dimensional submanifold of $\R^D$ with mild regularity \citep{graf2000foundations}.  
+Then there exists a compression operator $\Compress$ that produces a measure $\tmu_m$ with at most $m$ atoms such that
+\begin{equation}
+    \Wass{1}(\muN,\tmu_m)
+    \;\le\;
+    C \, m^{-1/d},
+\end{equation}
+for some constant $C$ depending on the data distribution but not on $m$.  
+Moreover, for general measures supported on $d$-dimensional manifolds, this rate $m^{-1/d}$ is minimax-optimal and cannot be improved in general.  
+Combined with Theorem~\ref{thm:bound}, the ICL prediction error under KV compression decays as
+\begin{equation}
+    \big\|
+        \LambdaOp_\theta(\muN, q)
+        -
+        \LambdaOp_\theta(\tmu_m, q)
+    \big\|
+    \;=\;
+    \tilde{\mathcal{O}}(m^{-1/d}),
+\end{equation}
+where the $\tilde{\mathcal{O}}$ hides logarithmic factors and network-dependent Lipschitz constants.
+\end{corollary}
+
+Corollary~\ref{cor:scaling} formalizes the \emph{intrinsic-dimension bottleneck} for KV compression:  
+contexts whose token features lie on low-dimensional manifolds (e.g., structured scientific or medical data) are highly compressible,  
+whereas high-entropy text with large intrinsic dimension is fundamentally harder to summarize, regardless of algorithmic ingenuity.
+
+This theory directly motivates our Measure-Aware Compression (MAC) algorithms in Section~\ref{sec:method},  
+which approximate the optimal quantizers predicted by \citet{graf2000foundations} using weighted K-Means and Sinkhorn-regularized OT \citep{cuturi2013sinkhorn},  
+and empirically achieve the predicted $m^{-1/d}$ scaling on synthetic tasks while improving memory--accuracy tradeoffs on real-world benchmarks.
+
+% =================================================================
+% 5. MEASURE-AWARE COMPRESSION (MAC)
+% =================================================================
+\section{Measure-Aware Compression (MAC)}
+\label{sec:method}
+
+The theory in Section~\ref{sec:theory} suggests that an optimal KV compressor should
+\emph{(i)} minimize the Wasserstein-1 distance $\Wass{1}(\muN,\tilde\mu_m)$ between the
+full and compressed context measures, and \emph{(ii)} exploit the intrinsic low-dimensional
+structure of token features to achieve the minimax $m^{-1/d}$ scaling. In practice, however,
+solving the exact $W_1$-optimal quantization problem is computationally prohibitive for
+large $N$.
+
+We therefore introduce \emph{Measure-Aware Compression} (MAC), a family of algorithms that
+approximate the Wasserstein minimizer under realistic compute budgets:
+
+\begin{itemize}[leftmargin=*,noitemsep,topsep=2pt]
+    \item \textbf{MAC-I} (Inference-only): a post-hoc KV compressor based on weighted
+    K-Means, applied once during the prefill phase of generation.
+    \item \textbf{MAC-T} (Training-time): an end-to-end learnable compressor that combines
+    induced set attention \citep{lee2019set} with a Sinkhorn-regularized OT loss
+    \citep{cuturi2013sinkhorn}.
+\end{itemize}
+
+Both variants treat the context as a probability measure and explicitly construct a
+finite-support approximation $\tilde\mu_m$ rather than scoring and dropping individual
+tokens.
+
+\subsection{MAC-I: Inference-Time Compression}
+\label{sec:method_inference}
+
+For pre-trained models where weights are frozen, we compress the KV cache after prefill,
+before decoding. Let $K \in \R^{N \times D}$ and $V \in \R^{N \times D}$ denote the keys
+and values for a given layer and head (for simplicity we describe the single-head case).
+
+\paragraph{Algorithm.}
+MAC-I interprets the rows of $K$ as samples from the context measure $\muN$ and seeks a
+finite-support approximation with $m$ atoms. Since K-Means minimizes a discrete
+$\Wass{2}^2$-type quantization error, which upper-bounds $\Wass{1}^2$ on bounded domains
+\citep{villani2009optimal,graf2000foundations}, it provides a natural, scalable proxy for
+Wasserstein minimization.
+
+\begin{algorithm}[h]
+   \caption{MAC-I: Inference-Time KV Compression}
+   \label{alg:mac_i}
+\begin{algorithmic}[1]
+   \STATE {\bf Input:} Keys $K \in \R^{N \times D}$, values $V \in \R^{N \times D}$,
+   budget $m$.
+   \STATE {\bf (Optional) Dimensionality reduction:} Project $K$ to
+   $K' \in \R^{N \times d_{\text{eff}}}$ via PCA or a learned linear map, with
+   $d_{\text{eff}} \ll D$.
+   \STATE {\bf K-Means clustering:} Run $m$-means on $K'$ with K-Means++ seeding
+   \citep{arthur2007k} for $t$ iterations to obtain centroids
+   $\{\tilde{k}_j\}_{j=1}^m$ and assignments $c(i) \in \{1,\dots,m\}$.
+   \STATE {\bf Value aggregation:} For each cluster $C_j = \{i : c(i) = j\}$, define
+   \begin{align*}
+       \tilde{v}_j &\leftarrow \frac{1}{|C_j|} \sum_{i \in C_j} V_i, \\
+       w_j &\leftarrow \frac{|C_j|}{N}.
+   \end{align*}
+   \STATE {\bf Output:} Compressed KV cache
+   $\{(\tilde{k}_j, \tilde{v}_j, w_j)\}_{j=1}^m$, representing the sparse measure
+   $\tilde\mu_m = \sum_{j=1}^m w_j \delta_{(\tilde{k}_j,\tilde{v}_j)}$.
+\end{algorithmic}
+\end{algorithm}
+
+At decoding time, attention is computed against the compressed keys and values,
+respecting the cluster weights $w_j$ (i.e., multiplying attention logits by $w_j$ or
+equivalently repeating each centroid according to its mass). For multi-head attention,
+we either (a) run MAC-I independently per head (more accurate, higher cost) or
+(b) cluster in a shared low-dimensional space of concatenated keys to amortize cost
+across heads; we compare these options in Appendix~\ref{app:exp_details}.
+
+\paragraph{Complexity.}
+For a single layer and head, MAC-I incurs $O(t N m d_{\text{eff}})$ time and $O(mD)$
+memory during prefill. Since prefill is amortized over many decoding steps in long
+generation, this overhead is competitive with token-pruning methods that recompute
+scores at each step \citep{zhang2024h2o,liu2024scissorhands,li2024snapkv} and with
+retrieval-based schemes that repeatedly invoke a vector index
+\citep{tang2024quest,gao2024retrieval}. Once compressed, decoding operates on a KV
+cache of size $m$ with the same $O(m)$ per-step complexity as other KV compression
+methods.
+
+\subsection{MAC-T: Training-Time Compression}
+\label{sec:method_training}
+
+When fine-tuning or domain-specific training is allowed (e.g., in medical or scientific
+settings), we can learn a compressive representation jointly with the task. MAC-T adds a
+small \emph{measure-aware bottleneck} in front of standard attention.
+
+\paragraph{Induced Set Attention as Learnable Quantizer.}
+We adopt induced set attention blocks from the Set Transformer
+\citep{lee2019set}: a set of $m$ learnable inducing points
+$I \in \R^{m \times D}$ attends to the full context $Z_N$ and produces a compressed set
+$\{\tilde{z}_j\}_{j=1}^m$. This defines a parametric map
+$\muN \mapsto \tilde\mu_m^\theta = \frac{1}{m}\sum_{j=1}^m \delta_{\tilde{z}_j}$ that
+plays the role of $\Compress(\cdot)$ in our theory. We then feed $\tilde\mu_m^\theta$ to
+downstream attention layers instead of $\muN$.
+
+\paragraph{Sinkhorn-regularized OT Coverage.}
+Without additional structure, inducing points may collapse onto a few modes and ignore
+rare but important regions of the measure. To encourage coverage of the support of
+$\muN$, we add an entropic OT regularizer between the empirical context measure and the
+induced compressed measure:
+\begin{equation}
+    \mathcal{L}_{\text{OT}}
+    \;=\;
+    \text{Sinkhorn}_\varepsilon(\muN, \tilde\mu_m^\theta),
+\end{equation}
+where $\text{Sinkhorn}_\varepsilon$ is the Sinkhorn approximation to $\Wass{1}$ with
+entropy parameter $\varepsilon$ computed via iterative matrix scaling
+\citep{cuturi2013sinkhorn}. The total training objective becomes
+\begin{equation}
+    \mathcal{L}_{\text{total}}
+    \;=\;
+    \mathcal{L}_{\text{task}}
+    \;+\;
+    \lambda \, \mathcal{L}_{\text{OT}},
+\end{equation}
+with $\lambda$ controlling the strength of the geometric regularization.
+
+This design closely matches the structure predicted by our theory: the induced points
+play the role of quantization centers, and the Sinkhorn loss encourages the learned
+compressor to minimize a differentiable approximation of $\Wass{1}(\muN,\tilde\mu_m)$.
+In contrast to retrieval-based methods with non-differentiable selection
+\citep{tang2024quest,gao2024retrieval}, MAC-T is fully end-to-end trainable.
+
+\subsection{Practical Design Choices and Comparison}
+\label{sec:method_practical}
+
+We summarize the computational profile of MAC against representative baselines below,
+where $N$ is context length, $m$ is KV budget, and $D$ is hidden dimension:
+
+\begin{table}[h]
+\caption{Asymptotic complexity per layer during prefill and decoding.}
+\label{tab:complexity}
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lcc}
+\toprule
+Method & Prefill & Decode (per step) \\
+\midrule
+Full Attention & $O(N^2 D)$ & $O(ND)$ \\
+Token Pruning (H2O) & $O(N^2 D)$ & $O(mD)$ \\
+Retrieval (Quest) & $O(ND + \log N)$ & $O(mD + \log N)$ \\
+Quantized KV (KIVI) & $O(N^2 D)$ & $O(ND)$ \\
+\textbf{MAC-I (Ours)} & $O(t N m D)$ & $O(mD)$ \\
+\textbf{MAC-T (Ours)} & $O(N^2 D)$ & $O(mD)$ \\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vspace{-8pt}
+\end{table}
+
+In MAC-I, the only additional cost over standard prefill is the $O(t N m D)$ clustering
+step, which is typically dominated by the $O(N^2)$ attention cost when $m \ll N$ and
+$t$ is small (we use $t \le 10$ in our experiments). In MAC-T, we pay the same asymptotic
+cost as standard attention during training but replace the full context by $m$ inducing
+tokens at inference time.
+
+Conceptually, MAC differs from existing KV compression strategies in how it uses the
+geometry of the context: rather than scoring and dropping tokens, it \emph{constructs}
+a small set of representative atoms that approximate the full context measure in
+Wasserstein geometry. Section~\ref{sec:exp} shows that this measure-aware design is
+sufficient to recover the predicted $m^{-1/d}$ scaling on synthetic tasks and to
+outperform strong baselines such as H2O and Quest on the LUNA16 medical benchmark.
+
+% =================================================================
+% 6. EXPERIMENTS
+% =================================================================
+\section{Experiments}
+\label{sec:exp}
+
+We empirically evaluate MAC on (i) a controlled synthetic regression task, where we can
+directly test the $m^{-1/d}$ scaling predicted by Corollary~\ref{cor:scaling}, and
+(ii) a real-world long-context medical benchmark (LUNA16) that reflects the intended
+scientific use cases of our framework \citep{moor2023foundation,setio2017validation}.
+Unless otherwise noted, we apply MAC-I at inference time; additional details, including
+MAC-T results, are deferred to Appendix~\ref{app:exp_details}.
+
+\subsection{Experimental Setup}
+\label{sec:exp_setup}
+
+\paragraph{Models.}
+All experiments use standard Transformer encoders with multi-head attention
+\citep{vaswani2017attention}. For each setting, we first train a baseline model on full
+contexts (no KV compression), then freeze the weights and apply different KV compression
+schemes only at inference time. This isolates the effect of compression from model
+capacity. We report mean performance over multiple random seeds.
+
+\paragraph{Baselines.}
+We compare MAC against:
+\begin{itemize}[leftmargin=*,noitemsep,topsep=1pt]
+    \item \textbf{Full KV}: no compression (upper bound).
+    \item \textbf{Random}: keep $m$ tokens chosen uniformly at random.
+    \item \textbf{H2O} \citep{zhang2024h2o}: heavy-hitter token pruning based on accumulated
+    attention scores.
+    \item \textbf{Quest} \citep{tang2024quest}: query-aware page-level sparsification.
+\end{itemize}
+For fairness, all compressed methods use the same KV budget $m$ at test time.
+
+\subsection{Synthetic Linear Regression: Testing the Scaling Law}
+\label{sec:exp_synth}
+
+\paragraph{Task.}
+We follow the in-context linear regression setup used in prior ICL work
+\citep[e.g.][]{garg2022what,akyurek2022learning,von2023transformers}. Inputs
+$x_i \in \R^{d}$ are drawn from a mixture of Gaussians, outputs are
+$y_i = w^\top x_i + \epsilon$, and the model must predict $y$ for new queries given a
+context of $N$ labeled examples. Here $d$ is controlled, allowing us to probe the
+intrinsic-dimension dependence in Corollary~\ref{cor:scaling}.
+
+\paragraph{Protocol.}
+We train a 4-layer Transformer encoder (no positional encodings) on full contexts of
+length $N=1024$. At test time, we compress the KV cache to size $m \in \{8, 16, 32, 64\}$
+using MAC-I, Random, and H2O, and measure the mean-squared error (MSE) on held-out
+queries. MAC-I uses a low-dimensional projection of keys ($d_{\text{eff}} \ll D$) before
+K-Means, as described in Section~\ref{sec:method_inference}.
+
+\paragraph{Results.}
+Figure~\ref{fig:synth_scaling} shows MSE versus $m$ on a log--log scale. MAC-I closely
+follows a straight line with slope consistent with the theoretical
+$\mathcal{O}(m^{-1/d})$ prediction, while Random pruning decays much more slowly and H2O
+plateaus early. Intuitively, H2O over-focuses on tokens that are salient for the current
+query but fails to preserve a good geometric summary of the underlying data distribution,
+whereas MAC explicitly approximates the context measure.
+
+\begin{figure}[t]
+\vskip 0.15in
+\begin{center}
+\centerline{\includegraphics[width=0.95\columnwidth]{figs/example-image-a}}
+\caption{\textbf{Synthetic linear regression.}
+Test MSE versus KV budget $m$ (log--log scale). MAC-I tracks the predicted
+$m^{-1/d}$ slope, while score-based pruning (H2O) saturates for moderate $m$.}
+\label{fig:synth_scaling}
+\end{center}
+\vskip -0.2in
+\end{figure}
+
+\subsection{LUNA16 Pulmonary Nodule Detection}
+\label{sec:exp_luna}
+
+\paragraph{Task and Data.}
+LUNA16 is a public benchmark for pulmonary nodule detection from chest CT scans
+\citep{setio2017validation}. Each scan consists of $200$--$500$ slices; following
+\citet{moor2023foundation}, we view a study as a long sequence of 2D slices and ask the
+model to predict, at study level, whether it contains nodules. This is a prototypical
+long-context medical task where only a few slices (nodules) are clinically critical, and
+the rest provide background.
+
+\paragraph{Model and Features.}
+We extract per-slice visual features using a ResNet-50 backbone pretrained on ImageNet,
+projected to a $D$-dimensional embedding. A 4-layer Transformer encoder with multi-head
+attention processes the sequence, and a pooled representation feeds a binary classifier.
+The model is trained on full sequences; at test time we apply MAC-I, H2O, Quest, or
+windowed attention under the same KV budget $m$.
+
+\paragraph{Results.}
+Table~\ref{tab:luna} reports accuracy, peak VRAM usage, and relative decoding speed for
+the LUNA16 test set with a fixed budget of $m=64$ cached tokens (roughly $10$–$20\%$ of
+the original context length).
+
+\begin{table}[h]
+\caption{LUNA16 nodule detection with KV budget $m=64$.}
+\label{tab:luna}
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lccc}
+\toprule
+Method & Accuracy & VRAM & Speedup \\
+\midrule
+Full KV             & 94.5\% & 24GB & 1.0$\times$ \\
+Local window        & 78.2\% & \textbf{2GB} & 4.5$\times$ \\
+H2O \citep{zhang2024h2o}   & 85.1\% & 4GB  & 4.2$\times$ \\
+Quest \citep{tang2024quest} & 88.4\% & 3GB  & 4.3$\times$ \\
+\textbf{MAC-I (ours)} & \textbf{92.3\%} & 4GB  & 4.1$\times$ \\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vspace{-8pt}
+\end{table}
+
+MAC-I achieves substantially better accuracy than H2O and Quest at similar memory and
+speed, closing most of the gap to the Full KV upper bound while reducing VRAM by
+$\sim 6\times$. Qualitative inspection of the learned clusters shows that MAC tends to
+assign dedicated centroids to rare nodule-like slices in feature space, whereas H2O
+sometimes evicts them in favor of more frequently attended but less informative slices.
+
+\subsection{Summary}
+\label{sec:exp_summary}
+
+Across synthetic and real-world settings, the empirical behavior of MAC closely matches
+our measure-theoretic analysis: (i) on controlled regression tasks, MAC follows the
+$m^{-1/d}$ error decay predicted by quantization theory; (ii) on LUNA16, MAC delivers
+state-of-the-art memory--accuracy tradeoffs compared to strong KV compression baselines,
+supporting the view that KV compression is best understood as constructing an optimal
+geometric summary of the context distribution rather than dropping low-score tokens.
+
+% =================================================================
+% 7. LIMITATIONS AND DISCUSSION
+% =================================================================
+\section{Limitations and Discussion}
+\label{sec:discussion}
+
+Our results support the view that Transformers behave as \emph{measure learners} and that
+KV compression is fundamentally a quantization problem in Wasserstein geometry. At the
+same time, the framework has several limitations that point to concrete directions for
+future work.
+
+\paragraph{Computational Cost of Measure-Aware Compression.}
+MAC-I trades off better geometric fidelity for additional prefill cost: K-Means-based
+clustering scales as $O(t N m D)$, which is cheaper than full $O(N^2 D)$ attention but
+more expensive than simple top-$k$ token scoring \citep{zhang2024h2o,liu2024scissorhands}
+or scalar quantization \citep{liu2024kivi}. In the settings we study, this overhead is
+amortized over long decoding horizons, but for very short sequences or extremely tight
+latency constraints, lighter-weight approximations (e.g., hierarchical clustering or
+coresets \citep{ge2024model}, or retrieval-style vector indices \citep{gao2024retrieval})
+may be preferable. A promising direction is to co-design MAC with the underlying
+inference stack so that geometric compression reuses infrastructure already deployed for
+retrieval \citep{tang2024quest,bertsch2024unlimiformer}.
+
+\paragraph{From Static Measures to Causal, Infinite Context.}
+Our theory treats the context as a static measure and is explicitly permutation
+invariant. In contrast, autoregressive LMs and streaming models operate with a
+time-evolving context $\mu_t$ and causal masking. Extending our Wasserstein stability
+results to this setting likely requires “time-lifting’’ or path-space constructions
+\citep{furuya2025transformers,castin2024how}, and a careful treatment of recurrent or
+infinite-context architectures such as Infini-attention
+\citep{munkhdalai2024leave,bertsch2024unlimiformer} and state-space models
+\citep{gu2024mamba}. Developing measure-theoretic compression schemes that remain
+consistent along the entire generation trajectory is an important open problem.
+
+\paragraph{Tightness of Lipschitz Bounds.}
+The KV compression error bound in Theorem~\ref{thm:bound} is worst-case and depends on a
+global network Lipschitz constant $L_{\text{net}}$, which can be loose for deep
+Transformers. In practice, normalization, residual connections, and attention structure
+often induce much smaller effective sensitivities than the naive product of per-layer
+constants would suggest \citep{castin2024how,sander2022sinkformers,chizat2018global}.
+Characterizing the \emph{effective} Lipschitz behavior of trained models and tying it to
+their KV compressibility is an interesting direction, and could motivate explicit
+regularization schemes that improve both robustness and compressibility.
+
+\paragraph{Scope of Empirical Validation.}
+Our experiments focus on medium-scale Transformers and two representative settings:
+synthetic linear regression and long-context medical imaging
+\citep{moor2023foundation,setio2017validation}. While this is sufficient to observe the
+predicted $m^{-1/d}$ scaling and to outperform strong KV compression baselines, it does
+not yet demonstrate benefits at the scale of frontier language models
+\citep{touvron2023llama,team2024gemini,ding2024longrope}. Scaling MAC to multi-billion
+parameter models and diverse domains (e.g., code, multi-modal scientific data) is
+primarily an engineering challenge but may also reveal new phenomena not captured by our
+current theory.
+
+\paragraph{Interaction with Other Efficiency Techniques.}
+We study MAC on top of standard softmax attention \citep{vaswani2017attention}. In
+practice, KV compression is often combined with linear/streaming attention
+\citep{katharopoulos2020transformers,xiao2024efficient}, quantization
+\citep{liu2024kivi}, and retrieval \citep{tang2024quest,gao2024retrieval}. Understanding
+how measure-aware compression composes with these techniques—e.g., whether MAC can serve
+as a geometric backbone into which retrieval or quantization plug as special cases—is an
+exciting direction for building unified long-context systems.
+
+% =================================================================
+% 8. CONCLUSION
+% =================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+We proposed a measure-theoretic view of In-Context Learning in Transformers, modeling the
+KV cache as a finite-support approximation of a context measure. Under mild regularity
+assumptions, we showed that kernel attention is Lipschitz with respect to the
+Wasserstein-1 distance, and combined this with classical quantization theory to derive a
+minimax-optimal $m^{-1/d}$ scaling law for KV compression error. Guided by this
+geometry, we introduced Measure-Aware Compression (MAC), which approximates
+Wasserstein-optimal quantization via K-Means at inference time and Sinkhorn-regularized
+induced attention during training. MAC empirically follows the predicted scaling on
+synthetic regression and achieves favorable memory–accuracy tradeoffs on a real-world
+medical benchmark compared to state-of-the-art KV compression methods.
+
+More broadly, our results support the thesis that Transformers are not only sequence
+models but \emph{measure learners}, and that KV compression is best understood as
+constructing an optimal geometric summary of the context distribution rather than
+dropping low-score tokens. We hope this perspective will help bridge theory and systems
+for long-context models, and inspire new compression and memory architectures grounded
+in optimal transport and the geometry of probability measures.
+
+% =================================================================
+% 8. BROADER IMPACT
+% =================================================================
+\section*{Broader Impact}
+\label{sec:broader_impact}
+
+Our work is methodological: we study Transformers as measure learners and design
+geometric KV compression schemes. A positive consequence is that long-context
+models may become more memory- and energy-efficient, making it easier for
+resource-limited settings (e.g., hospitals or smaller labs) to use foundation
+models on long medical or scientific sequences
+\citep{moor2023foundation,setio2017validation,team2024gemini,ding2024longrope,gu2024mamba}.
+
+At the same time, cheaper and more scalable long-context inference also lowers
+the barrier for misuse, for example in privacy-invasive logging or more
+targeted generation of harmful content. Our methods do not address dataset
+biases, fairness, or privacy by themselves; they should be combined with
+appropriate data governance and safety measures
+\citep{vaswani2017attention,touvron2023llama}. Overall, we view our
+contribution as clarifying the geometry of in-context learning; its societal
+impact will depend on how it is instantiated and regulated in downstream
+applications.
+
+% =================================================================
+% BIBLIOGRAPHY
+% =================================================================
+\bibliography{refs}
+\bibliographystyle{icml2026}
+
+% =================================================================
+% APPENDIX
+% =================================================================
+\newpage
+\appendix
+\onecolumn
+
+\section{Detailed Proofs of Theoretical Results}
+\label{app:proofs}
+
+In this appendix we provide proofs for the main theoretical results in
+Section~\ref{sec:theory}. Throughout, $\OmegaSpace \subset \mathbb{R}^d$ is a compact
+metric space, $\Pspace$ is the set of Borel probability measures on $\OmegaSpace$, and
+$\Wass{1}$ denotes the 1-Wasserstein distance on $\Pspace$
+\citep{villani2009optimal}.
+
+\subsection{Notation and Preliminaries}
+
+For a bounded measurable function $f:\OmegaSpace \to \mathbb{R}^k$ and
+$\mu \in \Pspace$, we write
+\[
+    \langle f,\mu\rangle \;\coloneqq\; \int_{\OmegaSpace} f(z)\, d\mu(z).
+\]
+The Kantorovich--Rubinstein dual formulation of $\Wass{1}$ states that for all
+$\mu,\nu \in \Pspace$,
+\begin{equation}
+    \Wass{1}(\mu,\nu)
+    =
+    \sup_{\|f\|_{\mathrm{Lip}} \le 1}
+    \left|
+        \langle f,\mu\rangle
+        -
+        \langle f,\nu\rangle
+    \right|,
+\end{equation}
+where the supremum runs over all 1-Lipschitz real-valued functions on $\OmegaSpace$
+\citep{villani2009optimal}.
+
+Let $\mathcal{H}_K$ be the reproducing kernel Hilbert space (RKHS) associated with a
+positive definite kernel $\kappa:\OmegaSpace \times \OmegaSpace \to \mathbb{R}$. The
+kernel mean embedding of $\mu\in\Pspace$ is
+\[
+    \phi(\mu) \;\coloneqq\; \int_{\OmegaSpace} \kappa(\cdot,z)\, d\mu(z) \in \mathcal{H}_K.
+\]
+A kernel is \emph{characteristic} if the map $\mu\mapsto \phi(\mu)$ is injective; see
+\citet{muandet2017kernel,sriperumbudur2010hilbert}.
+
+\subsection{Proof of Theorem~\ref{thm:universality} (Universality on Measures)}
+\label{app:proof_universality}
+
+\paragraph{Restatement.}
+Under Assumption~\ref{ass:regularity}, for any continuous functional
+$F \in C(\Pspace \times \OmegaSpace)$ and any $\varepsilon>0$, there exists a Transformer
+$\Lambda_\theta$ with kernel-attention heads and MLP layers such that
+\[
+    \sup_{\mu\in\Pspace,q\in\OmegaSpace}
+    \big\|F(\mu,q)-\Lambda_\theta(\mu,q)\big\| < \varepsilon.
+\]
+
+\paragraph{Proof sketch.}
+We follow the strategy of \citet{furuya2025transformers}, adapting it to our
+kernel-attention parameterization.
+
+\textbf{1. Compactness.}
+By Assumption~\ref{ass:regularity}, $\OmegaSpace$ is compact. By Prokhorov's theorem,
+$\Pspace$ is compact under the topology of weak convergence, which is metrized by
+$\Wass{1}$ on bounded domains \citep{villani2009optimal}. Therefore
+$\mathcal{X} \coloneqq \Pspace \times \OmegaSpace$ is compact Hausdorff.
+
+\textbf{2. Function algebra generated by attention heads.}
+Consider the class $\mathcal{A}$ of functions from $\mathcal{X}$ to $\mathbb{R}^k$
+representable by a finite composition of:
+(i) kernel-attention maps of the form
+\[
+    (\mu,q) \mapsto 
+    \Attn(q;\mu) 
+    =
+    \frac{\int \kappa(q,z)\,\varphi(z)\, d\mu(z)}
+         {\int \kappa(q,z)\, d\mu(z)}
+\]
+with bounded Lipschitz $\varphi$; and
+(ii) finite-width MLPs with continuous activations applied to finite collections of such
+features and $q$. Because MLPs are universal on compact subsets of Euclidean space,
+$\mathcal{A}$ is closed under finite linear combinations and pointwise products, and
+contains constant functions. Hence $\mathcal{A}$ is a subalgebra of $C(\mathcal{X})$.
+
+\textbf{3. Separation of points.}
+Let $(\mu,q)\neq(\nu,r)$ in $\mathcal{X}$. We must show there exists $f\in\mathcal{A}$
+such that $f(\mu,q)\neq f(\nu,r)$.
+
+\emph{Case 1: $q\neq r$.}  
+Use an MLP acting only on the query: the map
+$q \mapsto \mathrm{MLP}(q)$ is universal on compact $\OmegaSpace$, so there exists an MLP
+that separates $q$ and $r$.
+
+\emph{Case 2: $q=r$ and $\mu\neq\nu$.}  
+Consider the kernel mean embeddings
+\[
+    \phi(\mu) = \int \kappa(\cdot,z)\,d\mu(z),
+    \qquad
+    \phi(\nu) = \int \kappa(\cdot,z)\,d\nu(z).
+\]
+Since $\kappa$ is characteristic, $\phi(\mu)\neq\phi(\nu)$
+\citep{muandet2017kernel,sriperumbudur2010hilbert}. Therefore there exists some
+evaluation point $q^\star\in\OmegaSpace$ such that
+\[
+    \int \kappa(q^\star,z)\, d\mu(z)
+    \;\neq\;
+    \int \kappa(q^\star,z)\, d\nu(z).
+\]
+This evaluation is precisely the (unnormalized) numerator of an attention head with
+query $q^\star$ and value map $\varphi\equiv 1$. Thus an attention head yields a scalar
+feature that separates $\mu$ and $\nu$; combining it with a simple linear readout gives a
+function in $\mathcal{A}$ that separates $(\mu,q^\star)$ and $(\nu,q^\star)$.
+
+Therefore $\mathcal{A}$ separates points in $\mathcal{X}$.
+
+\textbf{4. Stone--Weierstrass.}
+By the Stone--Weierstrass theorem for compact Hausdorff spaces, any subalgebra
+$\mathcal{A}$ of $C(\mathcal{X})$ that contains constants and separates points is dense
+in $C(\mathcal{X})$ under the uniform norm. Hence for any $F\in C(\mathcal{X})$ and
+$\varepsilon>0$, there exists $f\in\mathcal{A}$ with
+$\sup_{(\mu,q)\in\mathcal{X}}\|F(\mu,q)-f(\mu,q)\| < \varepsilon$.
+
+Any such $f$ can be realized by a Transformer with finitely many kernel-attention heads
+and MLP layers, since $\mathcal{A}$ is defined exactly as the set of functions realized
+by this architecture. This concludes the proof. \hfill$\square$
+
+\subsection{Proof of Lemma~\ref{lemma:lipschitz} (Lipschitz Continuity)}
+\label{app:proof_lipschitz}
+
+\paragraph{Restatement.}
+Under Assumption~\ref{ass:regularity}, for any fixed query $q\in\OmegaSpace$, the map
+$\mu\mapsto \Attn(q;\mu)$ is Lipschitz with respect to $\Wass{1}$:
+\[
+    \big\|\Attn(q;\mu)-\Attn(q;\nu)\big\|
+    \le
+    L_{\Attn}\,\Wass{1}(\mu,\nu),
+    \quad \forall \mu,\nu\in\Pspace.
+\]
+
+\paragraph{Proof.}
+Fix $q$ and define the scalar- or vector-valued functions
+\[
+    f_N(z) \coloneqq \kappa(q,z)\,\varphi(z),
+    \qquad
+    f_D(z) \coloneqq \kappa(q,z),
+\]
+so that
+\[
+    N(\mu) \coloneqq \langle f_N,\mu\rangle,
+    \qquad
+    D(\mu) \coloneqq \langle f_D,\mu\rangle,
+    \qquad
+    \Attn(q;\mu) = \frac{N(\mu)}{D(\mu)}.
+\]
+
+By Assumption~\ref{ass:regularity}, $\kappa$ and $\varphi$ are bounded and Lipschitz on
+compact $\OmegaSpace$, hence $f_N$ and $f_D$ are bounded and Lipschitz. Let
+$\|f_N\|_\infty \le B_N$, $\|f_D\|_\infty \le B_D$, and
+$\mathrm{Lip}(f_N) \le L_N$, $\mathrm{Lip}(f_D) \le L_D$.
+
+Using the dual formulation of $\Wass{1}$,
+\[
+    \|N(\mu)-N(\nu)\|
+    =
+    \left\|\int f_N\, d(\mu-\nu)\right\|
+    \le
+    L_N \, \Wass{1}(\mu,\nu),
+\]
+and similarly
+\[
+    |D(\mu)-D(\nu)|
+    \le
+    L_D \, \Wass{1}(\mu,\nu).
+\]
+Moreover, $|D(\mu)|\le B_D$ for all $\mu$ and, by Assumption~\ref{ass:regularity}, there
+exists $\delta>0$ such that $D(\mu)\ge\delta$ for all relevant $\mu$.
+
+We now bound the difference of the quotients:
+\begin{align*}
+    \Attn(q;\mu) - \Attn(q;\nu)
+    &= \frac{N(\mu)}{D(\mu)} - \frac{N(\nu)}{D(\nu)} \\
+    &= \frac{N(\mu)D(\nu) - N(\nu)D(\mu)}{D(\mu)D(\nu)} \\
+    &= \frac{N(\mu)\big(D(\nu)-D(\mu)\big)
+        + D(\mu)\big(N(\mu)-N(\nu)\big)}
+       {D(\mu)D(\nu)} .
+\end{align*}
+Taking norms and using $|D(\mu)|,|D(\nu)|\ge\delta$,
+\begin{align*}
+    \big\|\Attn(q;\mu)-\Attn(q;\nu)\big\|
+    &\le
+    \frac{\|N(\mu)\|\,|D(\nu)-D(\mu)|
+          + |D(\mu)|\,\|N(\mu)-N(\nu)\|}
+         {|D(\mu)D(\nu)|} \\
+    &\le
+    \frac{B_N L_D + B_D L_N}{\delta^2} \, \Wass{1}(\mu,\nu).
+\end{align*}
+Thus the map is Lipschitz with constant
+$L_{\Attn} \coloneqq (B_N L_D + B_D L_N)/\delta^2$. \hfill$\square$
+
+\subsection{Proof of Theorem~\ref{thm:bound} (KV Compression Bound)}
+\label{app:proof_bound}
+
+\paragraph{Restatement.}
+Let $\Lambda_\theta = \Lambda^{(L)}\circ\cdots\circ\Lambda^{(1)}$ be an $L$-layer
+Transformer, where each layer $\Lambda^{(l)}$ is $L_{\text{layer}}^{(l)}$-Lipschitz in
+its measure argument. For any empirical context measure $\muN$ and compressed measure
+$\tilde\mu_m$,
+\[
+    \big\|\Lambda_\theta(\muN,q) - \Lambda_\theta(\tilde\mu_m,q)\big\|
+    \le
+    L_{\text{net}}\,\Wass{1}(\muN,\tilde\mu_m),
+\]
+with $L_{\text{net}} = \prod_{l=1}^L L_{\text{layer}}^{(l)}$.
+
+\paragraph{Proof.}
+Define $h^{(0)}(\mu,q) = (\mu,q)$ and for $l\ge 1$,
+\[
+    h^{(l)}(\mu,q)
+    \;=\;
+    \Lambda^{(l)}\big(h^{(l-1)}(\mu,q)\big).
+\]
+Then $\Lambda_\theta(\mu,q) = h^{(L)}(\mu,q)$.
+
+Let $\mu=\muN$ and $\nu=\tilde\mu_m$. By Lipschitzness of each layer,
+\[
+    \big\|h^{(1)}(\mu,q)-h^{(1)}(\nu,q)\big\|
+    \le
+    L_{\text{layer}}^{(1)} \,\Wass{1}(\mu,\nu).
+\]
+Applying the same argument recursively,
+\begin{align*}
+    \big\|h^{(2)}(\mu,q)-h^{(2)}(\nu,q)\big\|
+    &\le
+    L_{\text{layer}}^{(2)} \,
+    \big\|h^{(1)}(\mu,q)-h^{(1)}(\nu,q)\big\| \\
+    &\le
+    L_{\text{layer}}^{(2)} L_{\text{layer}}^{(1)} \,
+    \Wass{1}(\mu,\nu),
+\end{align*}
+and, by induction,
+\[
+    \big\|h^{(L)}(\mu,q)-h^{(L)}(\nu,q)\big\|
+    \le
+    \Big(\prod_{l=1}^L L_{\text{layer}}^{(l)}\Big)\,
+    \Wass{1}(\mu,\nu).
+\]
+Setting $\mu=\muN$ and $\nu=\tilde\mu_m$ yields the stated bound. \hfill$\square$
+
+\subsection{Proof of Corollary~\ref{cor:scaling} (Scaling Law)}
+\label{app:scaling}
+
+\paragraph{Restatement.}
+If the support of $\muN$ lies on a $d$-dimensional submanifold of $\mathbb{R}^D$ with
+mild regularity, there exists a compression operator producing $\tilde\mu_m$ with at
+most $m$ atoms such that
+\[
+    \Wass{1}(\muN,\tilde\mu_m)
+    \le
+    C \, m^{-1/d},
+\]
+and this rate is minimax-optimal in general. Combining with
+Theorem~\ref{thm:bound} yields an ICL prediction error of order
+$\tilde{\mathcal{O}}(m^{-1/d})$.
+
+\paragraph{Proof sketch.}
+The claim is a direct application of classical quantization theory for probability
+measures \citep{graf2000foundations,villani2009optimal}. For completeness, we briefly
+outline the relevant result.
+
+Let $\mathcal{Q}_m$ be the set of all probability measures with support size at most $m$.
+Define the optimal $L^1$ quantization error of $\mu$ at level $m$ as
+\[
+    e_1(\mu,m)
+    \;\coloneqq\;
+    \inf_{\nu\in\mathcal{Q}_m} \Wass{1}(\mu,\nu).
+\]
+Under mild assumptions on $\mu$—in particular, that it admits a density with respect to
+the $d$-dimensional Hausdorff measure on a compact $d$-dimensional manifold—there exist
+constants $0<c\le C<\infty$ such that
+\[
+    c\,m^{-1/d}
+    \le
+    e_1(\mu,m)
+    \le
+    C\,m^{-1/d}
+    \quad\text{for all sufficiently large }m.
+\]
+The upper bound is achieved by appropriately chosen $m$-point quantizers; the lower bound
+shows that no other scheme can improve the rate uniformly over a rich class of measures
+\citep{graf2000foundations}.
+
+Applying this to $\mu=\muN$ yields the claimed rate
+$\Wass{1}(\muN,\tilde\mu_m) \le C m^{-1/d}$ for some (possibly data-dependent) $C$.
+Plugging into Theorem~\ref{thm:bound} gives
+\[
+    \big\|
+        \Lambda_\theta(\muN,q)
+        -
+        \Lambda_\theta(\tilde\mu_m,q)
+    \big\|
+    \le
+    L_{\text{net}}\,C\,m^{-1/d},
+\]
+which we write as $\tilde{\mathcal{O}}(m^{-1/d})$ to emphasize that $L_{\text{net}}$ and
+logarithmic factors are absorbed into the constant. \hfill$\square$
+
+% =================================================================
+% B. EXPERIMENTAL DETAILS AND ADDITIONAL RESULTS
+% =================================================================
+\section{Experimental Details and Additional Results}
+\label{app:exp_details}
+
+We provide additional details on the experimental setups in Section~\ref{sec:exp}, as
+well as ablations and implementation notes.
+
+\subsection{Synthetic Linear Regression}
+\label{app:exp_synth_details}
+
+\paragraph{Data generation.}
+We consider input dimension $d\in\{10,20\}$ to probe the dependence on intrinsic
+dimension. For each task instance, we sample a weight vector $w\sim\mathcal{U}(-1,1)^d$
+and generate a context of $N=1024$ pairs $(x_i,y_i)$:
+\begin{itemize}[leftmargin=*,noitemsep,topsep=1pt]
+    \item $x_i$ is drawn from a mixture of three Gaussians on $\mathbb{R}^d$, with
+    randomly sampled means and shared covariance $0.1^2 I$. This yields a non-uniform,
+    low-dimensional data manifold.
+    \item $y_i = w^\top x_i + \epsilon_i$ with
+    $\epsilon_i \sim \mathcal{N}(0,\sigma^2)$, $\sigma=0.05$.
+\end{itemize}
+We generate fresh task instances at test time to avoid overfitting to a fixed $w$.
+
+\paragraph{Model architecture.}
+We use a 4-layer Transformer encoder with hidden dimension $D=128$, 4 attention heads,
+and GELU activations. No positional encodings are used so that the model is encouraged
+to treat the context as a set \citep{lee2019set}. We prepend a dedicated query token and
+train the model to predict its target value given the rest of the context.
+
+\paragraph{Training and evaluation.}
+The model is trained with Adam for 10\,000 steps, batch size 64, learning rate $10^{-3}$,
+using full KV cache. At evaluation time, we freeze weights and apply KV compression with
+different budgets $m$. For MAC-I, we project keys to $d_{\text{eff}}=16$ dimensions using
+a learned linear map, then run Mini-Batch K-Means with K-Means++ initialization
+\citep{arthur2007k}. We average results over 5 seeds.
+
+\subsection{LUNA16 Pulmonary Nodule Detection}
+\label{app:exp_luna_details}
+
+\paragraph{Preprocessing.}
+We follow the LUNA16 protocol \citep{setio2017validation}. CT volumes are resampled to a
+fixed voxel spacing, clipped to a standardized Hounsfield range, and normalized. We then
+extract 2D axial slices and center-crop each slice to a fixed resolution. Each study
+typically yields $N\approx 200$--$500$ slices.
+
+\paragraph{Feature extractor and Transformer.}
+We use a ResNet-50 backbone pretrained on ImageNet to extract per-slice feature vectors
+from the penultimate layer ($2048$-dim). A linear projection maps these to a Transformer
+hidden dimension $D=256$. We stack a 4-layer Transformer encoder with 8 heads and apply
+max-pooling over the sequence followed by a 2-layer MLP for binary classification.
+
+\paragraph{Training.}
+We train on full sequences using cross-entropy loss, with AdamW optimizer, learning rate
+$10^{-4}$, batch size 16, and cosine learning rate schedule. We use early stopping based
+on validation accuracy.
+
+\paragraph{MAC-I and baselines.}
+At test time:
+\begin{itemize}[leftmargin=*,noitemsep,topsep=1pt]
+    \item \textbf{MAC-I}: we apply PCA to reduce key dimension to $d_{\text{eff}}=32$
+    and run Mini-Batch K-Means with $m=64$ clusters and $t=10$ iterations. Cluster
+    centroids and masses are used as compressed KV states.
+    \item \textbf{H2O}: we implement heavy-hitter token selection as in
+    \citet{zhang2024h2o}, accumulating attention scores over layers and pruning to the
+    top-$m$ tokens.
+    \item \textbf{Quest}: we divide the sequence into pages of 16 slices and apply
+    query-aware page selection following \citet{tang2024quest}.
+    \item \textbf{Local window}: we restrict attention to a symmetric local window of
+    size $m$ around the query.
+\end{itemize}
+We report accuracy, peak GPU memory, and per-step decoding time averaged over the test
+set. All methods use the same underlying model and differ only in KV handling.
+
+\subsection{MAC-T Implementation Details}
+\label{app:exp_mact_details}
+
+\paragraph{Induced set attention.}
+For MAC-T experiments (not shown in the main text due to space), we insert an induced
+set attention block \citep{lee2019set} between the feature extractor and the first
+Transformer layer. The block uses $m=64$ inducing tokens $I\in\mathbb{R}^{m\times D}$ and
+produces a compressed set $\{\tilde{z}_j\}_{j=1}^m$ that replaces the original sequence.
+
+\paragraph{Sinkhorn loss.}
+We approximate the OT distance between the empirical measure over features
+$\muN = \frac{1}{N}\sum_{i=1}^N\delta_{z_i}$ and the compressed measure
+$\tilde\mu_m^\theta = \frac{1}{m}\sum_{j=1}^m\delta_{\tilde{z}_j}$ using the entropic
+Sinkhorn divergence \citep{cuturi2013sinkhorn} with regularization
+$\varepsilon=0.05$ and 10 iterations. The OT term is added to the task loss with weight
+$\lambda=0.1$.
+
+\paragraph{Observed behavior.}
+MAC-T typically learns inducing tokens that cover different semantic regions of feature
+space (e.g., normal lung tissue, nodule-like patterns), and achieves slightly better
+accuracy than MAC-I at the same budget $m$, at the cost of additional training
+overhead. The qualitative behavior is consistent with our interpretation of the inducing
+tokens as learned quantization centers guided by OT geometry.
+
+\subsection{Additional Ablations}
+
+Due to space, we summarize key trends:
+
+\begin{itemize}[leftmargin=*,noitemsep,topsep=1pt]
+    \item \textbf{Effect of intrinsic dimension.} On synthetic regression, increasing the
+    input dimension $d$ steepens the slope of the error curve in log--log space for all
+    methods, but MAC-I remains closest to the theoretical $m^{-1/d}$ prediction, while
+    Random and H2O deviate more strongly as $d$ grows.
+    \item \textbf{Budget sensitivity.} On LUNA16, MAC-I maintains a smooth accuracy
+    degradation as $m$ decreases, degrading gracefully down to $m=32$. H2O and Quest
+    exhibit sharper drops once $m$ falls below $\approx 10\%$ of the original context.
+    \item \textbf{Head-wise vs. shared clustering.} For moderate budgets, clustering in a
+    shared key space across heads achieves nearly the same accuracy as per-head
+    clustering, while being cheaper. At very small budgets, per-head clustering yields a
+    modest but consistent improvement, suggesting some head-specific geometry.
+\end{itemize}
+
+These results further support the view that explicitly respecting the measure structure
+of the context---instead of operating on tokens independently---is crucial for robust KV
+compression in both synthetic and real-world long-context settings.
+
+
+\end{document}

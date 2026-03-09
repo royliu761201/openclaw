@@ -1,6 +1,9 @@
 const KEY = "openclaw.control.settings.v1";
 
+type PersistedUiSettings = Omit<UiSettings, "token"> & { token?: never };
+
 import { isSupportedLocale } from "../i18n/index.ts";
+import { inferBasePathFromPathname, normalizeBasePath } from "./navigation.ts";
 import type { ThemeMode } from "./theme.ts";
 
 export type UiSettings = {
@@ -20,10 +23,14 @@ export type UiSettings = {
 export function loadSettings(): UiSettings {
   const defaultUrl = (() => {
     const proto = location.protocol === "https:" ? "wss" : "ws";
-    if (location.port === "5173") {
-      return `${proto}://${location.hostname}:18789`;
-    }
-    return `${proto}://${location.host}`;
+    const configured =
+      typeof window !== "undefined" &&
+      typeof window.__OPENCLAW_CONTROL_UI_BASE_PATH__ === "string" &&
+      window.__OPENCLAW_CONTROL_UI_BASE_PATH__.trim();
+    const basePath = configured
+      ? normalizeBasePath(configured)
+      : inferBasePathFromPathname(location.pathname);
+    return `${proto}://${location.host}${basePath}`;
   })();
 
   const defaults: UiSettings = {
@@ -45,23 +52,13 @@ export function loadSettings(): UiSettings {
       return defaults;
     }
     const parsed = JSON.parse(raw) as Partial<UiSettings>;
-    let savedUrl = parsed.gatewayUrl?.trim();
-    if (savedUrl && location.port === "5173" && savedUrl.endsWith(":5173")) {
-      // Auto-migrate from Vite dev port to actual gateway port
-      savedUrl = savedUrl.replace(":5173", ":18789");
-    }
-
-    let defaultToken = defaults.token;
-    if (location.port === "5173") {
-      defaultToken = "dev-token-123";
-    }
-
-    return {
-      gatewayUrl: savedUrl || defaults.gatewayUrl,
-      token:
-        typeof parsed.token === "string" && parsed.token.trim() !== ""
-          ? parsed.token
-          : defaultToken,
+    const settings = {
+      gatewayUrl:
+        typeof parsed.gatewayUrl === "string" && parsed.gatewayUrl.trim()
+          ? parsed.gatewayUrl.trim()
+          : defaults.gatewayUrl,
+      // Gateway auth is intentionally in-memory only; scrub any legacy persisted token on load.
+      token: defaults.token,
       sessionKey:
         typeof parsed.sessionKey === "string" && parsed.sessionKey.trim()
           ? parsed.sessionKey.trim()
@@ -95,11 +92,31 @@ export function loadSettings(): UiSettings {
           : defaults.navGroupsCollapsed,
       locale: isSupportedLocale(parsed.locale) ? parsed.locale : undefined,
     };
+    if ("token" in parsed) {
+      persistSettings(settings);
+    }
+    return settings;
   } catch {
     return defaults;
   }
 }
 
 export function saveSettings(next: UiSettings) {
-  localStorage.setItem(KEY, JSON.stringify(next));
+  persistSettings(next);
+}
+
+function persistSettings(next: UiSettings) {
+  const persisted: PersistedUiSettings = {
+    gatewayUrl: next.gatewayUrl,
+    sessionKey: next.sessionKey,
+    lastActiveSessionKey: next.lastActiveSessionKey,
+    theme: next.theme,
+    chatFocusMode: next.chatFocusMode,
+    chatShowThinking: next.chatShowThinking,
+    splitRatio: next.splitRatio,
+    navCollapsed: next.navCollapsed,
+    navGroupsCollapsed: next.navGroupsCollapsed,
+    ...(next.locale ? { locale: next.locale } : {}),
+  };
+  localStorage.setItem(KEY, JSON.stringify(persisted));
 }

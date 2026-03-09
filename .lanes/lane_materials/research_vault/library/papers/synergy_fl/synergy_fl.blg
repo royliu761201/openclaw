@@ -1,0 +1,48 @@
+This is BibTeX, Version 0.99d (TeX Live 2025)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: synergy_fl.aux
+The style file: icml2026.bst
+Database file #1: refs.bib
+Warning--empty journal in zhang2024generative
+You've used 52 entries,
+            2773 wiz_defined-function locations,
+            882 strings with 15499 characters,
+and the built_in function-call counts, 28598 in all, are:
+= -- 2461
+> -- 1971
+< -- 32
++ -- 668
+- -- 612
+* -- 2423
+:= -- 4352
+add.period$ -- 184
+call.type$ -- 52
+change.case$ -- 353
+chr.to.int$ -- 48
+cite$ -- 105
+duplicate$ -- 1274
+empty$ -- 2167
+format.name$ -- 672
+if$ -- 6014
+int.to.chr$ -- 5
+int.to.str$ -- 1
+missing$ -- 53
+newline$ -- 295
+num.names$ -- 208
+pop$ -- 750
+preamble$ -- 1
+purify$ -- 301
+quote$ -- 0
+skip$ -- 1005
+stack$ -- 0
+substring$ -- 847
+swap$ -- 221
+text.length$ -- 19
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 567
+warning$ -- 1
+while$ -- 218
+width$ -- 0
+write$ -- 718
+(There was 1 warning)

@@ -1,0 +1,167 @@
+\begin{thebibliography}{24}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Avellaneda and Stoikov(2008)]{avellaneda2008high}
+Marco Avellaneda and Sasha Stoikov.
+\newblock High-frequency trading in a limit order book.
+\newblock \emph{Quantitative Finance}, 8\penalty0 (3):\penalty0 217--224, 2008.
+
+\bibitem[Brown et~al.(2020)Brown, Mann, Ryder, Subbiah, Kaplan, Dhariwal,
+  Neelakantan, Shyam, Sastry, Askell, et~al.]{brown2020language}
+Tom Brown, Benjamin Mann, Nick Ryder, Melanie Subbiah, Jared~D Kaplan, Prafulla
+  Dhariwal, Arvind Neelakantan, Pranav Shyam, Girish Sastry, Amanda Askell,
+  et~al.
+\newblock Language models are few-shot learners.
+\newblock \emph{Advances in neural information processing systems},
+  33:\penalty0 1877--1901, 2020.
+
+\bibitem[Cartea et~al.(2015)Cartea, Jaimungal, and
+  Penalva]{cartea2015algorithmic}
+{\'A}lvaro Cartea, Sebastian Jaimungal, and Jos{\'e} Penalva.
+\newblock \emph{Algorithmic and High-Frequency Trading}.
+\newblock Cambridge University Press, 2015.
+
+\bibitem[Chen et~al.(2021)Chen, Lu, Rajeswaran, Lee, Grover, Laskin, Abbeel,
+  Srinivas, and Mordatch]{chen2021decision}
+Lili Chen, Kevin Lu, Aravind Rajeswaran, Kimin Lee, Aditya Grover, Michael
+  Laskin, Pieter Abbeel, Aravind Srinivas, and Igor Mordatch.
+\newblock Decision transformer: Reinforcement learning via sequence modeling.
+\newblock In \emph{Advances in Neural Information Processing Systems},
+  volume~34, pages 15084--15097, 2021.
+
+\bibitem[Duan et~al.(2016)Duan, Schulman, Chen, Bartlett, Sutskever, and
+  Abbeel]{duan2016rl2}
+Yan Duan, John Schulman, Xi~Chen, Peter~L. Bartlett, Ilya Sutskever, and Pieter
+  Abbeel.
+\newblock Rl$^2$: Fast reinforcement learning via slow reinforcement learning.
+\newblock In \emph{International Conference on Learning Representations}, 2016.
+
+\bibitem[Finn et~al.(2017)Finn, Abbeel, and Levine]{finn2017maml}
+Chelsea Finn, Pieter Abbeel, and Sergey Levine.
+\newblock Model-agnostic meta-learning for fast adaptation of deep networks.
+\newblock In \emph{Proceedings of the 34th International Conference on Machine
+  Learning}, pages 1126--1135, 2017.
+
+\bibitem[Garg et~al.(2022)Garg, Tsipras, Liang, and Valiant]{garg2022what}
+Shivam Garg, Dimitris Tsipras, Percy Liang, and Gregory Valiant.
+\newblock What can transformers learn in-context? a case study of simple
+  function classes.
+\newblock \emph{Advances in Neural Information Processing Systems},
+  35:\penalty0 30583--30598, 2022.
+
+\bibitem[Jiang et~al.(2017)Jiang, Xu, and Liang]{jiang2017portfolio}
+Zhengyao Jiang, Dixing Xu, and Jinjun Liang.
+\newblock Deep reinforcement learning for portfolio management.
+\newblock In \emph{Proceedings of the 1st ACM International Conference on AI in
+  Finance (ICAIF)}, 2017.
+
+\bibitem[Khetarpal et~al.(2022)Khetarpal, Riemer, Rish, and
+  Precup]{khetarpal2022continual}
+Khimya Khetarpal, Matthew Riemer, Irina Rish, and Doina Precup.
+\newblock Towards continual reinforcement learning: A review and perspectives.
+\newblock \emph{Journal of Artificial Intelligence Research}, 75:\penalty0
+  1401--1476, 2022.
+
+\bibitem[Laskin et~al.(2023)Laskin, Wang, Oh, Parisotto, Leblond, Soyer,
+  Narasimhan, Abbeel, and Mnih]{laskin2023context}
+Michael Laskin, Luyu Wang, Junhyuk Oh, Emilio Parisotto, R{\'e}mi Leblond,
+  Hubert Soyer, Karthik Narasimhan, Pieter Abbeel, and Volodymyr Mnih.
+\newblock In-context reinforcement learning with algorithm distillation.
+\newblock In \emph{International Conference on Learning Representations}, 2023.
+
+\bibitem[Lei et~al.(2020)Lei, Zhang, Li, Yang, and Shen]{lei2020time}
+Kai Lei, Boyang Zhang, Yizhen Li, Min Yang, and Haibo Shen.
+\newblock Time-driven feature-aware jointly deep reinforcement learning for
+  financial signal representation and algorithmic trading.
+\newblock \emph{Expert Systems with Applications}, 140:\penalty0 112872, 2020.
+
+\bibitem[Lim et~al.(2021)Lim, Ar{\i}k, Loeff, and Pfister]{lim2021temporal}
+Bryan Lim, Sercan~O Ar{\i}k, Nicolas Loeff, and Tomas Pfister.
+\newblock Temporal fusion transformers for interpretable multi-horizon time
+  series forecasting.
+\newblock \emph{International Journal of Forecasting}, 37\penalty0
+  (4):\penalty0 1748--1764, 2021.
+
+\bibitem[Moody and Saffell(2001)]{moody2001direct}
+John Moody and Matthew Saffell.
+\newblock Learning to trade via direct reinforcement.
+\newblock \emph{IEEE Transactions on Neural Networks}, 12\penalty0
+  (4):\penalty0 875--889, 2001.
+
+\bibitem[Nevmyvaka et~al.(2006)Nevmyvaka, Feng, and
+  Kearns]{nevmyvaka2006execution}
+Yuriy Nevmyvaka, Yi~Feng, and Michael Kearns.
+\newblock Reinforcement learning for optimized trade execution.
+\newblock In \emph{Proceedings of the 23rd International Conference on Machine
+  Learning}, pages 673--680, 2006.
+
+\bibitem[Padakandla(2021)]{padakandla2021survey}
+Sindhu Padakandla.
+\newblock A survey of reinforcement learning algorithms for dynamically varying
+  environments.
+\newblock \emph{ACM Computing Surveys}, 54\penalty0 (6):\penalty0
+  127:1--127:25, 2021.
+
+\bibitem[Pinto et~al.(2017)Pinto, Davidson, Sukthankar, and
+  Gupta]{pinto2017robust}
+Lerrel Pinto, James Davidson, Rahul Sukthankar, and Abhinav Gupta.
+\newblock Robust adversarial reinforcement learning.
+\newblock In \emph{International Conference on Machine Learning}, pages
+  2817--2826. PMLR, 2017.
+
+\bibitem[Sirignano and Cont(2019)]{sirignano2019universal}
+Justin Sirignano and Rama Cont.
+\newblock Universal features of price formation in financial markets:
+  Perspectives from deep learning.
+\newblock \emph{Quantitative Finance}, 19\penalty0 (9):\penalty0 1449--1459,
+  2019.
+
+\bibitem[Spooner et~al.(2018)Spooner, Fearnley, Savani, and
+  Koukorinis]{spooner2018market}
+Thomas Spooner, John Fearnley, Rahul Savani, and Alexandros Koukorinis.
+\newblock Market making via reinforcement learning.
+\newblock In \emph{Proceedings of the 17th International Conference on
+  Autonomous Agents and Multiagent Systems (AAMAS)}, pages 434--442, 2018.
+
+\bibitem[Wang(2021)]{wang2021metalearning}
+Jane~X. Wang.
+\newblock Meta-learning in natural and artificial intelligence.
+\newblock \emph{Current Opinion in Behavioral Sciences}, 38:\penalty0 90--95,
+  2021.
+
+\bibitem[Wei et~al.(2021)Wei, Luo, and Lee]{wei2021nonstationary}
+Chen-Yu Wei, Haipeng Luo, and Jason~D. Lee.
+\newblock Non-stationary reinforcement learning without prior knowledge.
+\newblock In \emph{Proceedings of the 38th International Conference on Machine
+  Learning}, volume 139, pages 11042--11052, 2021.
+
+\bibitem[Xie et~al.(2020)Xie, Chen, and Liu]{xie2020deep}
+He~Xie, Zhenxiang Chen, and Dong Liu.
+\newblock Deep reinforcement learning amidst security vulnerabilities.
+\newblock In \emph{AAAI}, 2020.
+
+\bibitem[Zhang et~al.(2019)Zhang, Zohren, and Roberts]{zhang2019deeplob}
+Zihao Zhang, Stefan Zohren, and Stephen~J. Roberts.
+\newblock {DeepLOB}: Deep convolutional neural networks for limit order books.
+\newblock \emph{IEEE Transactions on Signal Processing}, 67\penalty0
+  (11):\penalty0 3001--3012, 2019.
+
+\bibitem[Zhang et~al.(2020)Zhang, Zohren, and Roberts]{zhang2019deeptrading}
+Zihao Zhang, Stefan Zohren, and Stephen~J. Roberts.
+\newblock Deep reinforcement learning for trading.
+\newblock \emph{The Journal of Finance and Data Science}, 6:\penalty0 123--143,
+  2020.
+
+\bibitem[Zhou et~al.()Zhou, Zhang, Peng, Zhang, Li, Xiong, and
+  Zhang]{zhou2021informer}
+Haoyi Zhou, Shanghang Zhang, Jieqi Peng, Shuai Zhang, Jianxin Li, Hui Xiong,
+  and Wancai Zhang.
+\newblock Informer: Beyond efficient transformer for long sequence time-series
+  forecasting.
+\newblock In \emph{AAAI Conference on Artificial Intelligence}, volume~35.
+
+\end{thebibliography}

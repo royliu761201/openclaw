@@ -1,0 +1,317 @@
+% refs.bib — IJCAI submission (public datasets: ETIS / PICCOLO / Kvasir / CVC)
+% NOTE: Keys are stable + human-readable. Edit as needed for your LaTeX style (natbib/biblatex).
+
+% =========================
+% Datasets / Benchmarks
+% =========================
+
+@article{SanchezPeralta2020PICCOLO,
+  title        = {PICCOLO White-Light and Narrow-Band Imaging Colonoscopic Dataset: A Performance Comparative of Models and Datasets},
+  author       = {S{\'a}nchez-Peralta, Luis F. and Bote-Curiel, Luis and P{\'e}rez-Cort{\'e}s, Juan C. and Pic{\'o}n, Arturo and Andr{\'e}s-S{\'a}nchez, Julio and Mart{\'\i}nez, Juan P.},
+  journal      = {Applied Sciences},
+  year         = {2020},
+  volume       = {10},
+  number       = {23},
+  pages        = {8501},
+  doi          = {10.3390/app10238501}
+}
+
+@inproceedings{Jha2020KvasirSEG,
+  title        = {Kvasir-SEG: A Segmented Polyp Dataset},
+  author       = {Jha, Debesh and Smedsrud, Pia H. and Riegler, Michael A. and Johansen, Dag and de Lange, Thomas and Halvorsen, P{\aa}l and Johansen, H{\aa}vard D.},
+  booktitle    = {Proceedings of the International Conference on Multimedia Modeling (MMM)},
+  year         = {2020}
+}
+
+@article{Borgli2020HyperKvasir,
+  title        = {HyperKvasir, a comprehensive multi-class image and video dataset for gastrointestinal endoscopy},
+  author       = {Borgli, Hanna and Thambawita, Vajira and Smedsrud, Pia H. and Hicks, Steven A. and Jha, Debesh and Eskeland, Sigrun L. and Riegler, Michael A. and Halvorsen, P{\aa}l and de Lange, Thomas and Johansen, Dag},
+  journal      = {Scientific Data},
+  year         = {2020},
+  volume       = {7},
+  number       = {1},
+  pages        = {283},
+  doi          = {10.1038/s41597-020-00622-y}
+}
+
+@article{Silva2014ETISLarib,
+  title        = {Toward embedded detection of polyps in {WCE} images for early diagnosis of colorectal cancer},
+  author       = {Silva, Juan and Histace, Alice and Romain, Olivier and Dray, Xavier and Granado, Beatriz},
+  journal      = {International Journal of Computer Assisted Radiology and Surgery},
+  year         = {2014},
+  volume       = {9},
+  number       = {2},
+  pages        = {283--293},
+  doi          = {10.1007/s11548-013-0926-3}
+}
+
+@article{Bernal2017EndoscopicVisionChallenge,
+  title        = {Comparative validation of polyp detection methods in video colonoscopy: results from the {MICCAI} 2015 Endoscopic Vision Challenge},
+  author       = {Bernal, Jorge and S{\'a}nchez, Fernando J. and Fern{\'a}ndez-Esparrach, Gonzalo and Gil, David and Rodr{\'\i}guez, Crist{\'o}bal and Vilari{\~n}o, Ferm{\'\i}n},
+  journal      = {IEEE Transactions on Medical Imaging},
+  year         = {2017},
+  volume       = {36},
+  number       = {6},
+  pages        = {1231--1244},
+  doi          = {10.1109/TMI.2017.2664052}
+}
+
+@article{Ali2023PolypGen,
+  title        = {PolypGen: A multi-center polyp detection and segmentation dataset for generalisability assessment},
+  author       = {Ali, Sharib and Zhou, Feng and Bailey, Adam and Braden, Barbara and East, James E. and Lu, Xiaohuan and Rittscher, Jens and others},
+  journal      = {Scientific Data},
+  volume       = {10},
+  number       = {1},
+  pages        = {75},
+  year         = {2023},
+  publisher    = {Nature Publishing Group}
+}
+
+% =========================
+% Core polyp segmentation baselines
+% =========================
+
+@inproceedings{Ronneberger2015UNet,
+  title        = {U-Net: Convolutional Networks for Biomedical Image Segmentation},
+  author       = {Ronneberger, Olaf and Fischer, Philipp and Brox, Thomas},
+  booktitle    = {Medical Image Computing and Computer-Assisted Intervention -- MICCAI 2015},
+  year         = {2015},
+  pages        = {234--241},
+  publisher    = {Springer}
+}
+
+@inproceedings{Fan2020PraNet,
+  title        = {PraNet: Parallel Reverse Attention Network for Polyp Segmentation},
+  author       = {Fan, Deng-Ping and Ji, Ge-Peng and Zhou, Tao and Chen, Geng and Fu, Huazhu and Shen, Jianbing and Shao, Ling},
+  booktitle    = {Medical Image Computing and Computer Assisted Intervention -- MICCAI 2020},
+  year         = {2020},
+  pages        = {168--177},
+  publisher    = {Springer}
+}
+
+@inproceedings{Huang2021HarDNetMSEG,
+  title        = {HarDNet-MSEG: A Simple Encoder-Decoder Polyp Segmentation Neural Network that Achieves State-of-the-Art Performance},
+  author       = {Huang, Chao-Hsiang and Wu, Hsin-Ying and Lin, Yon-Ling},
+  booktitle    = {Proceedings of the IEEE/CVF Winter Conference on Applications of Computer Vision (WACV)},
+  year         = {2021},
+  pages        = {2381--2390},
+  publisher    = {IEEE}
+}
+
+@article{Duc2022ColonFormer,
+  title        = {ColonFormer: An Efficient Transformer based Method for Colon Polyp Segmentation},
+  author       = {Thanh Duc, Nguyen and Oanh, Nguyen Thi and Thuy, Nguyen Thi and Triet, Tran Minh and  Dinh, Viet Sang},
+  journal      = {IEEE Access},
+  year         = {2022},
+  volume       = {10},
+  pages        = {80575--80586},
+  doi          = {10.1109/ACCESS.2022.3195241}
+}
+
+% =========================
+% General segmentation / detection backbones used as strong baselines
+% =========================
+
+@inproceedings{He2017MaskRCNN,
+  title        = {Mask {R-CNN}},
+  author       = {He, Kaiming and Gkioxari, Georgia and Doll{\'a}r, Piotr and Girshick, Ross},
+  booktitle    = {Proceedings of ICCV},
+  year         = {2017}
+}
+
+@inproceedings{Lin2017FPN,
+  title        = {Feature Pyramid Networks for Object Detection},
+  author       = {Lin, Tsung-Yi and Doll{\'a}r, Piotr and Girshick, Ross and He, Kaiming and Hariharan, Bharath and Belongie, Serge},
+  booktitle    = {Proceedings of CVPR},
+  year         = {2017}
+}
+
+@inproceedings{Lin2017FocalLoss,
+  title        = {Focal Loss for Dense Object Detection},
+  author       = {Lin, Tsung-Yi and Goyal, Priya and Girshick, Ross and He, Kaiming and Doll{\'a}r, Piotr},
+  booktitle    = {Proceedings of ICCV},
+  year         = {2017}
+}
+
+@inproceedings{Carion2020DETR,
+  title        = {End-to-End Object Detection with Transformers},
+  author       = {Carion, Nicolas and Massa, Francisco and Synnaeve, Gabriel and Usunier, Nicolas and Kirillov, Alexander and Zagoruyko, Sergey},
+  booktitle    = {Proceedings of ECCV},
+  year         = {2020}
+}
+
+@inproceedings{Cheng2022Mask2Former,
+  title        = {Masked-attention Mask Transformer for Universal Image Segmentation},
+  author       = {Cheng, Bowen and Schwing, Alexander G. and Kirillov, Alexander},
+  booktitle    = {Proceedings of CVPR},
+  year         = {2022}
+}
+
+@inproceedings{Xie2021SegFormer,
+  title        = {SegFormer: Simple and Efficient Design for Semantic Segmentation with Transformers},
+  author       = {Xie, Enze and Wang, Wenhai and Yu, Zhiding and Anandkumar, Anima and Alvarez, Jose M. and Luo, Ping},
+  booktitle    = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year         = {2021}
+}
+
+@inproceedings{Liu2021Swin,
+  title        = {Swin Transformer: Hierarchical Vision Transformer using Shifted Windows},
+  author       = {Liu, Ze and Lin, Yutong and Cao, Yue and Hu, Han and Wei, Yixuan and Zhang, Zheng and Lin, Stephen and Guo, Baining},
+  booktitle    = {Proceedings of ICCV},
+  year         = {2021}
+}
+
+@inproceedings{Wang2021PVT,
+  title        = {Pyramid Vision Transformer: A Versatile Backbone for Dense Prediction without Convolutions},
+  author       = {Wang, Wenhai and Xie, Enze and Li, Xiang and Fan, Deng-Ping and Song, Kaitao and Liang, Ding and Lu, Tong and Luo, Ping and Shao, Ling},
+  booktitle    = {Proceedings of ICCV},
+  year         = {2021}
+}
+
+% =========================
+% Promptable / foundation segmentation
+% =========================
+
+@inproceedings{Kirillov2023SAM,
+  title        = {Segment Anything},
+  author       = {Kirillov, Alexander and Mintun, Eric and Ravi, Nikhila and Mao, Hanzi and Rolland, Chloe and Gustafson, Laura and Xiao, Tete and Whitehead, Spencer and Berg, Alexander C. and Lo, Wan-Yen and Doll{\'a}r, Piotr and Girshick, Ross},
+  booktitle    = {Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV)},
+  year         = {2023},
+  pages        = {4015--4026}
+}
+
+@inproceedings{Ravi2024SAM2,
+  title        = {{SAM} 2: Segment Anything in Images and Videos},
+  author       = {Ravi, Nikhila and Camarillo, Alvin and Gustafson, Laura and others},
+  booktitle    = {International Conference on Learning Representations (ICLR)},
+  year         = {2025}
+}
+
+@article{Camarillo2025SAM3,
+  title        = {{SAM} 3: Segment Anything with Concepts},
+  author       = {Camarillo, Alvin and Gustafson, Laura and Chen, Danqi and others},
+  journal      = {arXiv preprint},
+  year         = {2025},
+  eprint       = {2511.16719},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.CV}
+}
+
+@article{Ma2023MedSAM,
+  title        = {Segment Anything in Medical Images},
+  author       = {Ma, Jun and He, Yukun and Li, Feifei and Han, Lin and You, Chenyu and Wang, Bo},
+  journal      = {Nature Communications},
+  year         = {2024},
+  volume       = {15},
+  number       = {1},
+  pages        = {654},
+  doi          = {10.1038/s41467-024-44824-z}
+}
+
+% =========================
+% Vision-language / multimodal alignment (clinical priors as prompts)
+% =========================
+
+@inproceedings{Radford2021CLIP,
+  title        = {Learning Transferable Visual Models From Natural Language Supervision},
+  author       = {Radford, Alec and Kim, Jong Wook and Hallacy, Chris and Ramesh, Aditya and Goh, Gabriel and Agarwal, Sandhini and Sastry, Girish and Askell, Amanda and Mishkin, Pamela and Clark, Jack and Krueger, Gretchen and Sutskever, Ilya},
+  booktitle    = {Proceedings of ICML},
+  year         = {2021}
+}
+
+@article{Zhang2023BiomedCLIP,
+  title        = {BiomedCLIP: a multimodal biomedical foundation model pretrained from fifteen million scientific image-text pairs},
+  author       = {Zhang, Yuhao and others},
+  journal      = {arXiv preprint},
+  year         = {2023},
+  eprint       = {2303.00915},
+  archivePrefix= {arXiv},
+  primaryClass = {cs.CV}
+}
+
+@inproceedings{Lin2023PMCCLIP,
+  title        = {{PMC-CLIP}: Contrastive Language-Image Pre-training using Biomedical Documents},
+  author       = {Lin, Hsin-Ying and others},
+  booktitle    = {Medical Image Computing and Computer Assisted Intervention -- MICCAI 2023},
+  year         = {2023}
+}
+
+@inproceedings{Perez2018FiLM,
+  title        = {{FiLM}: Visual Reasoning with a General Conditioning Layer},
+  author       = {Perez, Ethan and Strub, Florian and de Vries, Harm and Dumoulin, Vincent and Courville, Aaron},
+  booktitle    = {Proceedings of AAAI},
+  year         = {2018}
+}
+
+% =========================
+% Causal / long-tail robustness (small lesions as tail)
+% =========================
+
+@inproceedings{Cui2019ClassBalanced,
+  title        = {Class-Balanced Loss Based on Effective Number of Samples},
+  author       = {Cui, Yin and Jia, Menglin and Lin, Tsung-Yi and Song, Yang and Belongie, Serge},
+  booktitle    = {Proceedings of CVPR},
+  year         = {2019}
+}
+
+@inproceedings{Sagawa2020GroupDRO,
+  title        = {Distributionally Robust Neural Networks for Group Shifts: On the Importance of Regularization for Worst-Case Generalization},
+  author       = {Sagawa, Shiori and Koh, Pang Wei and Hashimoto, Tatsunori B. and Liang, Percy},
+  booktitle    = {Proceedings of ICLR},
+  year         = {2020}
+}
+
+% =========================
+% Diffusion / GNN / Neural ODE / Neural Operators (method space for IJCAI)
+% =========================
+
+@inproceedings{Ho2020DDPM,
+  title        = {Denoising Diffusion Probabilistic Models},
+  author       = {Ho, Jonathan and Jain, Ajay and Abbeel, Pieter},
+  booktitle    = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year         = {2020}
+}
+
+@inproceedings{Kipf2017GCN,
+  title        = {Semi-Supervised Classification with Graph Convolutional Networks},
+  author       = {Kipf, Thomas N. and Welling, Max},
+  booktitle    = {International Conference on Learning Representations (ICLR)},
+  year         = {2017},
+  eprint       = {1609.02907},
+  archivePrefix= {arXiv}
+}
+
+@inproceedings{Velickovic2018GAT,
+  title        = {Graph Attention Networks},
+  author       = {Veli{\v{c}}kovi{\'c}, Petar and Cucurull, Guillem and Casanova, Arantxa and Romero, Adriana and Li{\`o}, Pietro and Bengio, Yoshua},
+  booktitle    = {International Conference on Learning Representations (ICLR)},
+  year         = {2018},
+  eprint       = {1710.10903},
+  archivePrefix= {arXiv}
+}
+
+@inproceedings{Chen2018NeuralODE,
+  title        = {Neural Ordinary Differential Equations},
+  author       = {Chen, Tian Qi and Rubanova, Yulia and Bettencourt, Jesse and Duvenaud, David K.},
+  booktitle    = {Advances in Neural Information Processing Systems (NeurIPS)},
+  year         = {2018}
+}
+
+@inproceedings{Li2021FNO,
+  title        = {Fourier Neural Operator for Parametric Partial Differential Equations},
+  author       = {Li, Zongyi and Kovachki, Nikola and Azizzadenesheli, Kamyar and Liu, Burigede and Bhattacharya, Kaushik and Stuart, Andrew and Anandkumar, Anima},
+  booktitle    = {International Conference on Learning Representations (ICLR)},
+  year         = {2021}
+}
+
+% =========================
+% Optional model card citations (if you rely on weights/tooling)
+% =========================
+
+@misc{Giammarino2023PubMedCLIPModelCard,
+  title        = {PubMedCLIP ViT-B/32 (model card)},
+  author       = {Giammarino, Flavia},
+  howpublished = {Hugging Face},
+  year         = {2023},
+  note         = {Model card / weights}
+}

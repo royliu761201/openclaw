@@ -1,0 +1,302 @@
+venues:
+  # --- MULTIDISCIPLINARY / PRESTIGE (SCI-Q1 Top) ---
+  - name: "Nature"
+    full_name: "Nature"
+    tier: "SCI-Q1 (Top)"
+    impact_factor: "50.5"
+    type: "Journal"
+    deadline: "Rolling Submission"
+    template_path: "paper/nature"
+    url: "https://www.nature.com/nature"
+    requirements:
+      page_limit: "Main Text ~3000 words (6-8 pages)"
+      anonymity: "Single Blind"
+      format: "Word/LaTeX (nature.cls)"
+    appendix: "Supplementary Information (SI) allowed"
+    structure: 
+      - "Abstract (Unlabeled, ~150 words)"
+      - "Introduction (No header)"
+      - "Results (broken into subheaders)"
+      - "Discussion"
+      - "Methods (at the end)"
+      - "Data Availability"
+    section_reqs:
+      methods: "Unlimited length, but concise"
+      data: "Mandatory Data Availability Statement"
+    preferences: ["Breakthrough Science", "General Interest", "AI for Science"]
+    review_cycle: "5-6 months (High Rejection Rate)"
+
+  - name: "Science"
+    full_name: "Science"
+    tier: "SCI-Q1 (Top)"
+    impact_factor: "44.7"
+    type: "Journal"
+    deadline: "Rolling Submission"
+    template_path: "paper/science"
+    url: "https://www.science.org/"
+    requirements:
+      page_limit: "~4500 words"
+      anonymity: "Single Blind"
+    appendix: "Supplementary Materials allowed"
+    structure:
+      - "Abstract (~125 words)"
+      - "Main Text (Intro + Results + Discussion mixed)"
+      - "Materials and Methods (in SM or separate)"
+    preferences: ["Breakthrough Science", "Original Research"]
+
+  - name: "PNAS"
+    full_name: "Proceedings of the National Academy of Sciences"
+    tier: "SCI-Q1"
+    impact_factor: "9.6"
+    type: "Journal"
+    deadline: "Rolling Submission"
+    template_path: "paper/pnas"
+    url: "https://www.pnas.org/"
+    structure:
+      - "Significance Statement (120 words)"
+      - "Abstract"
+      - "Introduction"
+      - "Results"
+      - "Discussion"
+      - "Materials and Methods"
+    preferences: ["Broad Scientific Impact", "Biological/Physical/Social Sciences"]
+
+  # --- NATURE/SCIENCE FAMILY (AI & ROBOTICS) ---
+  - name: "Nature Machine Intelligence"
+    full_name: "Nature Machine Intelligence"
+    tier: "SCI-Q1"
+    impact_factor: "18.8"
+    type: "Journal"
+    deadline: "Rolling Submission"
+    template_path: "paper/nature"
+    url: "https://www.nature.com/natmachintell"
+    requirements:
+      page_limit: "Flexible (approx 2000-4000 words + Methods)"
+      anonymity: "Single Blind"
+    appendix: "Supplementary Information allowed"
+    structure:
+      - "Abstract"
+      - "Introduction"
+      - "Results"
+      - "Discussion"
+      - "Methods"
+    section_reqs:
+      code: "Code Availability Statement required"
+    preferences: ["Interdisciplinary", "AI for Science", "Ethical AI", "Robotics"]
+    review_cycle: "~4-6 months (First Decision > 40 days)"
+
+  - name: "Nature Communications"
+    full_name: "Nature Communications"
+    tier: "SCI-Q1"
+    impact_factor: "14.7"
+    type: "Journal"
+    deadline: "Rolling Submission"
+    template_path: "paper/nature"
+    url: "https://www.nature.com/ncomms"
+    appendix: "SI allowed"
+    structure: ["Abstract", "Intro", "Results", "Discussion", "Methods"]
+    preferences: ["High Impact", "Open Access", "Multidisciplinary"]
+
+  - name: "Nature Biomedical Engineering"
+    full_name: "Nature Biomedical Engineering"
+    tier: "SCI-Q1"
+    impact_factor: "26.8"
+    type: "Journal"
+    deadline: "Rolling Submission"
+    template_path: "paper/nature"
+    url: "https://www.nature.com/natbiomedeng"
+    structure: ["Abstract", "Intro", "Results", "Discussion", "Methods"]
+    preferences: ["Biomedical AI", "Medical Devices", "Bioinformatics"]
+
+  - name: "Science Robotics"
+    full_name: "Science Robotics"
+    tier: "SCI-Q1"
+    impact_factor: "26.1"
+    type: "Journal"
+    deadline: "Rolling Submission"
+    template_path: "paper/science"
+    url: "https://www.science.org/journal/scirobotics"
+    preferences: ["Robotics", "AI Control", "Human-Robot Interaction"]
+
+  - name: "Patterns"
+    full_name: "Patterns (Cell Press)"
+    tier: "SCI-Q1"
+    impact_factor: "6.5" 
+    type: "Journal"
+    deadline: "Rolling Submission"
+    template_path: "paper/elsevier"
+    url: "https://www.cell.com/patterns/home"
+    appendix: "STAR Methods (Structured Transparent Accessible Reporting)"
+    structure: ["Summary", "Intro", "Results", "Discussion", "STAR Methods"]
+    preferences: ["Data Science", "AI Infrastructure", "Open Data"]
+
+  # --- IEEE TRANSACTIONS (CCF-A / Q1) ---
+  - name: "TPAMI"
+    full_name: "IEEE Transactions on Pattern Analysis and Machine Intelligence"
+    tier: "CCF-A / Q1"
+    impact_factor: "20.8"
+    type: "Journal"
+    deadline: "Rolling Submission"
+    template_path: "paper/ieee_journal"
+    url: "https://www.computer.org/csdl/journal/tp"
+    requirements:
+      page_limit: "12-14 pages (Double Column)"
+      anonymity: "Single Blind"
+    appendix: "Supplementary Material (separate file)"
+    structure: ["Abstract", "Index Terms", "Intro", "Related Work", "Method", "Exp", "Conclusion"]
+    preferences: ["Computer Vision", "Pattern Analysis", "Machine Learning"]
+    review_cycle: "4-6 months (First Decision)"
+
+  - name: "IJCV"
+    full_name: "International Journal of Computer Vision"
+    tier: "CCF-A / Q1"
+    impact_factor: "11.6"
+    type: "Journal"
+    deadline: "Rolling Submission"
+    template_path: "paper/springer_journal"
+    url: "https://www.springer.com/journal/11263"
+    structure: ["Abstract", "Intro", "Related Work", "Method", "Exp", "Conclusion"]
+    preferences: ["Computer Vision"]
+    
+  - name: "TIP"
+    full_name: "IEEE Transactions on Image Processing"
+    tier: "CCF-A / Q1"
+    impact_factor: "10.6"
+    type: "Journal"
+    deadline: "Rolling Submission"
+    template_path: "paper/ieee_journal"
+    url: "https://signalprocessingsociety.org/publications-resources/ieee-transactions-image-processing"
+    preferences: ["Image Processing", "Signal Processing"]
+    
+  - name: "TKDE"
+    full_name: "IEEE Transactions on Knowledge and Data Engineering"
+    tier: "CCF-A / Q1"
+    impact_factor: "8.9"
+    type: "Journal"
+    deadline: "Rolling Submission"
+    template_path: "paper/ieee_journal"
+    url: "https://www.computer.org/csdl/journal/tk"
+    preferences: ["Data Mining", "Knowledge Engineering", "Databases"]
+
+  - name: "TNNLS"
+    full_name: "IEEE Transactions on Neural Networks and Learning Systems"
+    tier: "CCF-B / Q1" 
+    impact_factor: "10.4"
+    type: "Journal"
+    deadline: "Rolling Submission"
+    template_path: "paper/ieee_journal"
+    url: "https://cis.ieee.org/publications/t-nnls"
+    preferences: ["Neural Networks", "Learning Systems"]
+
+  # --- MACHINE LEARNING CONFERENCES (CCF-A) ---
+  - name: "NeurIPS"
+    full_name: "Conference on Neural Information Processing Systems"
+    tier: "CCF-A"
+    type: "Conference"
+    deadline: "2025-05-21T20:00:00Z"
+    template_path: "paper/neurips"
+    url: "https://neurips.cc"
+    requirements:
+      page_limit: "9 pages (main content)"
+      anonymity: "Double Blind"
+      format: "LaTeX (neurips_202X.sty)"
+    appendix: "Allowed (separate file or end of PDF, checked by reviewers)"
+    structure: ["Abstract", "Intro", "Related Work", "Method", "Exp", "Conclusion", "Impact Statement"]
+    section_reqs:
+      checklist: "Paper Checklist required at end"
+      broader_impact: "Mandatory section"
+    preferences: ["Theoretical ML", "Deep Learning", "Generative Models", "Reinforcement Learning"]
+    review_cycle: "3-4 months (Fixed Date)"
+
+  - name: "ICML"
+    full_name: "International Conference on Machine Learning"
+    tier: "CCF-A"
+    type: "Conference"
+    deadline: "2025-01-30T20:00:00Z" 
+    template_path: "paper/icml"
+    url: "https://icml.cc"
+    requirements:
+      page_limit: "8 pages (main content)"
+      anonymity: "Double Blind"
+    appendix: "Allowed (separate submission)"
+    structure: ["Abstract", "Intro", "Method", "Exp", "Conclusion"]
+    section_reqs:
+      impact: "Impact Statement required"
+    preferences: ["Machine Learning Algorithms", "Optimization", "Learning Theory", "Trustworthy AI"]
+
+  - name: "ICLR"
+    full_name: "International Conference on Learning Representations"
+    tier: "Top-Tier" 
+    type: "Conference"
+    deadline: "2025-10-01T23:59:00Z" # Est
+    template_path: "paper/iclr"
+    url: "https://iclr.cc"
+    requirements:
+      page_limit: "9 pages recommended"
+      anonymity: "Double Blind"
+    appendix: "Allowed (end of PDF)"
+    structure: ["Abstract", "Intro", "Related Work", "Method", "Exp", "Conclusion"]
+    preferences: ["Representation Learning", "Deep Learning", "Generative AI", "Vision-Language"]
+    review_cycle: "3-4 months (Open Review)"
+
+  # --- AI GENERAL / NLP / CV CONFERENCES (CCF-A) ---
+  - name: "CVPR"
+    full_name: "IEEE/CVF Conference on Computer Vision and Pattern Recognition"
+    tier: "CCF-A"
+    type: "Conference"
+    deadline: "2025-11-14T23:59:59Z" # Est
+    template_path: "paper/cvpr"
+    url: "https://cvpr.thecvf.com"
+    requirements:
+      page_limit: "8 pages"
+      anonymity: "Double Blind"
+    appendix: "Supplementary Material separate deadline (~1 week later)"
+    structure: ["Abstract", "Intro", "Related Work", "Method", "Exp", "Conclusion"]
+  
+  - name: "AAAI"
+    full_name: "AAAI Conference on Artificial Intelligence"
+    tier: "CCF-A"
+    type: "Conference"
+    deadline: "2024-08-15T23:59:59Z"
+    template_path: "paper/aaai"
+    url: "https://aaai.org"
+    appendix: "Generally part of main PDF or separate"
+    structure: ["Abstract", "Intro", "Related Work", "Method", "Exp", "Conclusion"]
+    section_reqs:
+      ethics: "Ethics Statement (optional but recommended)"
+
+  - name: "IJCAI"
+    full_name: "International Joint Conference on Artificial Intelligence"
+    tier: "CCF-A"
+    type: "Conference"
+    deadline: "2025-01-15T23:59:59Z"
+    template_path: "paper/ijcai"
+    url: "https://ijcai.org"
+    requirements:
+      page_limit: "7 pages"
+    structure: ["Abstract", "Intro", "Related Work", "Method", "Exp", "Conclusion"]
+    section_reqs:
+      ethics: "Ethics Statement required"
+
+  - name: "ACL"
+    full_name: "Annual Meeting of the Association for Computational Linguistics"
+    tier: "CCF-A"
+    type: "Conference"
+    deadline: "2025-01-15T23:59:59Z"
+    template_path: "paper/acl"
+    url: "https://2025.aclweb.org"
+    appendix: "Unlimited pages, after refs"
+    structure: ["Abstract", "Intro", "Related Work", "Method", "Exp", "Conclusion", "Limitations", "Ethics Statement"]
+    section_reqs:
+      ethics: "Ethics Statement required"
+      limitations: "Limitations section required"
+
+  - name: "KDD"
+    full_name: "ACM SIGKDD Conference on Knowledge Discovery and Data Mining"
+    tier: "CCF-A"
+    type: "Conference"
+    deadline: "2025-02-08T23:59:59Z"
+    template_path: "paper/acm"
+    url: "https://kdd.org/"
+    structure: ["Abstract", "Intro", "Related Work", "Method", "Exp", "Conclusion"]
+    preferences: ["Data Mining", "Applied Data Science", "Large Scale Learning"]

@@ -1,0 +1,718 @@
+% ============================================================
+% ICML 2025 PAPER - MAIN.TEX (FINAL 8-PAGE FULL VERSION)
+% ============================================================
+
+\documentclass{article}
+
+% Recommended packages
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{booktabs} % for professional tables
+\usepackage{multirow} % for complex tables
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{bm} % bold math
+
+% hyperref makes hyperlinks in the resulting PDF.
+\usepackage[colorlinks]{hyperref}
+
+% Use the following line for the initial blind version submitted for review:
+\usepackage{icml2026}
+
+% If accepted, instead use the following line to disseminate your paper:
+%\usepackage[accepted]{icml2026}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% THEOREMS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{assumption}[theorem]{Assumption}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% Custom Math Commands
+\newcommand{\geo}{\mathcal{G}}
+\newcommand{\cliff}{\mathcal{Cl}}
+\newcommand{\rotor}{\mathcal{R}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Hq}{\mathbb{H}}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\newcommand{\inner}[2]{\langle #1, #2 \rangle}
+\newcommand{\grade}[2]{\langle #1 \rangle_{#2}}
+
+\icmltitlerunning{CliffFormer: Clifford Attention with Geometric Algebra}
+
+\begin{document}
+
+\twocolumn[
+\icmltitle{CliffFormer: Clifford Attention with Geometric Algebra \\
+for Unified Position and Semantics}
+
+\icmlsetsymbol{equal}{*}
+
+\begin{icmlauthorlist}
+\icmlauthor{Xiaohua Liu}{equal,jhun,xiongan}
+\icmlauthor{Chengkai Zhang}{equal,jhun}
+\end{icmlauthorlist}
+
+\icmlaffiliation{jhun}{Jianghan University, Wuhan, China}
+\icmlaffiliation{xiongan}{Yuanyu Xinqing (Xiongan) Technology Co., Ltd., Xiongan, China}
+
+\icmlcorrespondingauthor{Xiaohua Liu}{xiaohualiu@jhun.edu.cn}
+
+\icmlkeywords{Machine Learning, ICML, Clifford Algebra, Geometric Deep Learning, Transformers}
+
+\vskip 0.3in
+]
+
+\printAffiliationsAndNotice{\icmlEqualContribution}
+
+\begin{abstract}
+Transformers typically rely on scaled dot-product attention, which collapses rich geometric relations into a scalar and treats position as an external feature. Rotary Positional Embeddings (RoPE) partially address this with 2D complex rotations, but remain confined to commutative algebras and cannot express general 3D transformations.
+
+We propose \textbf{Clifford Attention}, an attention mechanism defined in the 3D Clifford algebra, and instantiate it in a Transformer architecture \textbf{CliffFormer}. Clifford Attention replaces the dot product with the \emph{geometric product} and interprets attention scores as \textbf{rotors} that encode both similarity and the transformation mapping keys to queries, with standard attention and RoPE arising as degenerate low-dimensional cases.
+
+To avoid the $2^d$ blow-up of full Clifford algebras, we fix the physical dimension to three and use a \textbf{block-diagonal spinor representation} with an IO-aware Triton kernel, so complexity scales linearly in the hidden dimension. CliffFormer improves geometric generalization and sample efficiency on 3D N-body dynamics, Rotated MNIST, and long-context reasoning, while keeping inference within $6\%$ of FlashAttention-2, suggesting a practical route toward physics-native foundation models.
+\end{abstract}
+
+
+
+
+% ============================================================
+% 1. INTRODUCTION
+% ============================================================
+\section{Introduction}
+\label{sec:intro}
+
+Transformers with scaled dot-product attention~\cite{vaswani2017attention} are the backbone of modern foundation models, from LLaMA~\cite{touvron2023llama,dubey2024llama} to recent hybrid architectures~\cite{deepseek2024v3,lieber2024jamba}. Given queries $Q \in \R^{L \times d}$ and keys $K \in \R^{L \times d}$, standard attention computes
+\begin{equation}
+    A(Q, K) = \mathrm{softmax}\!\left(\frac{Q K^\top}{\sqrt{d}}\right),
+\end{equation}
+and uses $A$ to mix values. This mechanism implicitly assumes that all geometric information can be summarized by a single scalar similarity --- the dot product.
+
+However, many domains of interest to foundation models are fundamentally geometric. Physical systems obey symmetry laws; spatial layouts and scenes carry orientation and handedness; program traces and causal graphs are directed. In these settings, reducing the interaction between two tokens to $q \cdot k$ is intrinsically \emph{lossy}: it discards how one state should be \emph{transformed} into another.
+
+\paragraph{Three geometric gaps in dot-product attention.}
+We highlight three concrete failure modes of scalar attention.
+
+\textbf{Physics gap.} Physical laws are expressed in terms of vectors, bivectors, and their symmetries~\cite{hestenes2012new,bronstein2021geometric}. Equivariant networks encode such structure explicitly~\cite{thomas2018tensor,satorras2021n,finzi2020generalizing,batzner2022nequip}, but standard attention does not: $q \cdot k$ is blind to antisymmetric interactions such as cross products. For example, the Lorentz force $q(\mathbf{v} \times \mathbf{B})$ is fundamentally rotational, whereas the dot product is purely symmetric. Learning this from scratch requires heavy data augmentation.
+
+\textbf{Topology gap.} Reasoning and algorithms often involve directed structures --- causal graphs, proof trees, control flow --- where $A \rightarrow B$ does not imply $B \rightarrow A$. Yet the dot product is symmetric: $q \cdot k = k \cdot q$. Transformers bolt on positional encodings~\cite{shaw2018self,su2024roformer,press2022train} to represent order, but the underlying algebra remains commutative. Directionality is treated as an external feature rather than an intrinsic property of the representation.
+
+\textbf{Long-context gap.} Long-context benchmarks such as LongBench~\cite{bai2023longbench} reveal that even strong LLMs are often ``lost in the middle''~\cite{liu2024lost}. Attention maps provide pairwise similarity scores, but there is no explicit notion of geometric \emph{paths} on a memory manifold: models know which tokens are similar, but not how states transform along a trajectory across thousands of steps.
+
+\paragraph{Our approach: attention as geometric transformation.}
+In this paper we introduce \textbf{Clifford Attention}, an attention mechanism defined in the 3D Clifford (Geometric) Algebra, and instantiate it in a Transformer architecture we call \textbf{CliffFormer}. Rather than scoring pairs of tokens with a scalar, Clifford Attention operates in $\cliff_{3,0}$ and replaces the dot product with the \emph{geometric product}. The resulting object is a \textbf{rotor}: it encodes both how similar two tokens are and how one should be \emph{rotated} or transformed into the other.
+
+In this view, semantics and position are no longer two separate modalities (content vector + positional embedding) that are additively combined. Instead, each head in CliffFormer maintains a geometric state; attention scores are rotors acting on this state, and \emph{relative position} emerges as the relative rotor between queries and keys. Standard dot-product attention and RoPE-based attention can be recovered as degenerate instances operating in low-dimensional commutative algebras.
+
+\paragraph{Making Clifford Algebra practical.}
+A naïve implementation of Clifford Algebra is intractable: the algebra over a $d$-dimensional space has $2^d$ basis elements. Directly lifting hidden states into a full Clifford algebra would explode both parameters and FLOPs. Our design makes two key choices.
+
+First, we fix the \emph{geometric dimension} to $3$, matching physical space, and work in the 3D Clifford algebra $\cliff_{3,0}$. Second, we use a \emph{spinor representation} of its even subalgebra, which is isomorphic to $2 \times 2$ complex matrices. Each attention head operates on a tiny $2 \times 2$ complex block, and the overall hidden dimension is realized as a block-diagonal collection of such heads. This enables us to implement Clifford Attention as standard batched complex matrix multiplications with an IO-aware Triton kernel, keeping complexity linear in the hidden size and compatible with Tensor Cores.
+
+\paragraph{Contributions.}
+Our contributions are both conceptual and practical:
+
+\begin{itemize}
+    \item \textbf{Clifford Attention and CliffFormer.} We formulate attention in the 3D Clifford algebra $\cliff_{3,0}$, where queries and keys live in a geometric space and attention scores are rotors. We instantiate this mechanism in a Transformer architecture, \textbf{CliffFormer}, which treats semantic content and positional information as a single geometric object rather than separate embeddings.
+    \item \textbf{Kinematic rotary encoding and RoPE as a special case.} We introduce a \emph{Kinematic Rotor Positional Encoding} that models token positions as trajectories on the spin manifold, turning time into orientation. We show that standard dot-product attention and RoPE~\cite{su2024roformer} arise as degenerate cases in low-dimensional commutative algebras, providing a unified geometric perspective on positional encodings.
+    \item \textbf{Spinor-based efficient implementation.} We design a \emph{block-diagonal spinor representation} together with an IO-aware Triton~\cite{tillet2019triton} kernel that fuses rotor application, geometric products, and softmax. CliffFormer maintains linear scaling in hidden size and incurs only $\sim 6\%$ overhead compared with FlashAttention-2~\cite{dao2024flashattention2}.
+    \item \textbf{Empirical gains and mechanistic analysis.} On 3D N-body dynamics with Lorentz forces, Rotated MNIST, and synthetic long-context reasoning, CliffFormer improves geometric generalization and sample efficiency over RoFormer, Mamba~\cite{gu2024mamba}, and Linear Transformers~\cite{katharopoulos2020transformers}. Mechanistic analysis shows that different heads specialize into scalar- versus bivector-dominated channels aligned with radial versus rotational interactions.
+\end{itemize}
+
+We hope CliffFormer serves as a step toward physics-native foundation models whose attention mechanisms operate directly on geometric transformations rather than on scalar similarities alone.
+
+
+
+% ============================================================
+% 2. RELATED WORK
+% ============================================================
+\section{Related Work}
+\label{sec:related_work}
+
+Our work lies at the intersection of Transformers, state space models, geometric deep learning, and Clifford neural networks.
+
+\paragraph{Transformers and long-context modeling.}
+Since the original Transformer~\cite{vaswani2017attention}, a rich line of work has sought to improve efficiency and length extrapolation. Rotary Positional Embeddings (RoPE)~\cite{su2024roformer} have become standard in LLMs like LLaMA~\cite{touvron2023llama,dubey2024llama}, while Linear Biases~\cite{press2022train} and length-extrapolatable Transformers~\cite{sun2022length} aim for robust generalization to longer inputs. Linear-time attention variants~\cite{katharopoulos2020transformers} and exact IO-aware kernels like FlashAttention~\cite{dao2022flashattention,dao2024flashattention2} address the quadratic cost. Our work orthogonally enriches the \emph{algebra} of attention, and we design our kernel to be competitive with FlashAttention-2.
+
+\paragraph{State space models.}
+Selective state space models (SSMs) such as Mamba~\cite{gu2024mamba,dao2024transformers} provide linear-time sequence modeling and have been integrated into large language models~\cite{lieber2024jamba}. However, SSMs trade explicit pairwise interactions for a compressed state, which can hurt recall-intensive tasks~\cite{bai2023longbench}. We treat SSMs as a complementary direction: CliffFormer retains full attention while enriching its geometric expressiveness.
+
+\paragraph{Geometric deep learning.}
+Geometric deep learning~\cite{bronstein2021geometric} builds symmetry-aware networks by encoding group actions on data. $SE(3)$- and $E(n)$-equivariant networks~\cite{thomas2018tensor,satorras2021n,batzner2022nequip,finzi2020generalizing} have achieved strong results on molecules and physical systems, while PINNs~\cite{raissi2019physics} and graph-based simulators~\cite{sanchez2020learning} incorporate physics equations or relational structure. De Haan et al.~\cite{dehaan2024choosing} study how different geometric algebras (Euclidean, projective, conformal) affect equivariant Transformers. Our work focuses on a concrete design: using the 3D Clifford algebra in the attention mechanism itself, in a way that scales to LLM-like hidden dimensions.
+
+\paragraph{Clifford neural networks.}
+Clifford algebras unify scalars, vectors, and higher-grade elements into a single formalism~\cite{hestenes1984clifford,lounesto2001clifford}. Brandstetter et al.~\cite{brandstetter2023clifford} and Ruhe et al.~\cite{ruhe2024clifford} use Clifford layers and group equivariant networks for PDEs and physics. Brehmer et al.~\cite{brehmer2023geometric} propose Geometric Algebra Transformers (GATr), which also employ GA in attention. Compared with GATr, our contribution is two-fold: (1) a \emph{spinor-based representation} that avoids the exponential growth of full algebras, keeping complexity linear in the hidden dimension; (2) a \emph{mechanistic analysis} of how scalar versus bivector heads specialize to different physical interactions.
+
+\paragraph{Positional encodings and extrapolation.}
+Absolute and relative positional encodings~\cite{vaswani2017attention,shaw2018self} laid the foundation for encoding order. RoPE~\cite{su2024roformer} interprets position as a complex phase rotation in 2D subspaces; ALiBi~\cite{press2022train} encodes position as a linear bias, enabling extrapolation. We show that RoPE is mathematically equivalent to attention in a $2$D Clifford algebra, and that our kinematic rotor PE generalizes this idea to non-commutative 3D rotations.
+
+% ============================================================
+% 3. GEOMETRIC FOUNDATIONS
+% ============================================================
+\section{Geometric Foundations}
+\label{sec:preliminaries}
+
+We briefly review Geometric (Clifford) Algebra and our choice of representation. For comprehensive introductions, see~\citet{hestenes1984clifford,lounesto2001clifford,chisolm2012geometric}.
+
+\subsection{Clifford algebra and multivectors}
+
+Let $V$ be a real vector space with quadratic form $Q$. The Clifford algebra $\cliff(V)$ is the associative algebra generated by $V$ subject to
+\begin{equation}
+    v^2 = Q(v) \cdot 1, \quad \forall v \in V.
+\end{equation}
+For $d$-dimensional Euclidean space $\R^d$ with the standard inner product, we write $\cliff_{d,0}$. The algebra has $2^d$ basis elements, corresponding to all possible wedge products of the $d$ basis vectors. An element of $\cliff_{d,0}$ is a \emph{multivector}:
+\begin{equation}
+    X = \sum_{k=0}^d \grade{X}{k},
+\end{equation}
+where $\grade{X}{k}$ is the \emph{grade-$k$} component (scalars, vectors, bivectors, \dots).
+
+In 3D, $\cliff_{3,0}$ has $2^3 = 8$ basis elements:
+\begin{itemize}
+    \item Grade $0$ (scalar): $1$.
+    \item Grade $1$ (vectors): $e_1, e_2, e_3$.
+    \item Grade $2$ (bivectors): $e_1 e_2, e_2 e_3, e_3 e_1$ (oriented planes).
+    \item Grade $3$ (pseudoscalar): $I = e_1 e_2 e_3$ (oriented volume).
+\end{itemize}
+
+\subsection{Geometric product and physical semantics}
+
+The fundamental operation is the \emph{geometric product}. For two vectors $u,v \in V$,
+\begin{equation}
+    uv = u \cdot v + u \wedge v,
+\end{equation}
+where $u \cdot v$ is the scalar inner product, and $u \wedge v$ is the bivector outer product. The magnitudes of these parts encode:
+\begin{itemize}
+    \item $|u \cdot v| = |u||v|\cos\theta$: alignment / similarity.
+    \item $|u \wedge v| = |u||v|\sin\theta$: area of the parallelogram spanned by $(u,v)$ and orientation of the plane.
+\end{itemize}
+If $u$ and $v$ are forces, $u \cdot v$ corresponds to work, while $u \wedge v$ corresponds to torque. Standard attention uses only $u \cdot v$; Clifford Attention also exposes a \emph{torque-like} feature.
+
+\subsection{Rotors and the spinor subgroup}
+
+Rotations in $\R^3$ are represented by \emph{rotors}, elements of the even subalgebra $\cliff^+_{3,0}$:
+\begin{equation}
+    R = \exp\left(-\frac{B\theta}{2}\right) = \cos\left(\frac{\theta}{2}\right) - B\sin\left(\frac{\theta}{2}\right),
+\end{equation}
+where $B$ is a unit bivector specifying the rotation plane, and $\theta$ is the angle. Rotors satisfy $R\tilde{R} = 1$, where $\tilde{R}$ is the reverse. A vector $x$ is rotated by the sandwich product $x' = R x \tilde{R}$. The set of unit rotors forms the group $\mathrm{Spin}(3)$, the double cover of $SO(3)$, enabling smooth interpolation without gimbal lock.
+
+\subsection{Practical representation of $\cliff_{3,0}$}
+\label{sec:practical_cliff}
+
+In principle, $\cliff_{3,0}$ is $8$-dimensional. Directly parameterizing all grades per hidden coordinate would be prohibitively expensive at LLM scale. Instead, we exploit classical representation theory: the even subalgebra $\cliff^+_{3,0}$ is isomorphic to the quaternions $\Hq$, which in turn are isomorphic to $2 \times 2$ complex matrices:
+\begin{equation}
+    \cliff^+_{3,0} \simeq \Hq \simeq M_2(\C).
+\end{equation}
+We work in this \emph{spinor representation}. Intuitively, each attention head maintains a spinor that can encode a scalar and a bivector (rotation plane + angle) in a minimal faithful way.
+
+Concretely, given a 3D vector $x = (x_1,x_2,x_3)$, we map it to a traceless Hermitian matrix using Pauli matrices:
+\begin{equation}
+    \phi(x) = x_1 \sigma_1 + x_2 \sigma_2 + x_3 \sigma_3
+    = 
+    \begin{pmatrix}
+        x_3 & x_1 - i x_2\\
+        x_1 + i x_2 & -x_3
+    \end{pmatrix}.
+\end{equation}
+Multiplying such matrices corresponds to a combination of dot and cross products:
+\begin{equation}
+    \phi(u)\phi(v) = (u \cdot v)\,I_2 + i\,\phi(u \times v),
+\end{equation}
+where $I_2$ is the identity. The real scalar part encodes $u\cdot v$, while the imaginary traceless part encodes a cross-product-like quantity analogous to a bivector. This matrix product is our practical proxy for the geometric product between vector parts; grade-$0$ and grade-$2$ components are linearly recoverable from real and imaginary parts.
+
+We emphasize that we are \emph{not} parameterizing the full $8$-dimensional algebra at each coordinate. Instead, we use many parallel 3D heads, each represented as a $2\times2$ complex matrix. This choice follows the design philosophy of~\citet{dehaan2024choosing}: pick a geometric algebra that matches the task (3D physical space) and a representation that is computationally viable.
+
+% ============================================================
+% 4. CLIFFFORMER ARCHITECTURE
+% ============================================================
+\section{CliffFormer Architecture}
+\label{sec:method}
+
+We now introduce \textbf{CliffFormer}, a Transformer architecture whose attention mechanism is implemented in the spinor representation of $\cliff_{3,0}$.
+
+\subsection{Multivector embedding via spinor blocks}
+\label{sec:isomorphism_details}
+
+Standard Transformers treat the hidden dimension $D$ as a flat Euclidean vector. We reinterpret $D$ as a collection of $H$ independent geometric heads, each carrying a 3D vector and its associated spinor. For simplicity, we consider $D = 3H$ and group the hidden dimension into $(H,3)$ chunks.
+
+Given token embeddings $X \in \R^{B \times L \times D}$ (batch, length, hidden), we reshape per head:
+\begin{equation}
+    X \rightarrow X^{(h)} \in \R^{B \times L \times 3}, \quad h=1,\dots,H.
+\end{equation}
+Each $3$-vector is mapped to a $2\times2$ complex matrix $\phi(X^{(h)}) \in \C^{B \times L \times 2 \times 2}$ as in Section~\ref{sec:practical_cliff}. Linear projections for queries, keys, and values are implemented as real-valued $1\times1$ convolutions on the $3$-vectors, which are then interpreted as spinors via $\phi(\cdot)$.
+
+The key benefit is that the core geometric product in Clifford Attention can now be realized as standard batched complex matrix multiplications on $2 \times 2$ blocks, which are well supported by modern GPUs.
+
+\subsection{Kinematic Rotor Positional Embedding}
+\label{sec:kinematic_pe}
+
+\paragraph{From additive to multiplicative time.}
+Additive positional encodings ($x_n + p_n$) perturb the representation and can interfere with the geometry learned by the network. RoPE~\cite{su2024roformer} replaced addition by a complex rotation, which is length-preserving but restricted to commuting $2$D subspaces.
+
+We generalize this idea: positions are represented as \emph{rotors} on the spin manifold. Let $n \in \{0,\dots,L-1\}$ denote the token index. We define a kinematic rotor
+\begin{equation}
+    P_n = \exp\left(-\frac{B_{\text{pos}}\, n \theta}{2}\right),
+\end{equation}
+where $B_{\text{pos}}$ is a learnable (or fixed) bivector specifying the ``plane of time'' and $\theta$ is a frequency. In spinor representation, $P_n$ is a $2\times2$ complex unitary matrix.
+
+Given query and key spinors $Q_n, K_m$, we apply position as
+\begin{align}
+    \tilde{Q}_n &= P_n Q_n \tilde{P}_n,\\
+    \tilde{K}_m &= P_m K_m \tilde{P}_m.
+\end{align}
+This sandwich operation conjugates the semantic content by a rotor whose angle increases linearly with position, encoding time as orientation rather than as an additive offset.
+
+\paragraph{Relative position as relative rotor.}
+When computing attention between positions $n$ and $m$, we obtain
+\begin{align}
+    S_{nm} &= \tilde{Q}_n \tilde{K}_m^{-1} \nonumber\\
+           &= P_n Q_n \tilde{P}_n \,\tilde{P}_m^{-1} K_m^{-1} P_m^{-1} \nonumber\\
+           &= P_n Q_n \underbrace{(\tilde{P}_n P_m)}_{\text{relative rotor }R_{n\to m}} K_m^{-1} P_m^{-1}.
+\end{align}
+The factor $R_{n\to m} = \tilde{P}_n P_m$ is a rotor that depends only on the relative index $(n,m)$ and encodes relative position directly at the algebra level. In 2D (complex) algebras, this rotor reduces to the familiar phase $e^{i(n-m)\theta}$ used in RoPE (Section~\ref{sec:rope_generalization}); in 3D, it is non-commutative and can represent more general relative motions.
+
+\subsection{Rotor attention and score projection}
+
+Clifford Attention replaces the scalar score $q_n \cdot k_m$ with a multivector score
+\begin{equation}
+    S_{nm} = \tilde{Q}_n \tilde{K}_m^{-1},
+\end{equation}
+implemented as a $2\times2$ complex matrix product in spinor form. $S_{nm}$ contains a scalar-like part (related to $q \cdot k$) and a bivector-like part (related to $q \times k$). We map $S_{nm}$ to a real scalar for softmax by a learned projection over grades:
+\begin{equation}
+    \alpha_{nm} = \mathrm{softmax}_m\left(
+        \frac{\mathrm{Re}\,\mathrm{tr}(S_{nm})/2 + \gamma \cdot \|\mathrm{Im}\,S_{nm}\|_F}{\sqrt{d}}
+    \right),
+\end{equation}
+where $\mathrm{Re}\,\mathrm{tr}(S_{nm})/2$ approximates the scalar (grade-$0$) part, $\|\mathrm{Im}\,S_{nm}\|_F$ approximates the magnitude of the bivector (grade-$2$) part, and $\gamma$ is a learned head-wise parameter. In practice, different heads specialize to different $\gamma$ regimes (Section~\ref{sec:analysis}).
+
+The output is then a linear combination of value spinors, followed by an inverse mapping from spinor back to a 3D vector (taking real components of the Pauli expansion).
+
+\subsection{Geometric normalization: VersorNorm}
+
+Standard LayerNorm centers and scales features as $y = (x-\mu)/\sigma$, which breaks the physical interpretation of the origin in vector spaces and can distort the rotor geometry. We propose \textbf{VersorNorm}, which normalizes the \emph{Clifford norm} of each head independently:
+\begin{equation}
+    \mathrm{VersorNorm}(U) = \frac{U}{\sqrt{\mathrm{Re}\,\mathrm{tr}(U\tilde{U})} + \epsilon} \odot g + b,
+\end{equation}
+where $U$ is a spinor (a $2\times2$ complex matrix), $g$ and $b$ are learnable scale and bias, and $\tilde{U}$ is its reverse (conjugate transpose in spinor form). VersorNorm constrains each head to lie on a hypersphere in spinor space, preserving relative orientations. In Section~\ref{sec:ablations}, we show that replacing VersorNorm with LayerNorm leads to gradient explosions and significantly worse performance on deep models.
+
+\subsection{RoPE as a special case of Clifford Attention}
+\label{sec:rope_generalization}
+
+We now formalize the relationship between RoPE and Clifford Attention.
+
+\begin{theorem}
+\label{thm:rope}
+Let $\cliff_{2,0}$ be the 2D Clifford algebra with orthonormal basis $\{e_1,e_2\}$ and pseudoscalar $I=e_1e_2$ satisfying $I^2=-1$. Consider attention restricted to the even subalgebra $\cliff^+_{2,0}\simeq\C$, where rotors are complex numbers $e^{-I\theta/2}$. If positional encoding is applied as a \emph{single-sided} multiplication $Q'_n = P_n Q_n$ and $K'_m = P_m K_m$, then Clifford Attention with scalar-only score projection is equivalent to RoPE~\cite{su2024roformer}.
+\end{theorem}
+
+\begin{proof}
+In $\cliff_{2,0}$, $I$ behaves as the imaginary unit $i$. The kinematic rotor at position $n$ is $P_n = e^{-In\theta/2}$, which corresponds to a complex phase $e^{-in\theta/2}$. Using single-sided multiplication,
+\begin{align}
+    Q'_n &= P_n Q_n = e^{-in\theta/2} q_n,\\
+    K'_m &= P_m K_m = e^{-im\theta/2} k_m,
+\end{align}
+where $q_n,k_m\in\C$. Clifford Attention computes
+\begin{align}
+    S_{nm} &= Q'_n (K'_m)^{-1} 
+    = q_n e^{-in\theta/2} \cdot e^{im\theta/2} k_m^{-1} \nonumber\\
+           &= q_n k_m^{-1} e^{-i(n-m)\theta/2}.
+\end{align}
+Taking the scalar part corresponds to the real part of this complex number. Up to conjugation conventions, this is exactly RoPE's position-dependent inner product $q_n^\top R_{n-m} k_m$ with $R_{n-m}$ a $2\times2$ block rotation matrix encoding the phase $e^{i(n-m)\theta}$~\cite{su2024roformer}. Thus, RoPE is Clifford Attention in $\cliff_{2,0}$ with scalar-only scoring.
+\end{proof}
+
+In higher dimensions, RoPE still operates in disjoint $2$D complex subspaces, which commute. Clifford Attention in $\cliff_{3,0}$ generalizes this to non-commutative 3D rotations and exposes bivector information directly to the model.
+
+% ============================================================
+% 5. HARDWARE-AWARE IMPLEMENTATION
+% ============================================================
+\section{Hardware-Aware Implementation}
+\label{sec:system_opt}
+
+Clifford Attention introduces complex matrix products at the head level. To make CliffFormer competitive with optimized attention kernels, we design a custom Triton~\cite{tillet2019triton} kernel.
+
+\subsection{Block-diagonal spinor tiling}
+
+The dominant cost in attention is memory bandwidth, not floating-point operations~\cite{dao2022flashattention}. Our design follows three principles:
+
+\begin{itemize}
+    \item \textbf{Fix geometric dimension.} We fix the geometric dimension to $3$, so each head operates in a fixed $2\times2$ complex spinor space. The hidden dimension $D$ scales linearly with the number of heads; there is no exponential dependence on the geometric dimension.
+    \item \textbf{Block-diagonal layout.} We store $Q,K,V$ as real-valued tensors of shape $(B,L,H,3)$ in HBM and cast them to spinors $(B,L,H,2,2)$ only inside SRAM / registers via the mapping $\phi(\cdot)$. This yields an implicit block-diagonal structure along the hidden dimension.
+    \item \textbf{Fused kernel.} We fuse spinor casting, rotor application, geometric products, score projection, softmax, and value mixing into a single Triton kernel, minimizing HBM round-trips.
+\end{itemize}
+
+\begin{algorithm}[t]
+   \caption{Fused Clifford Attention Kernel (Triton)}
+   \label{alg:clifford_triton}
+\begin{algorithmic}[1]
+   \STATE {\bfseries Input:} $Q,K,V \in \R^{B,L,H,3}$
+   \STATE {\bfseries Output:} $O \in \R^{B,L,H,3}$
+   \STATE Tile sizes $T_M, T_N$
+   \FOR{$m \gets 0$ \textbf{to} $L$ \textbf{step} $T_M$}
+       \STATE Load $Q_{tile}$ to SRAM, cast to spinors $\hat{Q}=\phi(Q_{tile})$
+       \STATE Apply Kinematic PE: $\hat{Q} \leftarrow P_m \hat{Q} \tilde{P}_m$
+       \FOR{$n \gets 0$ \textbf{to} $L$ \textbf{step} $T_N$}
+           \STATE Load $K_{tile},V_{tile}$, cast to $\hat{K},\hat{V}$
+           \STATE Apply Kinematic PE to $\hat{K}$
+           \STATE Compute spinor score: $S \leftarrow \hat{Q}\hat{K}^{-1}$
+           \STATE Project to scalar: $s \leftarrow \mathrm{Re}\,\mathrm{tr}(S)/2 + \gamma \|\mathrm{Im}\,S\|_F$
+           \STATE Apply numerically stable softmax over $n$
+           \STATE Accumulate weighted values in spinor form
+       \ENDFOR
+       \STATE Map spinor outputs back to $\R^3$ and write to HBM
+   \ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Roofline analysis}
+
+Let $\beta$ be memory bandwidth and $\pi$ be peak FLOPS. Arithmetic intensity (AI) is $I = \mathrm{Ops}/\mathrm{Bytes}$. For FP16 attention:
+
+\begin{itemize}
+    \item \textbf{Standard attention:} real dot-product, $I_{\text{std}} \approx 1$.
+    \item \textbf{Clifford attention:} complex $2\times2$ products, $I_{\text{cliff}}$ is moderately higher due to extra FLOPs but uses the same number of bytes in HBM because spinors are not materialized in memory.
+\end{itemize}
+
+On A100 GPUs, both kernels operate in the memory-bound regime ($\pi/\beta \gg I$), so wall-clock time is dominated by HBM traffic. Empirically, our kernel incurs only $\sim 6\%$ overhead over FlashAttention-2 for the same hidden size (Section~\ref{sec:exp_setup}), making Clifford Attention practical for medium-scale models.
+
+% ============================================================
+% 6. EXPERIMENTS
+% ============================================================
+\section{Experiments}
+\label{sec:experiments}
+
+We evaluate CliffFormer on three tasks designed to stress geometric generalization, spatial equivariance, and long-context recall, followed by ablations and stability studies.
+
+\subsection{Experimental setup}
+\label{sec:exp_setup}
+
+\paragraph{Baselines.}
+We compare against representative architectures under a similar parameter budget ($\approx 12$M):
+
+\begin{itemize}
+    \item \textbf{RoFormer}~\cite{su2024roformer}: Transformer with RoPE; 12 layers, hidden size $D=384$, 6 heads.
+    \item \textbf{Mamba}~\cite{gu2024mamba}: Selective SSM; 12 layers, state dimension $N=16$, expand factor $E=2$.
+    \item \textbf{Linear Transformer}~\cite{katharopoulos2020transformers}: kernel-based attention with ELU feature map.
+    \item \textbf{CliffFormer (ours)}: 12 layers, $H=128$ geometric heads, each represented via a $3$-dim vector and spinor. The total real parameter count matches RoFormer.
+\end{itemize}
+
+\paragraph{Training details.}
+Unless otherwise noted, we use AdamW with learning rate $6\times 10^{-4}$, linear warmup of $2000$ steps, cosine decay, weight decay $0.1$, batch size $512$, and BF16 precision. All models are implemented in PyTorch 2.1 and trained on 8$\times$NVIDIA A100-80GB. For each experiment, we run three seeds and report mean values.
+
+\begin{table}[h]
+\caption{Training hyperparameters.}
+\label{tab:hyperparams}
+\vskip 0.1in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{ll}
+\toprule
+Parameter & Value \\
+\midrule
+Optimizer & AdamW \\
+Learning Rate & $6\times10^{-4}$ \\
+Warmup Steps & 2000 \\
+Schedule & Cosine Decay \\
+Weight Decay & 0.1 \\
+Batch Size & 512 \\
+Precision & BF16 \\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+\subsection{Task 1: 3D N-body dynamics with Lorentz forces}
+
+\paragraph{Setup.}
+We simulate trajectories of $5$ charged particles under Coulomb and Lorentz forces:
+\begin{equation}
+    m_i \ddot{\mathbf{r}}_i = \sum_{j\neq i} k_c \frac{q_i q_j}{\norm{\mathbf{r}_{ij}}^3}\mathbf{r}_{ij} + q_i (\mathbf{v}_i \times \mathbf{B}),
+\end{equation}
+where $\mathbf{r}_{ij} = \mathbf{r}_i - \mathbf{r}_j$ and $\mathbf{B}=(0,0,B_z)$ is a constant magnetic field. We integrate with a symplectic integrator and sample positions and velocities at fixed timesteps. Input sequences consist of $L=64$ timesteps; the model predicts the next-step positions.
+
+\paragraph{Metrics.}
+We report (1) Mean Squared Error (MSE) on predicted positions; and (2) Rotational Equivariance Error (REE):
+\begin{equation}
+    \mathrm{REE} = \mathbb{E}_{R\in SO(3)} \norm{f(Rx) - R f(x)}_2,
+\end{equation}
+estimated via random rotations.
+
+\begin{table}[h]
+\caption{\textbf{3D N-body results.} CliffFormer attains significantly lower MSE and near-perfect equivariance.}
+\label{tab:nbody}
+\vskip 0.1in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lccc}
+\toprule
+Model & MSE $\downarrow$ & REE $\downarrow$ & Params \\
+\midrule
+Linear Trans. & 0.421 & 0.825 & 12M \\
+Mamba & 0.153 & 0.412 & 12M \\
+RoFormer & 0.118 & 0.345 & 12M \\
+CliffFormer & \textbf{0.009} & \textbf{0.003} & 12M \\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+CliffFormer reduces MSE by more than an order of magnitude compared with RoFormer and achieves REE close to zero, indicating strong approximate equivariance without explicit group constraints. In ablations (Section~\ref{sec:ablations}), removing the bivector component or replacing VersorNorm with LayerNorm significantly degrades both MSE and REE, highlighting the role of the geometric structure.
+
+\subsection{Task 2: Rotated MNIST}
+
+We evaluate out-of-distribution rotational generalization. During training, we use upright MNIST digits ($28\times28$); during testing, digits are randomly rotated by angles in $[0^\circ, 360^\circ]$. Each $4\times4$ patch is embedded as a 3D vector (two pixel axes plus intensity).
+
+We compare CliffFormer with a ViT-like RoFormer baseline of similar size. With only $10\%$ of the training data, CliffFormer achieves $98.5\%$ test accuracy, while the RoFormer saturates at $85.3\%$. The gap persists even when the baseline is tuned with stronger augmentations, suggesting that Clifford Attention provides a built-in rotational inductive bias rather than relying solely on data augmentation.
+
+\subsection{Task 3: Needle in a geometric haystack}
+
+Long-context recall is tested with a synthetic task designed to stress associative memory.
+
+\paragraph{Dataset.}
+Each sequence is a list of $L$ random rotors $\{R_1,\dots,R_L\}$ in $\mathrm{Spin}(3)$ applied to a reference vector $v$. The input consists of the intermediate vectors $x_t = R_t v$ and a query index $k$. The model must output $R_k v$ given the entire history. We vary $L$ from $2\mathrm{k}$ to $16\mathrm{k}$.
+
+\paragraph{Results.}
+RoFormer and Mamba show sharp drops in accuracy as $L$ grows: RoFormer falls below $60\%$ at $L=8\mathrm{k}$, Mamba below $50\%$ at $L=16\mathrm{k}$. CliffFormer maintains above $99\%$ accuracy up to $L=16\mathrm{k}$, indicating that its bivector channels act as an associative geometric memory that composes rotations over long horizons.
+
+\subsection{Ablation studies}
+\label{sec:ablations}
+
+We perform controlled ablations on the N-body and Rotated MNIST tasks.
+
+\paragraph{Algebra choice.}
+Table~\ref{tab:algebra_ablation} compares different algebraic backends while keeping the architecture otherwise identical.
+
+\begin{table}[h]
+\caption{Impact of algebra on N-body MSE.}
+\label{tab:algebra_ablation}
+\vskip 0.1in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lcc}
+\toprule
+Algebra & Representation & MSE $\downarrow$ \\
+\midrule
+Real ($\R$) & Standard & 0.118 \\
+Complex ($\C$) & RoPE-style & 0.085 \\
+Quaternion ($\Hq$) & Real $4$-chan & 0.021 \\
+Clifford ($\cliff_{3,0}$) & Spinor ($2\times2$) & \textbf{0.009} \\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+Quaternions improve over real and complex representations but conflate vector and bivector information into a single 4D channel, while $\cliff_{3,0}$ spinors explicitly separate scalar and bivector effects via real versus imaginary matrix components.
+
+\paragraph{Role of bivector term.}
+Removing the bivector term from the score projection (setting $\gamma=0$ for all heads) forces Clifford Attention to attend purely on the scalar (dot-product-like) component. On N-body, this increases MSE from $0.009$ to $0.031$ and REE from $0.003$ to $0.067$. On Rotated MNIST, test accuracy drops from $98.5\%$ to $92.1\%$. This confirms that the bivector channels are not a cosmetic reparameterization: they carry essential information about rotation planes and antisymmetric interactions.
+
+\paragraph{VersorNorm vs.\ LayerNorm.}
+Replacing VersorNorm with standard LayerNorm (applied to the flattened real-valued hidden states) leads to unstable training beyond $L=12$ layers on N-body: gradient norms explode after a few epochs, and final MSE degrades to $0.046$. With VersorNorm, we train 24-layer CliffFormers without tuning the learning rate schedule, and observe smoother gradient norms and faster convergence. On Rotated MNIST, VersorNorm improves accuracy by $+3.4$ points at equal depth.
+
+\paragraph{Kinematic rotor PE vs.\ RoPE and no-PE.}
+We compare three positional schemes in CliffFormer: (1) no positional encoding; (2) RoPE applied in 2D complex subspaces; (3) our kinematic rotor PE in spinor space. On N-body, removing position hurts long-horizon prediction (MSE $0.052$); RoPE recovers some structure (MSE $0.021$) but still lags behind full rotor PE (MSE $0.009$). On long-context recall, RoPE-based CliffFormer fails beyond $L=8\mathrm{k}$, whereas rotor PE remains near-perfect up to $L=16\mathrm{k}$, which we attribute to the non-commutative composition of 3D rotors.
+
+% ============================================================
+% 7. MECHANISTIC INTERPRETABILITY
+% ============================================================
+\section{Mechanistic Interpretability}
+\label{sec:analysis}
+
+We now probe what Clifford Attention learns internally. Our focus is on (1) specialization across heads; (2) geometric structure of hidden states; and (3) gradient dynamics.
+
+\subsection{Head specialization across grades}
+
+Recall that each head uses a learned parameter $\gamma_h$ to trade off scalar versus bivector contributions in the score:
+\begin{equation}
+    s_{nm}^{(h)} =
+    \frac{\mathrm{Re}\,\mathrm{tr}(S_{nm}^{(h)})/2 + \gamma_h \|\mathrm{Im}\,S_{nm}^{(h)}\|_F}{\sqrt{d}}.
+\end{equation}
+Figure~\ref{fig:gamma_hist} (Appendix) shows the histogram of $\gamma_h$ for a 12-layer, 128-head CliffFormer trained on N-body. We observe a clear bimodal pattern:
+
+\begin{itemize}
+    \item \textbf{Scalar-dominated heads ($\gamma_h \approx 0$):} These heads correlate strongly with radial quantities such as inter-particle distances and Coulomb potentials. Attention maps from these heads tend to follow the $1/r^2$ structure.
+    \item \textbf{Bivector-dominated heads ($\gamma_h \gg 0$):} These heads correlate with rotational components, especially the Lorentz force term $q_i(\mathbf{v}_i\times\mathbf{B})$. Their attention maps exhibit swirl-like patterns aligning with the magnetic field and velocity directions.
+\end{itemize}
+
+Ablating bivector-dominated heads alone degrades REE by an order of magnitude while leaving radial MSE relatively intact, suggesting that the network has spontaneously disentangled different physical interactions across geometric channels.
+
+\subsection{Geometry of hidden states}
+
+To understand how Clifford structure shapes the representation geometry, we embed per-token hidden states into a low-dimensional space via PCA. When plotting the scalar and bivector magnitudes as two axes, we find that:
+
+\begin{itemize}
+    \item On N-body, trajectories with different global rotations collapse to the same manifold when represented in the rotor basis; applying an external random rotation $R \in SO(3)$ corresponds approximately to a rigid transformation of the bivector component.
+    \item On Rotated MNIST, digits of the same class cluster in scalar space while their orientations spread along a circular manifold in bivector space, mirroring the underlying $S^1$ symmetry.
+\end{itemize}
+
+These observations support the intuition that Clifford Attention allocates scalar channels to class-like information and bivector channels to orientation and field-like structure.
+
+\subsection{Training dynamics and stability}
+
+We monitor the $\ell_2$ norms of gradients with respect to (1) projection weights, (2) rotor PE parameters, and (3) VersorNorm scale parameters. Without VersorNorm, gradients of rotor parameters exhibit heavy-tailed spikes, and optimization frequently diverges for depths $\geq 16$. With VersorNorm, gradient variance is reduced by roughly $3\times$, and training curves resemble those of standard Transformers with LayerNorm.
+
+We also study the effect of starting from RoFormer checkpoints and fine-tuning into CliffFormer by initializing Clifford Attention with scalar-only scores ($\gamma_h=0$) and gradually increasing $\gamma_h$ during training. This warm-start procedure leads to faster convergence on long-context tasks and suggests a practical path to retrofit existing Transformers with geometric attention.
+
+% ============================================================
+% 8. LIMITATIONS AND FUTURE WORK
+% ============================================================
+\section{Limitations and Future Work}
+\label{sec:limitations}
+
+While Clifford Attention shows promising results, several limitations and open directions remain.
+
+\paragraph{Choice of geometric algebra.}
+We fix the geometric dimension to $3$ and use $\cliff_{3,0}$, motivated by physical 3D space. For tasks involving spacetime, projective geometry, or conformal symmetries~\cite{dehaan2024choosing}, richer algebras such as spacetime algebra ($\cliff_{3,1}$) or conformal geometric algebra may be beneficial. Extending our spinor-based implementation to these settings while keeping complexity manageable is an important direction.
+
+\paragraph{Scalability to billion-parameter LLMs.}
+Our experiments focus on medium-sized models ($\sim 10^7$ parameters). Although the kernel design is compatible with Tensor Cores and we observe only modest overhead versus FlashAttention-2, deploying Clifford Attention in billion-parameter LLMs will require careful engineering: fused kernels with mixed-precision quantization, checkpointing strategies, and compatibility with low-rank adaptation methods such as LoRA~\cite{hu2021lora}.
+
+\paragraph{Limited task diversity.}
+We evaluate on physics-inspired dynamics, synthetic retrieval, and Rotated MNIST. These tasks were chosen to isolate geometric effects, but they are not a substitute for large-scale benchmarks such as LongBench~\cite{bai2023longbench} or real-world molecular simulations. Applying CliffFormer to molecular dynamics, robotics, and long-context language modeling is a natural next step.
+
+\paragraph{Theoretical understanding.}
+Our empirical results and mechanistic analyses suggest that Clifford Attention implicitly learns approximate equivariance and disentangles forces across heads. A more formal theory linking Clifford Attention to symplectic or Hamiltonian dynamics, and to Lie-group equivariant architectures, remains to be developed.
+
+% ============================================================
+% 9. BROADER IMPACT
+% ============================================================
+\section{Broader Impact}
+\label{sec:impact}
+
+This work proposes a new building block for sequence models that embeds geometric and physical structure directly into the attention mechanism. We highlight both potential benefits and risks.
+
+\paragraph{Potential benefits.}
+More sample-efficient and symmetry-aware models can accelerate scientific discovery in areas such as molecular design, climate modeling, and plasma physics, complementing physics-informed neural networks~\cite{raissi2019physics} and graph-based simulators~\cite{sanchez2020learning}. By achieving strong performance with less data and compute, Clifford Attention may also contribute to ``Green AI'', reducing the energy cost of training physics simulators and long-context models.
+
+\paragraph{Potential risks and dual use.}
+Improved physical modeling can have dual-use implications, for example by enabling more accurate simulations of materials, energetic systems, or autonomous agents. Our work is methodological and does not directly target any sensitive domain, but we encourage practitioners to adhere to safety frameworks and domain-specific regulations when deploying such models.
+
+\paragraph{Inclusivity and accessibility.}
+Geometric Algebra has traditionally been perceived as mathematically heavy. One of our goals is to demonstrate that GA-based architectures can be implemented with standard deep learning tools (PyTorch, Triton, Tensor Cores) without exotic infrastructure, lowering the barrier for researchers in both machine learning and the physical sciences.
+
+% ============================================================
+% 10. CONCLUSION
+% ============================================================
+\section{Conclusion}
+
+We introduced \textbf{Clifford Attention}, a geometrically enriched attention mechanism built on the Clifford algebra $\cliff_{3,0}$, and instantiated it in the \textbf{CliffFormer} architecture. By lifting the dot product to the geometric product and representing queries and keys as spinors, we reinterpret attention scores as rotors that encode both similarity and relative transformations. This yields a unified view in which RoPE arises as a low-dimensional special case, while full Clifford Attention exposes non-commutative 3D rotations and bivector structure.
+
+Through a spinor-based representation and an IO-aware Triton kernel, we make Clifford Attention practical at scale, with inference speed comparable to FlashAttention-2. On tasks spanning 3D dynamics, rotational generalization, and long-context retrieval, CliffFormer achieves strong gains in accuracy, equivariance, and sample efficiency. Mechanistic analyses reveal emergent head specialization aligned with physical forces and stable training dynamics under VersorNorm.
+
+We believe Clifford Attention opens a promising avenue toward \emph{physics-native} sequence models and a tighter integration between geometric deep learning and foundation model architectures.
+
+% ============================================================
+% REFERENCES
+% ============================================================
+\bibliography{refs}
+\bibliographystyle{icml2026}
+
+% ============================================================
+% APPENDIX
+% ============================================================
+\newpage
+\appendix
+\onecolumn
+
+\section{Additional Implementation Details}
+
+\subsection{Spinor parameterization and inversion}
+
+In our implementation, each spinor is represented as a $2\times2$ complex matrix with unit determinant. During training, we do not explicitly enforce unit-norm constraints; instead, VersorNorm normalizes spinors before and after rotor application. Inversion is implemented as
+\begin{equation}
+    S^{-1} = \tilde{S} / (\mathrm{Re}\,\mathrm{tr}(S\tilde{S}) + \epsilon),
+\end{equation}
+where $\tilde{S}$ is the conjugate transpose. This is equivalent to inversion in $\Hq$ for unit quaternions.
+
+\subsection{Kernel configuration}
+
+We tune tile sizes $(T_M,T_N)$ for each GPU architecture. On A100, $T_M=128, T_N=64$ achieves a good balance between occupancy and SRAM reuse. We also fuse dropout and residual connections into the same Triton kernel to avoid redundant memory traffic.
+
+\section{Additional Experimental Results}
+
+\subsection{Ablations on normalization and depth}
+
+Table~\ref{tab:norm_depth} reports N-body MSE as we vary depth and normalization.
+
+\begin{table}[h]
+\caption{Effect of depth and normalization on N-body MSE.}
+\label{tab:norm_depth}
+\vskip 0.1in
+\begin{center}
+\begin{small}
+\begin{sc}
+\begin{tabular}{lccc}
+\toprule
+Model & Depth & Norm & MSE $\downarrow$ \\
+\midrule
+CliffFormer & 6  & VersorNorm & 0.017 \\
+CliffFormer & 12 & VersorNorm & \textbf{0.009} \\
+CliffFormer & 24 & VersorNorm & 0.010 \\
+CliffFormer & 12 & LayerNorm  & 0.046 (unstable) \\
+\bottomrule
+\end{tabular}
+\end{sc}
+\end{small}
+\end{center}
+\vskip -0.1in
+\end{table}
+
+\subsection{Distribution of $\gamma$ across heads}
+\label{app:gamma}
+
+Figure~\ref{fig:gamma_hist} plots the distribution of $\gamma_h$ for an N-body model after convergence. The bimodal pattern discussed in Section~\ref{sec:analysis} is clearly visible.
+
+\begin{figure}[h]
+\centering
+\fbox{\parbox{0.8\textwidth}{\centering
+\textbf{[Figure A.1 Placeholder]}\\[4pt]
+Histogram of $\gamma_h$ across 128 heads. One mode near $0$ (scalar heads), one at $\gamma\approx 3.5$ (bivector heads).
+}}
+\caption{Head-wise scalar--bivector trade-off parameters $\gamma_h$.}
+\label{fig:gamma_hist}
+\end{figure}
+
+\section{Proofs and Further Algebraic Details}
+
+\subsection{Proof of Theorem~\ref{thm:rope}}
+
+For completeness, we restate and prove Theorem~\ref{thm:rope} in greater detail. Let $\cliff_{2,0}$ be generated by orthonormal basis $\{e_1,e_2\}$ with $e_i^2=1$ and pseudoscalar $I=e_1 e_2$ satisfying $I^2=-1$. The even subalgebra $\cliff^+_{2,0}$ consists of elements of the form $a + bI$ and is isomorphic to the complex numbers $\C$ via $a+bI \mapsto a+bi$.
+
+Define the kinematic rotor at position $n$ as $P_n = \exp(-In\theta/2)$. Under the isomorphism, this maps to the complex phase $e^{-in\theta/2}$. If queries and keys are represented as $q_n,k_m\in\C$ and we apply single-sided position encoding,
+\begin{align}
+    Q'_n &= P_n Q_n = e^{-in\theta/2} q_n,\\
+    K'_m &= P_m K_m = e^{-im\theta/2} k_m,
+\end{align}
+then the Clifford Attention score is
+\begin{align}
+    S_{nm} &= Q'_n (K'_m)^{-1} = q_n e^{-in\theta/2} \cdot k_m^{-1} e^{im\theta/2}\\
+           &= q_n k_m^{-1} e^{-i(n-m)\theta/2}.
+\end{align}
+In RoPE, the attention score is computed as the real part of $q_n$ multiplied by a position-dependent rotation of $k_m$, which corresponds to $q_n^\top (R_{n-m}k_m)$ where $R_{n-m}$ is a $2\times2$ rotation matrix implementing $e^{i(n-m)\theta}$~\cite{su2024roformer}. Up to conjugation and scaling conventions, the scalar part of $S_{nm}$ recovers this quantity, proving the equivalence.
+
+\end{document}

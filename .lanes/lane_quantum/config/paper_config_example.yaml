@@ -1,0 +1,10 @@
+project_id: "active_bidder"
+title: "The Free Energy Advertiser: Calibrating Bidding Dynamics via Active Inference"
+venue: "NeurIPS 2026"
+max_pages: 9
+context:
+  proposal: "research_vault/library/papers/active_bidder/proposal.md"
+  code: "research_vault/library/papers/active_bidder/code/train_vfe.py"
+experiment_script: "experiments/run_active_bidder_exp.py"
+autonomous_review: true
+output_dir: "research_vault/library/papers/active_bidder/paper"

@@ -1,13 +1,15 @@
+import { resolveRunModelFallbacksOverride } from "../../agents/agent-scope.js";
 import type { NormalizedUsage } from "../../agents/usage.js";
-import type { ChannelId, ChannelThreadingToolContext } from "../../channels/plugins/types.js";
-import type { OpenClawConfig } from "../../config/config.js";
-import type { TemplateContext } from "../templating.js";
-import type { ReplyPayload } from "../types.js";
-import type { FollowupRun } from "./queue.js";
 import { getChannelDock } from "../../channels/dock.js";
+import type { ChannelId, ChannelThreadingToolContext } from "../../channels/plugins/types.js";
 import { normalizeAnyChannelId, normalizeChannelId } from "../../channels/registry.js";
+import type { OpenClawConfig } from "../../config/config.js";
 import { isReasoningTagProvider } from "../../utils/provider-utils.js";
 import { estimateUsageCost, formatTokenCount, formatUsd } from "../../utils/usage-format.js";
+import type { TemplateContext } from "../templating.js";
+import type { ReplyPayload } from "../types.js";
+import { resolveOriginMessageProvider, resolveOriginMessageTo } from "./origin-routing.js";
+import type { FollowupRun } from "./queue.js";
 
 const BUN_FETCH_SOCKET_ERROR_RE = /socket connection was closed unexpectedly/i;
 
@@ -20,12 +22,17 @@ export function buildThreadingToolContext(params: {
   hasRepliedRef: { value: boolean } | undefined;
 }): ChannelThreadingToolContext {
   const { sessionCtx, config, hasRepliedRef } = params;
+  const currentMessageId = sessionCtx.MessageSidFull ?? sessionCtx.MessageSid;
   if (!config) {
-    return {};
+    return {
+      currentMessageId,
+    };
   }
   const rawProvider = sessionCtx.Provider?.trim().toLowerCase();
   if (!rawProvider) {
-    return {};
+    return {
+      currentMessageId,
+    };
   }
   const provider = normalizeChannelId(rawProvider) ?? normalizeAnyChannelId(rawProvider);
   // Fallback for unrecognized/plugin channels (e.g., BlueBubbles before plugin registry init)
@@ -34,6 +41,7 @@ export function buildThreadingToolContext(params: {
     return {
       currentChannelId: sessionCtx.To?.trim() || undefined,
       currentChannelProvider: provider ?? (rawProvider as ChannelId),
+      currentMessageId,
       hasRepliedRef,
     };
   }
@@ -46,15 +54,18 @@ export function buildThreadingToolContext(params: {
         From: sessionCtx.From,
         To: sessionCtx.To,
         ChatType: sessionCtx.ChatType,
+        CurrentMessageId: currentMessageId,
         ReplyToId: sessionCtx.ReplyToId,
         ThreadLabel: sessionCtx.ThreadLabel,
         MessageThreadId: sessionCtx.MessageThreadId,
+        NativeChannelId: sessionCtx.NativeChannelId,
       },
       hasRepliedRef,
     }) ?? {};
   return {
     ...context,
     currentChannelProvider: provider!, // guaranteed non-null since dock exists
+    currentMessageId: context.currentMessageId ?? currentMessageId,
   };
 }
 
@@ -135,6 +146,51 @@ export const appendUsageLine = (payloads: ReplyPayload[], line: string): ReplyPa
 export const resolveEnforceFinalTag = (run: FollowupRun["run"], provider: string) =>
   Boolean(run.enforceFinalTag || isReasoningTagProvider(provider));
 
+export function resolveModelFallbackOptions(run: FollowupRun["run"]) {
+  return {
+    cfg: run.config,
+    provider: run.provider,
+    model: run.model,
+    agentDir: run.agentDir,
+    fallbacksOverride: resolveRunModelFallbacksOverride({
+      cfg: run.config,
+      agentId: run.agentId,
+      sessionKey: run.sessionKey,
+    }),
+  };
+}
+
+export function buildEmbeddedRunBaseParams(params: {
+  run: FollowupRun["run"];
+  provider: string;
+  model: string;
+  runId: string;
+  authProfile: ReturnType<typeof resolveProviderScopedAuthProfile>;
+  allowTransientCooldownProbe?: boolean;
+}) {
+  return {
+    sessionFile: params.run.sessionFile,
+    workspaceDir: params.run.workspaceDir,
+    agentDir: params.run.agentDir,
+    config: params.run.config,
+    skillsSnapshot: params.run.skillsSnapshot,
+    ownerNumbers: params.run.ownerNumbers,
+    senderIsOwner: params.run.senderIsOwner,
+    enforceFinalTag: resolveEnforceFinalTag(params.run, params.provider),
+    provider: params.provider,
+    model: params.model,
+    ...params.authProfile,
+    thinkLevel: params.run.thinkLevel,
+    verboseLevel: params.run.verboseLevel,
+    reasoningLevel: params.run.reasoningLevel,
+    execOverrides: params.run.execOverrides,
+    bashElevated: params.run.bashElevated,
+    timeoutMs: params.run.timeoutMs,
+    runId: params.runId,
+    allowTransientCooldownProbe: params.allowTransientCooldownProbe,
+  };
+}
+
 export function buildEmbeddedContextFromTemplate(params: {
   run: FollowupRun["run"];
   sessionCtx: TemplateContext;
@@ -144,9 +200,15 @@ export function buildEmbeddedContextFromTemplate(params: {
     sessionId: params.run.sessionId,
     sessionKey: params.run.sessionKey,
     agentId: params.run.agentId,
-    messageProvider: params.sessionCtx.Provider?.trim().toLowerCase() || undefined,
+    messageProvider: resolveOriginMessageProvider({
+      originatingChannel: params.sessionCtx.OriginatingChannel,
+      provider: params.sessionCtx.Provider,
+    }),
     agentAccountId: params.sessionCtx.AccountId,
-    messageTo: params.sessionCtx.OriginatingTo ?? params.sessionCtx.To,
+    messageTo: resolveOriginMessageTo({
+      originatingTo: params.sessionCtx.OriginatingTo,
+      to: params.sessionCtx.To,
+    }),
     messageThreadId: params.sessionCtx.MessageThreadId ?? undefined,
     // Provider threading context for tool auto-injection
     ...buildThreadingToolContext({
@@ -173,6 +235,23 @@ export function resolveRunAuthProfile(run: FollowupRun["run"], provider: string)
     authProfileId: run.authProfileId,
     authProfileIdSource: run.authProfileIdSource,
   });
+}
+
+export function buildEmbeddedRunContexts(params: {
+  run: FollowupRun["run"];
+  sessionCtx: TemplateContext;
+  hasRepliedRef: { value: boolean } | undefined;
+  provider: string;
+}) {
+  return {
+    authProfile: resolveRunAuthProfile(params.run, params.provider),
+    embeddedContext: buildEmbeddedContextFromTemplate({
+      run: params.run,
+      sessionCtx: params.sessionCtx,
+      hasRepliedRef: params.hasRepliedRef,
+    }),
+    senderContext: buildTemplateSenderContext(params.sessionCtx),
+  };
 }
 
 export function resolveProviderScopedAuthProfile(params: {

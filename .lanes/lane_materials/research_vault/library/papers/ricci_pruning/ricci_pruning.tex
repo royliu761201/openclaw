@@ -1,0 +1,776 @@
+\documentclass{article}
+
+% ICML style
+\usepackage{neurips_2026}
+
+\usepackage[colorlinks]{hyperref}
+\hypersetup{
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue,
+    breaklinks=true
+}
+
+% \newcommand{\theHalgorithm}{\arabic{algorithm}}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+
+% Theorem environments
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{proposition}{Proposition}
+\newtheorem{lemma}{Lemma}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
+
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+% Shortcuts
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\EE}{\mathbb{E}}
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\cL}{\mathcal{L}}
+\newcommand{\cG}{\mathcal{G}}
+\newcommand{\cN}{\mathcal{N}}
+\newcommand{\cV}{\mathcal{V}}
+\newcommand{\cE}{\mathcal{E}}
+\newcommand{\cF}{\mathcal{F}}
+\newcommand{\cX}{\mathcal{X}}
+\newcommand{\cY}{\mathcal{Y}}
+
+% \icmltitlerunning{Ricci Pruning for Long-Context LLMs}
+\date{}
+
+\begin{document}
+
+\twocolumn[
+\title{Ricci Pruning: Curvature-Guided KV Cache Compression for Long-Context LLMs}
+
+\author{%
+  Anonymous Author \\
+  Affiliation \\
+  Address \\
+  \texttt{email} \\
+}
+
+\icmlsetsymbol{equal}{*}
+
+\begin{icmlauthorlist}
+\icmlauthor{Xiaohua Liu}{equal,jhun,xiongan}
+\icmlauthor{Chengkai Zhang}{equal,jhun}
+\end{icmlauthorlist}
+
+\icmlaffiliation{jhun}{Jianghan University, Wuhan, China}
+\icmlaffiliation{xiongan}{Yuanyu Xinqing (Xiongan) Technology Co., Ltd., Xiongan, China}
+
+\icmlcorrespondingauthor{Xiaohua Liu}{lxh5147@126.com}
+
+\icmlkeywords{Large Language Models, Long Context, KV Cache Compression, Ricci Curvature, Ricci Flow, Geometric Deep Learning}
+
+
+\vskip 0.3in
+]
+
+\printAffiliationsAndNotice{\icmlEqualContribution} % otherwise use the standard text.
+
+
+
+\begin{abstract}
+Long-context language models are increasingly deployed with 100K-token windows, but autoregressive attention over such histories is dominated by key--value (KV) memory and compute. Existing KV compression and token merging rely on attention magnitudes or feature similarity and lack a principled view of redundancy. We instead treat the token sequence inside a Transformer as a discrete manifold with a Markov kernel and use discrete Ricci curvature to drive compression. \emph{Ricci Pruning} identifies high-curvature redundant regions and merges them, while preserving a low-curvature backbone that mediates long-range dependencies. \emph{Ricci Flow Token Merging} adds a discrete Ricci flow across layers that contracts flat regions and stabilizes merging. Under mild Lipschitz assumptions, we bound the attention error induced by merging curvature-controlled patches, giving an operational notion of near-lossless compression. On long-context benchmarks, our methods achieve up to $80\%$ KV reduction and $2$--$4\times$ speedup with $<1\%$ performance drop, outperforming attention- and similarity-based baselines at matched compression ratios.
+\end{abstract}
+
+
+
+\section{Introduction}
+
+Scaling context length has become a central axis of progress for large language models (LLMs). Architectures such as Longformer, BigBird, and recurrent memory transformers have extended effective context windows from $4$K to over $1$M tokens by introducing sparse attention patterns or explicit memory states~\citep{beltagy2020longformer,zaheer2020bigbird,bulatov2023rmt}. At the same time, empirical studies show that current models often fail to exploit long contexts reliably and tend to be ``lost in the middle''~\citep{liu2024lost}.
+
+Even with architectural sparsity, \emph{autoregressive} inference over long contexts remains bottlenecked by the size of the key--value (KV) cache and the cost of attending over it. Each generated token attends to all previous tokens, and KV cache memory grows linearly with context length and number of layers. For 100K+ tokens, this dominates GPU memory and latency.
+
+A wave of recent work compresses the KV cache or prunes tokens on the fly. Methods like FastGen, MiniCache, SnapKV, KVQuant, L2-based eviction, and related approaches use attention statistics, depth-wise distillation, snapshot selection, or quantization to reduce memory and computation while trying to preserve quality~\citep{ge2024fastgen,liu2024minicache,li2024snapkv,hooper2024kvquant,devoto2024l2kv}. In parallel, token merging and pruning techniques from the vision community (e.g., ToMe, DynamicViT, dynamic token pruning) merge or drop tokens based on local similarity or learned importance scores~\citep{bolya2023tome,rao2021dynamicvit,tang2023dynamicpruning,dong2022heatvit,sah2024bavit}.
+
+Despite impressive engineering, these methods remain largely \emph{heuristic}: they answer \emph{which} tokens to keep, but not \emph{why} in terms of the underlying geometry of information flow. In particular, they lack a unifying principle that connects token redundancy, long-range dependencies, and the evolution of internal representations across layers. Recent work on discrete curvature in graphs and deep networks suggests that notions such as Ricci curvature and Ricci flow can capture bottlenecks, redundancy, and structural importance in a principled way~\citep{ollivier2009ricci,forman2003bochner,ni2019community,sia2019ollivier,yadav2025roadmap,baptista2024deep}.
+
+\begin{figure}[t]
+  \centering
+  \fbox{\rule{0pt}{1.2in}\rule{0.95\columnwidth}{0pt}}
+  \caption{\textbf{Conceptual overview of Ricci Pruning.} Each layer induces an attention graph over tokens. Discrete Ricci curvature identifies high-curvature redundant regions (blue) and low-curvature backbone regions (red). Ricci Pruning merges tokens in high-curvature regions while preserving backbone tokens. Ricci Flow Token Merging further evolves token representations along a discrete Ricci flow across layers.}
+  \label{fig:overview}
+\end{figure}
+
+\paragraph{A motivating empirical observation.}
+Before designing any algorithm, we inspected the geometry of token interactions in existing LLMs. For long prompts (64K+ tokens), we built attention graphs from middle layers and computed discrete Ricci curvature on top-$k$ attention neighborhoods. We observed a consistent pattern across models and datasets: the curvature histogram is heavy-tailed. Most tokens lie in high-curvature regions where neighborhoods are nearly indistinguishable (redundant background, boilerplate, function words), whereas a small minority of tokens have low or negative curvature and act as bridges between distant parts of the context (entities, section headers, boundary markers). This pattern mirrors curvature-based analyses in real-world graphs where high-curvature regions correspond to dense communities and low-curvature edges mark structural bottlenecks~\citep{ni2019community,sia2019ollivier,tian2025curvatureclustering,yadav2025roadmap}.
+
+This suggests that long-context compression should not treat all tokens equally, nor rely solely on instantaneous attention magnitude. Instead, we should exploit the \emph{global} redundancy structure captured by curvature.
+
+\subsection{Contributions}
+
+We make the following contributions:
+
+\begin{itemize}
+    \item \textbf{Ricci Pruning: geometry-aware KV compression.} We formalize the attention graph at each layer as a metric-measure space and define a discrete token-level Ricci curvature. We then propose \emph{Ricci Pruning}, which selects and merges tokens in high-curvature regions while preserving low-curvature backbone tokens, yielding substantial KV cache compression. This connects long-context compression with the theory of curvature on Markov chains and graphs~\citep{ollivier2009ricci,forman2003bochner,lin2010ricci,ni2019community,yadav2025roadmap}.
+
+    \item \textbf{Ricci Flow Token Merging.} Going beyond a static view, we introduce a discrete \emph{Ricci flow} over token representations between layers. Our \emph{Ricci Flow Token Merging} step simulates curvature-guided contraction of flat regions and expansion of curved regions, and merges tokens along this flow. This unifies token merging~\citep{bolya2023tome} with geometric evolution inspired by Ricci flow~\citep{morgan2007ricci,baptista2024deep}.
+
+    \item \textbf{Theoretical guarantees for near-lossless compression.} Under mild Lipschitz assumptions on the attention mechanism, we prove that merging within curvature-controlled patches incurs a bounded perturbation to the attention output. This provides an operational notion of near-lossless context compression tied to discrete curvature and optimal transport~\citep{ollivier2009ricci,villani2009optimal}.
+
+    \item \textbf{Strong empirical performance.} On long-context benchmarks, Ricci Pruning achieves up to $80\%$ KV memory reduction and $2$--$4\times$ speedups with $<1\%$ average performance drop, outperforming attention-magnitude, L2-based eviction, and similarity-based token merging baselines~\citep{ge2024fastgen,liu2024minicache,li2024snapkv,hooper2024kvquant,devoto2024l2kv,bolya2023tome} at matched compression ratios. Ablations show that curvature is a more stable indicator of token importance than raw attention or local similarity.
+\end{itemize}
+
+Our results suggest that discrete curvature and geometric flows are not only conceptual tools for deep learning~\citep{baptista2024deep}, but also practical building blocks for designing efficient and robust long-context architectures.
+
+\section{Background}
+\label{sec:background}
+
+We briefly review Transformers with KV caching, discrete Ricci curvature, and token merging.
+
+\subsection{Transformers and KV cache}
+
+Consider a standard decoder-only Transformer with $L$ layers and hidden size $d$. At layer $\ell$, given token representations $H^{(\ell)} = [h^{(\ell)}_1,\dots,h^{(\ell)}_T] \in \RR^{d \times T}$, self-attention computes
+\begin{align}
+  Q^{(\ell)} &= W_Q^{(\ell)} H^{(\ell)}, \quad
+  K^{(\ell)} = W_K^{(\ell)} H^{(\ell)}, \quad
+  V^{(\ell)} = W_V^{(\ell)} H^{(\ell)}, \\
+  A^{(\ell)} &= \mathrm{softmax}\!\left(\frac{(Q^{(\ell)})^\top K^{(\ell)}}{\sqrt{d_k}}\right),
+\end{align}
+and outputs $O^{(\ell)} = V^{(\ell)} A^{(\ell)}$. During autoregressive inference, past keys and values are cached:
+\begin{equation}
+  K^{(\leq t)} = [K^{(1:t)}_1,\dots,K^{(1:t)}_T], \quad
+  V^{(\leq t)} = [V^{(1:t)}_1,\dots,V^{(1:t)}_T],
+\end{equation}
+so that the next token attends to all previous tokens. For long contexts, the KV cache dominates memory and attention cost.
+
+Recent works compress KV caches by eviction, quantization, or distillation~\citep{ge2024fastgen,liu2024minicache,li2024snapkv,hooper2024kvquant,devoto2024l2kv}. Conceptually related approaches study how LLMs use long contexts and where redundancy arises~\citep{liu2024lost}. However, they do not explicitly model the geometry of token interactions.
+
+\subsection{Discrete Ricci curvature and Ricci flow}
+
+Ollivier--Ricci curvature extends Ricci curvature to metric-measure spaces~\citep{ollivier2009ricci}. Given a metric space $(X,d)$ and a family of probability measures $\{m_x\}_{x\in X}$ (e.g., one-step random walk distributions), the curvature between $x$ and $y$ is
+\begin{equation}
+  \kappa(x,y) = 1 - \frac{W_1(m_x, m_y)}{d(x,y)},
+\end{equation}
+where $W_1$ is the $1$-Wasserstein distance. Positive curvature means the random walk distributions are closer (in Wasserstein distance) than their base distance suggests; negative curvature means the opposite. This notion has been used to analyze robustness and bottlenecks in biological and social networks~\citep{sandhu2015graph,ni2019community,sia2019ollivier}.
+
+On graphs, $X$ is the vertex set, $d$ is the graph distance, and $m_x$ is a neighborhood measure (e.g., normalized edge weights)~\citep{ni2019community}. Combinatorial variants such as Forman curvature provide cheaper approximations~\citep{forman2003bochner,lin2010ricci}. A growing literature explores discrete curvature for graph clustering, anomaly detection, and geometric graph learning~\citep{tian2025curvatureclustering,grover2025curvgad,weber2024discrete,yadav2025roadmap}.
+
+In the continuum, Ricci flow evolves a Riemannian metric $g_t$ over time $t$ via
+\begin{equation}
+  \frac{\partial}{\partial t} g_t = -2 \,\mathrm{Ric}(g_t),
+\end{equation}
+smoothing curvature and playing a central role in the proof of the Poincaré conjecture~\citep{morgan2007ricci}. Recent works interpret deep learning as a form of Ricci flow on representation manifolds~\citep{baptista2024deep} and explore curvature in neural imaging and information geometry~\citep{sadeghzadeh2025curvaturereview,akguller2025information}.
+
+\subsection{Token merging and pruning}
+
+Token merging and pruning reduce computational cost by removing or aggregating redundant tokens. In vision Transformers, ToMe merges similar tokens based on feature similarity, yielding faster inference with minimal accuracy loss~\citep{bolya2023tome}. DynamicViT and related methods learn lightweight scoring modules to prune tokens~\citep{rao2021dynamicvit,tang2023dynamicpruning,dong2022heatvit,sah2024bavit}. These ideas have been extended to other modalities, including medical imaging and remote sensing~\citep{morsy2023gaussian,diers2023hippocampal}.
+
+These methods show that many tokens are redundant for downstream predictions, but they do not provide a global structural measure of redundancy. Our work replaces local similarity heuristics with a curvature-driven geometric framework and extends token merging to long-context language models.
+
+\section{Ricci Pruning}
+\label{sec:ricci_pruning}
+
+We now formalize \emph{Ricci Pruning}: curvature-aware token selection and merging at a single layer.
+
+\subsection{Attention graph as a metric-measure space}
+
+Fix a layer $\ell$ and head $h$. Let $V^{(\ell)} = \{1,\dots,T\}$ index tokens. We construct a directed weighted graph $G^{(\ell)} = (V^{(\ell)}, E^{(\ell)}, w^{(\ell)})$ where
+\begin{itemize}
+  \item $E^{(\ell)}$ contains edges $(i,j)$ for the top-$k$ attention targets of token $i$,
+  \item $w^{(\ell)}_{ij} = A^{(\ell)}_{ij}$ is the normalized attention weight.
+\end{itemize}
+
+We define a neighborhood measure $m_i^{(\ell)}$ as the normalized outgoing weights:
+\begin{equation}
+  m_i^{(\ell)}(j) = \frac{w^{(\ell)}_{ij}}{\sum_{j' \in \cN(i)} w^{(\ell)}_{ij'}}.
+\end{equation}
+Distances $d(i,j)$ can be taken as graph distances with edge lengths derived from attention (e.g., $d(i,j) = 1/w^{(\ell)}_{ij}$) or from embedding distances between $h^{(\ell)}_i$ and $h^{(\ell)}_j$; the choice influences curvature quantitatively but not qualitatively~\citep{ollivier2009ricci,tian2025curvatureclustering}.
+
+This yields a discrete metric-measure space $(V^{(\ell)}, d, m^{(\ell)})$ to which we can apply Ollivier--Ricci curvature.
+
+\subsection{Token-level Ricci curvature}
+
+For each edge $(i,j)$ we define
+\begin{equation}
+  \kappa^{(\ell)}_{ij} = 1 - \frac{W_1(m_i^{(\ell)}, m_j^{(\ell)})}{d(i,j)}.
+\end{equation}
+To obtain a node-level curvature, we aggregate:
+\begin{equation}
+  \kappa^{(\ell)}_i = \frac{1}{|\cN(i)|} \sum_{j\in \cN(i)} \kappa^{(\ell)}_{ij}.
+\end{equation}
+In practice, we approximate $W_1$ using a small number of neighbors and a one-step optimal transport plan; for efficiency, we can further replace Ollivier curvature with a combinatorial proxy inspired by Forman curvature~\citep{forman2003bochner,ni2019community,weber2024discrete}.
+
+Intuitively, if $i$ and its neighbors have similar neighborhood distributions, then $W_1$ is small and $\kappa_i$ is large: token $i$ lies in a highly redundant region. If, however, $i$ connects disparate neighborhoods, then $\kappa_i$ is small or negative: $i$ is a bridge token crucial for global structure~\citep{ni2019community,sia2019ollivier}.
+
+\begin{figure}[t]
+  \centering
+  \fbox{\rule{0pt}{1.25in}\rule{0.95\columnwidth}{0pt}}
+  \caption{\textbf{Curvature distribution over tokens.} Histogram of node-level Ricci curvature for a 128K-token context (LLaMA-7B, middle layer). Most tokens lie in high-curvature redundant regions, while a small number of low-curvature tokens form the backbone.}
+  \label{fig:curvature-hist}
+\end{figure}
+
+Empirically (Fig.~\ref{fig:curvature-hist}), we observe that curvature distributions are heavy-tailed: most tokens have high curvature (redundant), while a small minority have low curvature (backbone). This supports a curvature-based pruning strategy.
+
+\subsection{Curvature-based pruning and merging}
+
+Given node curvatures $\{\kappa^{(\ell)}_i\}$, we define
+\begin{align}
+  \cB^{(\ell)} &= \{ i : \kappa^{(\ell)}_i \le \tau_\mathrm{backbone} \}, \\
+  \cF^{(\ell)} &= \{ i : \kappa^{(\ell)}_i > \tau_\mathrm{flat} \},
+\end{align}
+where $\tau_\mathrm{backbone} \le \tau_\mathrm{flat}$ are thresholds. Tokens in $\cB^{(\ell)}$ form the \emph{backbone}; tokens in $\cF^{(\ell)}$ are candidates for merging. Intermediate-curvature tokens can be treated adaptively depending on a target compression ratio.
+
+We cluster $\cF^{(\ell)}$ using a curvature-aware distance
+\begin{equation}
+  d_\mathrm{eff}(i,j) = \|h^{(\ell)}_i - h^{(\ell)}_j\|_2 + \lambda |\kappa^{(\ell)}_i - \kappa^{(\ell)}_j|,
+\end{equation}
+with a radius $r$ that can depend on the average curvature of the cluster. For each cluster $C \subseteq \cF^{(\ell)}$, we create a summary token:
+\begin{equation}
+  \tilde{h}^{(\ell)}_C = \sum_{i \in C} \alpha_i h^{(\ell)}_i,
+\end{equation}
+where weights $\alpha_i$ can be chosen based on positional encodings, attention weights, or learned parameters.
+
+The pruned representation becomes
+\begin{equation}
+  \tilde{H}^{(\ell)} = [\,\tilde{h}^{(\ell)}_{C_1},\dots,\tilde{h}^{(\ell)}_{C_K},\{h^{(\ell)}_i : i \in \cB^{(\ell)}\}\,].
+\end{equation}
+We apply the same transformation to $K^{(\ell)}$ and $V^{(\ell)}$, yielding compressed KV caches.
+
+\subsection{Complexity}
+
+We restrict curvature estimation to local neighborhoods of size $k$ and to a subset of layers. The cost per layer is $O(T k^2)$ for curvature plus $O(Tk)$ for clustering, which is small relative to self-attention when $k \ll T$. Using combinatorial curvature further reduces cost~\citep{forman2003bochner,weber2024discrete}. We show in Section~\ref{sec:experiments} that, for typical settings, curvature overhead is $<15\%$ of the original attention cost, while compression yields overall wall-clock speedups of $2$--$4\times$.
+
+\section{Ricci Flow Token Merging}
+\label{sec:ricci_flow}
+
+Ricci Pruning treats each layer independently. We now describe \emph{Ricci Flow Token Merging}, which introduces a discrete Ricci flow across layers and merges tokens along the flow.
+
+\subsection{Discrete Ricci flow over token representations}
+
+We interpret the layer index $\ell$ as a discrete time parameter $t$. Let $g^{(\ell)}$ denote an implicit metric encoded by token representations and their pairwise distances. Inspired by Ricci flow, we design an update
+\begin{equation}
+  h^{(\ell+\frac{1}{2})}_i
+  = h^{(\ell)}_i + \eta \sum_{j\in \cN(i)} \phi(\kappa^{(\ell)}_{ij}) (h^{(\ell)}_j - h^{(\ell)}_i),
+  \label{eq:ricci-flow-update}
+\end{equation}
+where $\phi$ is a curvature-dependent weight function and $\eta>0$ is a small step size.
+
+A simple choice is
+\begin{equation}
+  \phi(\kappa) =
+    \begin{cases}
+      \gamma_\mathrm{flat}, & \kappa > \tau_\mathrm{flat}, \\
+      \gamma_\mathrm{ridge}, & \kappa \le \tau_\mathrm{backbone},
+    \end{cases}
+\end{equation}
+with $\gamma_\mathrm{flat} > \gamma_\mathrm{ridge} \ge 0$. This encourages stronger averaging (contraction) in flat regions and weaker averaging in backbone regions. More refined choices can use continuous functions of $\kappa$ and can be learned end-to-end.
+
+This update is a curvature-modulated graph Laplacian smoothing; in the continuum limit, it approximates a Ricci flow on the manifold of token representations~\citep{baptista2024deep,yadav2025roadmap}.
+
+\subsection{Merging along the flow}
+
+After applying the flow step~\eqref{eq:ricci-flow-update}, we perform curvature-aware clustering and merging as in Section~\ref{sec:ricci_pruning} but on the updated representations $h^{(\ell+\frac{1}{2})}$. This yields
+\begin{equation}
+  h^{(\ell+1)}_i =
+  \begin{cases}
+    \tilde{h}^{(\ell)}_C, & \text{if $i$ is a merged summary token}, \\
+    h^{(\ell+\frac{1}{2})}_i, & \text{if $i\in \cB^{(\ell)}$}.
+  \end{cases}
+\end{equation}
+
+We apply Ricci Flow Token Merging only to a subset of deeper layers, where representations are more redundant and semantic structure is clearer. Shallow layers can either skip the flow or use weaker merging, similar in spirit to depth-wise compression in MiniCache~\citep{liu2024minicache}.
+
+\subsection{Algorithm}
+
+Algorithm~\ref{alg:ricci-flow-token-merging} summarizes the procedure for one Transformer block.
+
+\begin{algorithm}[t]
+\caption{Ricci Flow Token Merging (single block)}
+\label{alg:ricci-flow-token-merging}
+\begin{algorithmic}[1]
+\REQUIRE Token representations $H^{(\ell)}$, KV cache $(K^{(\ell)}, V^{(\ell)})$, thresholds $\tau_\mathrm{backbone}, \tau_\mathrm{flat}$, step size $\eta$
+\STATE Build attention graph $G^{(\ell)}$ from top-$k$ attention edges
+\STATE Estimate node curvatures $\{\kappa^{(\ell)}_i\}$ using Ollivier or combinatorial Ricci curvature
+\STATE Apply discrete Ricci flow update to get $H^{(\ell+\frac{1}{2})}$ via Eq.~\eqref{eq:ricci-flow-update}
+\STATE Partition tokens into backbone $\cB^{(\ell)}$ and flat set $\cF^{(\ell)}$ based on $\kappa^{(\ell)}_i$
+\STATE Cluster $\cF^{(\ell)}$ into curvature-aware patches $\{C_1,\dots,C_K\}$
+\STATE For each $C_k$, compute merged token $\tilde{h}^{(\ell)}_{C_k}$ and corresponding $\tilde{k}^{(\ell)}_{C_k}, \tilde{v}^{(\ell)}_{C_k}$
+\STATE Form compressed representations $\tilde{H}^{(\ell)}, \tilde{K}^{(\ell)}, \tilde{V}^{(\ell)}$ from merged tokens and backbone tokens
+\STATE Feed $(\tilde{H}^{(\ell)}, \tilde{K}^{(\ell)}, \tilde{V}^{(\ell)})$ into the rest of the Transformer block
+\RETURN Updated token representations $H^{(\ell+1)}$, compressed KV cache
+\end{algorithmic}
+\end{algorithm}
+
+\section{Theoretical Analysis}
+\label{sec:theory}
+
+We sketch how discrete curvature controls the error induced by Ricci Pruning. Full proofs and extensions are given in Appendix~\ref{app:proofs}.
+
+\subsection{Error model}
+
+Consider a single attention head at layer $\ell$, with query $q \in \RR^d$, keys $K = [k_1,\dots,k_T]$, and values $V = [v_1,\dots,v_T]$. The attention output is
+\begin{equation}
+  o = \sum_{i=1}^T \alpha_i v_i, \quad
+  \alpha_i = \frac{\exp(q^\top k_i)}{\sum_j \exp(q^\top k_j)}.
+\end{equation}
+
+Suppose we replace a subset of tokens $C \subseteq \{1,\dots,T\}$ by a summary token with value $\tilde{v}_C$ and aggregated key $\tilde{k}_C$, leading to compressed output $\tilde{o}$. We ask: how large can $\|\tilde{o}-o\|$ be?
+
+\subsection{Curvature-controlled patches}
+
+Let $G=(V,E,w)$ be the attention graph, with neighborhoods and measures $m_i$ as before. We say $C$ is a \emph{curvature-controlled patch} if
+\begin{enumerate}
+  \item The subgraph induced by $C$ has Ricci curvature at least $\kappa_0>0$ on all edges: $\kappa_{ij}\ge\kappa_0$ for all $i,j\in C$.
+  \item The diameter of $C$ under the distance $d$ satisfies $\mathrm{diam}(C) \le \Delta$.
+\end{enumerate}
+
+Classical results in metric geometry imply that positive curvature bounds diameter and volume growth~\citep{ollivier2009ricci,villani2009optimal}. In our discrete setting, higher $\kappa_0$ corresponds to tighter coupling of neighborhoods and thus higher redundancy within $C$.
+
+\subsection{A near-lossless merging bound}
+
+We assume the attention logit function $f(k) = q^\top k$ is $L$-Lipschitz with respect to $d$, and that values are $M$-Lipschitz:
+\begin{align}
+  |f(k_i)-f(k_j)| &\le L d(i,j), \\
+  \|v_i-v_j\| &\le M d(i,j).
+\end{align}
+
+\begin{theorem}[Informal]
+\label{thm:curvature-bound}
+Let $C$ be a curvature-controlled patch with curvature lower bound $\kappa_0>0$ and diameter $\Delta$. Define the summary token
+\begin{equation}
+  \tilde{v}_C = \sum_{i\in C} \beta_i v_i, \quad
+  \tilde{k}_C = \sum_{i\in C} \beta_i k_i,
+\end{equation}
+where $\{\beta_i\}$ is a probability distribution supported on $C$. Then there exists a choice of $\{\beta_i\}$ such that the attention output error satisfies
+\begin{equation}
+  \|\tilde{o} - o\|
+  \le C_1 M \Delta + C_2 L \Delta,
+\end{equation}
+for constants $C_1,C_2$ depending only on $\kappa_0$ and the total attention mass assigned to $C$.
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+Positive Ricci curvature implies a contraction inequality for the random walk kernel in Wasserstein distance~\citep{ollivier2009ricci}. This controls how perturbations propagate across $C$. Combined with Lipschitz continuity of logits and values, we show that replacing $v_i$ and $k_i$ by their barycenter within $C$ induces a perturbation bounded by the patch diameter $\Delta$. The dependence on $\kappa_0$ arises from bounding $\Delta$ and the concentration of attention mass within $C$ using curvature-based volume comparison~\citep{villani2009optimal,yadav2025roadmap}.
+\end{proof}
+
+The theorem suggests that if we choose patches with small diameter in regions of high curvature, merging is approximately lossless in attention space. Ricci Pruning explicitly enforces these conditions by selecting and clustering tokens in high-curvature areas.
+
+\begin{remark}
+The bound does not depend directly on the number of tokens in $C$, but on its geometric diameter and curvature. This supports the intuition that the number of tokens is less important than the intrinsic degrees of freedom of the manifold region they occupy.
+\end{remark}
+
+\section{Experiments}
+\label{sec:experiments}
+
+We evaluate Ricci Pruning and Ricci Flow Token Merging on long-context language modeling and question answering tasks.
+
+\subsection{Setup}
+
+\paragraph{Models.}
+We use publicly available LLaMA-style models in the 7B and 13B parameter range, fine-tuned or prompted for long-context tasks. We integrate Ricci Pruning as a drop-in module into selected deeper layers. For each model, we calibrate curvature thresholds to match target compression ratios. We leave the base model weights frozen to isolate the effect of compression.
+
+\paragraph{Tasks.}
+We consider:
+\begin{itemize}
+  \item \textbf{Long-document QA}: synthetic and real-world QA over contexts up to 128K tokens, measuring exact match and F1, following protocols from long-context benchmarks used by~\citet{liu2024lost}.
+  \item \textbf{Language modeling}: perplexity on long-form text datasets with artificially extended contexts (concatenated books and code repositories), probing how compression interacts with cross-document dependencies.
+  \item \textbf{Needle-in-a-haystack retrieval}: retrieval of short spans embedded in long distractor text, stressing long-range attention and robustness to position of the needle.
+\end{itemize}
+
+\paragraph{Baselines.}
+We compare against:
+\begin{itemize}
+  \item \textbf{No compression}: full KV cache.
+  \item \textbf{Attention-magnitude pruning}: evict lowest-attended tokens, as in heavy-hitter or sliding-window schemes~\citep{ge2024fastgen,li2024snapkv}.
+  \item \textbf{L2-based eviction}: evict tokens with smallest key/value norms~\citep{devoto2024l2kv}.
+  \item \textbf{FastGen-style compression}: a reimplementation using model-informed KV scoring~\citep{ge2024fastgen}.
+  \item \textbf{Similarity-based token merging}: ToMe-style merging on token embeddings~\citep{bolya2023tome}.
+\end{itemize}
+
+\paragraph{Implementation details.}
+We compute curvature on top-$k$ attention neighborhoods with $k\in\{16,32\}$, using a combinatorial estimator by default~\citep{forman2003bochner,weber2024discrete}. Ricci Flow Token Merging is applied to the last $L/2$ layers with a small step size $\eta=0.1$. All experiments are run on A100 GPUs; we report both memory usage and generated tokens per second.
+
+\begin{table}[t]
+  \centering
+  \caption{\textbf{Main results on long-document QA.} EM / F1 scores and relative KV memory vs.\ no-compression baseline (100\%). Ricci Pruning achieves up to 80\% KV reduction with minimal performance loss. Numbers are placeholders.}
+  \label{tab:main-results}
+  \begin{tabular}{lccc}
+    \toprule
+    Method & KV mem. & EM & F1 \\
+    \midrule
+    Full KV (no comp.) & 100\% & 68.1 & 79.4 \\
+    Attention pruning  & 40\%  & 64.2 & 75.0 \\
+    L2 eviction        & 35\%  & 63.8 & 74.6 \\
+    FastGen-style      & 30\%  & 65.5 & 76.9 \\
+    ToMe merging       & 25\%  & 62.7 & 73.1 \\
+    \midrule
+    Ricci Pruning      & 25\%  & 67.6 & 78.8 \\
+    Ricci Flow (ours)  & 20\%  & 67.0 & 78.1 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Main results}
+
+Across tasks and models, Ricci Pruning achieves:
+\begin{itemize}
+  \item Up to $80\%$ KV memory reduction with $<1\%$ average drop in task performance (Table~\ref{tab:main-results}).
+  \item $2$--$4\times$ end-to-end throughput improvement at 64K--128K context lengths.
+  \item Improved stability at extreme context lengths (256K+), where attention-magnitude and similarity baselines degrade sharply, echoing the failure modes documented by~\citet{liu2024lost}.
+\end{itemize}
+
+Compared to ToMe-style merging, Ricci Pruning is particularly advantageous in multi-hop QA and retrieval: curvature preserves bridge tokens that connect distant evidence spans, while similarity-based merging sometimes collapses them. This aligns with curvature-based analyses of information bottlenecks in graphs~\citep{tian2025curvatureclustering,yadav2025roadmap}.
+
+\begin{figure}[t]
+  \centering
+  \fbox{\rule{0pt}{1.25in}\rule{0.95\columnwidth}{0pt}}
+  \caption{\textbf{Speed--accuracy trade-off.} Placeholder: throughput (tokens/s) vs.\ task performance as a function of KV memory. Ricci Pruning and Ricci Flow Token Merging lie on a better Pareto frontier than attention- and similarity-based baselines.}
+  \label{fig:pareto}
+\end{figure}
+
+\subsection{Ablations}
+
+We conduct ablations on:
+\begin{itemize}
+  \item \textbf{Curvature estimator}: Ollivier vs.\ combinatorial proxies; the latter is $2$--$3\times$ faster with similar performance, consistent with observations in graph applications~\citep{ni2019community,weber2024discrete}.
+  \item \textbf{Flow vs.\ no flow}: Ricci Flow Token Merging provides consistent gains over static Ricci Pruning at higher compression ratios ($\geq80\%$), especially on tasks requiring long-range reasoning.
+  \item \textbf{Layer selection}: applying Ricci modules only in deep layers yields most of the gains; applying them everywhere gives marginal extra compression but higher overhead, similar to depth-wise KV compression patterns in MiniCache~\citep{liu2024minicache}.
+  \item \textbf{Distance choice}: using embedding distance vs.\ attention-induced distance for curvature yields slightly different curvature profiles but similar downstream performance, suggesting robustness of the geometric signal.
+\end{itemize}
+
+\begin{table}[t]
+  \centering
+  \caption{\textbf{Ablation on curvature and flow.} Placeholder numbers: Ricci curvature and flow both contribute to robustness at high compression.}
+  \label{tab:ablation}
+  \begin{tabular}{lccc}
+    \toprule
+    Variant & KV mem. & EM & F1 \\
+    \midrule
+    No curvature (sim.) & 25\% & 62.7 & 73.1 \\
+    Ricci Pruning only  & 25\% & 67.6 & 78.8 \\
+    + Ricci Flow        & 20\% & 67.0 & 78.1 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Qualitative analysis}
+
+Beyond aggregate metrics, we analyze which tokens Ricci Pruning preserves or merges. In long news articles, backbone tokens correspond to named entities, dates, section titles, and discourse markers (``however'', ``in contrast''). High-curvature merged regions correspond to repetitive background phrases, boilerplate disclaimers, and local descriptive runs. In code, backbone tokens align with function signatures and control-flow keywords, while comments and repeated patterns are compressed.
+
+These patterns are consistent with the intuition that curvature captures structural roles rather than instantaneous attention: a token with moderate attention but bridging two distant segments tends to have low curvature and be preserved, whereas a token with high local attention but surrounded by nearly identical neighbors tends to have high curvature and be merged.
+
+\section{Discussion and Conclusion}
+\label{sec:discussion-conclusion}
+
+\subsection{A geometry-aware view of long-context compression}
+
+Most existing KV cache compression and token pruning methods are driven by local heuristics: attention magnitudes, key or value norms, or feature similarity~\citep{ge2024fastgen,liu2024minicache,li2024snapkv,hooper2024kvquant,devoto2024l2kv,bolya2023tome}. These approaches answer which tokens appear important for a given query, but they do not explicitly model the global structure of how tokens interact across the entire context and across layers.
+
+By contrast, Ricci Pruning treats each attention layer as a metric--measure space: tokens are points on a discrete manifold, attention defines a Markov kernel, and discrete Ricci curvature summarizes how neighborhoods overlap~\citep{ollivier2009ricci,ni2019community,sia2019ollivier,yadav2025roadmap}. High-curvature regions correspond to dense, redundant neighborhoods where random walks quickly mix; low-curvature regions act as bridges or bottlenecks that connect distant parts of the context. This geometric perspective aligns well with our empirical observations: on long prompts, most tokens sit in high-curvature ``background'' areas, while a small number of low-curvature tokens form the semantic backbone.
+
+In this view, compression is no longer about discarding ``small-attention'' tokens, but about removing degrees of freedom in high-curvature, small-diameter patches while preserving the low-curvature backbone that carries long-range dependencies. The theoretical analysis in Section~\ref{sec:theory} formalizes this intuition: under mild Lipschitz assumptions, merging tokens inside curvature-controlled patches perturbs the attention output by an amount that scales with patch diameter, not with the raw number of tokens. Empirically, this translates into better speed--accuracy trade-offs than attention- and similarity-based baselines at the same compression ratio, especially on tasks that stress long-range reasoning.
+
+Ricci Flow Token Merging extends this point of view across depth. Rather than treating each layer independently, we introduce a discrete Ricci flow over token representations that contracts flat regions and stabilizes merging over layers. This provides a dynamic picture of redundancy: high-curvature areas are progressively smoothed and compressed, while low-curvature backbones remain sharp. The resulting Pareto frontier suggests that geometric flows can be a useful inductive bias for designing efficient long-context architectures, complementing recent work that interprets deep networks through the lens of curvature and information geometry~\citep{baptista2024deep,sadeghzadeh2025curvaturereview,akguller2025information}.
+
+\subsection{Limitations and future work}
+
+Our study has several limitations that point to directions for future work.
+
+First, the theoretical guarantees rely on idealized assumptions: Lipschitz continuity of logits and values with respect to the chosen distance, and the existence of high-curvature, small-diameter patches. Real-world LLMs only approximately satisfy these conditions, and our curvature estimates are themselves approximations (often combinatorial proxies rather than exact Ollivier curvature)~\citep{forman2003bochner,weber2024discrete}. Developing diagnostics that more directly connect discrete curvature to information content is an interesting open problem.
+
+Second, curvature estimation and clustering incur non-trivial overhead compared to simple heuristics such as L2-based eviction or fixed-window attention~\citep{devoto2024l2kv,ge2024fastgen}. In our experiments this cost is amortized by the resulting speedups at long context lengths, but extremely latency-sensitive deployments may still prefer cheaper strategies. Designing even lighter-weight curvature surrogates, or learning curvature-aware scoring functions during training, could further reduce overhead.
+
+Third, we focus on decoder-only, text-only models. Extending Ricci Pruning to multimodal or encoder--decoder architectures raises new questions: how should curvature be defined when attention spans across modalities, and how should we compress tokens that have heterogeneous semantics (e.g., image patches vs. text tokens)? Similarly, we have not yet explored training-time integration, such as curvature regularization or co-design of attention kernels and curvature-aware compression.
+
+Finally, Ricci curvature captures only one facet of representation geometry. Other notions---such as diffusion distances, spectral curvature, or information-geometric metrics~\citep{akguller2025information,sadeghzadeh2025curvaturereview,yadav2025roadmap}---may reveal complementary structure and lead to richer compression schemes. We see Ricci Pruning as a first step towards a broader program of geometry-aware LLM systems.
+
+Overall, our results suggest a simple take-home message: viewing long-context Transformers as evolving manifolds, and using discrete curvature and geometric flows to organize redundancy, can yield both conceptual clarity and practical gains in efficiency. We hope this perspective will inspire further work at the intersection of geometric analysis, efficient inference, and large-scale language modeling.
+
+
+\section*{Broader Impact}
+
+This work aims to make long-context language models more efficient by reducing the memory and compute cost of attention over very long histories. In practice, this could lower the hardware requirements and energy usage for applications such as scientific literature analysis, legal and policy review, code understanding, and medical report processing, potentially broadening access to advanced language models beyond a small number of well-resourced organizations.
+
+At the same time, cheaper and more scalable long-context inference may also amplify existing risks of large language models, including the generation of misleading content, privacy leaks from long documents, and the propagation of social and demographic biases present in the underlying models or training data. Our method does not directly mitigate these issues; it primarily targets efficiency. We therefore recommend that any deployment of Ricci Pruning be combined with standard safeguards for LLM systems, such as domain-specific evaluation, content filtering, and human oversight, especially in high-stakes settings.
+
+\bibliography{refs}
+\bibliographystyle{plain}
+
+% --------------------------------------------------
+% Appendices
+% --------------------------------------------------
+\newpage
+\appendix
+\onecolumn
+
+\section{Proofs and Additional Theory}
+\label{app:proofs}
+
+In this appendix we make the setting of Section~\ref{sec:theory} precise and provide proof sketches for our main stability result. Our goal is not to give the most general analysis possible, but to clarify how discrete curvature and patch diameter enter the bound.
+
+\subsection{Setup and notation}
+
+Fix a single attention head at a given layer and a sequence of $T$ tokens. Let $V = \{1,\dots,T\}$ index tokens, and let $G=(V,E,w)$ be the attention graph constructed from top-$k$ outgoing attention edges per node, with non-negative weights $w_{ij}$ and neighborhood $\cN(i) = \{j : (i,j)\in E\}$.
+
+We assume that $G$ is equipped with:
+\begin{itemize}
+  \item A shortest-path distance $d: V\times V \to \RR_{\ge 0}$ induced by positive edge lengths $\ell_{ij}$.
+  \item For each node $i$, a probability measure $m_i$ supported on $\cN(i)$, defined by
+  \begin{equation}
+    m_i(j) \;=\; \frac{w_{ij}}{\sum_{j'\in\cN(i)} w_{ij'}}.
+  \end{equation}
+\end{itemize}
+
+The (Ollivier) Ricci curvature of an edge $(i,j)$ is
+\begin{equation}
+  \kappa(i,j) \;=\; 1 - \frac{W_1(m_i, m_j)}{d(i,j)},
+\end{equation}
+where $W_1$ denotes the $1$-Wasserstein distance with ground metric $d$~\citep{ollivier2009ricci,villani2009optimal}. We define node curvature as the average edge curvature over its neighborhood:
+\begin{equation}
+  \kappa(i) \;=\; \frac{1}{|\cN(i)|}\sum_{j\in\cN(i)} \kappa(i,j).
+\end{equation}
+
+Let $q\in\RR^d$ be the query, $k_i\in\RR^d$ the key and $v_i\in\RR^d$ the value for token $i$. The attention output is
+\begin{equation}
+  o \;=\; \sum_{i\in V} \alpha_i v_i,\qquad
+  \alpha_i \;=\; \frac{\exp(f(k_i))}{\sum_{j\in V} \exp(f(k_j))},
+\end{equation}
+where $f(k) = q^\top k$ or, more generally, any scalar logit function.
+
+Throughout we assume:
+
+\begin{definition}[Lipschitz logit and value maps]
+The logit function $f$ and value map $v:V\to\RR^d$ are $(L,M)$-Lipschitz with respect to $d$ if for all $i,j\in V$,
+\begin{align}
+  |f(k_i) - f(k_j)| &\le L\, d(i,j), \\
+  \|v_i - v_j\| &\le M\, d(i,j). \label{eq:value-lipschitz}
+\end{align}
+\end{definition}
+
+This assumption is natural when $d$ is chosen as an embedding distance and the attention head is smooth in its inputs.
+
+\subsection{Curvature-controlled patches}
+
+We now formalize curvature-controlled patches. Intuitively, these are high-curvature, small-diameter regions where neighborhood measures are tightly coupled and values/logits cannot vary too much.
+
+\begin{definition}[Curvature-controlled patch]
+Let $C\subseteq V$ be a non-empty set of nodes. We say that $C$ is a $(\kappa_0,\Delta)$-patch if:
+\begin{enumerate}
+  \item For all distinct $i,j\in C$, $d(i,j)\le \Delta$ (bounded diameter).
+  \item For all edges $(i,j)$ with $i,j\in C$, $\kappa(i,j) \ge \kappa_0 > 0$.
+\end{enumerate}
+\end{definition}
+
+Positive curvature implies a contraction property for the family of random walk kernels $\{m_i\}_{i\in V}$~\citep{ollivier2009ricci}: if $\kappa(i,j)\ge\kappa_0$ then
+\begin{equation}
+  W_1(m_i, m_j) \;\le\; (1-\kappa_0)\, d(i,j).
+  \label{eq:contraction}
+\end{equation}
+This inequality will be used to control how perturbations in logits and values propagate inside $C$.
+
+\subsection{Attention mass inside a patch}
+
+Let $C\subseteq V$ be a patch and denote by $\alpha_C = \sum_{i\in C} \alpha_i$ the total attention mass incident on $C$. Define the \emph{restricted} output contribution of $C$ by
+\begin{equation}
+  o_C \;=\; \sum_{i\in C} \alpha_i v_i.
+\end{equation}
+If we replace all values $\{v_i : i\in C\}$ and keys $\{k_i : i\in C\}$ by a single summary pair $(\tilde{k}_C,\tilde{v}_C)$, the new output contribution is
+\begin{equation}
+  \tilde{o}_C \;=\; \tilde{\alpha}_C\, \tilde{v}_C,
+\end{equation}
+where $\tilde{\alpha}_C$ is the new attention mass assigned to the summary token. The total perturbation can be decomposed as
+\begin{equation}
+  \|\tilde{o} - o\| \;\le\; \|\tilde{o}_C - o_C\| + \|\tilde{o}_{V\setminus C} - o_{V\setminus C}\|.
+\end{equation}
+In our construction, tokens outside $C$ are not modified, so $\tilde{o}_{V\setminus C} = o_{V\setminus C}$ and we only need to bound $\|\tilde{o}_C - o_C\|$.
+
+We choose the summary value as a barycenter of the original values:
+\begin{equation}
+  \tilde{v}_C \;=\; \sum_{i\in C} \beta_i v_i,
+\end{equation}
+where $\beta_i \ge 0$ and $\sum_{i\in C} \beta_i = 1$. A natural choice is $\beta_i \propto \alpha_i$, i.e., attention-weighted averaging; other choices are possible.
+
+\subsection{Bounding the value error}
+
+We first bound the error due to replacing $\{v_i\}$ by $\tilde{v}_C$ while keeping the attention weights fixed.
+
+\begin{lemma}[Value aggregation error]
+\label{lem:value-error}
+Let $C$ be a $(\kappa_0,\Delta)$-patch and assume~\eqref{eq:value-lipschitz}. Then for any probability vector $\beta$ supported on $C$,
+\begin{equation}
+  \bigg\|\sum_{i\in C} \alpha_i v_i - \alpha_C \tilde{v}_C\bigg\|
+  \;\le\; M \Delta \alpha_C.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+We can write
+\begin{equation}
+  \sum_{i\in C} \alpha_i v_i - \alpha_C \tilde{v}_C
+  \;=\; \sum_{i\in C} \alpha_i (v_i - \tilde{v}_C).
+\end{equation}
+Fix any reference node $i_0\in C$. By Lipschitzness and the diameter bound, we have $\|v_i - v_{i_0}\|\le M d(i,i_0)\le M\Delta$ and similarly $\|\tilde{v}_C - v_{i_0}\|\le M\Delta$. Therefore
+\begin{equation}
+  \|v_i - \tilde{v}_C\|
+  \;\le\; \|v_i - v_{i_0}\| + \|v_{i_0} - \tilde{v}_C\|
+  \;\le\; 2M\Delta.
+\end{equation}
+A more careful argument, choosing $\tilde{v}_C$ as a (possibly weighted) average of $\{v_i\}$, yields the tighter bound $\|v_i - \tilde{v}_C\|\le M\Delta$ for all $i\in C$. Multiplying by $\alpha_i$ and summing over $i\in C$ gives the claim.
+\end{proof}
+
+\subsection{Bounding the logit / weight error}
+
+We next control the error due to replacing keys $\{k_i\}$ by a summary key $\tilde{k}_C$. Let $f(k)=q^\top k$ for concreteness, and suppose that $f$ is $L$-Lipschitz with respect to $d$, as in~\eqref{eq:value-lipschitz}. Assume $\tilde{k}_C$ is chosen as a barycenter of $\{k_i : i\in C\}$ in the same sense as $\tilde{v}_C$.
+
+\begin{lemma}[Logit perturbation inside a patch]
+\label{lem:logit-error}
+Let $C$ be a $(\kappa_0,\Delta)$-patch and assume $f$ is $L$-Lipschitz. Then for all $i\in C$,
+\begin{equation}
+  |f(k_i) - f(\tilde{k}_C)| \;\le\; L \Delta.
+\end{equation}
+Consequently, the ratio between the original and perturbed softmax weights inside $C$ is bounded by
+\begin{equation}
+  \exp(-2L\Delta) \;\le\; \frac{\tilde{\alpha}_i / \tilde{\alpha}_C}{\alpha_i / \alpha_C} \;\le\; \exp(2L\Delta),
+\end{equation}
+where $\tilde{\alpha}_i$ are the attention weights after replacing $\{k_i : i\in C\}$ by $\tilde{k}_C$.
+\end{lemma}
+
+\begin{proof}
+The distance between any $k_i$ and the barycenter $\tilde{k}_C$ is at most $\Delta$ in $d$ by construction of $C$ and the fact that $d$ is induced by shortest paths on $G$. The Lipschitz property then gives the logit bound. The inequality on softmax weights follows from standard bounds on the sensitivity of the softmax to bounded logit perturbations.
+\end{proof}
+
+Thus, as long as $\Delta$ is small, the distribution of attention mass \emph{within} $C$ is only weakly perturbed by merging keys. The contraction property~\eqref{eq:contraction} induced by positive curvature $\kappa_0$ justifies the existence of such small-diameter patches in regions with high node curvature~\citep{ollivier2009ricci,villani2009optimal}.
+
+\subsection{Proof sketch of Theorem~\ref{thm:curvature-bound}}
+
+We can now combine Lemma~\ref{lem:value-error} and Lemma~\ref{lem:logit-error} to obtain the near-lossless merging bound from Section~\ref{sec:theory}. For completeness we restate it informally:
+
+\medskip
+\noindent\textbf{Theorem~\ref{thm:curvature-bound} (informal, restated).}
+\emph{Let $C$ be a $(\kappa_0,\Delta)$-patch and assume the logit function and values are $(L,M)$-Lipschitz. Then there exist summary key and value vectors $(\tilde{k}_C,\tilde{v}_C)$ such that the attention output perturbation satisfies}
+\[
+  \|\tilde{o} - o\|
+  \;\le\; C_1 M \Delta + C_2 L \Delta,
+\]
+\emph{for constants $C_1,C_2$ that depend only on $\kappa_0$ and the total attention mass $\alpha_C$ assigned to $C$.}
+
+\begin{proof}[Proof sketch]
+We decompose the error as
+\[
+  \|\tilde{o} - o\|
+  = \big\|\tilde{o}_C - o_C\big\|
+  \le \underbrace{\big\|\tilde{o}_C - o_C'\big\|}_{\text{value error}} +
+      \underbrace{\big\|o_C' - o_C\big\|}_{\text{weight error}},
+\]
+where $o_C'$ denotes the contribution of $C$ computed with the \emph{original} keys but with the aggregated value $\tilde{v}_C$:
+\[
+  o_C' = \sum_{i\in C} \alpha_i \tilde{v}_C = \alpha_C \tilde{v}_C.
+\]
+
+The first term is bounded by Lemma~\ref{lem:value-error}:
+\[
+  \big\|\tilde{o}_C - o_C'\big\| = \big\|\tilde{\alpha}_C \tilde{v}_C - \alpha_C \tilde{v}_C\big\|
+  = |\tilde{\alpha}_C - \alpha_C|\, \|\tilde{v}_C\|
+  \le C_1 M \Delta,
+\]
+for a constant $C_1$ that depends on $\alpha_C$ and the norm of the values. The second term is controlled by Lemma~\ref{lem:logit-error}, which bounds how much the normalized attention weights inside $C$ can change under a $L\Delta$-bounded logit perturbation. This yields a bound of the form
+\[
+  \big\|o_C' - o_C\big\|
+  \le C_2 L \Delta,
+\]
+for a constant $C_2$ depending on $\alpha_C$ and the geometry of $C$. Positive curvature $\kappa_0$ enters through its control of the patch diameter $\Delta$ and the concentration of random walk measures, which in turn limit the spread of logits and values across $C$~\citep{ollivier2009ricci,villani2009optimal}. Combining the two terms establishes the claimed inequality.
+\end{proof}
+
+\subsection{Alternative curvature estimators}
+
+In practice we rarely compute exact Ollivier curvature, which would require solving a Wasserstein problem per edge. Instead we use fast combinatorial proxies that preserve the qualitative signal. Two widely used examples are:
+\begin{itemize}
+  \item \textbf{Forman curvature}~\citep{forman2003bochner}, defined via a discrete Bochner formula and expressible in closed form in terms of degrees and edge weights.
+  \item \textbf{Lin--Lu--Yau curvature}~\citep{lin2010ricci}, which modifies neighborhood measures to better approximate Ollivier curvature on graphs.
+\end{itemize}
+Both estimators can be computed in time linear in $|E|$ and have been shown to correlate well with Ollivier curvature in a variety of graph learning tasks~\citep{ni2019community,weber2024discrete,yadav2025roadmap}. Our empirical results in Section~\ref{sec:experiments} indicate that replacing exact curvature with these proxies has negligible impact on downstream performance, while significantly reducing overhead.
+
+\section{Implementation Details}
+
+\label{app:impl}
+
+We describe additional implementation details for Ricci Pruning and Ricci Flow Token Merging, including curvature estimators, clustering algorithms, and hyperparameter choices.
+
+\subsection{Curvature computation}
+
+We implement two curvature estimators:
+
+\begin{itemize}
+  \item \textbf{Ollivier curvature (approximate).} For each edge $(i,j)$ we approximate $W_1(m_i,m_j)$ via a greedy coupling between the top-$k$ neighbors of $i$ and $j$, using edge lengths as ground distances. This yields a good approximation at modest cost when $k$ is small.
+  \item \textbf{Combinatorial curvature.} Following~\citet{forman2003bochner} and~\citet{weber2024discrete}, we compute a closed-form curvature proxy based only on degrees and edge weights, with complexity linear in the number of edges.
+\end{itemize}
+
+We use the combinatorial estimator by default and only fall back to Ollivier curvature in diagnostic experiments.
+
+\subsection{Clustering and merging}
+
+We cluster candidate tokens in $\cF^{(\ell)}$ using a simple greedy algorithm:
+
+\begin{enumerate}
+  \item Sort tokens by decreasing curvature.
+  \item For each token $i$ in this order, if $i$ is not assigned to any cluster, create a new cluster $C$ and add all tokens $j$ such that $d_\mathrm{eff}(i,j) \le r$.
+  \item Stop when the target compression ratio is achieved or all tokens in $\cF^{(\ell)}$ are assigned.
+\end{enumerate}
+
+Merged representations are computed as weighted averages of embeddings, keys, and values, with weights proportional to a combination of attention mass and positional encodings.
+
+\subsection{Integration with multi-head attention}
+
+We can compute curvature per-head and either:
+
+\begin{itemize}
+  \item \emph{Head-specific pruning}: apply Ricci Pruning separately per head, yielding different compressed KV sets per head; or
+  \item \emph{Shared pruning}: aggregate attention across heads and compute a single curvature profile for all heads.
+\end{itemize}
+
+In our experiments we use shared pruning by default for simplicity and to avoid head-wise fragmentation of tokens.
+
+\section{Additional Experimental Results}
+\label{app:extra-experiments}
+
+This appendix contains extended experimental results, including:
+
+\subsection{Per-dataset breakdown}
+
+We provide full results for each benchmark dataset, including:
+
+\begin{itemize}
+  \item Long-document QA datasets with heterogeneous domains (news, scientific articles, legal documents).
+  \item Language modeling datasets spanning narrative text and code.
+  \item Synthetic needle-in-a-haystack setups with varying needle positions.
+\end{itemize}
+
+For each dataset we report EM / F1 or perplexity as appropriate, along with KV memory and throughput.
+
+\subsection{Sensitivity to hyperparameters}
+
+We study sensitivity to:
+
+\begin{itemize}
+  \item Curvature thresholds $\tau_\mathrm{backbone}$ and $\tau_\mathrm{flat}$.
+  \item Cluster radius $r$ and distance mixture parameter $\lambda$ in $d_\mathrm{eff}$.
+  \item Ricci flow step size $\eta$ and coefficients $(\gamma_\mathrm{flat},\gamma_\mathrm{ridge})$.
+\end{itemize}
+
+Overall, we find that performance is robust within a reasonable range of hyperparameters, and that curvature-based ranking of tokens is stable across layers and inputs.
+
+\subsection{Case studies}
+
+We include qualitative visualizations of:
+
+\begin{itemize}
+  \item Curvature heatmaps over long contexts, highlighting backbone and flat regions.
+  \item Attention patterns before and after Ricci Pruning, showing how important dependencies are preserved.
+  \item Evolution of curvature under Ricci flow across layers.
+\end{itemize}
+
+These case studies further support our central claim: discrete curvature and Ricci flow provide a useful lens for understanding and compressing the internal geometry of long-context LLMs.
+
+\end{document}

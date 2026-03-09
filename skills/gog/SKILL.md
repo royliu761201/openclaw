@@ -1,48 +1,116 @@
 ---
 name: gog
-emoji: 🧭
-description: CLI interface for Google Workspace (Gmail, Calendar, Drive, Docs)
-metadata: { "openclaw": { "requires": { "bins": ["gog"] } } }
+description: Google Workspace CLI for Gmail, Calendar, Drive, Contacts, Sheets, and Docs.
+homepage: https://gogcli.sh
+metadata:
+  {
+    "openclaw":
+      {
+        "emoji": "🎮",
+        "requires": { "bins": ["gog"] },
+        "install":
+          [
+            {
+              "id": "brew",
+              "kind": "brew",
+              "formula": "steipete/tap/gogcli",
+              "bins": ["gog"],
+              "label": "Install gog (brew)",
+            },
+          ],
+      },
+  }
 ---
 
-# `gog` (Google in your terminal) Skill
+# gog
 
-Use the `gog` command to interact with the user's Google Workspace (Gmail, Calendar, Drive, Docs, Sheets, etc).
+Use `gog` for Gmail/Calendar/Drive/Contacts/Sheets/Docs. Requires OAuth setup.
 
-## Requirements
+Setup (once)
 
-If the user hasn't authenticated, instruct them to open their terminal and run:
-`gog auth credentials <path_to_client_json>` followed by `gog auth add <their-email>`.
+- `gog auth credentials /path/to/client_secret.json`
+- `gog auth add you@gmail.com --services gmail,calendar,drive,contacts,docs,sheets`
+- `gog auth list`
 
-**Important Output Parsing**: For agent processing, append `--json` to `gog` commands (when applicable) to receive a structured JSON response instead of human-oriented tables. Append `--plain` for tab-separated output if `--json` is unavailable or errors out.
+Common commands
 
-## Base Commands
+- Gmail search: `gog gmail search 'newer_than:7d' --max 10`
+- Gmail messages search (per email, ignores threading): `gog gmail messages search "in:inbox from:ryanair.com" --max 20 --account you@example.com`
+- Gmail send (plain): `gog gmail send --to a@b.com --subject "Hi" --body "Hello"`
+- Gmail send (multi-line): `gog gmail send --to a@b.com --subject "Hi" --body-file ./message.txt`
+- Gmail send (stdin): `gog gmail send --to a@b.com --subject "Hi" --body-file -`
+- Gmail send (HTML): `gog gmail send --to a@b.com --subject "Hi" --body-html "<p>Hello</p>"`
+- Gmail draft: `gog gmail drafts create --to a@b.com --subject "Hi" --body-file ./message.txt`
+- Gmail send draft: `gog gmail drafts send <draftId>`
+- Gmail reply: `gog gmail send --to a@b.com --subject "Re: Hi" --body "Reply" --reply-to-message-id <msgId>`
+- Calendar list events: `gog calendar events <calendarId> --from <iso> --to <iso>`
+- Calendar create event: `gog calendar create <calendarId> --summary "Title" --from <iso> --to <iso>`
+- Calendar create with color: `gog calendar create <calendarId> --summary "Title" --from <iso> --to <iso> --event-color 7`
+- Calendar update event: `gog calendar update <calendarId> <eventId> --summary "New Title" --event-color 4`
+- Calendar show colors: `gog calendar colors`
+- Drive search: `gog drive search "query" --max 10`
+- Contacts: `gog contacts list --max 20`
+- Sheets get: `gog sheets get <sheetId> "Tab!A1:D10" --json`
+- Sheets update: `gog sheets update <sheetId> "Tab!A1:B2" --values-json '[["A","B"],["1","2"]]' --input USER_ENTERED`
+- Sheets append: `gog sheets append <sheetId> "Tab!A:C" --values-json '[["x","y","z"]]' --insert INSERT_ROWS`
+- Sheets clear: `gog sheets clear <sheetId> "Tab!A2:Z"`
+- Sheets metadata: `gog sheets metadata <sheetId> --json`
+- Docs export: `gog docs export <docId> --format txt --out /tmp/doc.txt`
+- Docs cat: `gog docs cat <docId>`
 
-Below are the primary subsystems you can orchestrate. You can stack commands, for example `gog gmail get <message_id>`.
+Calendar Colors
 
-- **`gog time now`**
-  Get current local server time in readable text.
+- Use `gog calendar colors` to see all available event colors (IDs 1-11)
+- Add colors to events with `--event-color <id>` flag
+- Event color IDs (from `gog calendar colors` output):
+  - 1: #a4bdfc
+  - 2: #7ae7bf
+  - 3: #dbadff
+  - 4: #ff887c
+  - 5: #fbd75b
+  - 6: #ffb878
+  - 7: #46d6db
+  - 8: #e1e1e1
+  - 9: #5484ed
+  - 10: #51b749
+  - 11: #dc2127
 
-- **`gog gmail`**
-  Search (`gog gmail search 'newer_than:7d' --max 10`), read threads (`gog gmail thread get <id>`), send emails (`gog gmail send --to x@a.com --subject Y --body Z`), and manage labels/filters.
+Email Formatting
 
-- **`gog calendar`**
-  Check schedules (`gog calendar events primary --today`), see team calendars (`gog calendar team team-alias`), list calendars (`gog calendar calendars`), search events (`gog calendar search "meeting"`), or create/update/delete events.
+- Prefer plain text. Use `--body-file` for multi-paragraph messages (or `--body-file -` for stdin).
+- Same `--body-file` pattern works for drafts and replies.
+- `--body` does not unescape `\n`. If you need inline newlines, use a heredoc or `$'Line 1\n\nLine 2'`.
+- Use `--body-html` only when you need rich formatting.
+- HTML tags: `<p>` for paragraphs, `<br>` for line breaks, `<strong>` for bold, `<em>` for italic, `<a href="url">` for links, `<ul>`/`<li>` for lists.
+- Example (plain text via stdin):
 
-- **`gog drive`**
-  List and search files (`gog drive ls`, `gog drive search "receipt"`), upload/download/organize folders. Note down the `<fileId>` from the output to manipulate documents.
+  ```bash
+  gog gmail send --to recipient@example.com \
+    --subject "Meeting Follow-up" \
+    --body-file - <<'EOF'
+  Hi Name,
 
-- **`gog docs`** / **`gog sheets`** / **`gog slides`**
-  Get details or read components of the Google app formats.
-  Examples: `gog docs info <id>`, `gog docs cat <id>`, `gog slides info <id>`.
+  Thanks for meeting today. Next steps:
+  - Item one
+  - Item two
 
-- **`gog tasks`**
-  Get tasks (`gog tasks lists`, `gog tasks list <tasklistId>`).
+  Best regards,
+  Your Name
+  EOF
+  ```
 
-## Sandboxing & Limits
+- Example (HTML list):
+  ```bash
+  gog gmail send --to recipient@example.com \
+    --subject "Meeting Follow-up" \
+    --body-html "<p>Hi Name,</p><p>Thanks for meeting today. Here are the next steps:</p><ul><li>Item one</li><li>Item two</li></ul><p>Best regards,<br>Your Name</p>"
+  ```
 
-The tool communicates dynamically over REST APIs using user OAuth credentials. Please be cautious with destructive operations like `gmail send`, `drive delete`, or `calendar delete`. Verify inputs if they arise from untrusted sources.
+Notes
 
-## Aliases
-
-If the user specifies an email address, you can append `--account <email>` to the end of your command.
+- Set `GOG_ACCOUNT=you@gmail.com` to avoid repeating `--account`.
+- For scripting, prefer `--json` plus `--no-input`.
+- Sheets values can be passed via `--values-json` (recommended) or as inline rows.
+- Docs supports export/cat/copy. In-place edits require a Docs API client (not in gog).
+- Confirm before sending mail or creating events.
+- `gog gmail search` returns one row per thread; use `gog gmail messages search` when you need every individual email returned separately.

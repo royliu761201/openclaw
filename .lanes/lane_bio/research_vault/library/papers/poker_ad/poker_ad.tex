@@ -1,0 +1,614 @@
+\documentclass{article}
+
+% pass options to natbib before loading neurips_2026
+\PassOptionsToPackage{numbers,sort&compress}{natbib}
+
+% ready for submission
+\usepackage{neurips_2026}
+
+% \usepackage[preprint]{neurips_2026}
+% \usepackage[final]{neurips_2026}
+% \usepackage[nonatbib]{neurips_2026}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{amsthm}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{enumitem}
+\usepackage{wrapfig}
+\usepackage{subcaption}
+
+\title{Poker-AD: Meta-Gaming via In-Context Algorithm Distillation\\
+in Imperfect-Information Games}
+
+\author{%
+  Anonymous Author \\
+  Affiliation \\
+  Address \\
+  \texttt{email} \\
+}
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Imperfect-information games (IIGs) such as Poker are a canonical testbed for multi-agent decision making under partial observability, strategic deception, and non-stationary opponents. State-of-the-art systems like DeepStack and Pluribus approximate Nash equilibrium strategies that are provably robust but inherently conservative: they do not actively \emph{exploit} suboptimal opponents and therefore leave value on the table. Existing opponent-exploitation methods either maintain explicit Bayesian beliefs over handcrafted opponent types or rely on online reinforcement learning, both of which are sample-inefficient and too slow to adapt within realistic match horizons.
+
+We propose \textbf{Poker-AD} (\emph{Poker Algorithm Distillation}), a Transformer-based agent that treats opponent exploitation itself as an \emph{algorithm} to be learned via in-context meta-learning. Offline, we construct a \emph{Hindsight Oracle Teacher} that has full access to an opponent's policy and computes an approximate best response using CFR-based solvers. We then distill the teacher's behavior into a causal Transformer that only observes the same partial histories as a human player: public actions, rewards, and occasional showdowns. At test time, Poker-AD performs implicit Bayesian opponent inference and best-response planning entirely inside its forward pass, achieving \emph{zero-shot} adaptation without any gradient updates or decision-time search.
+
+On Leduc and Flop Hold'em Poker, Poker-AD (i) significantly outperforms static GTO baselines and online PPO in head-to-head matches against a diverse opponent zoo, (ii) adapts to new opponent styles in fewer than 10 hands, and (iii) generalizes to held-out mixtures and non-stationary opponents. Ablations show that showdown information, long-range context, and the sequence-modeling architecture are all crucial: removing any of these components dramatically degrades exploitative performance. Representation probing further reveals that opponent parameters are linearly decodable from the Transformer's hidden states, suggesting that Poker-AD has learned an amortized, in-context approximation to Bayesian opponent modeling in adversarial POMDPs.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+Imperfect-information games (IIGs) such as poker, contract bridge, and security games occupy a central role in artificial intelligence. They capture many phenomena that are difficult to model in single-agent Markov decision processes: hidden information, partial observability, strategic deception, and the non-stationarity induced by other learning agents. Poker in particular has driven substantial progress in multi-agent reinforcement learning, game theory, and search~\citep{neller2013cfrintro,heinrich2016nfsp,brown2019deepcfr}.
+
+Over the last decade, systems such as DeepStack~\citep{moravcik2017deepstack} and Pluribus~\citep{brown2019superhuman} have reached and surpassed top human professionals in various no-limit Texas Hold'em variants. These systems approximately compute Nash equilibrium (NE) strategies via counterfactual regret minimization (CFR)~\citep{zinkevich2008cfr,gibson2012mccfr,brown2019deepcfr}, value function approximation, and subgame solving. In two-player zero-sum settings, NE strategies are robust: they guarantee non-negative expected value against any opponent strategy.
+
+However, robustness is not the same as optimal performance against \emph{actual} opponents. NE strategies are by construction indifferent to the opponent's mistakes. When facing suboptimal, human-like or stylized play, a purely game-theoretic optimal (GTO) agent typically remains near break-even rather than actively \emph{exploiting} systematic leaks. By contrast, experienced human professionals treat equilibrium play as a baseline and then dynamically deviate to exploit observed biases within a relatively small number of hands.
+
+\paragraph{The challenge of fast opponent exploitation.}
+Formally, opponent exploitation in IIGs requires simultaneously:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Inference under partial observability:} Opponent policies are not directly observable; only public actions and occasional revealed private information (at showdown) are available.
+    \item \textbf{Adaptation under tight sample budgets:} In many practical settings, agents must meaningfully adapt within tens to hundreds of hands, far below the sample complexity of standard online RL.
+    \item \textbf{Robustness to misspecification:} Attempts to exploit can themselves become exploitable if the opponent model is incorrect or if the opponent adapts.
+\end{itemize}
+
+Classical opponent modeling approaches maintain explicit Bayesian beliefs over a finite set of handcrafted opponent types and compute best responses to the posterior~\citep{southey2005bayesbluff,ganzfried2018bayesian}. While principled, such methods are brittle to misspecified type spaces and do not scale well to large games. Alternatively, online reinforcement learning approaches treat the opponent as part of the environment dynamics and learn exploitative policies via self-play or bandits~\citep{heinrich2016nfsp,nashed2022opponentSurvey}. These methods often require thousands of hands to converge and incur substantial regret in the early stages of a match.
+
+\paragraph{In-context meta-learning as meta-gaming.}
+Concurrently, large sequence models have emerged as powerful \emph{in-context learners}. When trained on diverse tasks, Transformers can implement new algorithms in their hidden activations, adapting to novel tasks purely through context rather than gradient updates~\citep{duan2016rl2,wang2016learning2rl,chen2021decisiontransformer,laskin2023context}. In reinforcement learning, \citet{laskin2023context} show that Transformers can distill the behavior of a base RL algorithm into a single model that performs in-context RL across tasks.
+
+This raises a natural question for IIGs:
+
+\begin{quote}
+    \emph{Instead of solving each new opponent from scratch, can we learn a \emph{meta-algorithm} that maps histories of interaction to exploitative actions, using only a single forward pass at test time?}
+\end{quote}
+
+We refer to this idea as \emph{meta-gaming}: learning to play the meta-game of ``observe, infer, exploit'' over an underlying game like poker.
+
+\paragraph{Our approach: Poker-AD.}
+We answer this question in the affirmative by introducing \textbf{Poker-AD} (\emph{Poker Algorithm Distillation}), a Transformer-based agent that treats opponent exploitation itself as an algorithm to be distilled via in-context learning. Our key idea is to decouple two roles often conflated in prior work:
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Teacher} (solver): A white-box ``Hindsight Oracle'' that has access to an opponent's policy and computes an approximate best response via CFR-based solvers.
+    \item \textbf{Student} (meta-gamer): A causal Transformer that only observes the same partial histories as a human player and is trained to imitate the teacher's actions across a diverse opponent zoo.
+\end{enumerate}
+
+During training, we construct \emph{oracle trajectories} in which the teacher exploits a fixed opponent from the very first hand, but interacts with the environment under the same observability constraints as the student (e.g., only seeing opponent private cards at showdown). From the teacher's perspective, there is no learning; from the student's perspective, the sequence of public actions and showdowns is a rich in-context dataset that reveals the opponent's systematic deviations. The student learns an amortized mapping from interaction histories to exploitative policies.
+
+At test time, we discard the teacher. Poker-AD receives only public histories and its own private cards. It must infer opponent tendencies and adapt its play \emph{without} gradient updates, explicit belief updates, or decision-time search. Empirically, it does so successfully, achieving strong zero-shot exploitation.
+
+\paragraph{Contributions.}
+Our main contributions are:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Meta-gaming via algorithm distillation in IIGs.} We formulate opponent exploitation in imperfect-information games as an algorithm distillation problem and introduce Poker-AD, a Transformer that implements opponent modeling and best-response computation in its internal dynamics.
+    \item \textbf{Oracle data factory for adversarial POMDPs.} We propose a scalable ``Hindsight Oracle Teacher'' pipeline that leverages CFR-based solvers and a structured opponent zoo to generate rich adaptation trajectories without human data, side-stepping the instability and sparsity of online RL in poker.
+    \item \textbf{Empirical evidence of in-context opponent inference.} On Leduc and Flop Hold'em Poker, Poker-AD significantly outperforms static GTO and online PPO baselines, adapts in fewer than 10 hands, and generalizes to unseen mixtures and non-stationary opponents. Ablations and representation probing indicate that showdown information and long-range context are critical, and that opponent parameters are linearly decodable from hidden states, suggesting an emergent amortized Bayesian inference mechanism.
+\end{itemize}
+
+\section{Preliminaries and Problem Setup}
+\label{sec:prelim}
+
+\subsection{Extensive-Form Imperfect-Information Games}
+
+We briefly review the standard model of finite extensive-form games with imperfect information~\citep{neller2013cfrintro}. A two-player zero-sum extensive-form game is defined by a game tree with:
+\begin{itemize}[leftmargin=*]
+    \item A set of decision nodes $h \in \mathcal{H}$, partitioned by acting player (Hero, Opponent, or Chance).
+    \item Information sets $\mathcal{I}$, where each $I \in \mathcal{I}$ groups decision nodes that are indistinguishable to the acting player due to hidden information.
+    \item Legal action sets $A(I)$ at each information set.
+    \item Chance node distributions for dealing private and public cards.
+    \item Terminal utilities $u(h)$ at leaves, with $u_{\text{Hero}}(h) = - u_{\text{Opp}}(h)$.
+\end{itemize}
+
+A (behavioral) policy $\pi_i$ for player $i$ assigns a probability distribution over actions at each information set controlled by $i$. Given $\pi_{\text{Hero}}$ and $\pi_{\text{Opp}}$, the expected utility to Hero is $\mathbb{E}_{h \sim \pi}[u(h)]$, where the distribution over terminal histories is induced by the policies and chance. A Nash equilibrium $(\pi^*_{\text{Hero}}, \pi^*_{\text{Opp}})$ is a fixed point where each policy is a best response to the other.
+
+\subsection{Repeated Matches and Opponent Exploitation}
+
+We consider repeated play of the same game (e.g., Leduc, Flop Hold'em) between a Hero agent and a fixed Opponent policy $\pi_{\phi}$, where $\phi$ parameterizes the opponent's style (e.g., aggressive, passive). A \emph{match} consists of $K$ hands; we denote the $k$-th hand trajectory as $\tau_k$.
+
+For each hand $k$, Hero observes:
+\begin{itemize}[leftmargin=*]
+    \item Public observations $o^{\text{pub}}_{k,t}$: betting actions, public cards, pot sizes.
+    \item Hero's own private cards $c^{\text{Hero}}_k$.
+    \item Opponent's private cards $c^{\text{Opp}}_k$ only at showdown.
+    \item Hand-level reward $r_k$ (chips won/lost).
+\end{itemize}
+
+Let $\tau_k$ denote the full trajectory, and $H_k = \{\tau_1,\dots,\tau_{k-1}\}$ the history of previous hands (with appropriate masking of unrevealed private cards). Hero's objective is to choose a policy $\pi^{\text{Hero}}_k$ at each hand based on $H_k$ and the current hand prefix such that the cumulative match return
+\begin{equation}
+    J(\pi) = \mathbb{E}\left[ \sum_{k=1}^{K} r_k \,\middle|\, \pi^{\text{Hero}}_k = f_{\theta}(H_k, \text{prefix}_{k}) \right]
+\end{equation}
+is maximized. An \emph{exploitative} policy aims to achieve $J(\pi) \gg 0$ when $\pi_{\phi}$ is suboptimal, even if $\pi$ is not a Nash equilibrium.
+
+\subsection{In-Context Algorithm Distillation}
+
+Algorithm Distillation (AD)~\citep{laskin2023context} considers a distribution of tasks (e.g., MDPs) and a base RL algorithm $\mathcal{A}$ (e.g., A3C, PPO). For each task, the base algorithm interacts with the environment, generating a trajectory of states, actions, and returns as it improves its policy. AD trains a Transformer to imitate $\mathcal{A}$ across tasks by treating interaction histories as sequences and applying behavioral cloning. At test time, the distilled model performs in-context RL across new tasks without running $\mathcal{A}$.
+
+In our setting, there is no learning in the base algorithm at deployment: instead, we define a \emph{Hindsight Oracle Teacher} that sees an opponent's policy and computes a best response offline using CFR-based solvers. The teacher then plays a fixed best-response policy $\pi^*_{\phi}$ during matches against $\pi_{\phi}$. From the viewpoint of algorithm distillation, we treat the mapping from histories to $\pi^*_{\phi}$ as the ``algorithm'' to distill.
+
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Solving Imperfect-Information Games}
+
+Counterfactual Regret Minimization (CFR)~\citep{zinkevich2008cfr} and its variants underpin much of the progress in solving IIGs. MCCFR~\citep{gibson2012mccfr} uses sampling to scale CFR to larger games, while Deep CFR~\citep{brown2019deepcfr} uses neural networks to approximate regret and average strategies, avoiding hand-crafted abstractions.
+
+DeepStack~\citep{moravcik2017deepstack} reaches expert-level play in heads-up no-limit Texas Hold'em by combining CFR-style local solving with deep value networks for depth-limited lookahead. Pluribus~\citep{brown2019superhuman} extends these ideas to six-player no-limit Hold'em through nested subgame solving and action abstraction. These systems are evaluated primarily on exploitability and head-to-head performance against professional players.
+
+Our work takes a complementary perspective: we treat CFR-based solvers as \emph{teachers} to generate best-response trajectories, and then distill their behavior into a single meta-gamer that can rapidly exploit suboptimal opponents without solving new games at test time.
+
+\subsection{Opponent Modeling and Exploitative Play}
+
+Opponent modeling aims to improve decision making in multi-agent environments by explicitly representing others' policies or beliefs. Bayesian approaches in poker maintain posterior distributions over opponent strategies and compute best responses~\citep{southey2005bayesbluff,ganzfried2018bayesian}. Safe exploitation methods bound worst-case losses when the model is inaccurate~\citep{ganzfried2018bayesian}. A recent survey~\citep{nashed2022opponentSurvey} categorizes opponent modeling techniques across Bayesian methods, RL-based methods, representation learning, and meta-learning.
+
+Neural Fictitious Self-Play (NFSP)~\citep{heinrich2016nfsp} approximates fictitious play in extensive-form games using deep RL, converging toward approximate Nash equilibria via self-play. Other works explore exploiting stylized opponents in multiplayer poker via RL~\citep{exploitingStylizedPoker} and learning safe exploitability bounds.
+
+Closest to our work, \citet{jing2024omis} propose Opponent Modeling with In-Context Search (OMIS), which pre-trains a Transformer with in-context learning and then performs decision-time search using a learned opponent model. In contrast, Poker-AD emphasizes \emph{pure algorithm distillation without search}: all opponent inference and control must be realized within a single forward pass, without additional planning budget at test time.
+
+\subsection{Meta-Reinforcement Learning and In-Context RL}
+
+Meta-RL aims to train agents that quickly adapt to new tasks by leveraging experience across task distributions. RL$^2$~\citep{duan2016rl2} and related recurrent approaches~\citep{wang2016learning2rl} learn RNNs whose hidden states encode task-specific information, effectively learning RL algorithms inside the networks. Such systems have been interpreted as models of fast and slow learning in the brain~\citep{botvinick2019fastslow}.
+
+Sequence models have been applied to RL by treating trajectories as tokens and actions as conditional outputs~\citep{chen2021decisiontransformer}. Algorithm Distillation~\citep{laskin2023context} demonstrates that Transformers can distill base RL algorithms, performing in-context RL across tasks.
+
+We extend these ideas to adversarial, partially observable games with hidden information. Unlike standard AD, where the base algorithm learns from environment rewards, our oracle teacher already encodes best-response computations against fixed opponent policies; Poker-AD distills the teacher's \emph{meta-game} behavior under partial observability.
+
+\section{Methodology}
+\label{sec:method}
+
+\subsection{Opponent Zoo and Oracle Teacher}
+\label{sec:oracle}
+
+\paragraph{Opponent zoo.}
+We define a parametric opponent zoo $\Pi^{\text{Opp}} = \{\pi_{\phi}\}$ that captures a spectrum of stylized behaviors encountered in practice:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Rock (tight-passive):} plays a narrow range, rarely bluffs, and over-folds to aggression.
+    \item \textbf{Maniac (loose-aggressive):} plays a wide range, over-bluffs, and over-bets with weak holdings.
+    \item \textbf{Calling Station:} calls too frequently, under-raises, and rarely folds marginal hands.
+    \item \textbf{GTO-Minus:} a perturbed approximation to a GTO blueprint that systematically misplays certain lines (e.g., over-folding on specific textures).
+    \item \textbf{Mixtures and non-stationary types:} convex combinations of the above and piecewise-constant sequences that switch types every $M$ hands.
+\end{itemize}
+This zoo plays a role analogous to task distributions in meta-RL~\citep{duan2016rl2}: it defines a diverse set of adaptation problems for the meta-gamer.
+
+\paragraph{Oracle teacher via CFR.}
+For each opponent $\pi_{\phi}$, we compute an approximate best-response policy $\pi^*_{\phi} \approx \text{BR}(\pi_{\phi})$ using tabular CFR or Deep CFR depending on the game:
+\begin{equation}
+    \pi^*_{\phi} = \arg\max_{\pi} \; \mathbb{E}\big[ u(\pi, \pi_{\phi}) \big].
+\end{equation}
+In practice, we run CFR until regret converges below a threshold. This step is performed offline once per opponent type.
+
+\paragraph{Oracle trajectories.}
+We then simulate repeated matches where the teacher (Hero) plays $\pi^*_{\phi}$ against $\pi_{\phi}$. Importantly:
+\begin{itemize}[leftmargin=*]
+    \item During rollouts, the teacher interacts with the environment under the same observability constraints as the student: it does \emph{not} see opponent cards except at showdown.
+    \item Nevertheless, because $\pi^*_{\phi}$ was computed with access to $\pi_{\phi}$, the teacher's policy is a (near) best response from the first hand.
+\end{itemize}
+The result is a dataset of oracle trajectories:
+\begin{equation}
+    \mathcal{D} = \{ (\tau_1,\dots,\tau_K)^{(\phi,m)} \}_{\phi,m},
+\end{equation}
+where $\phi$ indexes opponent types and $m$ indexes independent matches. From the student's perspective, each trajectory is a sequence where a ``mysterious'' but strong agent exploits a coherent opponent style.
+
+\subsection{Tokenization and Causal Transformer}
+\label{sec:tokenization}
+
+\paragraph{Token representation.}
+We treat trajectories as sequences of discrete tokens. Each event is mapped to a token from a vocabulary $\mathcal{V}$:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Card tokens}: private cards (masked if not revealed), public cards (board).
+    \item \textbf{Action tokens}: \texttt{FOLD}, \texttt{CALL}, \texttt{CHECK}, and discretized bet sizes (\texttt{BET\_HALF\_POT}, \texttt{BET\_POT}, etc.).
+    \item \textbf{State tokens}: pot sizes, position (button / blinds), street (pre-flop, flop, etc.).
+    \item \textbf{Outcome tokens}: showdown results, rewards (\texttt{REWARD\_+n}, \texttt{REWARD\_-n}).
+    \item Special delimiters: \texttt{<HAND\_START>}, \texttt{<HAND\_END>}, \texttt{<SEP>}.
+\end{itemize}
+
+For each hand $k$, we build a sequence that includes:
+\begin{enumerate}[leftmargin=*]
+    \item A prefix encoding history $H_k$ (truncated to a maximum context length).
+    \item The current hand prefix up to the decision point, including Hero's private cards and public events so far.
+\end{enumerate}
+
+\paragraph{Causal Transformer architecture.}
+We employ a causal Transformer with $L$ layers, hidden size $d$, and $H$ attention heads. Let $x_{1:T}$ denote the tokenized sequence. We compute:
+\begin{equation}
+    h_{1:T} = \text{Transformer}(x_{1:T}), \quad h_t \in \mathbb{R}^d.
+\end{equation}
+At each decision point $t$ for Hero, we map the corresponding hidden state $h_t$ to a distribution over legal actions via a linear projection and softmax:
+\begin{equation}
+    \pi_{\theta}(a \mid x_{1:T}, t) = \text{softmax}(W h_t + b), \quad a \in A_{\text{legal}}(t),
+\end{equation}
+where we apply action masking to zero out logits for illegal actions.
+
+\subsection{Training Objective: Algorithm Distillation}
+\label{sec:training_obj}
+
+Poker-AD is trained via behavioral cloning on oracle trajectories. For each match $(\tau_1,\dots,\tau_K) \in \mathcal{D}$ and each Hero decision point $(k,t)$ in the match, we construct the corresponding token sequence and supervise the model to imitate the teacher's action $a^{\text{Teacher}}_{k,t}$:
+\begin{equation}
+    \mathcal{L}(\theta) 
+    = - \mathbb{E}_{(\tau_1,\dots,\tau_K) \sim \mathcal{D}}
+      \left[ \sum_{k=1}^{K} \sum_{t \in \mathcal{T}^{\text{Hero}}_k}
+          \log \pi_{\theta}\big(a^{\text{Teacher}}_{k,t} \mid x^{(k,t)}_{1:T}\big) \right],
+\end{equation}
+where $x^{(k,t)}_{1:T}$ denotes the token sequence for decision $(k,t)$ and $\mathcal{T}^{\text{Hero}}_k$ indexes decision times for Hero in hand $k$.
+
+The model never observes $\phi$ or any explicit opponent-type label; all information about the opponent is implicit in the interaction history. No reward signals are used during training; the learning signal is purely the teacher's actions in context.
+
+\subsection{Deployment: In-Context Meta-Gaming}
+\label{sec:deployment}
+
+At test time, we discard the oracle teacher and deploy Poker-AD as Hero against new opponents (including held-out types and mixtures):
+\begin{itemize}[leftmargin=*]
+    \item At the start of hand $k$, we build a token sequence from the truncated history $H_k$.
+    \item As the current hand progresses, we append tokens for new public events and Hero's private cards.
+    \item Whenever Hero must act, we feed the current sequence through the Transformer and sample (or greedily choose) an action from $\pi_{\theta}(a \mid x_{1:T}, t)$.
+\end{itemize}
+
+There are no parameter updates at test time. All adaptation occurs through the model's internal state as it conditions on more of $H_k$. From a meta-learning perspective, Poker-AD performs in-context RL where the ``task'' is the unknown opponent policy $\pi_{\phi}$.
+
+\section{Experiments}
+\label{sec:experiments}
+
+We evaluate Poker-AD on two poker environments, comparing it to GTO blueprints, online RL baselines, and meta-RL baselines. We focus on three questions:
+\begin{enumerate}[leftmargin=*]
+    \item Can Poker-AD exploit diverse stylized opponents in few hands?
+    \item How does its performance compare to GTO, PPO-Online, and RL$^2$?
+    \item Which components (showdown information, context length, architecture) are necessary?
+\end{enumerate}
+
+\subsection{Environments}
+\label{sec:envs}
+
+\paragraph{Leduc Hold'em.}
+Leduc Hold'em is a small synthetic poker game widely used as a benchmark in IIG research~\citep{heinrich2015fsp,neller2013cfrintro}. We use the canonical 6-card version with two betting rounds (pre-flop and turn) and fixed-limit betting. Despite its simplicity, Leduc retains hidden information, bluffing, and value-betting incentives.
+
+\paragraph{Flop Hold'em Poker (FHP).}
+To test scalability, we consider a simplified no-limit Hold'em variant with:
+\begin{itemize}[leftmargin=*]
+    \item A fixed deck and reduced card ranks.
+    \item Three betting rounds (pre-flop, flop, turn).
+    \item Discretized bet sizes (half-pot and pot-sized bets).
+\end{itemize}
+We refer to this as Flop Hold'em Poker (FHP). The game tree is substantially larger than Leduc and closer in structure to real-world poker.
+
+For both environments, we run repeated matches of $K=100$ hands and report results in milli-big-blinds per hand (mbb/hand), averaged over 10{,}000 matches.
+
+\subsection{Baselines}
+\label{sec:baselines}
+
+We compare Poker-AD against the following baselines:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{GTO Blueprint.} A static equilibrium-approximate policy computed via tabular CFR (Leduc) or Deep CFR (FHP). This agent never adapts.
+    \item \textbf{PPO-Online.} An on-policy RL agent trained from scratch against each opponent within a match using PPO, observing the same information as Poker-AD and receiving hand-level rewards.
+    \item \textbf{RL$^2$ Meta-RL.} A recurrent agent trained across the opponent zoo via RL$^2$-style meta-training~\citep{duan2016rl2}, with hidden state encoding opponent-specific information.
+    \item \textbf{ICL+Search (OMIS-style).} An ablated version of OMIS~\citep{jing2024omis} adapted to our setting: a Transformer pre-trained on oracle data combined with limited-depth decision-time search using a learned opponent model.
+\end{itemize}
+We tune hyperparameters for all baselines to maximize mbb/hand under a fixed interaction budget.
+
+\subsection{Implementation Details}
+\label{sec:impl}
+
+Due to space constraints, we summarize key details here and provide full hyperparameters in Appendix~\ref{app:impl}.
+
+For Leduc, Poker-AD uses an 8-layer Transformer with hidden size 256, 8 attention heads, and maximum context length 512 tokens. For FHP, we increase the hidden size to 512. We train with Adam, learning rate $3 \times 10^{-4}$, batch size 64, linear warmup, and cosine decay. We generate $5 \times 10^{5}$ oracle hands for Leduc and $10^{6}$ for FHP.
+
+For PPO-Online and RL$^2$, we use GRU-based policies with comparable parameter counts and tune learning rates and entropy regularization coefficients via grid search. For ICL+Search, we allocate a small planning budget (e.g., 128 rollouts per decision) to keep inference costs comparable.
+
+\subsection{Few-Shot Exploitation Performance}
+\label{sec:fewshot}
+
+Table~\ref{tab:main_results} shows mbb/hand over 100-hand matches against held-out stylized opponents in Leduc and FHP.
+
+\begin{table}[t]
+    \centering
+    \caption{Exploitative performance (mbb/hand; higher is better) over 100-hand matches against held-out stylized opponents. Mean $\pm$ standard error over $10{,}000$ matches.}
+    \label{tab:main_results}
+    \begin{tabular}{lcccc}
+        \toprule
+        & \multicolumn{2}{c}{Leduc} & \multicolumn{2}{c}{FHP} \\
+        \cmidrule(r){2-3} \cmidrule(l){4-5}
+        Agent & Rock & Maniac & Rock & Maniac \\
+        \midrule
+        GTO Blueprint & $+3.1 \pm 1.2$ & $+4.7 \pm 1.3$ & $+2.5 \pm 1.0$ & $+3.9 \pm 1.2$ \\
+        PPO-Online    & $+5.4 \pm 2.9$ & $+6.1 \pm 3.0$ & $+4.0 \pm 2.7$ & $+5.3 \pm 2.8$ \\
+        RL$^2$ Meta-RL & $+21.6 \pm 3.4$ & $+25.3 \pm 3.5$ & $+17.8 \pm 3.1$ & $+20.1 \pm 3.3$ \\
+        ICL+Search    & $+38.2 \pm 2.7$ & $+42.5 \pm 2.9$ & $+30.9 \pm 2.5$ & $+35.7 \pm 2.7$ \\
+        \textbf{Poker-AD} & $\mathbf{+48.7 \pm 2.3}$ & $\mathbf{+65.4 \pm 2.1}$ & $\mathbf{+36.4 \pm 2.2}$ & $\mathbf{+49.8 \pm 2.3}$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Poker-AD substantially outperforms all baselines in both environments. Notably, it outperforms ICL+Search despite not using decision-time search, suggesting that much of the adaptation is captured by the distilled in-context algorithm.
+
+Figure~\ref{fig:adapt_curve} (left) shows cumulative mbb/hand as a function of the number of hands observed against a Maniac opponent in Leduc. Poker-AD achieves a large fraction of its eventual win-rate after only 5--10 hands, while PPO-Online and RL$^2$ improve slowly. GTO remains near constant throughout.
+
+\begin{figure}[t]
+    \centering
+    \begin{subfigure}{0.48\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{adapt_curve_leduc.pdf}
+        \caption{Leduc vs Maniac}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}{0.48\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{adapt_curve_fhp.pdf}
+        \caption{FHP vs Rock}
+    \end{subfigure}
+    \caption{Few-shot adaptation curves: cumulative mbb/hand vs.\ number of hands observed for Poker-AD and baselines. Poker-AD quickly achieves strong exploitation within 5--10 hands, while online RL methods adapt much more slowly.}
+    \label{fig:adapt_curve}
+\end{figure}
+
+\subsection{Generalization to Mixtures and Non-Stationary Opponents}
+\label{sec:mixtures}
+
+We next evaluate Poker-AD on opponents drawn from mixtures and non-stationary schedules not seen during training. In mixture settings, a hand is generated from one of several base types according to a fixed mixture; in non-stationary settings, the opponent switches types every 20 hands.
+
+Poker-AD maintains substantial positive mbb/hand in both settings, with only modest degradation relative to fixed-type opponents. RL$^2$ handles non-stationarity better than PPO-Online but remains significantly weaker than Poker-AD. Full results are provided in Appendix~\ref{app:extra_results}.
+
+\subsection{Ablation Studies}
+\label{sec:ablation}
+
+We perform ablations on Leduc to understand which components of Poker-AD are critical. Results are summarized in Table~\ref{tab:ablation}.
+
+\begin{table}[t]
+    \centering
+    \caption{Ablation study in Leduc (mbb/hand vs.\ Maniac). ``$\Delta$'' reports drop relative to full Poker-AD.}
+    \label{tab:ablation}
+    \begin{tabular}{lcc}
+        \toprule
+        Variant & mbb/hand & $\Delta$ \\
+        \midrule
+        Full Poker-AD & $+65.4 \pm 2.1$ & -- \\
+        \quad w/o showdown cards & $+38.9 \pm 2.8$ & $-26.5$ \\
+        \quad context length = 5 hands & $+41.2 \pm 2.6$ & $-24.2$ \\
+        \quad feed-forward policy (no history) & $+7.8 \pm 2.3$ & $-57.6$ \\
+        \quad GRU instead of Transformer & $+49.6 \pm 2.4$ & $-15.8$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Removing showdown information (masking opponent private cards even at showdowns) results in a $\sim 40\%$ drop in exploitative performance. Reducing the context window to 5 hands has a similar effect, especially in matchups where showdowns are infrequent. Replacing the Transformer with a feed-forward policy that only sees the current hand collapses performance to near-zero exploitation, confirming the importance of cross-hand reasoning. A GRU-based sequence model performs better than feed-forward but remains noticeably weaker than the Transformer.
+
+\section{Analysis and Innovation Reflection}
+\label{sec:analysis}
+
+\subsection{What Does Poker-AD Learn?}
+
+To probe Poker-AD's internal representations, we train linear probes to predict ground-truth opponent parameters (e.g., bluffing tendency, range width) from the Transformer's hidden states. Specifically, after each hand, we average the hidden states over tokens corresponding to the final decision in that hand and train a linear model to predict $\phi$. We find that:
+\begin{itemize}[leftmargin=*]
+    \item Prediction accuracy improves rapidly over the first 10--20 hands, mirroring the adaptation curves.
+    \item Different dimensions of $\phi$ (e.g., pre-flop looseness vs.\ post-flop aggression) become decodable at different rates, depending on when relevant behaviors manifest.
+\end{itemize}
+This suggests that Poker-AD learns an internal embedding of opponent style that is refined as more interaction data arrives, even though it is never directly supervised on $\phi$.
+
+\subsection{Connection to Bayesian Opponent Modeling}
+
+Classical Bayesian opponent modeling maintains an explicit posterior $p(\phi \mid H_k)$ over opponent types and computes best responses under this posterior~\citep{southey2005bayesbluff,ganzfried2018bayesian}. Poker-AD can be viewed as an \emph{amortized} version of this process:
+\begin{itemize}[leftmargin=*]
+    \item Rather than representing $p(\phi \mid H_k)$ explicitly, Poker-AD encodes an implicit belief state in its hidden activations $h_t$.
+    \item Rather than computing a best response via explicit optimization, Poker-AD maps $h_t$ directly to action probabilities.
+\end{itemize}
+In this view, Poker-AD replaces iterative Bayesian updating and planning with a single amortized mapping learned across the opponent zoo. Our empirical results support this interpretation: showdown information and long-range context are crucial, and opponent parameters are linearly decodable from hidden states.
+
+\subsection{Innovation and Reflection}
+
+Our work is innovative along three main dimensions, but it is also useful to be explicit about what is fundamentally new versus what is a careful integration of existing ideas.
+
+\paragraph{From equilibrium solving to meta-gaming via algorithm distillation.}
+Most prior poker AIs either (i) focus on approximating Nash equilibria via CFR-style solvers~\citep{moravcik2017deepstack,brown2019superhuman,brown2019deepcfr}, or (ii) learn to exploit opponents online via RL or Bayesian methods~\citep{southey2005bayesbluff,heinrich2016nfsp,ganzfried2018bayesian,nashed2022opponentSurvey}. Poker-AD takes a different perspective: we treat \emph{opponent exploitation itself} as an algorithm to be distilled. Instead of running a solver or an online learning algorithm at test time, we amortize the process of ``observe–infer–exploit’’ into a single Transformer that operates purely through in-context learning. To our knowledge, this is the first application of algorithm distillation to adversarial imperfect-information games, where the learning target is a \emph{best-response meta-algorithm}, not a task-specific policy.
+
+\paragraph{Oracle data factory for adversarial POMDPs.}
+Algorithm distillation has previously been explored in fully observable single-agent control~\citep{laskin2023context,chen2021decisiontransformer}. We extend this paradigm to adversarial partially observable environments by introducing a \emph{Hindsight Oracle Teacher} that computes best responses to a structured opponent zoo via CFR-based solvers. The resulting data factory produces trajectories where the teacher exploits each opponent from the first hand, yet interacts with the environment under the same observability constraints as the student. This design sidesteps the sparsity and instability of online RL in poker and provides a clean separation between (i) solving a game once and (ii) distilling the solution into a reusable meta-gamer.
+
+\paragraph{Zero-shot opponent exploitation as in-context Bayesian inference.}
+Empirically, Poker-AD adapts to new opponent styles in fewer than 10 hands and substantially outperforms both static GTO policies and online RL baselines. Ablations show that showdown information and long-range context are crucial: removing either component leads to large drops in performance. Linear probes on the Transformer's hidden states reveal that opponent parameters (e.g., bluffing frequencies) are decodable despite never being directly supervised. This suggests that Poker-AD is not merely memorizing trajectories but has learned an \emph{implicit Bayesian inference procedure} in context. Conceptually, this connects Bayesian opponent modeling~\citep{southey2005bayesbluff,ganzfried2018bayesian} with in-context reinforcement learning under a unifying amortized-inference view.
+
+\paragraph{Limitations and avenues for stronger innovation.}
+At the same time, our approach is not without limitations. The generality of Poker-AD is bounded by the diversity and quality of the oracle teacher and opponent zoo; failure modes arise when deployment opponents lie far outside this training distribution. Moreover, we do not yet provide formal guarantees on worst-case regret or ``safe exploitation’’~\citep{ganzfried2018bayesian}. In Appendix~\ref{app:toy_theory}, we present a toy analysis in a simplified setting that illustrates conditions under which algorithm distillation can approximate Bayesian best responses, but a full theory remains open. Integrating principled uncertainty estimation and safety constraints into the distillation process is an important direction for future work.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+We introduced Poker-AD, a meta-gaming framework that leverages algorithm distillation and in-context learning to achieve zero-shot opponent exploitation in imperfect-information games. By distilling CFR-based best-response behavior from a hindsight oracle teacher into a Transformer, Poker-AD learns to infer opponent strategies and adjust its play entirely within its forward pass, without any online gradient updates or decision-time search.
+
+On Leduc and Flop Hold'em Poker, Poker-AD substantially outperforms static GTO baselines and online RL agents in short-horizon matches against diverse stylized and mixed opponents. Ablation studies highlight the importance of showdown information, long-range context, and sequence modeling for effective meta-gaming, while representation probing provides evidence of an emergent amortized opponent inference mechanism.
+
+More broadly, our results suggest a blueprint for turning powerful solvers into teachers in an algorithm distillation pipeline, yielding adaptive agents that operate at test time with minimal computational overhead. We believe this approach extends beyond poker to other adversarial POMDPs in security, auctions, and negotiation, and raises intriguing connections between game theory, meta-learning, and amortized inference.
+
+\paragraph{Broader Impact.}
+Techniques for rapid opponent exploitation can be applied in domains with significant societal implications, such as financial trading, online auctions, and security. While our work focuses on benchmark games, deploying similar techniques in the real world raises concerns about fairness, market stability, and potential misuse. For example, highly exploitative agents may exacerbate inequalities between sophisticated algorithmic actors and human participants. We advocate for careful consideration of deployment contexts, the design of safeguards and regulations, and further research on safe and fair exploitation mechanisms.
+
+\medskip
+\noindent\textbf{Acknowledgments.} \\
+\emph{(Omitted for double-blind review.)}
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\clearpage
+\appendix
+
+\section{Environment Details}
+\label{app:envs}
+
+\subsection{Leduc Hold'em}
+
+We use the standard 6-card Leduc variant described by \citet{neller2013cfrintro}. The deck consists of three ranks with two suits each. Each hand proceeds as:
+\begin{itemize}[leftmargin=*]
+    \item Chance deals one private card to each player.
+    \item Pre-flop betting round with fixed-limit betting.
+    \item Chance deals one public card (the ``turn'').
+    \item Second betting round with fixed-limit betting.
+    \item Showdown if no player folded.
+\end{itemize}
+We use a betting structure with up to two bets per round. The hand-level reward is the net change in Hero's stack.
+
+\subsection{Flop Hold'em Poker (FHP)}
+
+FHP is a simplified no-limit Hold'em variant designed to capture key structural properties while remaining computationally tractable:
+\begin{itemize}[leftmargin=*]
+    \item The deck is reduced to a fixed set of ranks and suits to limit the state space.
+    \item Each player receives two private cards; three public cards are revealed on the ``flop,'' followed by a turn card.
+    \item There are three betting rounds (pre-flop, flop, turn) with discretized bet sizes (fold, call/check, half-pot, pot).
+    \item We cap the number of raises per street to keep the tree finite.
+\end{itemize}
+We implement standard hand ranking rules (pairs, two pairs, etc.). Further details, including exact deck composition and betting caps, are in our code release.
+
+\section{Oracle Teacher and CFR Details}
+\label{app:teacher}
+
+For Leduc, we use tabular CFR with regret matching:
+\begin{itemize}[leftmargin=*]
+    \item We run CFR for $3 \times 10^{6}$ iterations per opponent type.
+    \item Regrets are initialized to zero; strategies are updated at each iteration.
+    \item We use linear averaging to construct the average strategy profile.
+\end{itemize}
+For FHP, we approximate best responses with Deep CFR~\citep{brown2019deepcfr}:
+\begin{itemize}[leftmargin=*]
+    \item We use multilayer perceptrons to approximate regret and strategy networks.
+    \item We run Deep CFR for $5 \times 10^{5}$ iterations per opponent type.
+    \item We monitor exploitability against a fixed GTO approximation and stop when changes fall below a threshold.
+\end{itemize}
+
+In both cases, the resulting policies are treated as approximate best responses $\pi^*_{\phi}$.
+
+\section{Implementation and Hyperparameters}
+\label{app:impl}
+
+\subsection{Poker-AD Architecture}
+
+Table~\ref{tab:hyperparams} summarizes key hyperparameters for Poker-AD.
+
+\begin{table}[h]
+    \centering
+    \caption{Poker-AD hyperparameters.}
+    \label{tab:hyperparams}
+    \begin{tabular}{lc}
+        \toprule
+        Parameter & Value \\
+        \midrule
+        Layers $L$ (Leduc / FHP) & 8 / 8 \\
+        Hidden size $d$ (Leduc / FHP) & 256 / 512 \\
+        Attention heads $H$ & 8 \\
+        Feed-forward dim & 4$d$ \\
+        Max context length & 512 tokens \\
+        Dropout & 0.1 \\
+        Optimizer & Adam \\
+        Learning rate & $3 \times 10^{-4}$ \\
+        Batch size & 64 \\
+        Training steps (Leduc / FHP) & 500k / 800k \\
+        LR schedule & linear warmup + cosine decay \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+We apply gradient clipping at norm 1.0 and use weight decay of $10^{-2}$. We train models on a single GPU.
+
+\subsection{PPO-Online and RL$^2$}
+
+For PPO-Online and RL$^2$, we use GRU-based actor-critic architectures:
+\begin{itemize}[leftmargin=*]
+    \item GRU hidden size 256 (Leduc) and 512 (FHP).
+    \item PPO clip parameter 0.2, entropy coefficient tuned in $\{0.0, 0.01, 0.05\}$.
+    \item Learning rate tuned in $\{1e{-4}, 3e{-4}, 1e{-3}\}$.
+\end{itemize}
+RL$^2$ is trained across the opponent zoo with episodes grouped into tasks of 100 hands.
+
+\section{Additional Experimental Results}
+\label{app:extra_results}
+
+\subsection{Mixtures and Non-Stationary Opponents}
+
+Table~\ref{tab:mixt_results} reports mbb/hand in Leduc for mixture and non-stationary opponents.
+
+\begin{table}[h]
+    \centering
+    \caption{Performance (mbb/hand) vs mixture and non-stationary opponents in Leduc.}
+    \label{tab:mixt_results}
+    \begin{tabular}{lcc}
+        \toprule
+        Agent & Mixture (Rock/Maniac/Station) & Non-stationary (switch every 20 hands) \\
+        \midrule
+        GTO Blueprint & $+5.2 \pm 1.4$ & $+4.9 \pm 1.5$ \\
+        PPO-Online & $+7.8 \pm 2.9$ & $+6.5 \pm 3.0$ \\
+        RL$^2$ Meta-RL & $+19.3 \pm 3.2$ & $+17.6 \pm 3.4$ \\
+        \textbf{Poker-AD} & $\mathbf{+36.7 \pm 2.4}$ & $\mathbf{+32.9 \pm 2.6}$ \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+Poker-AD remains substantially ahead of baselines in both settings, though its performance is somewhat reduced relative to fixed-type opponents, as expected.
+
+\section{Representation Probing Details}
+\label{app:probe}
+
+We describe the setup for linear probes on opponent parameters:
+\begin{itemize}[leftmargin=*]
+    \item For each hand $k$, we extract the hidden state corresponding to the final Hero decision in that hand.
+    \item We average these hidden states over the first $m$ hands to obtain an aggregated representation $z_m$.
+    \item We train a linear regressor or classifier to predict parameters of $\phi$ (e.g., bluffing rate, range width) from $z_m$, using data from oracle trajectories.
+\end{itemize}
+
+We observe that:
+\begin{itemize}[leftmargin=*]
+    \item Prediction error decreases sharply as $m$ increases from 1 to 10.
+    \item Different dimensions of $\phi$ become accurately predictable at different rates, consistent with their observability.
+\end{itemize}
+
+\section{Toy Theoretical Illustration}
+\label{app:toy_theory}
+
+We provide a toy illustration in a simplified setting to give intuition for when algorithm distillation can approximate Bayesian best responses.
+
+Consider a two-type opponent family $\phi \in \{\phi_0, \phi_1\}$ in a small IIG (e.g., a reduced Leduc game) such that:
+\begin{itemize}[leftmargin=*]
+    \item Under $\phi_0$, the opponent always plays action $a_0$ in a particular information set; under $\phi_1$, it always plays $a_1$.
+    \item The rest of the game is identical under both types.
+\end{itemize}
+
+Suppose we construct an oracle teacher that:
+\begin{enumerate}[leftmargin=*]
+    \item Observes the opponent's behavior in this information set for the first hand.
+    \item Determines $\phi$ exactly after one observation.
+    \item Plays the corresponding best response for all subsequent hands.
+\end{enumerate}
+
+Let $\pi^*_{\phi}$ denote this teacher policy. We generate oracle trajectories for both $\phi_0$ and $\phi_1$, and train a Transformer-based Poker-AD via behavioral cloning, with:
+\begin{itemize}[leftmargin=*]
+    \item Maximum context length of at least one hand.
+    \item Sufficient model capacity to represent the mapping from histories to actions.
+\end{itemize}
+
+\begin{theorem}[Informal]
+In the above setting, there exists a Poker-AD model with finite capacity that can achieve the same expected return as the oracle teacher for both $\phi_0$ and $\phi_1$, up to approximation error due to finite data and optimization.
+\end{theorem}
+
+\begin{proof}[Sketch]
+The opponent type $\phi$ is identifiable from the action taken in the special information set in the first hand. Therefore, there exists a deterministic function $g$ from the history of the first hand to $\{\phi_0,\phi_1\}$. There also exists a deterministic function $h$ from $(\phi, \text{current state})$ to the teacher's best-response action. The composition $h \circ g$ specifies the teacher's policy as a function of the observed history and current state. Since Transformers with sufficient depth and width can approximate arbitrary sequence-to-sequence functions over finite vocabularies, Poker-AD can approximate $h \circ g$ arbitrarily well, and thus match the teacher's performance up to approximation error. \qedhere
+\end{proof}
+
+While this toy result is trivial, it highlights two structural requirements for algorithm distillation to approximate Bayesian best responses:
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Identifiability:} The opponent type must be (approximately) identifiable from interaction histories under the oracle teacher's policy.
+    \item \textbf{Capacity:} The sequence model must have sufficient capacity to represent the mapping from histories to best-response actions.
+\end{enumerate}
+Extending such analyses to richer opponent families and games is an interesting direction for future work.
+
+\end{document}

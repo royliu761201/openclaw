@@ -1,0 +1,202 @@
+\begin{thebibliography}{26}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Ali et~al.(2023)Ali, Zhou, Bailey, Braden, East, Lu, Rittscher,
+  et~al.]{Ali2023PolypGen}
+Ali, S., Zhou, F., Bailey, A., Braden, B., East, J.~E., Lu, X., Rittscher, J.,
+  et~al.
+\newblock Polypgen: A multi-center polyp detection and segmentation dataset for
+  generalisability assessment.
+\newblock \emph{Scientific Data}, 10\penalty0 (1):\penalty0 75, 2023.
+
+\bibitem[Bernal et~al.(2017)Bernal, S{\'a}nchez, Fern{\'a}ndez-Esparrach, Gil,
+  Rodr{\'\i}guez, and Vilari{\~n}o]{Bernal2017EndoscopicVisionChallenge}
+Bernal, J., S{\'a}nchez, F.~J., Fern{\'a}ndez-Esparrach, G., Gil, D.,
+  Rodr{\'\i}guez, C., and Vilari{\~n}o, F.
+\newblock Comparative validation of polyp detection methods in video
+  colonoscopy: results from the {MICCAI} 2015 endoscopic vision challenge.
+\newblock \emph{IEEE Transactions on Medical Imaging}, 36\penalty0
+  (6):\penalty0 1231--1244, 2017.
+\newblock \doi{10.1109/TMI.2017.2664052}.
+
+\bibitem[Borgli et~al.(2020)Borgli, Thambawita, Smedsrud, Hicks, Jha, Eskeland,
+  Riegler, Halvorsen, de~Lange, and Johansen]{Borgli2020HyperKvasir}
+Borgli, H., Thambawita, V., Smedsrud, P.~H., Hicks, S.~A., Jha, D., Eskeland,
+  S.~L., Riegler, M.~A., Halvorsen, P., de~Lange, T., and Johansen, D.
+\newblock Hyperkvasir, a comprehensive multi-class image and video dataset for
+  gastrointestinal endoscopy.
+\newblock \emph{Scientific Data}, 7\penalty0 (1):\penalty0 283, 2020.
+\newblock \doi{10.1038/s41597-020-00622-y}.
+
+\bibitem[Chen et~al.(2018)Chen, Rubanova, Bettencourt, and
+  Duvenaud]{Chen2018NeuralODE}
+Chen, T.~Q., Rubanova, Y., Bettencourt, J., and Duvenaud, D.~K.
+\newblock Neural ordinary differential equations.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, 2018.
+
+\bibitem[Cui et~al.(2019)Cui, Jia, Lin, Song, and
+  Belongie]{Cui2019ClassBalanced}
+Cui, Y., Jia, M., Lin, T.-Y., Song, Y., and Belongie, S.
+\newblock Class-balanced loss based on effective number of samples.
+\newblock In \emph{Proceedings of CVPR}, 2019.
+
+\bibitem[Fan et~al.(2020)Fan, Ji, Zhou, Chen, Fu, Shen, and
+  Shao]{Fan2020PraNet}
+Fan, D.-P., Ji, G.-P., Zhou, T., Chen, G., Fu, H., Shen, J., and Shao, L.
+\newblock Pranet: Parallel reverse attention network for polyp segmentation.
+\newblock In \emph{Medical Image Computing and Computer Assisted Intervention
+  -- MICCAI 2020}, pp.\  168--177. Springer, 2020.
+
+\bibitem[Ho et~al.(2020)Ho, Jain, and Abbeel]{Ho2020DDPM}
+Ho, J., Jain, A., and Abbeel, P.
+\newblock Denoising diffusion probabilistic models.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, 2020.
+
+\bibitem[Huang et~al.(2021)Huang, Wu, and Lin]{Huang2021HarDNetMSEG}
+Huang, C.-H., Wu, H.-Y., and Lin, Y.-L.
+\newblock Hardnet-mseg: A simple encoder-decoder polyp segmentation neural
+  network that achieves state-of-the-art performance.
+\newblock In \emph{Proceedings of the IEEE/CVF Winter Conference on
+  Applications of Computer Vision (WACV)}, pp.\  2381--2390. IEEE, 2021.
+
+\bibitem[Jha et~al.(2020)Jha, Smedsrud, Riegler, Johansen, de~Lange, Halvorsen,
+  and Johansen]{Jha2020KvasirSEG}
+Jha, D., Smedsrud, P.~H., Riegler, M.~A., Johansen, D., de~Lange, T.,
+  Halvorsen, P., and Johansen, H.~D.
+\newblock Kvasir-seg: A segmented polyp dataset.
+\newblock In \emph{Proceedings of the International Conference on Multimedia
+  Modeling (MMM)}, 2020.
+
+\bibitem[Kipf \& Welling(2017)Kipf and Welling]{Kipf2017GCN}
+Kipf, T.~N. and Welling, M.
+\newblock Semi-supervised classification with graph convolutional networks.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2017.
+
+\bibitem[Kirillov et~al.(2023)Kirillov, Mintun, Ravi, Mao, Rolland, Gustafson,
+  Xiao, Whitehead, Berg, Lo, Doll{\'a}r, and Girshick]{Kirillov2023SAM}
+Kirillov, A., Mintun, E., Ravi, N., Mao, H., Rolland, C., Gustafson, L., Xiao,
+  T., Whitehead, S., Berg, A.~C., Lo, W.-Y., Doll{\'a}r, P., and Girshick, R.
+\newblock Segment anything.
+\newblock In \emph{Proceedings of the IEEE/CVF International Conference on
+  Computer Vision (ICCV)}, pp.\  4015--4026, 2023.
+
+\bibitem[Li et~al.(2021)Li, Kovachki, Azizzadenesheli, Liu, Bhattacharya,
+  Stuart, and Anandkumar]{Li2021FNO}
+Li, Z., Kovachki, N., Azizzadenesheli, K., Liu, B., Bhattacharya, K., Stuart,
+  A., and Anandkumar, A.
+\newblock Fourier neural operator for parametric partial differential
+  equations.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2021.
+
+\bibitem[Lin et~al.(2023)]{Lin2023PMCCLIP}
+Lin, H.-Y. et~al.
+\newblock {PMC-CLIP}: Contrastive language-image pre-training using biomedical
+  documents.
+\newblock In \emph{Medical Image Computing and Computer Assisted Intervention
+  -- MICCAI 2023}, 2023.
+
+\bibitem[Lin et~al.(2017)Lin, Doll{\'a}r, Girshick, He, Hariharan, and
+  Belongie]{Lin2017FPN}
+Lin, T.-Y., Doll{\'a}r, P., Girshick, R., He, K., Hariharan, B., and Belongie,
+  S.
+\newblock Feature pyramid networks for object detection.
+\newblock In \emph{Proceedings of CVPR}, 2017.
+
+\bibitem[Ma et~al.(2024)Ma, He, Li, Han, You, and Wang]{Ma2023MedSAM}
+Ma, J., He, Y., Li, F., Han, L., You, C., and Wang, B.
+\newblock Segment anything in medical images.
+\newblock \emph{Nature Communications}, 15\penalty0 (1):\penalty0 654, 2024.
+\newblock \doi{10.1038/s41467-024-44824-z}.
+
+\bibitem[Perez et~al.(2018)Perez, Strub, de~Vries, Dumoulin, and
+  Courville]{Perez2018FiLM}
+Perez, E., Strub, F., de~Vries, H., Dumoulin, V., and Courville, A.
+\newblock {FiLM}: Visual reasoning with a general conditioning layer.
+\newblock In \emph{Proceedings of AAAI}, 2018.
+
+\bibitem[Radford et~al.(2021)Radford, Kim, Hallacy, Ramesh, Goh, Agarwal,
+  Sastry, Askell, Mishkin, Clark, Krueger, and Sutskever]{Radford2021CLIP}
+Radford, A., Kim, J.~W., Hallacy, C., Ramesh, A., Goh, G., Agarwal, S., Sastry,
+  G., Askell, A., Mishkin, P., Clark, J., Krueger, G., and Sutskever, I.
+\newblock Learning transferable visual models from natural language
+  supervision.
+\newblock In \emph{Proceedings of ICML}, 2021.
+
+\bibitem[Ravi et~al.(2025)Ravi, Camarillo, Gustafson, et~al.]{Ravi2024SAM2}
+Ravi, N., Camarillo, A., Gustafson, L., et~al.
+\newblock {SAM} 2: Segment anything in images and videos.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2025.
+
+\bibitem[Ronneberger et~al.(2015)Ronneberger, Fischer, and
+  Brox]{Ronneberger2015UNet}
+Ronneberger, O., Fischer, P., and Brox, T.
+\newblock U-net: Convolutional networks for biomedical image segmentation.
+\newblock In \emph{Medical Image Computing and Computer-Assisted Intervention
+  -- MICCAI 2015}, pp.\  234--241. Springer, 2015.
+
+\bibitem[Sagawa et~al.(2020)Sagawa, Koh, Hashimoto, and
+  Liang]{Sagawa2020GroupDRO}
+Sagawa, S., Koh, P.~W., Hashimoto, T.~B., and Liang, P.
+\newblock Distributionally robust neural networks for group shifts: On the
+  importance of regularization for worst-case generalization.
+\newblock In \emph{Proceedings of ICLR}, 2020.
+
+\bibitem[S{\'a}nchez-Peralta et~al.(2020)S{\'a}nchez-Peralta, Bote-Curiel,
+  P{\'e}rez-Cort{\'e}s, Pic{\'o}n, Andr{\'e}s-S{\'a}nchez, and
+  Mart{\'\i}nez]{SanchezPeralta2020PICCOLO}
+S{\'a}nchez-Peralta, L.~F., Bote-Curiel, L., P{\'e}rez-Cort{\'e}s, J.~C.,
+  Pic{\'o}n, A., Andr{\'e}s-S{\'a}nchez, J., and Mart{\'\i}nez, J.~P.
+\newblock Piccolo white-light and narrow-band imaging colonoscopic dataset: A
+  performance comparative of models and datasets.
+\newblock \emph{Applied Sciences}, 10\penalty0 (23):\penalty0 8501, 2020.
+\newblock \doi{10.3390/app10238501}.
+
+\bibitem[Silva et~al.(2014)Silva, Histace, Romain, Dray, and
+  Granado]{Silva2014ETISLarib}
+Silva, J., Histace, A., Romain, O., Dray, X., and Granado, B.
+\newblock Toward embedded detection of polyps in {WCE} images for early
+  diagnosis of colorectal cancer.
+\newblock \emph{International Journal of Computer Assisted Radiology and
+  Surgery}, 9\penalty0 (2):\penalty0 283--293, 2014.
+\newblock \doi{10.1007/s11548-013-0926-3}.
+
+\bibitem[Thanh~Duc et~al.(2022)Thanh~Duc, Oanh, Thuy, Triet, and
+  Dinh]{Duc2022ColonFormer}
+Thanh~Duc, N., Oanh, N.~T., Thuy, N.~T., Triet, T.~M., and Dinh, V.~S.
+\newblock Colonformer: An efficient transformer based method for colon polyp
+  segmentation.
+\newblock \emph{IEEE Access}, 10:\penalty0 80575--80586, 2022.
+\newblock \doi{10.1109/ACCESS.2022.3195241}.
+
+\bibitem[Veli{\v{c}}kovi{\'c} et~al.(2018)Veli{\v{c}}kovi{\'c}, Cucurull,
+  Casanova, Romero, Li{\`o}, and Bengio]{Velickovic2018GAT}
+Veli{\v{c}}kovi{\'c}, P., Cucurull, G., Casanova, A., Romero, A., Li{\`o}, P.,
+  and Bengio, Y.
+\newblock Graph attention networks.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2018.
+
+\bibitem[Xie et~al.(2021)Xie, Wang, Yu, Anandkumar, Alvarez, and
+  Luo]{Xie2021SegFormer}
+Xie, E., Wang, W., Yu, Z., Anandkumar, A., Alvarez, J.~M., and Luo, P.
+\newblock Segformer: Simple and efficient design for semantic segmentation with
+  transformers.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, 2021.
+
+\bibitem[Zhang et~al.(2023)]{Zhang2023BiomedCLIP}
+Zhang, Y. et~al.
+\newblock Biomedclip: a multimodal biomedical foundation model pretrained from
+  fifteen million scientific image-text pairs.
+\newblock \emph{arXiv preprint}, 2023.
+
+\end{thebibliography}

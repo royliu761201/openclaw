@@ -1,0 +1,384 @@
+\begin{thebibliography}{52}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Abadi et~al.(2016)Abadi, Chu, Goodfellow, McMahan, Mironov, Talwar,
+  and Zhang]{abadi2016dpsgd}
+Abadi, M., Chu, A., Goodfellow, I., McMahan, H.~B., Mironov, I., Talwar, K.,
+  and Zhang, L.
+\newblock Deep learning with differential privacy.
+\newblock In \emph{Proceedings of the 2016 ACM SIGSAC Conference on Computer
+  and Communications Security (CCS)}, pp.\  308--318, 2016.
+\newblock \doi{10.1145/2976749.2978318}.
+
+\bibitem[Acar et~al.(2021)Acar, Zhao, Navarro, Mattina, Whatmough, and
+  Saligrama]{acar2021feddyn}
+Acar, D. A.~E., Zhao, Y., Navarro, R.~M., Mattina, M., Whatmough, P.~N., and
+  Saligrama, V.
+\newblock Federated learning based on dynamic regularization.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2021.
+\newblock URL \url{https://openreview.net/forum?id=B7v4QMR6Z9w}.
+
+\bibitem[Anandkumar et~al.(2014)Anandkumar, Ge, Hsu, Kakade, and
+  Telgarsky]{anandkumar2014tensor}
+Anandkumar, A., Ge, R., Hsu, D., Kakade, S.~M., and Telgarsky, M.
+\newblock Tensor decompositions for learning latent variable models.
+\newblock \emph{Journal of Machine Learning Research}, 15\penalty0
+  (1):\penalty0 2773--2832, 2014.
+\newblock URL \url{https://jmlr.org/papers/v15/anandkumar14a.html}.
+
+\bibitem[Beaver(1992)]{beaver1991triples}
+Beaver, D.
+\newblock Efficient multiparty protocols using circuit randomization.
+\newblock In \emph{Advances in Cryptology --- CRYPTO '91}, volume 576 of
+  \emph{Lecture Notes in Computer Science}, pp.\  420--432. Springer, 1992.
+\newblock \doi{10.1007/3-540-46766-1_34}.
+
+\bibitem[Bennett(1982)]{bennett1982thermodynamics}
+Bennett, C.~H.
+\newblock The thermodynamics of computation---a review.
+\newblock \emph{International Journal of Theoretical Physics}, 21\penalty0
+  (12):\penalty0 905--940, 1982.
+\newblock \doi{10.1007/BF02084158}.
+
+\bibitem[Blum \& Mitchell(1998)Blum and Mitchell]{blum1998cotraining}
+Blum, A. and Mitchell, T.
+\newblock Combining labeled and unlabeled data with co-training.
+\newblock In \emph{Proceedings of the 11th Annual Conference on Computational
+  Learning Theory (COLT)}, pp.\  92--100, 1998.
+\newblock \doi{10.1145/279943.279962}.
+
+\bibitem[Bonawitz et~al.(2017)Bonawitz, Ivanov, Kreuter, Marcedone, McMahan,
+  Patel, Ramage, Segal, and Seth]{bonawitz2017secureagg}
+Bonawitz, K., Ivanov, V., Kreuter, B., Marcedone, A., McMahan, H.~B., Patel,
+  S., Ramage, D., Segal, A., and Seth, K.
+\newblock Practical {Secure Aggregation} for privacy-preserving {Machine
+  Learning}.
+\newblock In \emph{Proceedings of the 2017 ACM SIGSAC Conference on Computer
+  and Communications Security (CCS)}, pp.\  1175--1191, 2017.
+\newblock \doi{10.1145/3133956.3133982}.
+
+\bibitem[Bonawitz et~al.(2019)Bonawitz, Eichner, Grieskamp, Huba, Ingerman,
+  Ivanov, Kiddon, Kone{\v{c}}n{\'y}, Mazzocchi, McMahan,
+  et~al.]{bonawitz2019system}
+Bonawitz, K., Eichner, H., Grieskamp, W., Huba, D., Ingerman, A., Ivanov, V.,
+  Kiddon, C., Kone{\v{c}}n{\'y}, J., Mazzocchi, S., McMahan, H.~B., et~al.
+\newblock Towards federated learning at scale: System design.
+\newblock In \emph{Proceedings of Machine Learning and Systems (MLSys)},
+  volume~1, pp.\  374--388, 2019.
+
+\bibitem[Braverman et~al.(2016)Braverman, Garg, Ma, Nguyen, and
+  Woodruff]{braverman2016comm}
+Braverman, M., Garg, A., Ma, T., Nguyen, H.~L., and Woodruff, D.~P.
+\newblock Communication lower bounds for statistical estimation problems via a
+  distributed data processing inequality.
+\newblock \emph{Journal of the ACM}, 63\penalty0 (6):\penalty0 1--50, 2016.
+\newblock URL \url{https://arxiv.org/abs/1506.07216}.
+
+\bibitem[Chen et~al.(2024)Chen, Zhang, and Liu]{chen2024multiparty}
+Chen, H., Zhang, K., and Liu, Y.
+\newblock Efficient multi-party computation for collaborative machine learning.
+\newblock \emph{Journal of Privacy and Confidentiality}, 2024.
+
+\bibitem[Cheng et~al.(2021{\natexlab{a}})Cheng, Fan, Jin, Liu, Chen,
+  Papadopoulos, and Yang]{cheng2021secureboost}
+Cheng, K., Fan, T., Jin, Y., Liu, Y., Chen, T., Papadopoulos, D., and Yang, Q.
+\newblock Secureboost: A lossless federated learning framework.
+\newblock \emph{IEEE Intelligent Systems}, 36\penalty0 (6):\penalty0 87--98,
+  2021{\natexlab{a}}.
+
+\bibitem[Cheng et~al.(2021{\natexlab{b}})Cheng, Lu, Huang, Hu, and
+  Chen]{cheng2021vfl}
+Cheng, X., Lu, W., Huang, X., Hu, S., and Chen, K.
+\newblock A novel attribute reconstruction attack in federated learning.
+\newblock In \emph{International Workshop on Federated and Transfer Learning
+  for Data Sparsity and Confidentiality in Conjunction with IJCAI 2021
+  (FTL-IJCAI'21)}, 2021{\natexlab{b}}.
+
+\bibitem[Collins et~al.(2021)Collins, Hassani, Mokhtari, and
+  Shakkottai]{collins2021fedrep}
+Collins, L., Hassani, H., Mokhtari, A., and Shakkottai, S.
+\newblock Exploiting shared representations for personalized {Federated
+  Learning}.
+\newblock In \emph{Proceedings of the 38th International Conference on Machine
+  Learning (ICML)}, volume 139 of \emph{Proceedings of Machine Learning
+  Research}, pp.\  2089--2099, 2021.
+\newblock URL \url{https://proceedings.mlr.press/v139/collins21a.html}.
+
+\bibitem[Dinh et~al.(2020)Dinh, Tran, and Nguyen]{dinh2020pfedme}
+Dinh, C.~T., Tran, N.~H., and Nguyen, T.~D.
+\newblock Personalized {Federated Learning} with {Moreau Envelopes}.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, 2020.
+
+\bibitem[Duchi et~al.(2013)Duchi, Jordan, and Wainwright]{duchi2013ldp}
+Duchi, J.~C., Jordan, M.~I., and Wainwright, M.~J.
+\newblock Local privacy, data processing inequalities, and statistical minimax
+  rates.
+\newblock \emph{arXiv preprint arXiv:1302.3203}, 2013.
+\newblock URL \url{https://arxiv.org/abs/1302.3203}.
+
+\bibitem[Duchi et~al.(2018)Duchi, Wainwright, and Jordan]{duchi2016minimaxldp}
+Duchi, J.~C., Wainwright, M.~J., and Jordan, M.~I.
+\newblock Minimax optimal procedures for locally private estimation.
+\newblock \emph{Journal of the American Statistical Association}, 113\penalty0
+  (521):\penalty0 182--201, 2018.
+
+\bibitem[Dwork et~al.(2006)Dwork, McSherry, Nissim, and Smith]{dwork2006dp}
+Dwork, C., McSherry, F., Nissim, K., and Smith, A.
+\newblock Calibrating noise to sensitivity in private data analysis.
+\newblock \emph{Journal of Privacy and Confidentiality}, 7\penalty0
+  (3):\penalty0 17--51, 2006.
+\newblock URL \url{https://arxiv.org/abs/cs/0601021}.
+
+\bibitem[Fallah et~al.(2020)Fallah, Mokhtari, and
+  Ozdaglar]{fallah2020perfedavg}
+Fallah, A., Mokhtari, A., and Ozdaglar, A.
+\newblock Personalized {Federated Learning}: A meta-learning approach.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, 2020.
+\newblock URL \url{https://arxiv.org/abs/2002.07948}.
+
+\bibitem[Fan et~al.(2024)Fan, Liu, Chen, and Yang]{fan2024secureagg}
+Fan, L., Liu, Y., Chen, T., and Yang, Q.
+\newblock Secure aggregation for federated learning: A comprehensive survey.
+\newblock \emph{IEEE Transactions on Knowledge and Data Engineering}, 2024.
+
+\bibitem[Fu et~al.(2025)Fu, Zhang, and Tang]{fu2025conceptdrift}
+Fu, P., Zhang, M., and Tang, M.
+\newblock An information-theoretic analysis for federated learning under
+  concept drift.
+\newblock \emph{IEEE Transactions on Network Science and Engineering},
+  12\penalty0 (1):\penalty0 1--14, 2025.
+
+\bibitem[Gao et~al.(2023)Gao, Liu, Huang, Ju, Han, Zhao, Chen, and
+  Yang]{gao2023vfl}
+Gao, D., Liu, Y., Huang, A., Ju, C., Han, Y., Zhao, H., Chen, B., and Yang, Q.
+\newblock A survey on {Vertical} federated learning: From a layered
+  architecture perspective.
+\newblock \emph{arXiv preprint arXiv:2304.01007}, 2023.
+
+\bibitem[Hastie et~al.(2009)Hastie, Tibshirani, and Friedman]{hastie2009esl}
+Hastie, T., Tibshirani, R., and Friedman, J.
+\newblock \emph{The Elements of Statistical Learning: Data Mining, Inference,
+  and Prediction}.
+\newblock Springer, 2 edition, 2009.
+\newblock \doi{10.1007/978-0-387-84858-7}.
+
+\bibitem[He et~al.(2023)]{he2023theory_vfl}
+He, J. et~al.
+\newblock On the theory of gradient leakage in {Vertical} federated learning.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2023.
+
+\bibitem[Hotelling(1936)]{hotelling1936cca}
+Hotelling, H.
+\newblock Relations between two sets of variates.
+\newblock \emph{Biometrika}, 28\penalty0 (3/4):\penalty0 321--377, 1936.
+\newblock \doi{10.2307/2333955}.
+
+\bibitem[Ji et~al.(2024)Ji, Saravirta, Pan, Long, and Walid]{ji2024emerging}
+Ji, S., Saravirta, T., Pan, S., Long, G., and Walid, A.
+\newblock Emerging trends in federated learning: From model fusion to federated
+  x learning.
+\newblock \emph{International Journal of Machine Learning and Cybernetics},
+  2024.
+
+\bibitem[Kairouz et~al.(2021)Kairouz, McMahan, Avent, Bellet, Bennis,
+  et~al.]{kairouz2021advances}
+Kairouz, P., McMahan, H.~B., Avent, B., Bellet, A., Bennis, M., et~al.
+\newblock Advances and open problems in {Federated Learning}.
+\newblock \emph{Foundations and Trends{\textregistered} in Machine Learning},
+  14\penalty0 (1--2):\penalty0 1--210, 2021.
+\newblock URL \url{https://arxiv.org/abs/1912.04977}.
+
+\bibitem[Karimireddy et~al.(2020)Karimireddy, Kale, Mohri, Reddi, Stich, and
+  Suresh]{karimireddy2020scaffold}
+Karimireddy, S.~P., Kale, S., Mohri, M., Reddi, S.~J., Stich, S.~U., and
+  Suresh, A.~T.
+\newblock {SCAFFOLD}: Stochastic controlled averaging for {Federated Learning}.
+\newblock In \emph{Proceedings of the 37th International Conference on Machine
+  Learning (ICML)}, volume 119 of \emph{Proceedings of Machine Learning
+  Research}, pp.\  5132--5143, 2020.
+\newblock URL \url{https://proceedings.mlr.press/v119/karimireddy20a.html}.
+
+\bibitem[Landauer(1961)]{landauer1961irreversibility}
+Landauer, R.
+\newblock Irreversibility and heat generation in the computing process.
+\newblock \emph{IBM Journal of Research and Development}, 5\penalty0
+  (3):\penalty0 183--191, 1961.
+\newblock \doi{10.1147/rd.53.0183}.
+
+\bibitem[Li et~al.(2024)Li, Sun, Zhang, and Wang]{li2024synergy_local}
+Li, A., Sun, J., Zhang, S., and Wang, S.
+\newblock On the {Synergy} of local and global updates in federated learning.
+\newblock In \emph{Proceedings of the 41st International Conference on Machine
+  Learning (ICML)}, 2024.
+
+\bibitem[Li et~al.(2021{\natexlab{a}})Li, He, and Song]{li2021model}
+Li, Q., He, B., and Song, D.
+\newblock Model-contrastive federated learning.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition (CVPR)}, pp.\  10750--10759, 2021{\natexlab{a}}.
+
+\bibitem[Li et~al.(2020)Li, Sahu, Zaheer, Sanjabi, Talwalkar, and
+  Smith]{li2020fedprox}
+Li, T., Sahu, A.~K., Zaheer, M., Sanjabi, M., Talwalkar, A., and Smith, V.
+\newblock Federated optimization in heterogeneous networks.
+\newblock In \emph{Proceedings of Machine Learning and Systems (MLSys)},
+  volume~2, pp.\  429--450, 2020.
+
+\bibitem[Li et~al.(2021{\natexlab{b}})Li, Hu, Beirami, and Smith]{li2021ditto}
+Li, T., Hu, S., Beirami, A., and Smith, V.
+\newblock {Ditto}: Fair and robust {Federated Learning} through
+  personalization.
+\newblock In \emph{Proceedings of the 38th International Conference on Machine
+  Learning (ICML)}, volume 139 of \emph{Proceedings of Machine Learning
+  Research}, pp.\  6357--6368, 2021{\natexlab{b}}.
+\newblock URL \url{https://proceedings.mlr.press/v139/li21h.html}.
+
+\bibitem[Liu et~al.(2024)Liu, Zhang, and Chen]{liu2024promptfl}
+Liu, J., Zhang, Y., and Chen, Z.
+\newblock Prompt-based federated learning for cross-silo heterogeneity.
+\newblock In \emph{Proceedings of the 30th ACM SIGKDD Conference on Knowledge
+  Discovery and Data Mining (KDD)}, 2024.
+
+\bibitem[McGill(1954)]{mcgill1954interaction}
+McGill, W.~J.
+\newblock Multivariate information transmission.
+\newblock \emph{Psychometrika}, 19\penalty0 (2):\penalty0 97--116, 1954.
+\newblock \doi{10.1007/BF02289159}.
+
+\bibitem[McMahan et~al.(2017)McMahan, Moore, Ramage, Hampson, and Ag{\"u}era~y
+  Arcas]{mcmahan2017fedavg}
+McMahan, H.~B., Moore, E., Ramage, D., Hampson, S., and Ag{\"u}era~y Arcas, B.
+\newblock Communication-efficient learning of deep networks from decentralized
+  data.
+\newblock In \emph{Proceedings of the 20th International Conference on
+  Artificial Intelligence and Statistics (AISTATS)}, volume~54 of
+  \emph{Proceedings of Machine Learning Research}, pp.\  1273--1282, 2017.
+\newblock URL \url{https://proceedings.mlr.press/v54/mcmahan17a.html}.
+
+\bibitem[Reddi et~al.(2021)Reddi, Charles, Zaheer, Garrett, Rush,
+  Kone{\v{c}}n{\'y}, Kumar, and McMahan]{reddi2021fedopt}
+Reddi, S.~J., Charles, Z.~r., Zaheer, M., Garrett, Z., Rush, K.,
+  Kone{\v{c}}n{\'y}, J., Kumar, S., and McMahan, H.~B.
+\newblock Adaptive federated optimization.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2021.
+\newblock URL \url{https://openreview.net/forum?id=LkFG3lB13U5}.
+
+\bibitem[Shamir(1979)]{shamir1979sss}
+Shamir, A.
+\newblock How to share a secret.
+\newblock \emph{Communications of the ACM}, 22\penalty0 (11):\penalty0
+  612--613, 1979.
+\newblock \doi{10.1145/359168.359176}.
+
+\bibitem[Shannon(1948)]{shannon1948}
+Shannon, C.~E.
+\newblock A mathematical theory of communication.
+\newblock \emph{Bell System Technical Journal}, 27\penalty0 (3):\penalty0
+  379--423, 1948.
+\newblock \doi{10.1002/j.1538-7305.1948.tb01338.x}.
+
+\bibitem[Tan et~al.(2023)]{tan2023federated_gnn}
+Tan, B. et~al.
+\newblock Federated graph neural networks: Overview and perspectives.
+\newblock In \emph{Proceedings of the 32nd International Joint Conference on
+  Artificial Intelligence (IJCAI)}, 2023.
+
+\bibitem[Valdeira et~al.(2025)Valdeira, Wang, and Chi]{valdeira2025laser}
+Valdeira, P., Wang, S., and Chi, Y.
+\newblock {Vertical} federated learning with missing features during training
+  and inference.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2025.
+\newblock URL \url{https://openreview.net/forum?id=Vl_cIu1aXy}.
+
+\bibitem[Wang et~al.(2023)Wang, Zhang, Liu, and Zhu]{wang2023interactions}
+Wang, H., Zhang, S., Liu, Z., and Zhu, W.
+\newblock Discovering cross-party feature interactions in {Vertical} federated
+  learning.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, 2023.
+
+\bibitem[Wang et~al.(2020)Wang, Charles, Xu, Joshi, and
+  McMahan]{wang2020fednova}
+Wang, J., Charles, Z., Xu, Z., Joshi, G., and McMahan, H.~B.
+\newblock Tackling the objective inconsistency problem in heterogeneous
+  federated optimization.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, 2020.
+\newblock URL \url{https://arxiv.org/abs/2007.07481}.
+
+\bibitem[Wang et~al.(2024)]{wang2024llm_fl}
+Wang, L. et~al.
+\newblock Large language models meet federated learning: A survey.
+\newblock \emph{arXiv preprint arXiv:2403.00000}, 2024.
+
+\bibitem[Williams \& Beer(2010)Williams and Beer]{williams2010pid}
+Williams, P.~L. and Beer, R.~D.
+\newblock Nonnegative decomposition of multivariate information.
+\newblock \emph{arXiv preprint arXiv:1004.2515}, 2010.
+\newblock URL \url{https://arxiv.org/abs/1004.2515}.
+
+\bibitem[Xu et~al.(2025)Xu, Zhang, and Liu]{xu2025byzantine}
+Xu, M., Zhang, W., and Liu, B.
+\newblock Robust federated learning against byzantine interaction signals.
+\newblock In \emph{Proceedings of the IEEE/CVF Conference on Computer Vision
+  and Pattern Recognition (CVPR)}, 2025.
+
+\bibitem[Ye et~al.(2023{\natexlab{a}})Ye, Fang, Du, Yuen, and
+  Tao]{ye2023survey}
+Ye, M., Fang, X., Du, B., Yuen, C., and Tao, D.
+\newblock Heterogeneous federated learning: State-of-the-art and research
+  challenges.
+\newblock \emph{ACM Computing Surveys}, 2023{\natexlab{a}}.
+
+\bibitem[Ye et~al.(2023{\natexlab{b}})Ye, Yu, Zhou, et~al.]{ye2023heterofl}
+Ye, M., Yu, W., Zhou, Z., et~al.
+\newblock Heterogeneous federated learning: State-of-the-art and research
+  challenges.
+\newblock \emph{ACM Computing Surveys}, 2023{\natexlab{b}}.
+\newblock \doi{10.1145/3625558}.
+
+\bibitem[Zhang et~al.(2024{\natexlab{a}})]{zhang2024generative}
+Zhang, J. et~al.
+\newblock Federated generative learning with foundation models.
+\newblock 2024{\natexlab{a}}.
+
+\bibitem[Zhang et~al.(2024{\natexlab{b}})Zhang, Liu, and
+  Wang]{zhang2024tensorized}
+Zhang, R., Liu, Y., and Wang, F.
+\newblock Tensorized representation learning for high-order {Synergy}
+  discovery.
+\newblock \emph{IEEE Transactions on Neural Networks and Learning Systems},
+  2024{\natexlab{b}}.
+
+\bibitem[Zhang et~al.(2013)Zhang, Duchi, Jordan, and
+  Wainwright]{zhang2013lowerbounds}
+Zhang, Y., Duchi, J.~C., Jordan, M.~I., and Wainwright, M.~J.
+\newblock Information-theoretic lower bounds for distributed statistical
+  estimation with communication constraints.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, 2013.
+
+\bibitem[Zhao et~al.(2024)Zhao, Zhao, Jiang, Tan, and Niyato]{zhao2024adaptive}
+Zhao, Y., Zhao, J., Jiang, L., Tan, R., and Niyato, D.
+\newblock Privacy-preserving heterogeneous federated learning with adaptive
+  model aggregation.
+\newblock \emph{IEEE Journal on Selected Areas in Communications}, 2024.
+
+\bibitem[Zhu et~al.(2021)Zhu, Hong, and Zhou]{zhu2021data}
+Zhu, Z., Hong, J., and Zhou, J.
+\newblock Data-free knowledge distillation for heterogeneous federated
+  learning.
+\newblock In \emph{Proceedings of the 38th International Conference on Machine
+  Learning (ICML)}, pp.\  12878--12889, 2021.
+
+\end{thebibliography}
