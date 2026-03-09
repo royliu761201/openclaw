@@ -1,48 +1,48 @@
 ---
-description: 强制全网格算力与存储物理拓扑探查，严防硬件级“降维或越权幻觉”。
+description: Enforces node-level hardware verification and topology probing to prevent physical hallucination and payload mismatch.
 name: ontology
 ---
 
-# Ontology (系统全息物理拓扑探针)
+# Ontology (System Holographic Topology Probe)
 
-这个核心技能的诞生是为了彻底根绝 AI Agent 在调度任务时产生的**物理拓扑幻觉**。
-在过去，Agent 会因为某个节点叫 `Node 02` 或者 `remote`，就不假思索地调用它去下载百GB数据集或跑深度学习训练，导致网关节点被当场击穿。
+This core skill exists to permanently eradicate **Physical Topology Hallucination** during cross-node operations.
+In the past, Agents blindly assumed `Node 02` or `remote` could handle heavy deep learning or massive dataset downloads, immediately crashing edge gateways.
 
-为了捍卫 OpenClaw 算力网格的稳定，**任何 Agent 在试图发起跨端通信、带宽转移、大模型查探或计算下发时，必须首先调用本技能！** 这是一切行动的前提！
+To defend the OpenClaw Grid, **ANY Agent attempting cross-node communication, bandwidth transfer, model probing, or compute dispatch MUST invoke this skill first!**
 
-## 🚨 拓扑寻址最高防线 (Top-Level Topology Defense)
+## 🚨 Top-Level Topology Defense
 
-你必须始终将 Ontology 视作你的“物理侦察兵”。
+You MUST treat the Ontology as your "Physical Reconnaissance Probe".
 
-1. **先问路，后发兵**: 在你决定要把任何任务 (哪怕只是 `wget` 一个文件) 发送到任何一个远端之前，**强制**执行 `ontology.py query --type Node` 获取该节点此时此刻的物理定位与角色。
-2. **严禁望文生义 (No Assumption)**:
-   - 绝不允许看到 `Node` 就认为有算力！
-   - 绝不允许看到 `Server` 就认为网速快！
-3. **刻入骨髓的物理映射 (The Absolute Truth)**:
-   这是系统当前的客观物理法则，如有违背，即视为最致命的拓扑幻觉：
-   - **`Node 01`**: Master Control (主脑中控，也就是你现在所在的机器)。
-   - **`Node 02`**: Edge Gateway (边缘快递员，**严守零负载状态 Zero-Weight，绝对禁止跑计算实验/存大文件**)。
-   - **`Node 03`**: Data Vault (冷备金库，纯 CPU 存储，跑不动 CUDA)。
-   - **`Node 05`**: Exit Node (无限制海外代理抓取出口)。
-   - **`Node 06`**: Jump Host (跳板机，仅作网络穿透辅助)。
-   - **`GPU Server (10.190.*)`**: Air-Gapped Tensor Forge (全网**唯一**合规用于重型 AI 实验、大容量落盘 `/jhdx0003008/` 的禁区)。
+1. **Probe First, Dispatch Later**: Before sending any payload or command (even a simple `wget`) to a remote node, you **MUST** execute `ontology.py query --type Node` to acquire its true, physical parameters and role.
+2. **No Assumption Policy**:
+   - NEVER assume the word `Node` implies compute capacity.
+   - NEVER assume the word `Server` implies high bandwidth.
+3. **The Absolute Truth (Physical Mapping)**:
+   This graph is the objective physical law. Any violation is considered fatal topology hallucination:
+   - **`Node 01`**: Master Control (The local commander brain).
+   - **`Node 02`**: Edge Gateway (**Zero-Weight policy strictly enforced. ABSOLUTELY NO heavy compute or large file storage**).
+   - **`Node 03`**: Data Vault (Cold storage vault, pure CPU, no CUDA).
+   - **`Node 05`**: Exit Node (Unrestricted outbound proxy fetcher).
+   - **`Node 06`**: Jump Host (Network penetration bridge only).
+   - **`GPU Server (10.190.*)`**: Air-Gapped Tensor Forge (The **ONLY** authorized zone for heavy AI experiments and dataset persistence at `/jhdx0003008/`).
 
-## 使用指引 (Usage)
+## Usage
 
-Ontology 的本体数据库是一个纯文本 JSONL (`graph.jsonl`)，位于 `docs/system_core/memory_core/ontology/` 下。
+The Ontology SSoT database is a pure JSONL (`graph.jsonl`) located under `workspace/docs/system_core/memory_core/ontology/`.
 
-### 探底可用节点 (Probe All Nodes)
+### Probe All Nodes
 
 ```bash
 python3 ~/openclaw/skills/ontology/scripts/ontology.py list --type Node
 ```
 
-_如果查出来对方 Role 不是 Tensor Forge，就给我把大模型收起来！_
+_If the target's Role is NOT Tensor Forge, DO NOT dispatch heavy ML workloads!_
 
-### 查证特定策略 (Lookup Policies)
+### Lookup Policies
 
 ```bash
 python3 ~/openclaw/skills/ontology/scripts/ontology.py query --type Policy --where '{"scope":"workspace"}'
 ```
 
-记住：**Ontology 是 OpenClaw 物理世界的唯一真理 (SSoT)。不查此表盲打错配者，罪无可恕。**
+Remember: **Ontology is the ONLY Source of Truth for the OpenClaw physical realm. Blind dispatch without querying this graph is an absolute violation.**
