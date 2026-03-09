@@ -28,6 +28,8 @@ SSH_PORT=22                   # Optional (Default: 22)
 > 2. You **CANNOT** use human aliases like `roy-02`. You **MUST** query `tailscale ip -4` and use absolute Tailscale IPs (e.g., `100.90.140.62`).
 > 3. The local `.env` file often pollutes `SSH_PORT` (e.g., to GPU server 30305). You **MUST** explicitly override `--env SSH_PORT=22` inline to bypass this pollution.
 > 4. **SSH Key Mesh Baseline**: If `ssh_tool.py` hangs or fails with a seemingly unrelated exception, the root cause is frequently a missing `~/.ssh/authorized_keys` entry on the target or a missing local `~/.ssh/id_ed25519` keypair. You **MUST** preemptively verify their mutual SSH trust base before debugging Python.
+> 5. **Air-gapped Island Law**: Nodes like `02` and `03` are **Air-gapped / Internal Only**. DO NOT use `ssh_exec` to blindly run public network fetching commands (e.g. `pip install`, `kaggle download`), as they will hang permanently payload drop. You MUST use Node 01, 05 or a Gateway to fetch, then `ssh_upload` them back to the island's isolated Sandbox (e.g. `~/openclaw/venv_cli`).
+> 6. **Tailscale PMTUD Blackhole Law (Large Asset Downgrade)**: When pushing large assets (>50MB) across Tailscale nodes (100.x.x.x), standard `ssh_upload` (scp/paramiko) WILL face silent connection drops (`stalled`) due to Path MTU Discovery blackholes (MTU 1280 vs 1500). **YOU MUST ABANDON `ssh_upload`** for these payloads and instead use native `rsync -avz --progress` to forcibly stream and handle disconnects.
 >
 > **Explicit Invocation Master Strategy:**
 > `SSH_HOST=100.90.140.62 SSH_USER=roy-002 SSH_PORT=22 python3 ssh_tool.py exec ...`

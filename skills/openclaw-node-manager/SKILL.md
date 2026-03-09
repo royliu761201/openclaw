@@ -44,11 +44,19 @@ _(If this hangs or fails with "Permission denied", you must **STOP** and first r
 **CRITICAL RULE**: Never directly `git pull` from official upstream on Edge Nodes (e.g. Node 02).
 
 1. Ensure the source code is cleanly merged on the master commander (Node 01).
-2. Have the Edge Node blindly pull from your local origin branch (`mac`) and rebuild:
+2. Have the Edge Node pull from your local origin branch (`mac`) and rebuild:
 
 ```bash
-python3 $HOME/openclaw/skills/ssh/scripts/ssh_tool.py --host {NODE_ID} exec "source ~/.nvm/nvm.sh || true && export PATH=\$HOME/.nvm/versions/node/{NODE_VERSION}/bin:\$PATH && cd /Users/{TARGET_USER}/openclaw && git pull origin mac && npm install && npm run build"
+python3 $HOME/openclaw/skills/ssh/scripts/ssh_tool.py --host {NODE_ID} exec "source ~/.nvm/nvm.sh || true && export PATH=\$HOME/.nvm/versions/node/{NODE_VERSION}/bin:\$PATH && cd /Users/{TARGET_USER}/openclaw && git stash && GIT_TERMINAL_PROMPT=0 git pull origin mac && git stash pop || true && npm install -g pnpm --registry=https://registry.npmmirror.com && pnpm install --registry=https://registry.npmmirror.com && pnpm build"
 ```
+
+**[NEW] 🚨 ANTI-HANG PROTOCOL (Physical Injection Escape):** If the `git pull` hangs indefinitely on the Edge Node due to headless SSH credential blocks or network blackholes, immediately abort the SSH job and execute a physical SSoT injection from Node 01:
+
+```bash
+rsync -avz -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=no" --exclude 'node_modules' --exclude '.git' --exclude 'dist' $HOME/openclaw/ {TARGET_USER}@{TARGET_IP}:/Users/{TARGET_USER}/openclaw/
+```
+
+_(After syncing, run the `pnpm install` and `build` commands via SSH)._
 
 3. Push the fresh configuration from Node 01 to the target node using native `scp` (if config changed):
 
@@ -74,7 +82,7 @@ If the boss requests a fundamental OpenClaw version upgrade (e.g., v3.6 to v3.7)
 Use the `ssh` tool to execute a massive, absolute kill command on the target. This includes destroying zombie ports (18789), clearing PM2, and cold-booting the engine with strict `.nvm/nvm.sh` sourcing to prevent PATH errors.
 
 ```bash
-python3 $HOME/openclaw/skills/ssh/scripts/ssh_tool.py --host {NODE_ID} exec "source ~/.nvm/nvm.sh || true && export PATH=\$HOME/.nvm/versions/node/{NODE_VERSION}/bin:\$PATH && pm2 delete {PM2_NAME} || true && pkill -9 -f openclaw || true && lsof -ti:18789 | xargs kill -9 || true && cd /Users/{TARGET_USER}/openclaw && OPENCLAW_CONFIG_PATH=/Users/{TARGET_USER}/openclaw/config/{CONFIG_NAME} pm2 start scripts/run-node.mjs --name {PM2_NAME} -f -- gateway && pm2 save"
+python3 $HOME/openclaw/skills/ssh/scripts/ssh_tool.py --host {NODE_ID} exec "source ~/.nvm/nvm.sh || true && export PATH=\$HOME/.nvm/versions/node/{NODE_VERSION}/bin:\$PATH && pm2 delete {PM2_NAME} || true && pkill -9 -f openclaw || true && lsof -ti:18789 | xargs kill -9 || true && cd /Users/{TARGET_USER}/openclaw && OPENCLAW_CONFIG_PATH=/Users/{TARGET_USER}/openclaw/config/{CONFIG_NAME} pm2 start 'pnpm start' --name {PM2_NAME} && pm2 save"
 ```
 
 ### Step 3: Test (Hardcore E2E Audit)
@@ -112,6 +120,11 @@ To clean up rogue, redundant, or obsolete scheduled tasks (Agent Cron Jobs) on a
 ### 🚫 防坑禁区 (Anti-Hallucination)
 
 - **Environment Disconnects (NVM/PATH)**: Non-interactive SSH drops `.bashrc` profiles. ALWAYS prefix commands that use `npm` or `pm2` with `source ~/.nvm/nvm.sh || true && export PATH=$HOME/.nvm/versions/node/{NODE_VERSION}/bin:$PATH`.
+- **Node 02 NPM/Git Blackholes**: Always append `--registry=https://registry.npmmirror.com` when running `pnpm install` on domestic edge nodes. For Git, set `GIT_TERMINAL_PROMPT=0` to fail fast instead of hanging on headless auth prompts. If `git pull` is bricked by locally generated config files (like `openclaw.mac02.json`), use `git stash` before pulling or fallback to the `rsync` physical injection protocol.
+- **OpenClaw 3.7 Persona / Workspace Binding**: In OpenClaw 3.7+, agents no longer rely just on `openclaw.json` arrays. You MUST physically map their identity and workspace using the native CLI:
+  `node scripts/run-node.mjs agents set-identity --agent {AGENT_ID} --workspace ~/workspace/agent_workspaces/{WORKSPACE_NAME} --from-identity`
+  This strictly anchors the `IDENTITY.md` and workspace path into the core SQLite database.
+- **OpenClaw 3.7 Search Provider Spoofing**: If the v3.7 gateway blocks startup because `tavily` is set as a search provider (which fails its internal strict checks), hardcode `"tools": { "web": { "search": { "provider": "gemini" } } }` into `openclaw.json` to spoof the core engine, whilst keeping actual custom `tavily-search` standalone skill arrays intact on the agent payload.
 - **SSoT Git Hierarchy**: Edge nodes MUST NEVER resolve git merge conflicts. All merges from official `upstream` must happen on Node 01, resolving locally, pushing to `origin`, and only then do Edge nodes run `git pull origin mac`.
 - **Zombie Process & Port Locks**: `pm2 delete` alone DOES NOT kill detached child processes that hold the gateway port (e.g., `18789` or `ws://`). The Scorched Earth step must run absolute kills: `npx openclaw gateway stop || true && pkill -9 -f openclaw && pkill -9 -f node && lsof -ti:18789 | xargs kill -9`.
 - **Silent PM2 Deaths**: PM2 will completely bury startup crashes (e.g., port in use) in `pm2 logs`. When diagnosing an offline gateway, ALWAYS bypass PM2 and run `OPENCLAW_DEBUG=true npx openclaw gateway` foreground to catch the true exception.
