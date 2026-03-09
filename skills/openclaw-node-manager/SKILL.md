@@ -47,7 +47,7 @@ _(If this hangs or fails with "Permission denied", you must **STOP** and first r
 2. Have the Edge Node pull from your local origin branch (`mac`) and rebuild:
 
 ```bash
-python3 $HOME/openclaw/skills/ssh/scripts/ssh_tool.py --host {NODE_ID} exec "source ~/.nvm/nvm.sh || true && export PATH=\$HOME/.nvm/versions/node/{NODE_VERSION}/bin:\$PATH && cd /Users/{TARGET_USER}/openclaw && git stash && GIT_TERMINAL_PROMPT=0 git pull origin mac && git stash pop || true && npm install -g pnpm --registry=https://registry.npmmirror.com && pnpm install --registry=https://registry.npmmirror.com && pnpm build"
+python3 $HOME/openclaw/skills/ssh/scripts/ssh_tool.py --host {NODE_ID} exec "source ~/.nvm/nvm.sh || true && export PATH=\$HOME/.nvm/versions/node/{NODE_VERSION}/bin:\$PATH && cd /Users/{TARGET_USER}/openclaw && GIT_TERMINAL_PROMPT=0 git pull origin mac --rebase --autostash -X theirs || true && npm install -g pnpm --registry=https://registry.npmmirror.com && pnpm install --registry=https://registry.npmmirror.com && pnpm build"
 ```
 
 **[NEW] 🚨 ANTI-HANG PROTOCOL (Physical Injection Escape):** If the `git pull` hangs indefinitely on the Edge Node due to headless SSH credential blocks or network blackholes, immediately abort the SSH job and execute a physical SSoT injection from Node 01:
