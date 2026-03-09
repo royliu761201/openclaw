@@ -1,6 +1,6 @@
 import type { CronConfig } from "../../config/types.cron.js";
 import type { HeartbeatRunResult } from "../../infra/heartbeat-wake.js";
-import type { CronJob, CronJobCreate, CronJobPatch, CronRunOutcome, CronRunStatus, CronRunTelemetry, CronStoreFile } from "../types.js";
+import type { CronDeliveryStatus, CronJob, CronJobCreate, CronJobPatch, CronMessageChannel, CronRunOutcome, CronRunStatus, CronRunTelemetry, CronStoreFile } from "../types.js";
 export type CronEvent = {
     jobId: string;
     action: "added" | "updated" | "removed" | "started" | "finished";
@@ -9,6 +9,9 @@ export type CronEvent = {
     status?: CronRunStatus;
     error?: string;
     summary?: string;
+    delivered?: boolean;
+    deliveryStatus?: CronDeliveryStatus;
+    deliveryError?: string;
     sessionId?: string;
     sessionKey?: string;
     nextRunAtMs?: number;
@@ -46,6 +49,10 @@ export type CronServiceDeps = {
         reason?: string;
         agentId?: string;
         sessionKey?: string;
+        /** Optional heartbeat config override (e.g. target: "last" for cron-triggered heartbeats). */
+        heartbeat?: {
+            target?: string;
+        };
     }) => Promise<HeartbeatRunResult>;
     /**
      * WakeMode=now: max time to wait for runHeartbeatOnce to stop returning
@@ -58,6 +65,7 @@ export type CronServiceDeps = {
     runIsolatedAgentJob: (params: {
         job: CronJob;
         message: string;
+        abortSignal?: AbortSignal;
     }) => Promise<{
         summary?: string;
         /** Last non-empty agent text output (not truncated). */
@@ -68,7 +76,20 @@ export type CronServiceDeps = {
          * https://github.com/openclaw/openclaw/issues/15692
          */
         delivered?: boolean;
+        /**
+         * `true` when announce/direct delivery was attempted for this run, even
+         * if the final per-message ack status is uncertain.
+         */
+        deliveryAttempted?: boolean;
     } & CronRunOutcome & CronRunTelemetry>;
+    sendCronFailureAlert?: (params: {
+        job: CronJob;
+        text: string;
+        channel: CronMessageChannel;
+        to?: string;
+        mode?: "announce" | "webhook";
+        accountId?: string;
+    }) => Promise<void>;
     onEvent?: (evt: CronEvent) => void;
 };
 export type CronServiceDepsInternal = Omit<CronServiceDeps, "nowMs"> & {
@@ -96,6 +117,10 @@ export type CronStatusSummary = {
 export type CronRunResult = {
     ok: true;
     ran: true;
+} | {
+    ok: true;
+    enqueued: true;
+    runId: string;
 } | {
     ok: true;
     ran: false;

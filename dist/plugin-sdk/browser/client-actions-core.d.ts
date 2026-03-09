@@ -89,6 +89,11 @@ export type BrowserDownloadPayload = {
     suggestedFilename: string;
     path: string;
 };
+type BrowserDownloadResult = {
+    ok: true;
+    targetId: string;
+    download: BrowserDownloadPayload;
+};
 export declare function browserNavigate(baseUrl: string | undefined, opts: {
     url: string;
     targetId?: string;
@@ -115,22 +120,14 @@ export declare function browserWaitForDownload(baseUrl: string | undefined, opts
     targetId?: string;
     timeoutMs?: number;
     profile?: string;
-}): Promise<{
-    ok: true;
-    targetId: string;
-    download: BrowserDownloadPayload;
-}>;
+}): Promise<BrowserDownloadResult>;
 export declare function browserDownload(baseUrl: string | undefined, opts: {
     ref: string;
     path: string;
     targetId?: string;
     timeoutMs?: number;
     profile?: string;
-}): Promise<{
-    ok: true;
-    targetId: string;
-    download: BrowserDownloadPayload;
-}>;
+}): Promise<BrowserDownloadResult>;
 export declare function browserAct(baseUrl: string | undefined, req: BrowserActRequest, opts?: {
     profile?: string;
 }): Promise<BrowserActResponse>;
@@ -142,3 +139,4 @@ export declare function browserScreenshotAction(baseUrl: string | undefined, opt
     type?: "png" | "jpeg";
     profile?: string;
 }): Promise<BrowserActionPathResult>;
+export {};

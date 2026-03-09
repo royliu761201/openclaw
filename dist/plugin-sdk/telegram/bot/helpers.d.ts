@@ -1,8 +1,8 @@
 import type { Chat, Message } from "@grammyjs/types";
-import type { TelegramGroupConfig, TelegramTopicConfig } from "../../config/types.js";
-import type { TelegramStreamMode } from "./types.js";
 import { type NormalizedLocation } from "../../channels/location.js";
+import type { TelegramDirectConfig, TelegramGroupConfig, TelegramTopicConfig } from "../../config/types.js";
 import { type NormalizedAllowFrom } from "../bot-access.js";
+import type { TelegramStreamMode } from "./types.js";
 export type TelegramThreadSpec = {
     id?: number;
     scope: "dm" | "forum" | "none";
@@ -10,17 +10,19 @@ export type TelegramThreadSpec = {
 export declare function resolveTelegramGroupAllowFromContext(params: {
     chatId: string | number;
     accountId?: string;
+    isGroup?: boolean;
     isForum?: boolean;
     messageThreadId?: number | null;
     groupAllowFrom?: Array<string | number>;
     resolveTelegramGroupConfig: (chatId: string | number, messageThreadId?: number) => {
-        groupConfig?: TelegramGroupConfig;
+        groupConfig?: TelegramGroupConfig | TelegramDirectConfig;
         topicConfig?: TelegramTopicConfig;
     };
 }): Promise<{
     resolvedThreadId?: number;
+    dmThreadId?: number;
     storeAllowFrom: string[];
-    groupConfig?: TelegramGroupConfig;
+    groupConfig?: TelegramGroupConfig | TelegramDirectConfig;
     topicConfig?: TelegramTopicConfig;
     groupAllowOverride?: Array<string | number>;
     effectiveGroupAllow: NormalizedAllowFrom;
@@ -66,9 +68,21 @@ export declare function buildTypingThreadParams(messageThreadId?: number): {
     message_thread_id: number;
 } | undefined;
 export declare function resolveTelegramStreamMode(telegramCfg?: {
-    streamMode?: TelegramStreamMode;
+    streaming?: unknown;
+    streamMode?: unknown;
 }): TelegramStreamMode;
 export declare function buildTelegramGroupPeerId(chatId: number | string, messageThreadId?: number): string;
+/**
+ * Resolve the direct-message peer identifier for Telegram routing/session keys.
+ *
+ * In some Telegram DM deliveries (for example certain business/chat bridge flows),
+ * `chat.id` can differ from the actual sender user id. Prefer sender id when present
+ * so per-peer DM scopes isolate users correctly.
+ */
+export declare function resolveTelegramDirectPeerId(params: {
+    chatId: number | string;
+    senderId?: number | string | null;
+}): string;
 export declare function buildTelegramGroupFrom(chatId: number | string, messageThreadId?: number): string;
 /**
  * Build parentPeer for forum topic binding inheritance.
@@ -89,6 +103,11 @@ export declare function buildSenderName(msg: Message): string | undefined;
 export declare function resolveTelegramMediaPlaceholder(msg: Pick<Message, "photo" | "video" | "video_note" | "audio" | "voice" | "document" | "sticker"> | undefined | null): string | undefined;
 export declare function buildSenderLabel(msg: Message, senderId?: number | string): string;
 export declare function buildGroupLabel(msg: Message, chatId: number | string, messageThreadId?: number): string;
+export type TelegramTextEntity = NonNullable<Message["entities"]>[number];
+export declare function getTelegramTextParts(msg: Pick<Message, "text" | "caption" | "entities" | "caption_entities">): {
+    text: string;
+    entities: TelegramTextEntity[];
+};
 export declare function hasBotMention(msg: Message, botUsername: string): boolean;
 type TelegramTextLinkEntity = {
     type: string;
@@ -103,6 +122,8 @@ export type TelegramReplyTarget = {
     sender: string;
     body: string;
     kind: "reply" | "quote";
+    /** Forward context if the reply target was itself a forwarded message (issue #9619). */
+    forwardedFrom?: TelegramForwardedContext;
 };
 export declare function describeReplyTarget(msg: Message): TelegramReplyTarget | null;
 export type TelegramForwardedContext = {

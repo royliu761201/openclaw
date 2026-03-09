@@ -1,5 +1,7 @@
+import { type OpenClawConfig } from "../config/config.js";
 import { type SignalTextStyleRange } from "./format.js";
 export type SignalSendOpts = {
+    cfg?: OpenClawConfig;
     baseUrl?: string;
     account?: string;
     accountId?: string;

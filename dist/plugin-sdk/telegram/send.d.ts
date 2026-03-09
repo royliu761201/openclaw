@@ -1,12 +1,13 @@
 import type { InlineKeyboardMarkup } from "@grammyjs/types";
 import { Bot } from "grammy";
-import type { RetryConfig } from "../infra/retry.js";
-import type { TelegramInlineButtons } from "./button-types.js";
 import { loadConfig } from "../config/config.js";
+import type { RetryConfig } from "../infra/retry.js";
 import { type PollInput } from "../polls.js";
+import type { TelegramInlineButtons } from "./button-types.js";
 type TelegramApi = Bot["api"];
 type TelegramApiOverride = Partial<TelegramApi>;
 type TelegramSendOpts = {
+    cfg?: ReturnType<typeof loadConfig>;
     token?: string;
     accountId?: string;
     verbose?: boolean;
@@ -100,6 +101,7 @@ type TelegramStickerOpts = {
  */
 export declare function sendStickerTelegram(to: string, fileId: string, opts?: TelegramStickerOpts): Promise<TelegramSendResult>;
 type TelegramPollOpts = {
+    cfg?: ReturnType<typeof loadConfig>;
     token?: string;
     accountId?: string;
     verbose?: boolean;

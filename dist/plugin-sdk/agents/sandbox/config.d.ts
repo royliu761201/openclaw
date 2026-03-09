@@ -1,5 +1,6 @@
 import type { OpenClawConfig } from "../../config/config.js";
 import type { SandboxBrowserConfig, SandboxConfig, SandboxDockerConfig, SandboxPruneConfig, SandboxScope } from "./types.js";
+export declare const DANGEROUS_SANDBOX_DOCKER_BOOLEAN_KEYS: readonly ["dangerouslyAllowReservedContainerTargets", "dangerouslyAllowExternalBindSources", "dangerouslyAllowContainerNamespaceJoin"];
 export declare function resolveSandboxBrowserDockerCreateConfig(params: {
     docker: SandboxDockerConfig;
     browser: SandboxBrowserConfig;

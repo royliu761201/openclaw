@@ -128,6 +128,9 @@ const hasSourceMtimeChanged = (stampMtime, deps) => {
 };
 
 const shouldBuild = (deps) => {
+  if (deps.env.OPENCLAW_SKIP_BUILD === "1") {
+    return false;
+  }
   if (deps.env.OPENCLAW_FORCE_BUILD === "1") {
     return true;
   }

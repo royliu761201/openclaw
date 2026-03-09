@@ -5,6 +5,9 @@ export declare const DevicePairApproveParamsSchema: import("@sinclair/typebox").
 export declare const DevicePairRejectParamsSchema: import("@sinclair/typebox").TObject<{
     requestId: import("@sinclair/typebox").TString;
 }>;
+export declare const DevicePairRemoveParamsSchema: import("@sinclair/typebox").TObject<{
+    deviceId: import("@sinclair/typebox").TString;
+}>;
 export declare const DeviceTokenRotateParamsSchema: import("@sinclair/typebox").TObject<{
     deviceId: import("@sinclair/typebox").TString;
     role: import("@sinclair/typebox").TString;
@@ -20,6 +23,7 @@ export declare const DevicePairRequestedEventSchema: import("@sinclair/typebox")
     publicKey: import("@sinclair/typebox").TString;
     displayName: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     platform: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+    deviceFamily: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     clientId: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     clientMode: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     role: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;

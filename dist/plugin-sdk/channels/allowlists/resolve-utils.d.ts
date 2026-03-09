@@ -10,6 +10,7 @@ export declare function mergeAllowlist(params: {
 }): string[];
 export declare function buildAllowlistResolutionSummary<T extends AllowlistUserResolutionLike>(resolvedUsers: T[], opts?: {
     formatResolved?: (entry: T) => string;
+    formatUnresolved?: (entry: T) => string;
 }): {
     resolvedMap: Map<string, T>;
     mapping: string[];
@@ -20,9 +21,14 @@ export declare function resolveAllowlistIdAdditions<T extends AllowlistUserResol
     existing: Array<string | number>;
     resolvedMap: Map<string, T>;
 }): string[];
+export declare function canonicalizeAllowlistWithResolvedIds<T extends AllowlistUserResolutionLike>(params: {
+    existing?: Array<string | number>;
+    resolvedMap: Map<string, T>;
+}): string[];
 export declare function patchAllowlistUsersInConfigEntries<T extends AllowlistUserResolutionLike, TEntries extends Record<string, unknown>>(params: {
     entries: TEntries;
     resolvedMap: Map<string, T>;
+    strategy?: "merge" | "canonicalize";
 }): TEntries;
 export declare function addAllowlistUserEntriesFromConfigEntry(target: Set<string>, entry: unknown): void;
 export declare function summarizeMapping(label: string, mapping: string[], unresolved: string[], runtime: RuntimeEnv): void;

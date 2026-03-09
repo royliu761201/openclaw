@@ -1,10 +1,14 @@
 import { type DeliveryContext } from "../utils/delivery-context.js";
+import type { SpawnSubagentMode } from "./subagent-spawn.js";
+export declare function captureSubagentCompletionReply(sessionKey: string): Promise<string | undefined>;
 export declare function buildSubagentSystemPrompt(params: {
     requesterSessionKey?: string;
     requesterOrigin?: DeliveryContext;
     childSessionKey: string;
     label?: string;
     task?: string;
+    /** Whether ACP-specific routing guidance should be included. Defaults to true. */
+    acpEnabled?: boolean;
     /** Depth of the child being spawned (1 = sub-agent, 2 = sub-sub-agent). */
     childDepth?: number;
     /** Config value: max allowed spawn depth. */
@@ -25,6 +29,11 @@ export declare function runSubagentAnnounceFlow(params: {
     timeoutMs: number;
     cleanup: "delete" | "keep";
     roundOneReply?: string;
+    /**
+     * Fallback text preserved from the pre-wake run when a wake continuation
+     * completes with NO_REPLY despite an earlier final summary already existing.
+     */
+    fallbackReply?: string;
     waitForCompletion?: boolean;
     startedAt?: number;
     endedAt?: number;
@@ -32,4 +41,8 @@ export declare function runSubagentAnnounceFlow(params: {
     outcome?: SubagentRunOutcome;
     announceType?: SubagentAnnounceType;
     expectsCompletionMessage?: boolean;
+    spawnMode?: SpawnSubagentMode;
+    wakeOnDescendantSettle?: boolean;
+    signal?: AbortSignal;
+    bestEffortDeliver?: boolean;
 }): Promise<boolean>;

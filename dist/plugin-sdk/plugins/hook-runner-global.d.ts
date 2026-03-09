@@ -4,9 +4,9 @@
  * Singleton hook runner that's initialized when plugins are loaded
  * and can be called from anywhere in the codebase.
  */
+import { type HookRunner } from "./hooks.js";
 import type { PluginRegistry } from "./registry.js";
 import type { PluginHookGatewayContext, PluginHookGatewayStopEvent } from "./types.js";
-import { type HookRunner } from "./hooks.js";
 /**
  * Initialize the global hook runner with a plugin registry.
  * Called once when plugins are loaded during gateway startup.

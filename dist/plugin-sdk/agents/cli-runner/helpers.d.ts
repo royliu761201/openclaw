@@ -28,6 +28,7 @@ export declare function buildSystemPrompt(params: {
     docsPath?: string;
     tools: AgentTool[];
     contextFiles?: EmbeddedContextFile[];
+    bootstrapTruncationWarningLines?: string[];
     modelDisplay: string;
     agentId?: string;
 }): string;

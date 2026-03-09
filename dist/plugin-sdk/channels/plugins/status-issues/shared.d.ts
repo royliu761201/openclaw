@@ -1,4 +1,5 @@
 import { isRecord } from "../../../utils.js";
+import type { ChannelAccountSnapshot, ChannelStatusIssue } from "../types.js";
 export { isRecord };
 export declare function asString(value: unknown): string | undefined;
 export declare function formatMatchMetadata(params: {
@@ -14,3 +15,15 @@ export declare function resolveEnabledConfiguredAccountId(account: {
     enabled?: unknown;
     configured?: unknown;
 }): string | null;
+export declare function collectIssuesForEnabledAccounts<T extends {
+    accountId?: unknown;
+    enabled?: unknown;
+}>(params: {
+    accounts: ChannelAccountSnapshot[];
+    readAccount: (value: ChannelAccountSnapshot) => T | null;
+    collectIssues: (params: {
+        account: T;
+        accountId: string;
+        issues: ChannelStatusIssue[];
+    }) => void;
+}): ChannelStatusIssue[];

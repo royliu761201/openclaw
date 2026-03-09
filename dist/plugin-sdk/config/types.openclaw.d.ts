@@ -1,9 +1,11 @@
+import type { AcpConfig } from "./types.acp.js";
 import type { AgentBinding, AgentsConfig } from "./types.agents.js";
 import type { ApprovalsConfig } from "./types.approvals.js";
 import type { AuthConfig } from "./types.auth.js";
 import type { DiagnosticsConfig, LoggingConfig, SessionConfig, WebConfig } from "./types.base.js";
 import type { BrowserConfig } from "./types.browser.js";
 import type { ChannelsConfig } from "./types.channels.js";
+import type { CliConfig } from "./types.cli.js";
 import type { CronConfig } from "./types.cron.js";
 import type { CanvasHostConfig, DiscoveryConfig, GatewayConfig, TalkConfig } from "./types.gateway.js";
 import type { HooksConfig } from "./types.hooks.js";
@@ -12,6 +14,7 @@ import type { AudioConfig, BroadcastConfig, CommandsConfig, MessagesConfig } fro
 import type { ModelsConfig } from "./types.models.js";
 import type { NodeHostConfig } from "./types.node-host.js";
 import type { PluginsConfig } from "./types.plugins.js";
+import type { SecretsConfig } from "./types.secrets.js";
 import type { SkillsConfig } from "./types.skills.js";
 import type { ToolsConfig } from "./types.tools.js";
 export type OpenClawConfig = {
@@ -22,6 +25,7 @@ export type OpenClawConfig = {
         lastTouchedAt?: string;
     };
     auth?: AuthConfig;
+    acp?: AcpConfig;
     env?: {
         /** Opt-in: import missing secrets from a login shell environment (exec `$SHELL -l -c 'env -0'`). */
         shellEnv?: {
@@ -46,11 +50,23 @@ export type OpenClawConfig = {
     };
     diagnostics?: DiagnosticsConfig;
     logging?: LoggingConfig;
+    cli?: CliConfig;
     update?: {
         /** Update channel for git + npm installs ("stable", "beta", or "dev"). */
         channel?: "stable" | "beta" | "dev";
         /** Check for updates on gateway start (npm installs only). */
         checkOnStart?: boolean;
+        /** Core auto-update policy for package installs. */
+        auto?: {
+            /** Enable background auto-update checks and apply logic. Default: false. */
+            enabled?: boolean;
+            /** Stable channel minimum delay before auto-apply. Default: 6. */
+            stableDelayHours?: number;
+            /** Additional stable-channel jitter window. Default: 12. */
+            stableJitterHours?: number;
+            /** Beta channel check cadence. Default: 1 hour. */
+            betaCheckIntervalHours?: number;
+        };
     };
     browser?: BrowserConfig;
     ui?: {
@@ -63,6 +79,7 @@ export type OpenClawConfig = {
             avatar?: string;
         };
     };
+    secrets?: SecretsConfig;
     skills?: SkillsConfig;
     plugins?: PluginsConfig;
     models?: ModelsConfig;
@@ -72,6 +89,12 @@ export type OpenClawConfig = {
     bindings?: AgentBinding[];
     broadcast?: BroadcastConfig;
     audio?: AudioConfig;
+    media?: {
+        /** Preserve original uploaded filenames when storing inbound media. */
+        preserveFilenames?: boolean;
+        /** Optional retention window for persisted inbound media cleanup. */
+        ttlHours?: number;
+    };
     messages?: MessagesConfig;
     commands?: CommandsConfig;
     approvals?: ApprovalsConfig;
@@ -89,6 +112,8 @@ export type OpenClawConfig = {
 export type ConfigValidationIssue = {
     path: string;
     message: string;
+    allowedValues?: string[];
+    allowedValuesHiddenCount?: number;
 };
 export type LegacyConfigIssue = {
     path: string;

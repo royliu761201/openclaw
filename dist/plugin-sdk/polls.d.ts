@@ -23,6 +23,7 @@ export type NormalizedPollInput = {
 type NormalizePollOptions = {
     maxOptions?: number;
 };
+export declare function resolvePollMaxSelections(optionCount: number, allowMultiselect: boolean | undefined): number;
 export declare function normalizePollInput(input: PollInput, options?: NormalizePollOptions): NormalizedPollInput;
 export declare function normalizePollDurationHours(value: number | undefined, options: {
     defaultHours: number;

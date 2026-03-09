@@ -1,30 +1,6 @@
 import { type DeliveryContext } from "../utils/delivery-context.js";
-import { type SubagentRunOutcome } from "./subagent-announce.js";
-export type SubagentRunRecord = {
-    runId: string;
-    childSessionKey: string;
-    requesterSessionKey: string;
-    requesterOrigin?: DeliveryContext;
-    requesterDisplayKey: string;
-    task: string;
-    cleanup: "delete" | "keep";
-    label?: string;
-    model?: string;
-    runTimeoutSeconds?: number;
-    createdAt: number;
-    startedAt?: number;
-    endedAt?: number;
-    outcome?: SubagentRunOutcome;
-    archiveAtMs?: number;
-    cleanupCompletedAt?: number;
-    cleanupHandled?: boolean;
-    suppressAnnounceReason?: "steer-restart" | "killed";
-    expectsCompletionMessage?: boolean;
-    /** Number of times announce delivery has been attempted and returned false (deferred). */
-    announceRetryCount?: number;
-    /** Timestamp of the last announce retry attempt (for backoff). */
-    lastAnnounceRetryAt?: number;
-};
+import type { SubagentRunRecord } from "./subagent-registry.types.js";
+export type { SubagentRunRecord } from "./subagent-registry.types.js";
 export declare function markSubagentRunForSteerRestart(runId: string): boolean;
 export declare function clearSubagentRunSteerRestart(runId: string): boolean;
 export declare function replaceSubagentRunAfterSteer(params: {
@@ -32,6 +8,7 @@ export declare function replaceSubagentRunAfterSteer(params: {
     nextRunId: string;
     fallback?: SubagentRunRecord;
     runTimeoutSeconds?: number;
+    preserveFrozenResultFallback?: boolean;
 }): boolean;
 export declare function registerSubagentRun(params: {
     runId: string;
@@ -43,8 +20,13 @@ export declare function registerSubagentRun(params: {
     cleanup: "delete" | "keep";
     label?: string;
     model?: string;
+    workspaceDir?: string;
     runTimeoutSeconds?: number;
     expectsCompletionMessage?: boolean;
+    spawnMode?: "run" | "session";
+    attachmentsDir?: string;
+    attachmentsRootDir?: string;
+    retainAttachmentsOnKeep?: boolean;
 }): void;
 export declare function resetSubagentRegistryForTests(opts?: {
     persist?: boolean;
@@ -56,13 +38,18 @@ export declare function resolveRequesterForChildSession(childSessionKey: string)
     requesterOrigin?: DeliveryContext;
 } | null;
 export declare function isSubagentSessionRunActive(childSessionKey: string): boolean;
+export declare function shouldIgnorePostCompletionAnnounceForSession(childSessionKey: string): boolean;
 export declare function markSubagentRunTerminated(params: {
     runId?: string;
     childSessionKey?: string;
     reason?: string;
 }): number;
-export declare function listSubagentRunsForRequester(requesterSessionKey: string): SubagentRunRecord[];
+export declare function listSubagentRunsForRequester(requesterSessionKey: string, options?: {
+    requesterRunId?: string;
+}): SubagentRunRecord[];
 export declare function countActiveRunsForSession(requesterSessionKey: string): number;
 export declare function countActiveDescendantRuns(rootSessionKey: string): number;
+export declare function countPendingDescendantRuns(rootSessionKey: string): number;
+export declare function countPendingDescendantRunsExcludingRun(rootSessionKey: string, excludeRunId: string): number;
 export declare function listDescendantRunsForRequester(rootSessionKey: string): SubagentRunRecord[];
 export declare function initSubagentRegistry(): void;

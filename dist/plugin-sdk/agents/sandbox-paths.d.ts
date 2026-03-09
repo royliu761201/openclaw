@@ -11,7 +11,8 @@ export declare function assertSandboxPath(params: {
     filePath: string;
     cwd: string;
     root: string;
-    allowFinalSymlink?: boolean;
+    allowFinalSymlinkForUnlink?: boolean;
+    allowFinalHardlinkForUnlink?: boolean;
 }): Promise<{
     resolved: string;
     relative: string;

@@ -1,14 +1,13 @@
 import type { App } from "@slack/bolt";
 import type { HistoryEntry } from "../../auto-reply/reply/history.js";
 import type { OpenClawConfig, SlackReactionNotificationMode } from "../../config/config.js";
+import { type SessionScope } from "../../config/sessions.js";
 import type { DmPolicy, GroupPolicy } from "../../config/types.js";
+import { getChildLogger } from "../../logging.js";
 import type { RuntimeEnv } from "../../runtime.js";
 import type { SlackMessageEvent } from "../types.js";
 import type { SlackChannelConfigEntries } from "./channel-config.js";
-import { type SessionScope } from "../../config/sessions.js";
-import { getChildLogger } from "../../logging.js";
-export declare function inferSlackChannelType(channelId?: string | null): SlackMessageEvent["channel_type"] | undefined;
-export declare function normalizeSlackChannelType(channelType?: string | null, channelId?: string | null): SlackMessageEvent["channel_type"];
+export { inferSlackChannelType, normalizeSlackChannelType } from "./channel-type.js";
 export type SlackMonitorContext = {
     cfg: OpenClawConfig;
     accountId: string;
@@ -25,10 +24,12 @@ export type SlackMonitorContext = {
     dmEnabled: boolean;
     dmPolicy: DmPolicy;
     allowFrom: string[];
+    allowNameMatching: boolean;
     groupDmEnabled: boolean;
     groupDmChannels: string[];
     defaultRequireMention: boolean;
     channelsConfig?: SlackChannelConfigEntries;
+    channelsConfigKeys: string[];
     groupPolicy: GroupPolicy;
     useAccessGroups: boolean;
     reactionMode: SlackReactionNotificationMode;
@@ -39,6 +40,7 @@ export type SlackMonitorContext = {
     slashCommand: Required<import("../../config/config.js").SlackSlashCommandConfig>;
     textLimit: number;
     ackReactionScope: string;
+    typingReaction: string;
     mediaMaxBytes: number;
     removeAckAfterReply: boolean;
     logger: ReturnType<typeof getChildLogger>;
@@ -47,6 +49,7 @@ export type SlackMonitorContext = {
     resolveSlackSystemEventSessionKey: (params: {
         channelId?: string | null;
         channelType?: string | null;
+        senderId?: string | null;
     }) => string;
     isChannelAllowed: (params: {
         channelId?: string;
@@ -83,6 +86,7 @@ export declare function createSlackMonitorContext(params: {
     dmEnabled: boolean;
     dmPolicy: DmPolicy;
     allowFrom: Array<string | number> | undefined;
+    allowNameMatching: boolean;
     groupDmEnabled: boolean;
     groupDmChannels: Array<string | number> | undefined;
     defaultRequireMention?: boolean;
@@ -97,6 +101,7 @@ export declare function createSlackMonitorContext(params: {
     slashCommand: SlackMonitorContext["slashCommand"];
     textLimit: number;
     ackReactionScope: string;
+    typingReaction: string;
     mediaMaxBytes: number;
     removeAckAfterReply: boolean;
 }): SlackMonitorContext;

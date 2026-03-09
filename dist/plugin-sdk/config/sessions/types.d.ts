@@ -16,6 +16,44 @@ export type SessionOrigin = {
     accountId?: string;
     threadId?: string | number;
 };
+export type SessionAcpIdentitySource = "ensure" | "status" | "event";
+export type SessionAcpIdentityState = "pending" | "resolved";
+export type SessionAcpIdentity = {
+    state: SessionAcpIdentityState;
+    acpxRecordId?: string;
+    acpxSessionId?: string;
+    agentSessionId?: string;
+    source: SessionAcpIdentitySource;
+    lastUpdatedAt: number;
+};
+export type SessionAcpMeta = {
+    backend: string;
+    agent: string;
+    runtimeSessionName: string;
+    identity?: SessionAcpIdentity;
+    mode: "persistent" | "oneshot";
+    runtimeOptions?: AcpSessionRuntimeOptions;
+    cwd?: string;
+    state: "idle" | "running" | "error";
+    lastActivityAt: number;
+    lastError?: string;
+};
+export type AcpSessionRuntimeOptions = {
+    /**
+     * ACP runtime mode set via session/set_mode (for example: "plan", "normal", "auto").
+     */
+    runtimeMode?: string;
+    /** ACP runtime config option: model id. */
+    model?: string;
+    /** Working directory override for ACP session turns. */
+    cwd?: string;
+    /** ACP runtime config option: permission profile id. */
+    permissionProfile?: string;
+    /** ACP runtime config option: per-turn timeout in seconds. */
+    timeoutSeconds?: number;
+    /** Backend-specific option bag mapped through session/set_config_option. */
+    backendExtras?: Record<string, string>;
+};
 export type SessionEntry = {
     /**
      * Last delivered heartbeat payload (used to suppress duplicate heartbeat notifications).
@@ -29,10 +67,20 @@ export type SessionEntry = {
     sessionFile?: string;
     /** Parent session key that spawned this session (used for sandbox session-tool scoping). */
     spawnedBy?: string;
+    /** True after a thread/topic session has been forked from its parent transcript once. */
+    forkedFromParent?: boolean;
     /** Subagent spawn depth (0 = main, 1 = sub-agent, 2 = sub-sub-agent). */
     spawnDepth?: number;
     systemSent?: boolean;
     abortedLastRun?: boolean;
+    /**
+     * Session-level stop cutoff captured when /stop is received.
+     * Messages at/before this boundary are skipped to avoid replaying
+     * queued pre-stop backlog.
+     */
+    abortCutoffMessageSid?: string;
+    /** Epoch ms cutoff paired with abortCutoffMessageSid when available. */
+    abortCutoffTimestamp?: number;
     chatType?: SessionChatType;
     thinkingLevel?: string;
     verboseLevel?: string;
@@ -65,8 +113,17 @@ export type SessionEntry = {
      * totalTokens as stale/unknown for context-utilization displays.
      */
     totalTokensFresh?: boolean;
+    cacheRead?: number;
+    cacheWrite?: number;
     modelProvider?: string;
     model?: string;
+    /**
+     * Last selected/runtime model pair for which a fallback notice was emitted.
+     * Used to avoid repeating the same fallback notice every turn.
+     */
+    fallbackNoticeSelectedModel?: string;
+    fallbackNoticeActiveModel?: string;
+    fallbackNoticeReason?: string;
     contextTokens?: number;
     compactionCount?: number;
     memoryFlushAt?: number;
@@ -88,8 +145,21 @@ export type SessionEntry = {
     lastThreadId?: string | number;
     skillsSnapshot?: SessionSkillSnapshot;
     systemPromptReport?: SessionSystemPromptReport;
+    acp?: SessionAcpMeta;
 };
+export declare function normalizeSessionRuntimeModelFields(entry: SessionEntry): SessionEntry;
+export declare function setSessionRuntimeModel(entry: SessionEntry, runtime: {
+    provider: string;
+    model: string;
+}): boolean;
+export type SessionEntryMergePolicy = "touch-activity" | "preserve-activity";
+type MergeSessionEntryOptions = {
+    policy?: SessionEntryMergePolicy;
+    now?: number;
+};
+export declare function mergeSessionEntryWithPolicy(existing: SessionEntry | undefined, patch: Partial<SessionEntry>, options?: MergeSessionEntryOptions): SessionEntry;
 export declare function mergeSessionEntry(existing: SessionEntry | undefined, patch: Partial<SessionEntry>): SessionEntry;
+export declare function mergeSessionEntryPreserveActivity(existing: SessionEntry | undefined, patch: Partial<SessionEntry>): SessionEntry;
 export declare function resolveFreshSessionTotalTokens(entry?: Pick<SessionEntry, "totalTokens" | "totalTokensFresh"> | null): number | undefined;
 export declare function isSessionTotalTokensFresh(entry?: Pick<SessionEntry, "totalTokens" | "totalTokensFresh"> | null): boolean;
 export type GroupKeyResolution = {
@@ -103,6 +173,7 @@ export type SessionSkillSnapshot = {
     skills: Array<{
         name: string;
         primaryEnv?: string;
+        requiredEnv?: string[];
     }>;
     /** Normalized agent-level filter used to build this snapshot; undefined means unrestricted. */
     skillFilter?: string[];
@@ -119,6 +190,15 @@ export type SessionSystemPromptReport = {
     workspaceDir?: string;
     bootstrapMaxChars?: number;
     bootstrapTotalMaxChars?: number;
+    bootstrapTruncation?: {
+        warningMode?: "off" | "once" | "always";
+        warningShown?: boolean;
+        promptWarningSignature?: string;
+        warningSignaturesSeen?: string[];
+        truncatedFiles?: number;
+        nearLimitFiles?: number;
+        totalNearLimit?: boolean;
+    };
     sandbox?: {
         mode?: string;
         sandboxed?: boolean;
@@ -157,3 +237,4 @@ export type SessionSystemPromptReport = {
 export declare const DEFAULT_RESET_TRIGGER = "/new";
 export declare const DEFAULT_RESET_TRIGGERS: string[];
 export declare const DEFAULT_IDLE_MINUTES = 60;
+export {};

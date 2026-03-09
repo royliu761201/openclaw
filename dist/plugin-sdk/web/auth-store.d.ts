@@ -1,5 +1,5 @@
-import type { WebChannel } from "../utils.js";
 import { type RuntimeEnv } from "../runtime.js";
+import type { WebChannel } from "../utils.js";
 export declare function resolveDefaultWebAuthDir(): string;
 export declare const WA_WEB_AUTH_DIR: string;
 export declare function resolveWebCredsPath(authDir: string): string;

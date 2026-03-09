@@ -1,3 +1,4 @@
+import { type EmbeddingBatchExecutionParams } from "./batch-runner.js";
 import type { GeminiEmbeddingClient } from "./embeddings-gemini.js";
 export type GeminiBatchRequest = {
     custom_id: string;
@@ -47,9 +48,4 @@ export declare function runGeminiEmbeddingBatches(params: {
     gemini: GeminiEmbeddingClient;
     agentId: string;
     requests: GeminiBatchRequest[];
-    wait: boolean;
-    pollIntervalMs: number;
-    timeoutMs: number;
-    concurrency: number;
-    debug?: (message: string, data?: Record<string, unknown>) => void;
-}): Promise<Map<string, number[]>>;
+} & EmbeddingBatchExecutionParams): Promise<Map<string, number[]>>;

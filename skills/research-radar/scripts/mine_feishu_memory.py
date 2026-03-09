@@ -9,7 +9,7 @@ import subprocess
 
 WORKSPACE_DIR = Path(os.path.expanduser("~/workspace"))
 DB_PATH = Path(os.path.expanduser("~/.openclaw/memory/main.sqlite"))
-OUT_FILE = WORKSPACE_DIR / "docs" / "research_ideation" / "radar_raw_data" / "feishu_inbox.json"
+OUT_FILE = WORKSPACE_DIR / "docs" / "research_ideation" / "radar_raw_data" / "_inbox.md"
 
 def get_db_connection():
     if not DB_PATH.exists():
@@ -83,10 +83,16 @@ def mine_memory():
     # Save to file
     OUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     
-    with open(OUT_FILE, "w") as f:
-        json.dump(final_list, f, indent=4, ensure_ascii=False)
+    with open(OUT_FILE, "w", encoding="utf-8") as f:
+        f.write("# 📥 OpenClaw Asynchronous Token Drop (Inbox)\n\n")
+        f.write("> **Auto-harvested from Feishu/WeChat Memory Logs**\n\n")
+        for item in final_list:
+            f.write(f"### 🔗 Link: {item['url']}\n")
+            f.write(f"**Timestamp**: {item['timestamp']}\n\n")
+            f.write(f"**Chatbot Context / Quick Summary:**\n> {item['context'].replace(chr(10), chr(10)+'> ')}\n\n")
+            f.write("---\n\n")
         
-    print(f"✅ Mined {len(final_list)} URLs from OpenClaw memory in the last 24h.")
+    print(f"✅ Mined {len(final_list)} URLs from OpenClaw memory in the last 24h into Markdown.")
 
 def git_sync():
     print("🔄 Pushing Feishu Inbox to SSoT Git...")

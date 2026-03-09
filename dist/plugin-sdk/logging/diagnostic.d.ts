@@ -1,5 +1,7 @@
+import type { OpenClawConfig } from "../config/config.js";
 import { type SessionRef, type SessionStateValue } from "./diagnostic-session-state.js";
 declare const diag: import("./subsystem.js").SubsystemLogger;
+export declare function resolveStuckSessionWarnMs(config?: OpenClawConfig): number;
 export declare function logWebhookReceived(params: {
     channel: string;
     updateType?: string;
@@ -58,7 +60,7 @@ export declare function logToolLoopAction(params: SessionRef & {
     pairedToolName?: string;
 }): void;
 export declare function logActiveRuns(): void;
-export declare function startDiagnosticHeartbeat(): void;
+export declare function startDiagnosticHeartbeat(config?: OpenClawConfig): void;
 export declare function stopDiagnosticHeartbeat(): void;
 export declare function getDiagnosticSessionStateCountForTest(): number;
 export declare function resetDiagnosticStateForTest(): void;

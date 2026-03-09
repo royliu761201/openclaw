@@ -1,10 +1,15 @@
 import type { OpenClawConfig } from "../config/config.js";
+import type { SecretInput } from "../config/types.secrets.js";
 import { type GeminiEmbeddingClient } from "./embeddings-gemini.js";
+import { type MistralEmbeddingClient } from "./embeddings-mistral.js";
+import { type OllamaEmbeddingClient } from "./embeddings-ollama.js";
 import { type OpenAiEmbeddingClient } from "./embeddings-openai.js";
 import { type VoyageEmbeddingClient } from "./embeddings-voyage.js";
 export type { GeminiEmbeddingClient } from "./embeddings-gemini.js";
+export type { MistralEmbeddingClient } from "./embeddings-mistral.js";
 export type { OpenAiEmbeddingClient } from "./embeddings-openai.js";
 export type { VoyageEmbeddingClient } from "./embeddings-voyage.js";
+export type { OllamaEmbeddingClient } from "./embeddings-ollama.js";
 export type EmbeddingProvider = {
     id: string;
     model: string;
@@ -12,7 +17,7 @@ export type EmbeddingProvider = {
     embedQuery: (text: string) => Promise<number[]>;
     embedBatch: (texts: string[]) => Promise<number[][]>;
 };
-export type EmbeddingProviderId = "openai" | "local" | "gemini" | "voyage";
+export type EmbeddingProviderId = "openai" | "local" | "gemini" | "voyage" | "mistral" | "ollama";
 export type EmbeddingProviderRequest = EmbeddingProviderId | "auto";
 export type EmbeddingProviderFallback = EmbeddingProviderId | "none";
 export type EmbeddingProviderResult = {
@@ -24,6 +29,8 @@ export type EmbeddingProviderResult = {
     openAi?: OpenAiEmbeddingClient;
     gemini?: GeminiEmbeddingClient;
     voyage?: VoyageEmbeddingClient;
+    mistral?: MistralEmbeddingClient;
+    ollama?: OllamaEmbeddingClient;
 };
 export type EmbeddingProviderOptions = {
     config: OpenClawConfig;
@@ -31,7 +38,7 @@ export type EmbeddingProviderOptions = {
     provider: EmbeddingProviderRequest;
     remote?: {
         baseUrl?: string;
-        apiKey?: string;
+        apiKey?: SecretInput;
         headers?: Record<string, string>;
     };
     model: string;

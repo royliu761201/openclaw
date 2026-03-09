@@ -16,6 +16,12 @@ export type WorkspaceBootstrapFile = {
     content?: string;
     missing: boolean;
 };
+export type ExtraBootstrapLoadDiagnosticCode = "invalid-bootstrap-filename" | "missing" | "security" | "io";
+export type ExtraBootstrapLoadDiagnostic = {
+    path: string;
+    reason: ExtraBootstrapLoadDiagnosticCode;
+    detail: string;
+};
 export declare function isWorkspaceOnboardingCompleted(dir: string): Promise<boolean>;
 export declare function ensureAgentWorkspace(params?: {
     dir?: string;
@@ -33,3 +39,7 @@ export declare function ensureAgentWorkspace(params?: {
 export declare function loadWorkspaceBootstrapFiles(dir: string): Promise<WorkspaceBootstrapFile[]>;
 export declare function filterBootstrapFilesForSession(files: WorkspaceBootstrapFile[], sessionKey?: string): WorkspaceBootstrapFile[];
 export declare function loadExtraBootstrapFiles(dir: string, extraPatterns: string[]): Promise<WorkspaceBootstrapFile[]>;
+export declare function loadExtraBootstrapFilesWithDiagnostics(dir: string, extraPatterns: string[]): Promise<{
+    files: WorkspaceBootstrapFile[];
+    diagnostics: ExtraBootstrapLoadDiagnostic[];
+}>;

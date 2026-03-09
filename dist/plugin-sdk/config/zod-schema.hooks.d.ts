@@ -44,13 +44,19 @@ export declare const InternalHooksSchema: z.ZodOptional<z.ZodObject<{
         extraDirs: z.ZodOptional<z.ZodArray<z.ZodString>>;
     }, z.core.$strict>>;
     installs: z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodObject<{
+        hooks: z.ZodOptional<z.ZodArray<z.ZodString>>;
         source: z.ZodUnion<readonly [z.ZodLiteral<"npm">, z.ZodLiteral<"archive">, z.ZodLiteral<"path">]>;
         spec: z.ZodOptional<z.ZodString>;
         sourcePath: z.ZodOptional<z.ZodString>;
         installPath: z.ZodOptional<z.ZodString>;
         version: z.ZodOptional<z.ZodString>;
+        resolvedName: z.ZodOptional<z.ZodString>;
+        resolvedVersion: z.ZodOptional<z.ZodString>;
+        resolvedSpec: z.ZodOptional<z.ZodString>;
+        integrity: z.ZodOptional<z.ZodString>;
+        shasum: z.ZodOptional<z.ZodString>;
+        resolvedAt: z.ZodOptional<z.ZodString>;
         installedAt: z.ZodOptional<z.ZodString>;
-        hooks: z.ZodOptional<z.ZodArray<z.ZodString>>;
     }, z.core.$strict>>>;
 }, z.core.$strict>>;
 export declare const HooksGmailSchema: z.ZodOptional<z.ZodObject<{

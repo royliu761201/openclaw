@@ -7,7 +7,8 @@ type SandboxHashInput = {
 };
 type SandboxBrowserHashInput = {
     docker: SandboxDockerConfig;
-    browser: Pick<SandboxBrowserConfig, "cdpPort" | "vncPort" | "noVncPort" | "headless" | "enableNoVnc">;
+    browser: Pick<SandboxBrowserConfig, "cdpPort" | "cdpSourceRange" | "vncPort" | "noVncPort" | "headless" | "enableNoVnc">;
+    securityEpoch: string;
     workspaceAccess: SandboxWorkspaceAccess;
     workspaceDir: string;
     agentWorkspaceDir: string;

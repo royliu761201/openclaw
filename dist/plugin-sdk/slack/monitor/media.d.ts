@@ -12,6 +12,7 @@ export type SlackMediaResult = {
     contentType?: string;
     placeholder: string;
 };
+export declare const MAX_SLACK_MEDIA_FILES = 8;
 /**
  * Downloads all files attached to a Slack message and returns them as an array.
  * Returns `null` when no files could be downloaded.

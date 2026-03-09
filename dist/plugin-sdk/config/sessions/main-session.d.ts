@@ -1,5 +1,5 @@
-import type { SessionScope } from "./types.js";
 import { resolveAgentIdFromSessionKey } from "../../routing/session-key.js";
+import type { SessionScope } from "./types.js";
 export declare function resolveMainSessionKey(cfg?: {
     session?: {
         scope?: SessionScope;

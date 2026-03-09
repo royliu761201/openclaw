@@ -1,12 +1,13 @@
 import type { OpenClawConfig } from "../config/config.js";
+import type { SecretInput } from "../config/types.secrets.js";
 export type ResolvedMemorySearchConfig = {
     enabled: boolean;
     sources: Array<"memory" | "sessions">;
     extraPaths: string[];
-    provider: "openai" | "local" | "gemini" | "voyage" | "auto";
+    provider: "openai" | "local" | "gemini" | "voyage" | "mistral" | "ollama" | "auto";
     remote?: {
         baseUrl?: string;
-        apiKey?: string;
+        apiKey?: SecretInput;
         headers?: Record<string, string>;
         batch?: {
             enabled: boolean;
@@ -19,7 +20,7 @@ export type ResolvedMemorySearchConfig = {
     experimental: {
         sessionMemory: boolean;
     };
-    fallback: "openai" | "gemini" | "local" | "voyage" | "none";
+    fallback: "openai" | "gemini" | "local" | "voyage" | "mistral" | "ollama" | "none";
     model: string;
     local: {
         modelPath?: string;

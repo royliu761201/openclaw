@@ -23,7 +23,7 @@ export type EnvApiKeyResult = {
     source: string;
 };
 export type ModelAuthMode = "api-key" | "oauth" | "token" | "mixed" | "aws-sdk" | "unknown";
-export declare function resolveEnvApiKey(provider: string): EnvApiKeyResult | null;
+export declare function resolveEnvApiKey(provider: string, env?: NodeJS.ProcessEnv): EnvApiKeyResult | null;
 export declare function resolveModelAuthMode(provider?: string, cfg?: OpenClawConfig, store?: AuthProfileStore): ModelAuthMode | undefined;
 export declare function getApiKeyForModel(params: {
     model: Model<Api>;

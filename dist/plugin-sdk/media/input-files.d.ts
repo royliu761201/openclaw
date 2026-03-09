@@ -1,9 +1,6 @@
 import type { SsrFPolicy } from "../infra/net/ssrf.js";
-export type InputImageContent = {
-    type: "image";
-    data: string;
-    mimeType: string;
-};
+import { type PdfExtractedImage } from "./pdf-extract.js";
+export type InputImageContent = PdfExtractedImage;
 export type InputFileExtractResult = {
     filename: string;
     text?: string;
@@ -46,15 +43,22 @@ export type InputImageLimits = {
     timeoutMs: number;
 };
 export type InputImageSource = {
-    type: "base64" | "url";
-    data?: string;
-    url?: string;
+    type: "base64";
+    data: string;
+    mediaType?: string;
+} | {
+    type: "url";
+    url: string;
     mediaType?: string;
 };
 export type InputFileSource = {
-    type: "base64" | "url";
-    data?: string;
-    url?: string;
+    type: "base64";
+    data: string;
+    mediaType?: string;
+    filename?: string;
+} | {
+    type: "url";
+    url: string;
     mediaType?: string;
     filename?: string;
 };

@@ -17,7 +17,7 @@ export declare function normalizeExtraMemoryPaths(workspaceDir: string, extraPat
 export declare function isMemoryPath(relPath: string): boolean;
 export declare function listMemoryFiles(workspaceDir: string, extraPaths?: string[]): Promise<string[]>;
 export declare function hashText(value: string): string;
-export declare function buildFileEntry(absPath: string, workspaceDir: string): Promise<MemoryFileEntry>;
+export declare function buildFileEntry(absPath: string, workspaceDir: string): Promise<MemoryFileEntry | null>;
 export declare function chunkMarkdown(content: string, chunking: {
     tokens: number;
     overlap: number;

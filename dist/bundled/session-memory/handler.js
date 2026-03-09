@@ -1,81 +1,79 @@
-import { s as resolveStateDir } from "../../paths-CyR9Pa1R.js";
-import { d as resolveAgentIdFromSessionKey } from "../../session-key-CgcjHuX_.js";
-import "../../registry-B3v_dMjW.js";
-import { s as resolveAgentWorkspaceDir } from "../../agent-scope-DanU6CT8.js";
-import { t as createSubsystemLogger } from "../../subsystem-12Cr1qkN.js";
-import "../../exec-BcuB7agq.js";
-import "../../workspace-BBSUSFTB.js";
-import "../../tokens-BIWsvHaB.js";
-import "../../pi-embedded-DEWtyBVP.js";
-import "../../accounts-DmbLHz3-.js";
-import "../../normalize-Cve15Q9q.js";
-import "../../boolean-CE7i9tBR.js";
-import "../../env-CHgPw2cH.js";
-import "../../bindings-Dxat9suu.js";
-import "../../send-CbJFPx1A.js";
-import "../../plugins-Dy_YZOpV.js";
-import "../../send-CocpQMpH.js";
-import "../../deliver-CnE5WvUi.js";
-import "../../diagnostic-CJC2Qdcb.js";
-import "../../diagnostic-session-state-C1vRJs5w.js";
-import "../../accounts-BFVCDHLN.js";
-import "../../send-rj7ANh9g.js";
-import "../../image-ops-qpGLqv9k.js";
-import "../../model-auth-BWr5qEtA.js";
-import "../../github-copilot-token-D5ISrFy7.js";
-import "../../pi-model-discovery-DIA4gIzW.js";
-import "../../message-channel-BSPy_J6t.js";
-import { st as hasInterSessionUserProvenance } from "../../pi-embedded-helpers-CzEuJFFV.js";
-import "../../config-DXPgdIgF.js";
-import "../../manifest-registry-BGtqiFuf.js";
-import "../../chrome-BkJNYiGr.js";
-import "../../frontmatter-BPvsEU3m.js";
-import "../../skills-Cj-bjVUG.js";
-import "../../redact-9hYpOXID.js";
-import "../../errors-pj0CRkCB.js";
-import "../../store-D13UGRE4.js";
-import "../../thinking-DqJWj_Tw.js";
-import "../../accounts-CrNX3S4t.js";
-import "../../paths-gnW-md4M.js";
-import "../../tool-images-ht-C9kvN.js";
-import "../../image-BG4i5HHN.js";
-import "../../reply-prefix-CBsUYPbZ.js";
-import "../../manager-C6BVw5y3.js";
-import "../../gemini-auth-B8uGVM0W.js";
-import "../../sqlite-wwudzAAI.js";
-import "../../retry-DVtnPnF6.js";
-import "../../common-CbpTVFY9.js";
-import "../../chunk-CTULoyP3.js";
-import "../../markdown-tables-C6ikgcr9.js";
-import "../../fetch-DssVrA3_.js";
-import "../../ir-B31LmBFu.js";
-import "../../render-DwEu-aCr.js";
-import "../../commands-registry-ucu-TW_N.js";
-import "../../runner-H0xBWDT9.js";
-import "../../skill-commands-HACo2-aM.js";
-import "../../fetch-BBkSX75a.js";
-import "../../send-CL8sncrd.js";
-import "../../outbound-attachment-ttO57Lkw.js";
-import "../../send-CgzaUKIS.js";
-import "../../resolve-route-7_Yxg3Cy.js";
-import "../../channel-activity-BXFDwXVQ.js";
-import "../../tables-axXG6H7h.js";
-import "../../proxy-DVy9foH0.js";
-import "../../replies-RekRpCy5.js";
+import { l as resolveAgentWorkspaceDir, s as resolveAgentIdByWorkspacePath } from "../../run-with-concurrency-_Xv7jMpx.js";
+import { c as resolveStateDir } from "../../paths-hfkBoC7i.js";
+import { t as createSubsystemLogger } from "../../subsystem-DQJPqN9H.js";
+import { B as resolveAgentIdFromSessionKey, W as toAgentStoreSessionKey, et as parseAgentSessionKey } from "../../workspace-Cez7tM9z.js";
+import "../../logger-C6eFjEx8.js";
+import "../../model-selection-Dlz_Qmqi.js";
+import "../../github-copilot-token-CQmATy5E.js";
+import "../../legacy-names-DeWhx4AY.js";
+import "../../thinking-Bhkz_OAl.js";
+import "../../tokens-CPCWTGYC.js";
+import "../../pi-embedded-D9aoNcl8.js";
+import "../../plugins-iJTtkY2_.js";
+import "../../accounts-DrJKnY0B.js";
+import "../../send-CtSdEFh-.js";
+import "../../send-0wPrKyxN.js";
+import "../../deliver-BxDu_GCF.js";
+import "../../diagnostic-BUKLn-_j.js";
+import "../../accounts-CE9KWRU2.js";
+import "../../image-ops-BwGzrtHo.js";
+import "../../send-DufKnq0R.js";
+import "../../pi-model-discovery-pYrYVQqE.js";
+import { pt as hasInterSessionUserProvenance } from "../../pi-embedded-helpers-nvwNNFVg.js";
+import "../../chrome-Cu4MAo8M.js";
+import "../../frontmatter-BAic8FWM.js";
+import "../../skills-BFWox_AX.js";
+import "../../path-alias-guards-457JCSHr.js";
+import "../../proxy-env-DKXuS04c.js";
+import "../../redact-Coev2L_A.js";
+import "../../errors-DbcY9zSC.js";
+import { c as writeFileWithinRoot } from "../../fs-safe-CnL2SWY6.js";
+import "../../store-DE2mwsSi.js";
+import "../../paths-D_dtI_RW.js";
+import "../../tool-images-CGZO341K.js";
+import "../../image-YPbekh_o.js";
+import "../../audio-transcription-runner-ByY-8AXe.js";
+import "../../fetch-UqGz2TM1.js";
+import "../../fetch-guard-BFt2Tveu.js";
+import "../../api-key-rotation-CtVz75QR.js";
+import "../../proxy-fetch-DMQEaYIu.js";
+import "../../ir-BwkxGUCH.js";
+import "../../render-7C7EDC8_.js";
+import "../../target-errors-L9sQ9YV2.js";
+import "../../commands-registry-KW-ZGuTn.js";
+import "../../skill-commands-SCA7gylN.js";
+import "../../fetch-CONQGbzL.js";
+import "../../channel-activity-YsS3xJh-.js";
+import "../../tables-kGiKzDN2.js";
+import "../../send-8I9vebLR.js";
+import "../../outbound-attachment-BCWRRVJ9.js";
+import "../../send-tAuhiitS.js";
+import "../../proxy-o7sro0Y0.js";
+import "../../manager-DKV9fHfm.js";
+import "../../query-expansion-CMYNFEdb.js";
 import { generateSlugViaLLM } from "../../llm-slug-generator.js";
-import { t as resolveHookConfig } from "../../config-DmMe1tf9.js";
+import { t as resolveHookConfig } from "../../config-DI4SUeiY.js";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-
 //#region src/hooks/bundled/session-memory/handler.ts
 /**
 * Session memory hook handler
 *
-* Saves session context to memory when /new command is triggered
+* Saves session context to memory when /new or /reset command is triggered
 * Creates a new dated memory file with LLM-generated slug
 */
 const log = createSubsystemLogger("hooks/session-memory");
+function resolveDisplaySessionKey(params) {
+	if (!params.cfg || !params.workspaceDir) return params.sessionKey;
+	const workspaceAgentId = resolveAgentIdByWorkspacePath(params.cfg, params.workspaceDir);
+	const parsed = parseAgentSessionKey(params.sessionKey);
+	if (!workspaceAgentId || !parsed || workspaceAgentId === parsed.agentId) return params.sessionKey;
+	return toAgentStoreSessionKey({
+		agentId: workspaceAgentId,
+		requestKey: parsed.rest
+	});
+}
 /**
 * Read recent messages from session file for slug generation
 */
@@ -146,16 +144,23 @@ async function findPreviousSessionFile(params) {
 	} catch {}
 }
 /**
-* Save session context to memory when /new command is triggered
+* Save session context to memory when /new or /reset command is triggered
 */
 const saveSessionToMemory = async (event) => {
-	if (event.type !== "command" || event.action !== "new") return;
+	const isResetCommand = event.action === "new" || event.action === "reset";
+	if (event.type !== "command" || !isResetCommand) return;
 	try {
-		log.debug("Hook triggered for /new command");
+		log.debug("Hook triggered for reset/new command", { action: event.action });
 		const context = event.context || {};
 		const cfg = context.cfg;
+		const contextWorkspaceDir = typeof context.workspaceDir === "string" && context.workspaceDir.trim().length > 0 ? context.workspaceDir : void 0;
 		const agentId = resolveAgentIdFromSessionKey(event.sessionKey);
-		const workspaceDir = cfg ? resolveAgentWorkspaceDir(cfg, agentId) : path.join(resolveStateDir(process.env, os.homedir), "workspace");
+		const workspaceDir = contextWorkspaceDir || (cfg ? resolveAgentWorkspaceDir(cfg, agentId) : path.join(resolveStateDir(process.env, os.homedir), "workspace"));
+		const displaySessionKey = resolveDisplaySessionKey({
+			cfg,
+			workspaceDir: contextWorkspaceDir,
+			sessionKey: event.sessionKey
+		});
 		const memoryDir = path.join(workspaceDir, "memory");
 		await fs.mkdir(memoryDir, { recursive: true });
 		const now = new Date(event.timestamp);
@@ -221,14 +226,18 @@ const saveSessionToMemory = async (event) => {
 		const entryParts = [
 			`# Session: ${dateStr} ${timeStr} UTC`,
 			"",
-			`- **Session Key**: ${event.sessionKey}`,
+			`- **Session Key**: ${displaySessionKey}`,
 			`- **Session ID**: ${sessionId}`,
 			`- **Source**: ${source}`,
 			""
 		];
 		if (sessionContent) entryParts.push("## Conversation Summary", "", sessionContent, "");
-		const entry = entryParts.join("\n");
-		await fs.writeFile(memoryFilePath, entry, "utf-8");
+		await writeFileWithinRoot({
+			rootDir: memoryDir,
+			relativePath: filename,
+			data: entryParts.join("\n"),
+			encoding: "utf-8"
+		});
 		log.debug("Memory file written successfully");
 		const relPath = memoryFilePath.replace(os.homedir(), "~");
 		log.info(`Session context saved to ${relPath}`);
@@ -241,6 +250,5 @@ const saveSessionToMemory = async (event) => {
 		else log.error("Failed to save session memory", { error: String(err) });
 	}
 };
-
 //#endregion
 export { saveSessionToMemory as default };

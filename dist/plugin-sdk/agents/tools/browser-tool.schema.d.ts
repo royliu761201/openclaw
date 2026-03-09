@@ -1,9 +1,10 @@
 export declare const BrowserToolSchema: import("@sinclair/typebox").TObject<{
-    action: import("@sinclair/typebox").TUnsafe<"open" | "close" | "start" | "console" | "status" | "navigate" | "profiles" | "stop" | "snapshot" | "upload" | "dialog" | "pdf" | "screenshot" | "tabs" | "focus" | "act">;
+    action: import("@sinclair/typebox").TUnsafe<"close" | "stop" | "open" | "start" | "status" | "console" | "navigate" | "profiles" | "snapshot" | "dialog" | "pdf" | "screenshot" | "tabs" | "focus" | "upload" | "act">;
     target: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TUnsafe<"sandbox" | "node" | "host">>;
     node: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     profile: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     targetUrl: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+    url: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     targetId: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     limit: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TNumber>;
     maxChars: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TNumber>;
@@ -26,8 +27,27 @@ export declare const BrowserToolSchema: import("@sinclair/typebox").TObject<{
     timeoutMs: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TNumber>;
     accept: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TBoolean>;
     promptText: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+    kind: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TUnsafe<"fill" | "close" | "type" | "resize" | "click" | "press" | "hover" | "drag" | "select" | "wait" | "evaluate">>;
+    doubleClick: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TBoolean>;
+    button: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+    modifiers: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TArray<import("@sinclair/typebox").TString>>;
+    text: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+    submit: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TBoolean>;
+    slowly: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TBoolean>;
+    key: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+    delayMs: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TNumber>;
+    startRef: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+    endRef: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+    values: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TArray<import("@sinclair/typebox").TString>>;
+    fields: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TArray<import("@sinclair/typebox").TObject<{}>>>;
+    width: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TNumber>;
+    height: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TNumber>;
+    timeMs: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TNumber>;
+    textGone: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+    loadState: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+    fn: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     request: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TObject<{
-        kind: import("@sinclair/typebox").TUnsafe<"fill" | "close" | "resize" | "type" | "select" | "wait" | "click" | "drag" | "evaluate" | "hover" | "press">;
+        kind: import("@sinclair/typebox").TUnsafe<"fill" | "close" | "type" | "resize" | "click" | "press" | "hover" | "drag" | "select" | "wait" | "evaluate">;
         targetId: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
         ref: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
         doubleClick: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TBoolean>;
@@ -37,6 +57,7 @@ export declare const BrowserToolSchema: import("@sinclair/typebox").TObject<{
         submit: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TBoolean>;
         slowly: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TBoolean>;
         key: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+        delayMs: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TNumber>;
         startRef: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
         endRef: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
         values: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TArray<import("@sinclair/typebox").TString>>;
@@ -44,7 +65,11 @@ export declare const BrowserToolSchema: import("@sinclair/typebox").TObject<{
         width: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TNumber>;
         height: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TNumber>;
         timeMs: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TNumber>;
+        selector: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+        url: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+        loadState: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
         textGone: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+        timeoutMs: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TNumber>;
         fn: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     }>>;
 }>;

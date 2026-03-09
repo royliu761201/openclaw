@@ -1,6 +1,6 @@
 import type { OpenClawConfig } from "../config/config.js";
-import type { PluginConfigUiHint, PluginDiagnostic, PluginKind, PluginOrigin } from "./types.js";
 import { type PluginCandidate } from "./discovery.js";
+import type { PluginConfigUiHint, PluginDiagnostic, PluginKind, PluginOrigin } from "./types.js";
 export type PluginManifestRecord = {
     id: string;
     name?: string;

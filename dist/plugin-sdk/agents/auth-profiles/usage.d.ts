@@ -1,9 +1,21 @@
 import type { OpenClawConfig } from "../../config/config.js";
-import type { AuthProfileFailureReason, AuthProfileStore } from "./types.js";
+import type { AuthProfileFailureReason, AuthProfileStore, ProfileUsageStats } from "./types.js";
+export declare function resolveProfileUnusableUntil(stats: Pick<ProfileUsageStats, "cooldownUntil" | "disabledUntil">): number | null;
 /**
- * Check if a profile is currently in cooldown (due to rate limiting or errors).
+ * Check if a profile is currently in cooldown (due to rate limits, overload, or other transient failures).
  */
-export declare function isProfileInCooldown(store: AuthProfileStore, profileId: string): boolean;
+export declare function isProfileInCooldown(store: AuthProfileStore, profileId: string, now?: number): boolean;
+/**
+ * Infer the most likely reason all candidate profiles are currently unavailable.
+ *
+ * We prefer explicit active `disabledReason` values (for example billing/auth)
+ * over generic cooldown buckets, then fall back to failure-count signals.
+ */
+export declare function resolveProfilesUnavailableReason(params: {
+    store: AuthProfileStore;
+    profileIds: string[];
+    now?: number;
+}): AuthProfileFailureReason | null;
 /**
  * Return the soonest `unusableUntil` timestamp (ms epoch) among the given
  * profiles, or `null` when no profile has a recorded cooldown. Note: the
@@ -41,8 +53,9 @@ export declare function markAuthProfileUsed(params: {
 export declare function calculateAuthProfileCooldownMs(errorCount: number): number;
 export declare function resolveProfileUnusableUntilForDisplay(store: AuthProfileStore, profileId: string): number | null;
 /**
- * Mark a profile as failed for a specific reason. Billing failures are treated
- * as "disabled" (longer backoff) vs the regular cooldown window.
+ * Mark a profile as failed for a specific reason. Billing and permanent-auth
+ * failures are treated as "disabled" (longer backoff) vs the regular cooldown
+ * window.
  */
 export declare function markAuthProfileFailure(params: {
     store: AuthProfileStore;
@@ -52,7 +65,7 @@ export declare function markAuthProfileFailure(params: {
     agentDir?: string;
 }): Promise<void>;
 /**
- * Mark a profile as failed/rate-limited. Applies exponential backoff cooldown.
+ * Mark a profile as transiently failed. Applies exponential backoff cooldown.
  * Cooldown times: 1min, 5min, 25min, max 1 hour.
  * Uses store lock to avoid overwriting concurrent usage updates.
  */

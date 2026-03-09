@@ -1,6 +1,6 @@
 import type { ChannelId } from "../channels/plugins/types.js";
 import type { OpenClawConfig } from "./config.js";
-import type { GroupToolPolicyBySenderConfig, GroupToolPolicyConfig } from "./types.tools.js";
+import { type GroupToolPolicyBySenderConfig, type GroupToolPolicyConfig } from "./types.tools.js";
 export type GroupPolicyChannel = ChannelId;
 export type ChannelGroupConfig = {
     requireMention?: boolean;
@@ -28,6 +28,8 @@ export declare function resolveChannelGroupPolicy(params: {
     groupId?: string | null;
     accountId?: string | null;
     groupIdCaseInsensitive?: boolean;
+    /** When true, sender-level filtering (groupAllowFrom) is configured upstream. */
+    hasGroupAllowFrom?: boolean;
 }): ChannelGroupPolicy;
 export declare function resolveChannelGroupRequireMention(params: {
     cfg: OpenClawConfig;

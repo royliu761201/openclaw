@@ -52,6 +52,7 @@ export declare const SessionSchema: z.ZodOptional<z.ZodObject<{
     store: z.ZodOptional<z.ZodString>;
     typingIntervalSeconds: z.ZodOptional<z.ZodNumber>;
     typingMode: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"never">, z.ZodLiteral<"instant">, z.ZodLiteral<"thinking">, z.ZodLiteral<"message">]>>;
+    parentForkMaxTokens: z.ZodOptional<z.ZodNumber>;
     mainKey: z.ZodOptional<z.ZodString>;
     sendPolicy: z.ZodOptional<z.ZodOptional<z.ZodObject<{
         default: z.ZodOptional<z.ZodUnion<readonly [z.ZodLiteral<"allow">, z.ZodLiteral<"deny">]>>;
@@ -68,15 +69,23 @@ export declare const SessionSchema: z.ZodOptional<z.ZodObject<{
     agentToAgent: z.ZodOptional<z.ZodObject<{
         maxPingPongTurns: z.ZodOptional<z.ZodNumber>;
     }, z.core.$strict>>;
+    threadBindings: z.ZodOptional<z.ZodObject<{
+        enabled: z.ZodOptional<z.ZodBoolean>;
+        idleHours: z.ZodOptional<z.ZodNumber>;
+        maxAgeHours: z.ZodOptional<z.ZodNumber>;
+    }, z.core.$strict>>;
     maintenance: z.ZodOptional<z.ZodObject<{
         mode: z.ZodOptional<z.ZodEnum<{
-            warn: "warn";
             enforce: "enforce";
+            warn: "warn";
         }>>;
         pruneAfter: z.ZodOptional<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>;
         pruneDays: z.ZodOptional<z.ZodNumber>;
         maxEntries: z.ZodOptional<z.ZodNumber>;
         rotateBytes: z.ZodOptional<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>;
+        resetArchiveRetention: z.ZodOptional<z.ZodUnion<readonly [z.ZodString, z.ZodNumber, z.ZodLiteral<false>]>>;
+        maxDiskBytes: z.ZodOptional<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>;
+        highWaterBytes: z.ZodOptional<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>;
     }, z.core.$strict>>;
 }, z.core.$strict>>;
 export declare const MessagesSchema: z.ZodOptional<z.ZodObject<{
@@ -112,11 +121,33 @@ export declare const MessagesSchema: z.ZodOptional<z.ZodObject<{
     ackReaction: z.ZodOptional<z.ZodString>;
     ackReactionScope: z.ZodOptional<z.ZodEnum<{
         direct: "direct";
+        off: "off";
         all: "all";
+        none: "none";
         "group-mentions": "group-mentions";
         "group-all": "group-all";
     }>>;
     removeAckAfterReply: z.ZodOptional<z.ZodBoolean>;
+    statusReactions: z.ZodOptional<z.ZodObject<{
+        enabled: z.ZodOptional<z.ZodBoolean>;
+        emojis: z.ZodOptional<z.ZodObject<{
+            thinking: z.ZodOptional<z.ZodString>;
+            tool: z.ZodOptional<z.ZodString>;
+            coding: z.ZodOptional<z.ZodString>;
+            web: z.ZodOptional<z.ZodString>;
+            done: z.ZodOptional<z.ZodString>;
+            error: z.ZodOptional<z.ZodString>;
+            stallSoft: z.ZodOptional<z.ZodString>;
+            stallHard: z.ZodOptional<z.ZodString>;
+        }, z.core.$strict>>;
+        timing: z.ZodOptional<z.ZodObject<{
+            debounceMs: z.ZodOptional<z.ZodNumber>;
+            stallSoftMs: z.ZodOptional<z.ZodNumber>;
+            stallHardMs: z.ZodOptional<z.ZodNumber>;
+            doneHoldMs: z.ZodOptional<z.ZodNumber>;
+            errorHoldMs: z.ZodOptional<z.ZodNumber>;
+        }, z.core.$strict>>;
+    }, z.core.$strict>>;
     suppressToolErrors: z.ZodOptional<z.ZodBoolean>;
     tts: z.ZodOptional<z.ZodObject<{
         auto: z.ZodOptional<z.ZodEnum<{
@@ -147,14 +178,26 @@ export declare const MessagesSchema: z.ZodOptional<z.ZodObject<{
             allowSeed: z.ZodOptional<z.ZodBoolean>;
         }, z.core.$strict>>;
         elevenlabs: z.ZodOptional<z.ZodObject<{
-            apiKey: z.ZodOptional<z.ZodString>;
+            apiKey: z.ZodOptional<z.ZodUnion<readonly [z.ZodString, z.ZodDiscriminatedUnion<[z.ZodObject<{
+                source: z.ZodLiteral<"env">;
+                provider: z.ZodString;
+                id: z.ZodString;
+            }, z.core.$strict>, z.ZodObject<{
+                source: z.ZodLiteral<"file">;
+                provider: z.ZodString;
+                id: z.ZodString;
+            }, z.core.$strict>, z.ZodObject<{
+                source: z.ZodLiteral<"exec">;
+                provider: z.ZodString;
+                id: z.ZodString;
+            }, z.core.$strict>], "source">]>>;
             baseUrl: z.ZodOptional<z.ZodString>;
             voiceId: z.ZodOptional<z.ZodString>;
             modelId: z.ZodOptional<z.ZodString>;
             seed: z.ZodOptional<z.ZodNumber>;
             applyTextNormalization: z.ZodOptional<z.ZodEnum<{
-                off: "off";
                 auto: "auto";
+                off: "off";
                 on: "on";
             }>>;
             languageCode: z.ZodOptional<z.ZodString>;
@@ -167,7 +210,20 @@ export declare const MessagesSchema: z.ZodOptional<z.ZodObject<{
             }, z.core.$strict>>;
         }, z.core.$strict>>;
         openai: z.ZodOptional<z.ZodObject<{
-            apiKey: z.ZodOptional<z.ZodString>;
+            apiKey: z.ZodOptional<z.ZodUnion<readonly [z.ZodString, z.ZodDiscriminatedUnion<[z.ZodObject<{
+                source: z.ZodLiteral<"env">;
+                provider: z.ZodString;
+                id: z.ZodString;
+            }, z.core.$strict>, z.ZodObject<{
+                source: z.ZodLiteral<"file">;
+                provider: z.ZodString;
+                id: z.ZodString;
+            }, z.core.$strict>, z.ZodObject<{
+                source: z.ZodLiteral<"exec">;
+                provider: z.ZodString;
+                id: z.ZodString;
+            }, z.core.$strict>], "source">]>>;
+            baseUrl: z.ZodOptional<z.ZodString>;
             model: z.ZodOptional<z.ZodString>;
             voice: z.ZodOptional<z.ZodString>;
         }, z.core.$strict>>;
@@ -196,8 +252,13 @@ export declare const CommandsSchema: z.ZodDefault<z.ZodOptional<z.ZodObject<{
     bashForegroundMs: z.ZodOptional<z.ZodNumber>;
     config: z.ZodOptional<z.ZodBoolean>;
     debug: z.ZodOptional<z.ZodBoolean>;
-    restart: z.ZodOptional<z.ZodBoolean>;
+    restart: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
     useAccessGroups: z.ZodOptional<z.ZodBoolean>;
     ownerAllowFrom: z.ZodOptional<z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>;
+    ownerDisplay: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+        raw: "raw";
+        hash: "hash";
+    }>>>;
+    ownerDisplaySecret: z.ZodOptional<z.ZodString>;
     allowFrom: z.ZodOptional<z.ZodOptional<z.ZodRecord<z.ZodString, z.ZodArray<z.ZodUnion<readonly [z.ZodString, z.ZodNumber]>>>>>;
 }, z.core.$strict>>>;

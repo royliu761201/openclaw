@@ -1,8 +1,8 @@
 import { ChannelType, type Client } from "@buape/carbon";
+import { createReplyReferencePlanner } from "../../auto-reply/reply/reply-reference.js";
 import type { ReplyToMode } from "../../config/config.js";
 import type { DiscordChannelConfigResolved } from "./allow-list.js";
 import type { DiscordMessageEvent } from "./listeners.js";
-import { createReplyReferencePlanner } from "../../auto-reply/reply/reply-reference.js";
 export type DiscordThreadChannel = {
     id: string;
     name?: string | null;

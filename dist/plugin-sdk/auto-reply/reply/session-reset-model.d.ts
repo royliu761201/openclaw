@@ -1,7 +1,7 @@
+import { type ModelAliasIndex } from "../../agents/model-selection.js";
 import type { OpenClawConfig } from "../../config/config.js";
 import type { SessionEntry } from "../../config/sessions.js";
 import type { MsgContext, TemplateContext } from "../templating.js";
-import { type ModelAliasIndex } from "../../agents/model-selection.js";
 import { type ModelDirectiveSelection } from "./model-selection.js";
 type ResetModelResult = {
     selection?: ModelDirectiveSelection;

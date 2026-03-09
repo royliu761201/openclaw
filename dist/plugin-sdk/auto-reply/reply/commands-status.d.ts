@@ -9,6 +9,7 @@ export declare function buildStatusReply(params: {
     command: CommandContext;
     sessionEntry?: SessionEntry;
     sessionKey: string;
+    parentSessionKey?: string;
     sessionScope?: SessionScope;
     storePath?: string;
     provider: string;

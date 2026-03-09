@@ -14,6 +14,7 @@ export type MonitorTelegramOpts = {
     webhookHost?: string;
     proxyFetch?: typeof fetch;
     webhookUrl?: string;
+    webhookCertPath?: string;
 };
 export declare function createTelegramRunnerOptions(cfg: OpenClawConfig): RunOptions<unknown>;
 export declare function monitorTelegramProvider(opts?: MonitorTelegramOpts): Promise<void>;

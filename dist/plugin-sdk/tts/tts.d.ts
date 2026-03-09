@@ -28,6 +28,7 @@ export type ResolvedTtsConfig = {
     };
     openai: {
         apiKey?: string;
+        baseUrl: string;
         model: string;
         voice: string;
     };

@@ -1,3 +1,4 @@
+import { type SessionArchiveReason } from "../config/sessions.js";
 import type { SessionPreviewItem } from "./session-utils.types.js";
 type SessionTitleFields = {
     firstUserMessage: string | null;
@@ -5,7 +6,7 @@ type SessionTitleFields = {
 };
 export declare function readSessionMessages(sessionId: string, storePath: string | undefined, sessionFile?: string): unknown[];
 export declare function resolveSessionTranscriptCandidates(sessionId: string, storePath: string | undefined, sessionFile?: string, agentId?: string): string[];
-export type ArchiveFileReason = "bak" | "reset" | "deleted";
+export type ArchiveFileReason = SessionArchiveReason;
 export declare function archiveFileOnDisk(filePath: string, reason: ArchiveFileReason): string;
 /**
  * Archives all transcript files for a given session.
@@ -17,11 +18,16 @@ export declare function archiveSessionTranscripts(opts: {
     sessionFile?: string;
     agentId?: string;
     reason: "reset" | "deleted";
+    /**
+     * When true, only archive files resolved under the session store directory.
+     * This prevents maintenance operations from mutating paths outside the agent sessions dir.
+     */
+    restrictToStoreDir?: boolean;
 }): string[];
 export declare function cleanupArchivedSessionTranscripts(opts: {
     directories: string[];
     olderThanMs: number;
-    reason?: "deleted";
+    reason?: ArchiveFileReason;
     nowMs?: number;
 }): Promise<{
     removed: number;

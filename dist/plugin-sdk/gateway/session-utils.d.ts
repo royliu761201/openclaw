@@ -1,6 +1,6 @@
-import type { GatewayAgentRow, GatewaySessionRow, GatewaySessionsDefaults, SessionsListResult } from "./session-utils.types.js";
 import { type OpenClawConfig } from "../config/config.js";
 import { type SessionEntry, type SessionScope } from "../config/sessions.js";
+import type { GatewayAgentRow, GatewaySessionRow, GatewaySessionsDefaults, SessionsListResult } from "./session-utils.types.js";
 export { archiveFileOnDisk, archiveSessionTranscripts, capArrayByJsonBytes, readFirstUserMessageFromTranscript, readLastMessagePreviewFromTranscript, readSessionTitleFieldsFromTranscript, readSessionPreviewItemsFromTranscript, readSessionMessages, resolveSessionTranscriptCandidates, } from "./session-utils.fs.js";
 export type { GatewayAgentRow, GatewaySessionRow, GatewaySessionsDefaults, SessionsListResult, SessionsPatchResult, SessionsPreviewEntry, SessionsPreviewResult, } from "./session-utils.types.js";
 export declare function deriveSessionTitle(entry: SessionEntry | undefined, firstUserMessage?: string | null): string | undefined;
@@ -61,6 +61,10 @@ export declare function loadCombinedSessionStoreForGateway(cfg: OpenClawConfig):
 export declare function getSessionDefaults(cfg: OpenClawConfig): GatewaySessionsDefaults;
 export declare function resolveSessionModelRef(cfg: OpenClawConfig, entry?: SessionEntry | Pick<SessionEntry, "model" | "modelProvider" | "modelOverride" | "providerOverride">, agentId?: string): {
     provider: string;
+    model: string;
+};
+export declare function resolveSessionModelIdentityRef(cfg: OpenClawConfig, entry?: SessionEntry | Pick<SessionEntry, "model" | "modelProvider" | "modelOverride" | "providerOverride">, agentId?: string): {
+    provider?: string;
     model: string;
 };
 export declare function listSessionsFromStore(params: {

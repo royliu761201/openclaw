@@ -33,8 +33,22 @@ def resolve_markdown_links(content, base_dir):
 def main():
     parser = argparse.ArgumentParser(description="Load Global Task Board into Session task.md with absolute links.")
     parser.add_argument("--global_board", required=True, help="Path to 01_GLOBAL_TASK_BOARD.md")
-    parser.add_argument("--session_task", required=True, help="Path to the session task.md")
+    parser.add_argument("--session_task", required=False, default="", help="Path to the session task.md (auto-detected if blank)")
     args = parser.parse_args()
+
+    session_task = args.session_task
+    # Auto-detect the current Antigravity brain directory if omitted or literally passed as a raw bash variable
+    if not session_task or session_task.startswith("$") or "BRAIN_DIR" in session_task:
+        import glob
+        brain_base = os.path.expanduser("~/.gemini/antigravity/brain")
+        try:
+            # Find the most recently modified directory in the brain folder
+            latest_brain = max(glob.glob(os.path.join(brain_base, "*/")), key=os.path.getmtime)
+            session_task = os.path.join(latest_brain, "task.md")
+            print(f"🧠 Auto-detected active session brain: {session_task}")
+        except Exception as e:
+            print(f"Error auto-detecting brain dir: {e}")
+            sys.exit(1)
 
     if not os.path.exists(args.global_board):
         print(f"Error: Global board not found at {args.global_board}")
@@ -51,12 +65,12 @@ def main():
     resolved_content = re.sub(r'^\s*[*+]\s+\[( |x|/)\]', lambda m: m.group(0).replace(m.group(0).strip()[0], '-', 1), resolved_content, flags=re.MULTILINE)
 
     # Ensure the directory for session task exists
-    os.makedirs(os.path.dirname(args.session_task), exist_ok=True)
+    os.makedirs(os.path.dirname(session_task), exist_ok=True)
 
-    with open(args.session_task, 'w', encoding='utf-8') as f:
+    with open(session_task, 'w', encoding='utf-8') as f:
         f.write(resolved_content)
 
-    print(f"✅ Successfully loaded and resolved links from {args.global_board} to {args.session_task}")
+    print(f"✅ Successfully loaded and resolved links from {args.global_board} to {session_task}")
 
 if __name__ == "__main__":
     main()

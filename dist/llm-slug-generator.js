@@ -1,74 +1,64 @@
-import "./paths-CyR9Pa1R.js";
-import "./registry-B3v_dMjW.js";
-import { c as resolveDefaultAgentId, r as resolveAgentDir, s as resolveAgentWorkspaceDir } from "./agent-scope-DanU6CT8.js";
-import "./subsystem-12Cr1qkN.js";
-import "./exec-BcuB7agq.js";
-import "./workspace-BBSUSFTB.js";
-import "./tokens-BIWsvHaB.js";
-import { t as runEmbeddedPiAgent } from "./pi-embedded-DEWtyBVP.js";
-import "./accounts-DmbLHz3-.js";
-import "./normalize-Cve15Q9q.js";
-import "./boolean-CE7i9tBR.js";
-import "./env-CHgPw2cH.js";
-import "./bindings-Dxat9suu.js";
-import "./send-CbJFPx1A.js";
-import "./plugins-Dy_YZOpV.js";
-import "./send-CocpQMpH.js";
-import "./deliver-CnE5WvUi.js";
-import "./diagnostic-CJC2Qdcb.js";
-import "./diagnostic-session-state-C1vRJs5w.js";
-import "./accounts-BFVCDHLN.js";
-import "./send-rj7ANh9g.js";
-import "./image-ops-qpGLqv9k.js";
-import "./model-auth-BWr5qEtA.js";
-import "./github-copilot-token-D5ISrFy7.js";
-import "./pi-model-discovery-DIA4gIzW.js";
-import "./message-channel-BSPy_J6t.js";
-import "./pi-embedded-helpers-CzEuJFFV.js";
-import "./config-DXPgdIgF.js";
-import "./manifest-registry-BGtqiFuf.js";
-import "./chrome-BkJNYiGr.js";
-import "./frontmatter-BPvsEU3m.js";
-import "./skills-Cj-bjVUG.js";
-import "./redact-9hYpOXID.js";
-import "./errors-pj0CRkCB.js";
-import "./store-D13UGRE4.js";
-import "./thinking-DqJWj_Tw.js";
-import "./accounts-CrNX3S4t.js";
-import "./paths-gnW-md4M.js";
-import "./tool-images-ht-C9kvN.js";
-import "./image-BG4i5HHN.js";
-import "./reply-prefix-CBsUYPbZ.js";
-import "./manager-C6BVw5y3.js";
-import "./gemini-auth-B8uGVM0W.js";
-import "./sqlite-wwudzAAI.js";
-import "./retry-DVtnPnF6.js";
-import "./common-CbpTVFY9.js";
-import "./chunk-CTULoyP3.js";
-import "./markdown-tables-C6ikgcr9.js";
-import "./fetch-DssVrA3_.js";
-import "./ir-B31LmBFu.js";
-import "./render-DwEu-aCr.js";
-import "./commands-registry-ucu-TW_N.js";
-import "./runner-H0xBWDT9.js";
-import "./skill-commands-HACo2-aM.js";
-import "./fetch-BBkSX75a.js";
-import "./send-CL8sncrd.js";
-import "./outbound-attachment-ttO57Lkw.js";
-import "./send-CgzaUKIS.js";
-import "./resolve-route-7_Yxg3Cy.js";
-import "./channel-activity-BXFDwXVQ.js";
-import "./tables-axXG6H7h.js";
-import "./proxy-DVy9foH0.js";
-import "./replies-RekRpCy5.js";
+import { a as resolveAgentDir, l as resolveAgentWorkspaceDir, o as resolveAgentEffectiveModelPrimary, u as resolveDefaultAgentId } from "./run-with-concurrency-_Xv7jMpx.js";
+import "./paths-hfkBoC7i.js";
+import { t as createSubsystemLogger } from "./subsystem-DQJPqN9H.js";
+import "./workspace-Cez7tM9z.js";
+import "./logger-C6eFjEx8.js";
+import { Ar as DEFAULT_PROVIDER, l as parseModelRef } from "./model-selection-Dlz_Qmqi.js";
+import "./github-copilot-token-CQmATy5E.js";
+import "./legacy-names-DeWhx4AY.js";
+import "./thinking-Bhkz_OAl.js";
+import "./tokens-CPCWTGYC.js";
+import { t as runEmbeddedPiAgent } from "./pi-embedded-D9aoNcl8.js";
+import "./plugins-iJTtkY2_.js";
+import "./accounts-DrJKnY0B.js";
+import "./send-CtSdEFh-.js";
+import "./send-0wPrKyxN.js";
+import "./deliver-BxDu_GCF.js";
+import "./diagnostic-BUKLn-_j.js";
+import "./accounts-CE9KWRU2.js";
+import "./image-ops-BwGzrtHo.js";
+import "./send-DufKnq0R.js";
+import "./pi-model-discovery-pYrYVQqE.js";
+import "./pi-embedded-helpers-nvwNNFVg.js";
+import "./chrome-Cu4MAo8M.js";
+import "./frontmatter-BAic8FWM.js";
+import "./skills-BFWox_AX.js";
+import "./path-alias-guards-457JCSHr.js";
+import "./proxy-env-DKXuS04c.js";
+import "./redact-Coev2L_A.js";
+import "./errors-DbcY9zSC.js";
+import "./fs-safe-CnL2SWY6.js";
+import "./store-DE2mwsSi.js";
+import "./paths-D_dtI_RW.js";
+import "./tool-images-CGZO341K.js";
+import "./image-YPbekh_o.js";
+import "./audio-transcription-runner-ByY-8AXe.js";
+import "./fetch-UqGz2TM1.js";
+import "./fetch-guard-BFt2Tveu.js";
+import "./api-key-rotation-CtVz75QR.js";
+import "./proxy-fetch-DMQEaYIu.js";
+import "./ir-BwkxGUCH.js";
+import "./render-7C7EDC8_.js";
+import "./target-errors-L9sQ9YV2.js";
+import "./commands-registry-KW-ZGuTn.js";
+import "./skill-commands-SCA7gylN.js";
+import "./fetch-CONQGbzL.js";
+import "./channel-activity-YsS3xJh-.js";
+import "./tables-kGiKzDN2.js";
+import "./send-8I9vebLR.js";
+import "./outbound-attachment-BCWRRVJ9.js";
+import "./send-tAuhiitS.js";
+import "./proxy-o7sro0Y0.js";
+import "./manager-DKV9fHfm.js";
+import "./query-expansion-CMYNFEdb.js";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-
 //#region src/hooks/llm-slug-generator.ts
 /**
 * LLM-based slug generator for session memory filenames
 */
+const log = createSubsystemLogger("llm-slug-generator");
 /**
 * Generate a short 1-2 word filename slug from session content using LLM
 */
@@ -86,6 +76,10 @@ Conversation summary:
 ${params.sessionContent.slice(0, 2e3)}
 
 Reply with ONLY the slug, nothing else. Examples: "vendor-pitch", "api-design", "bug-fix"`;
+		const modelRef = resolveAgentEffectiveModelPrimary(params.cfg, agentId);
+		const parsed = modelRef ? parseModelRef(modelRef, DEFAULT_PROVIDER) : null;
+		const provider = parsed?.provider ?? "anthropic";
+		const model = parsed?.model ?? "claude-opus-4-6";
 		const result = await runEmbeddedPiAgent({
 			sessionId: `slug-generator-${Date.now()}`,
 			sessionKey: "temp:slug-generator",
@@ -95,6 +89,8 @@ Reply with ONLY the slug, nothing else. Examples: "vendor-pitch", "api-design", 
 			agentDir,
 			config: params.cfg,
 			prompt,
+			provider,
+			model,
 			timeoutMs: 15e3,
 			runId: `slug-gen-${Date.now()}`
 		});
@@ -104,7 +100,8 @@ Reply with ONLY the slug, nothing else. Examples: "vendor-pitch", "api-design", 
 		}
 		return null;
 	} catch (err) {
-		console.error("[llm-slug-generator] Failed to generate slug:", err);
+		const message = err instanceof Error ? err.stack ?? err.message : String(err);
+		log.error(`Failed to generate slug: ${message}`);
 		return null;
 	} finally {
 		if (tempSessionFile) try {
@@ -115,6 +112,5 @@ Reply with ONLY the slug, nothing else. Examples: "vendor-pitch", "api-design", 
 		} catch {}
 	}
 }
-
 //#endregion
 export { generateSlugViaLLM };

@@ -1,5 +1,9 @@
 import type { OpenClawConfig } from "../config/config.js";
 import type { FailoverReason } from "./pi-embedded-helpers.js";
+export type ModelFallbackRunOptions = {
+    allowTransientCooldownProbe?: boolean;
+};
+type ModelFallbackRunFn<T> = (provider: string, model: string, options?: ModelFallbackRunOptions) => Promise<T>;
 type FallbackAttempt = {
     provider: string;
     model: string;
@@ -36,7 +40,7 @@ export declare function runWithModelFallback<T>(params: {
     agentDir?: string;
     /** Optional explicit fallbacks list; when provided (even empty), replaces agents.defaults.model.fallbacks. */
     fallbacksOverride?: string[];
-    run: (provider: string, model: string) => Promise<T>;
+    run: ModelFallbackRunFn<T>;
     onError?: ModelFallbackErrorHandler;
 }): Promise<ModelFallbackRunResult<T>>;
 export declare function runWithImageModelFallback<T>(params: {

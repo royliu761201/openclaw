@@ -1,8 +1,11 @@
 import type { BrowserConfig, BrowserProfileConfig, OpenClawConfig } from "../config/config.js";
+import type { SsrFPolicy } from "../infra/net/ssrf.js";
 export type ResolvedBrowserConfig = {
     enabled: boolean;
     evaluateEnabled: boolean;
     controlPort: number;
+    cdpPortRangeStart: number;
+    cdpPortRangeEnd: number;
     cdpProtocol: "http" | "https";
     cdpHost: string;
     cdpIsLoopback: boolean;
@@ -15,7 +18,9 @@ export type ResolvedBrowserConfig = {
     attachOnly: boolean;
     defaultProfile: string;
     profiles: Record<string, BrowserProfileConfig>;
+    ssrfPolicy?: SsrFPolicy;
     extraArgs: string[];
+    relayBindHost?: string;
 };
 export type ResolvedBrowserProfile = {
     name: string;
@@ -25,6 +30,7 @@ export type ResolvedBrowserProfile = {
     cdpIsLoopback: boolean;
     color: string;
     driver: "openclaw" | "extension";
+    attachOnly: boolean;
 };
 export declare function parseHttpUrl(raw: string, label: string): {
     parsed: URL;

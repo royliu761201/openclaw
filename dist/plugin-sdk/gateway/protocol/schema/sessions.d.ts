@@ -57,6 +57,7 @@ export declare const SessionsResetParamsSchema: import("@sinclair/typebox").TObj
 export declare const SessionsDeleteParamsSchema: import("@sinclair/typebox").TObject<{
     key: import("@sinclair/typebox").TString;
     deleteTranscript: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TBoolean>;
+    emitLifecycleHooks: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TBoolean>;
 }>;
 export declare const SessionsCompactParamsSchema: import("@sinclair/typebox").TObject<{
     key: import("@sinclair/typebox").TString;
@@ -69,6 +70,10 @@ export declare const SessionsUsageParamsSchema: import("@sinclair/typebox").TObj
     startDate: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     /** End date for range filter (YYYY-MM-DD). */
     endDate: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+    /** How start/end dates should be interpreted. Defaults to UTC when omitted. */
+    mode: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TUnion<[import("@sinclair/typebox").TLiteral<"utc">, import("@sinclair/typebox").TLiteral<"gateway">, import("@sinclair/typebox").TLiteral<"specific">]>>;
+    /** UTC offset to use when mode is `specific` (for example, UTC-4 or UTC+5:30). */
+    utcOffset: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     /** Maximum sessions to return (default 50). */
     limit: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TInteger>;
     /** Include context weight breakdown (systemPromptReport). */

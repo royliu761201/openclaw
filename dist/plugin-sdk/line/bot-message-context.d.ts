@@ -1,4 +1,5 @@
 import type { MessageEvent, EventSource, PostbackEvent } from "@line/bot-sdk";
+import { type HistoryEntry } from "../auto-reply/reply/history.js";
 import type { OpenClawConfig } from "../config/config.js";
 import type { ResolvedLineAccount } from "./types.js";
 interface MediaRef {
@@ -10,6 +11,9 @@ interface BuildLineMessageContextParams {
     allMedia: MediaRef[];
     cfg: OpenClawConfig;
     account: ResolvedLineAccount;
+    commandAuthorized: boolean;
+    groupHistories?: Map<string, HistoryEntry[]>;
+    historyLimit?: number;
 }
 export type LineSourceInfo = {
     userId?: string;
@@ -20,8 +24,11 @@ export type LineSourceInfo = {
 export declare function getLineSourceInfo(source: EventSource): LineSourceInfo;
 export declare function buildLineMessageContext(params: BuildLineMessageContextParams): Promise<{
     ctxPayload: {
+        CommandAuthorized: boolean;
         OriginatingChannel: "line";
         OriginatingTo: string;
+        GroupSystemPrompt: string | undefined;
+        InboundHistory: Pick<HistoryEntry, "body" | "sender" | "timestamp">[] | undefined;
         LocationLat?: number | undefined;
         LocationLon?: number | undefined;
         LocationAccuracy?: number;
@@ -67,10 +74,14 @@ export declare function buildLinePostbackContext(params: {
     event: PostbackEvent;
     cfg: OpenClawConfig;
     account: ResolvedLineAccount;
+    commandAuthorized: boolean;
 }): Promise<{
     ctxPayload: {
+        CommandAuthorized: boolean;
         OriginatingChannel: "line";
         OriginatingTo: string;
+        GroupSystemPrompt: string | undefined;
+        InboundHistory: Pick<HistoryEntry, "body" | "sender" | "timestamp">[] | undefined;
         LocationLat?: number | undefined;
         LocationLon?: number | undefined;
         LocationAccuracy?: number;

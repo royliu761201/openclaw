@@ -35,6 +35,21 @@ export declare function parseTargetPrefixes(params: {
         kind: MessagingTargetKind;
     }>;
 }): MessagingTarget | undefined;
+export declare function parseAtUserTarget(params: {
+    raw: string;
+    pattern: RegExp;
+    errorMessage: string;
+}): MessagingTarget | undefined;
+export declare function parseMentionPrefixOrAtUserTarget(params: {
+    raw: string;
+    mentionPattern: RegExp;
+    prefixes: Array<{
+        prefix: string;
+        kind: MessagingTargetKind;
+    }>;
+    atUserPattern: RegExp;
+    atUserErrorMessage: string;
+}): MessagingTarget | undefined;
 export declare function requireTargetKind(params: {
     platform: string;
     target: MessagingTarget | undefined;

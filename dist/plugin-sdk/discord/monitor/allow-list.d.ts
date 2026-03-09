@@ -11,12 +11,14 @@ export type DiscordGuildEntryResolved = {
     id?: string;
     slug?: string;
     requireMention?: boolean;
+    ignoreOtherMentions?: boolean;
     reactionNotifications?: "off" | "own" | "all" | "allowlist";
     users?: string[];
     roles?: string[];
     channels?: Record<string, {
         allow?: boolean;
         requireMention?: boolean;
+        ignoreOtherMentions?: boolean;
         skills?: string[];
         enabled?: boolean;
         users?: string[];
@@ -29,6 +31,7 @@ export type DiscordGuildEntryResolved = {
 export type DiscordChannelConfigResolved = {
     allowed: boolean;
     requireMention?: boolean;
+    ignoreOtherMentions?: boolean;
     skills?: string[];
     enabled?: boolean;
     users?: string[];
@@ -49,6 +52,8 @@ export declare function allowListMatches(list: DiscordAllowList, candidate: {
     id?: string;
     name?: string;
     tag?: string;
+}, params?: {
+    allowNameMatching?: boolean;
 }): boolean;
 export declare function resolveDiscordAllowListMatch(params: {
     allowList: DiscordAllowList;
@@ -57,12 +62,14 @@ export declare function resolveDiscordAllowListMatch(params: {
         name?: string;
         tag?: string;
     };
+    allowNameMatching?: boolean;
 }): DiscordAllowListMatch;
 export declare function resolveDiscordUserAllowed(params: {
     allowList?: string[];
     userId: string;
     userName?: string;
     userTag?: string;
+    allowNameMatching?: boolean;
 }): boolean;
 export declare function resolveDiscordRoleAllowed(params: {
     allowList?: string[];
@@ -75,6 +82,7 @@ export declare function resolveDiscordMemberAllowed(params: {
     userId: string;
     userName?: string;
     userTag?: string;
+    allowNameMatching?: boolean;
 }): boolean;
 export declare function resolveDiscordMemberAccessState(params: {
     channelConfig?: DiscordChannelConfigResolved | null;
@@ -85,6 +93,7 @@ export declare function resolveDiscordMemberAccessState(params: {
         name?: string;
         tag?: string;
     };
+    allowNameMatching?: boolean;
 }): {
     readonly channelUsers: string[] | undefined;
     readonly channelRoles: string[] | undefined;
@@ -99,12 +108,26 @@ export declare function resolveDiscordOwnerAllowFrom(params: {
         name?: string;
         tag?: string;
     };
+    allowNameMatching?: boolean;
 }): string[] | undefined;
+export declare function resolveDiscordOwnerAccess(params: {
+    allowFrom?: string[];
+    sender: {
+        id: string;
+        name?: string;
+        tag?: string;
+    };
+    allowNameMatching?: boolean;
+}): {
+    ownerAllowList: DiscordAllowList | null;
+    ownerAllowed: boolean;
+};
 export declare function resolveDiscordCommandAuthorized(params: {
     isDirectMessage: boolean;
     allowFrom?: string[];
     guildInfo?: DiscordGuildEntryResolved | null;
     author: User;
+    allowNameMatching?: boolean;
 }): boolean;
 export declare function resolveDiscordGuildEntry(params: {
     guild?: Guild<true> | Guild | null;
@@ -163,5 +186,6 @@ export declare function shouldEmitDiscordReactionNotification(params: {
     userName?: string;
     userTag?: string;
     allowlist?: string[];
+    allowNameMatching?: boolean;
 }): boolean;
 export {};

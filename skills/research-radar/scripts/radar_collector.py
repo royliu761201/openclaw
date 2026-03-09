@@ -78,7 +78,8 @@ def collect_raw_data():
     try:
         env = os.environ.copy()
         env["GIT_TERMINAL_PROMPT"] = "0"
-        subprocess.run(["git", "pull", "--rebase"], cwd=str(WORKSPACE_DIR), check=True, timeout=30, env=env)
+        # Use atomic autostash and force 'theirs' strategy to silently override any Node 02 local drift
+        subprocess.run(["git", "pull", "--rebase", "--autostash", "-X", "theirs"], cwd=str(WORKSPACE_DIR), check=True, timeout=30, env=env)
     except subprocess.TimeoutExpired:
         print("⚠️ [Pre-Flight] Warning: Git pull TIMED OUT after 30s. Triggering abort and falling back.")
         subprocess.run(["git", "rebase", "--abort"], cwd=str(WORKSPACE_DIR), capture_output=True)
@@ -248,41 +249,32 @@ def collect_raw_data():
                 time.sleep(10)
 
     # === Asynchronous Feishu Inbox Processing ===
-    FEISHU_INBOX_PATH = RAW_DATA_DIR / "feishu_inbox.json"
+    FEISHU_INBOX_PATH = RAW_DATA_DIR / "_inbox.md"
     if FEISHU_INBOX_PATH.exists():
         print("  -> [Feishu Asynchronous Handoff] Processing Inbox...")
         raw_content.append(f"## 💬 Feishu Intercepted Intel (Asynchronous Handoff)")
         try:
-            with open(FEISHU_INBOX_PATH, "r") as f:
-                import json
-                inbox_items = json.load(f)
+            with open(FEISHU_INBOX_PATH, "r", encoding="utf-8") as f:
+                inbox_text = f.read()
+            
+            # Extract all URLs from the markdown
+            inbox_urls = set(re.findall(r'(https?://[A-Za-z0-9\.\-\_\/\?\&\=\%]+)', inbox_text))
             
             new_inbox_items = []
-            for item in inbox_items:
-                url = item.get("url", "")
-                context = item.get("context", "")
-                
+            for url in inbox_urls:
                 # Check deduplication by simulating a raw text block containing the URL
                 _, is_new = filter_new_content(url, "inbox_check")
                 
                 if is_new:
                     print(f"     |_ Extracting new Feishu URL: {url}")
-                    # Use a powerful web extractor to get the raw text 
-                    # We'll re-use Tavily search but just feed it the URL in hopes of content extraction
-                    # Or better, we just format it for Dandan Analyzer to take over
                     raw_content.append(f"### 🔗 Link: {url}")
-                    raw_content.append(f"**Chatbot Context / Quick Summary:**\n> {context}\n")
-                    raw_content.append(f"*(This URL was intercepted from a live chat session. The Analyzer will cross-reference this URL with the chat context.)*\n\n")
-                    new_inbox_items.append(item)
+                    raw_content.append(f"*(This URL was intercepted from a live chat session via _inbox.md. The Analyzer will cross-reference this URL with the chat context.)*\n\n")
+                    new_inbox_items.append(url)
                 else:
                     print(f"     |_ [Skip] Feishu URL already processed: {url}")
                     
             if not new_inbox_items:
                 raw_content.append("*No new intercepts found today.*")
-                
-            # Node 02 treats the inbox purely as read-only. 
-            # Node 01 automatically prunes it by only keeping the last 24 hours.
-            # Deduplication handles preventing duplicates over successive cron runs.
                 
         except Exception as e:
             print(f"     |_ [Error processing Feishu Inbox] {e}")
@@ -302,7 +294,8 @@ def git_sync_workspace():
             print("   [Skip] No new files to commit.")
             return
         subprocess.run(["git", "commit", "-m", "[Auto] Radar Raw Data Collection"], cwd=str(WORKSPACE_DIR), check=True)
-        subprocess.run(["git", "pull", "--rebase"], cwd=str(WORKSPACE_DIR), check=True)
+        # Use atomic autostash to silently override any Node 02 local drift before pushing
+        subprocess.run(["git", "pull", "--rebase", "--autostash", "-X", "theirs"], cwd=str(WORKSPACE_DIR), check=True)
         subprocess.run(["git", "push"], cwd=str(WORKSPACE_DIR), check=True)
         print("✅ Git Sync Complete. Pure raw data deposited to SSoT.")
     except subprocess.CalledProcessError as e:

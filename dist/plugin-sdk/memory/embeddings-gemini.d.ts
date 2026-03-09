@@ -1,7 +1,9 @@
+import type { SsrFPolicy } from "../infra/net/ssrf.js";
 import type { EmbeddingProvider, EmbeddingProviderOptions } from "./embeddings.js";
 export type GeminiEmbeddingClient = {
     baseUrl: string;
     headers: Record<string, string>;
+    ssrfPolicy?: SsrFPolicy;
     model: string;
     modelPath: string;
     apiKeys: string[];

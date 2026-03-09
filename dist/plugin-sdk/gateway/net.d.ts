@@ -11,13 +11,14 @@ export declare function isLoopbackAddress(ip: string | undefined): boolean;
  * Private ranges: RFC1918, link-local, ULA IPv6, and CGNAT (100.64/10), plus loopback.
  */
 export declare function isPrivateOrLoopbackAddress(ip: string | undefined): boolean;
-export declare function parseForwardedForClientIp(forwardedFor?: string): string | undefined;
 export declare function isTrustedProxyAddress(ip: string | undefined, trustedProxies?: string[]): boolean;
-export declare function resolveGatewayClientIp(params: {
+export declare function resolveClientIp(params: {
     remoteAddr?: string;
     forwardedFor?: string;
     realIp?: string;
     trustedProxies?: string[];
+    /** Default false: only trust X-Real-IP when explicitly enabled. */
+    allowRealIpFallback?: boolean;
 }): string | undefined;
 export declare function isLocalGatewayAddress(ip: string | undefined): boolean;
 /**
@@ -57,3 +58,29 @@ export declare function isValidIPv4(host: string): boolean;
  * Note: 0.0.0.0 and :: are NOT loopback - they bind to all interfaces.
  */
 export declare function isLoopbackHost(host: string): boolean;
+/**
+ * Local-facing host check for inbound requests:
+ * - loopback hosts (localhost/127.x/::1 and mapped forms)
+ * - Tailscale Serve/Funnel hostnames (*.ts.net)
+ */
+export declare function isLocalishHost(hostHeader?: string): boolean;
+/**
+ * Check if a hostname or IP refers to a private or loopback address.
+ * Handles the same hostname formats as isLoopbackHost, but also accepts
+ * RFC 1918, link-local, CGNAT, and IPv6 ULA/link-local addresses.
+ */
+export declare function isPrivateOrLoopbackHost(host: string): boolean;
+/**
+ * Security check for WebSocket URLs (CWE-319: Cleartext Transmission of Sensitive Information).
+ *
+ * Returns true if the URL is secure for transmitting data:
+ * - wss:// (TLS) is always secure
+ * - ws:// is secure only for loopback addresses by default
+ * - optional break-glass: private ws:// can be enabled for trusted networks
+ *
+ * All other ws:// URLs are considered insecure because both credentials
+ * AND chat/conversation data would be exposed to network interception.
+ */
+export declare function isSecureWebSocketUrl(url: string, opts?: {
+    allowPrivateWs?: boolean;
+}): boolean;

@@ -1,3 +1,16 @@
+export declare const AgentInternalEventSchema: import("@sinclair/typebox").TObject<{
+    type: import("@sinclair/typebox").TLiteral<"task_completion">;
+    source: import("@sinclair/typebox").TString;
+    childSessionKey: import("@sinclair/typebox").TString;
+    childSessionId: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+    announceType: import("@sinclair/typebox").TString;
+    taskLabel: import("@sinclair/typebox").TString;
+    status: import("@sinclair/typebox").TString;
+    statusLabel: import("@sinclair/typebox").TString;
+    result: import("@sinclair/typebox").TString;
+    statsLine: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+    replyInstruction: import("@sinclair/typebox").TString;
+}>;
 export declare const AgentEventSchema: import("@sinclair/typebox").TObject<{
     runId: import("@sinclair/typebox").TString;
     seq: import("@sinclair/typebox").TInteger;
@@ -13,6 +26,8 @@ export declare const SendParamsSchema: import("@sinclair/typebox").TObject<{
     gifPlayback: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TBoolean>;
     channel: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     accountId: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+    /** Optional agent id for per-agent media root resolution on gateway sends. */
+    agentId: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     /** Thread id (channel-specific meaning, e.g. Telegram forum topic id). */
     threadId: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     /** Optional session key for mirroring delivered output back into the transcript. */
@@ -56,8 +71,22 @@ export declare const AgentParamsSchema: import("@sinclair/typebox").TObject<{
     groupChannel: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     groupSpace: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     timeout: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TInteger>;
+    bestEffortDeliver: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TBoolean>;
     lane: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     extraSystemPrompt: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+    internalEvents: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TArray<import("@sinclair/typebox").TObject<{
+        type: import("@sinclair/typebox").TLiteral<"task_completion">;
+        source: import("@sinclair/typebox").TString;
+        childSessionKey: import("@sinclair/typebox").TString;
+        childSessionId: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+        announceType: import("@sinclair/typebox").TString;
+        taskLabel: import("@sinclair/typebox").TString;
+        status: import("@sinclair/typebox").TString;
+        statusLabel: import("@sinclair/typebox").TString;
+        result: import("@sinclair/typebox").TString;
+        statsLine: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+        replyInstruction: import("@sinclair/typebox").TString;
+    }>>>;
     inputProvenance: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TObject<{
         kind: import("@sinclair/typebox").TString;
         sourceSessionKey: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
@@ -67,6 +96,7 @@ export declare const AgentParamsSchema: import("@sinclair/typebox").TObject<{
     idempotencyKey: import("@sinclair/typebox").TString;
     label: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     spawnedBy: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+    workspaceDir: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
 }>;
 export declare const AgentIdentityParamsSchema: import("@sinclair/typebox").TObject<{
     agentId: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;

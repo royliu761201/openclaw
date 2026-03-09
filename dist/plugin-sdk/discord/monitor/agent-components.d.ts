@@ -1,5 +1,5 @@
-import type { APIStringSelectComponent } from "discord-api-types/v10";
 import { Button, ChannelSelectMenu, MentionableSelectMenu, Modal, RoleSelectMenu, StringSelectMenu, UserSelectMenu, type ButtonInteraction, type ComponentData, type StringSelectMenuInteraction } from "@buape/carbon";
+import type { APIStringSelectComponent } from "discord-api-types/v10";
 import { ButtonStyle } from "discord-api-types/v10";
 import type { OpenClawConfig } from "../../config/config.js";
 import type { DiscordAccountConfig } from "../../config/types.discord.js";

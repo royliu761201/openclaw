@@ -61,4 +61,9 @@ export declare const SnapshotSchema: import("@sinclair/typebox").TObject<{
         scope: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     }>>;
     authMode: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TUnion<[import("@sinclair/typebox").TLiteral<"none">, import("@sinclair/typebox").TLiteral<"token">, import("@sinclair/typebox").TLiteral<"password">, import("@sinclair/typebox").TLiteral<"trusted-proxy">]>>;
+    updateAvailable: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TObject<{
+        currentVersion: import("@sinclair/typebox").TString;
+        latestVersion: import("@sinclair/typebox").TString;
+        channel: import("@sinclair/typebox").TString;
+    }>>;
 }>;

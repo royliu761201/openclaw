@@ -4,8 +4,8 @@ export declare const WhatsAppAccountSchema: z.ZodObject<{
     markdown: z.ZodOptional<z.ZodObject<{
         tables: z.ZodOptional<z.ZodEnum<{
             off: "off";
-            code: "code";
             bullets: "bullets";
+            code: "code";
         }>>;
     }, z.core.$strict>>;
     configWrites: z.ZodOptional<z.ZodBoolean>;
@@ -13,18 +13,19 @@ export declare const WhatsAppAccountSchema: z.ZodObject<{
     messagePrefix: z.ZodOptional<z.ZodString>;
     responsePrefix: z.ZodOptional<z.ZodString>;
     dmPolicy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+        allowlist: "allowlist";
         open: "open";
         disabled: "disabled";
-        allowlist: "allowlist";
         pairing: "pairing";
     }>>>;
     selfChatMode: z.ZodOptional<z.ZodBoolean>;
     allowFrom: z.ZodOptional<z.ZodArray<z.ZodString>>;
+    defaultTo: z.ZodOptional<z.ZodString>;
     groupAllowFrom: z.ZodOptional<z.ZodArray<z.ZodString>>;
     groupPolicy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+        allowlist: "allowlist";
         open: "open";
         disabled: "disabled";
-        allowlist: "allowlist";
     }>>>;
     historyLimit: z.ZodOptional<z.ZodNumber>;
     dmHistoryLimit: z.ZodOptional<z.ZodNumber>;
@@ -59,8 +60,8 @@ export declare const WhatsAppAccountSchema: z.ZodObject<{
         emoji: z.ZodOptional<z.ZodString>;
         direct: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
         group: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
-            never: "never";
             always: "always";
+            never: "never";
             mentions: "mentions";
         }>>>;
     }, z.core.$strict>>;
@@ -76,12 +77,13 @@ export declare const WhatsAppAccountSchema: z.ZodObject<{
     mediaMaxMb: z.ZodOptional<z.ZodNumber>;
 }, z.core.$strict>;
 export declare const WhatsAppConfigSchema: z.ZodObject<{
+    enabled: z.ZodOptional<z.ZodBoolean>;
     capabilities: z.ZodOptional<z.ZodArray<z.ZodString>>;
     markdown: z.ZodOptional<z.ZodObject<{
         tables: z.ZodOptional<z.ZodEnum<{
             off: "off";
-            code: "code";
             bullets: "bullets";
+            code: "code";
         }>>;
     }, z.core.$strict>>;
     configWrites: z.ZodOptional<z.ZodBoolean>;
@@ -89,18 +91,19 @@ export declare const WhatsAppConfigSchema: z.ZodObject<{
     messagePrefix: z.ZodOptional<z.ZodString>;
     responsePrefix: z.ZodOptional<z.ZodString>;
     dmPolicy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+        allowlist: "allowlist";
         open: "open";
         disabled: "disabled";
-        allowlist: "allowlist";
         pairing: "pairing";
     }>>>;
     selfChatMode: z.ZodOptional<z.ZodBoolean>;
     allowFrom: z.ZodOptional<z.ZodArray<z.ZodString>>;
+    defaultTo: z.ZodOptional<z.ZodString>;
     groupAllowFrom: z.ZodOptional<z.ZodArray<z.ZodString>>;
     groupPolicy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+        allowlist: "allowlist";
         open: "open";
         disabled: "disabled";
-        allowlist: "allowlist";
     }>>>;
     historyLimit: z.ZodOptional<z.ZodNumber>;
     dmHistoryLimit: z.ZodOptional<z.ZodNumber>;
@@ -135,8 +138,8 @@ export declare const WhatsAppConfigSchema: z.ZodObject<{
         emoji: z.ZodOptional<z.ZodString>;
         direct: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
         group: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
-            never: "never";
             always: "always";
+            never: "never";
             mentions: "mentions";
         }>>>;
     }, z.core.$strict>>;
@@ -151,8 +154,8 @@ export declare const WhatsAppConfigSchema: z.ZodObject<{
         markdown: z.ZodOptional<z.ZodObject<{
             tables: z.ZodOptional<z.ZodEnum<{
                 off: "off";
-                code: "code";
                 bullets: "bullets";
+                code: "code";
             }>>;
         }, z.core.$strict>>;
         configWrites: z.ZodOptional<z.ZodBoolean>;
@@ -160,18 +163,19 @@ export declare const WhatsAppConfigSchema: z.ZodObject<{
         messagePrefix: z.ZodOptional<z.ZodString>;
         responsePrefix: z.ZodOptional<z.ZodString>;
         dmPolicy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+            allowlist: "allowlist";
             open: "open";
             disabled: "disabled";
-            allowlist: "allowlist";
             pairing: "pairing";
         }>>>;
         selfChatMode: z.ZodOptional<z.ZodBoolean>;
         allowFrom: z.ZodOptional<z.ZodArray<z.ZodString>>;
+        defaultTo: z.ZodOptional<z.ZodString>;
         groupAllowFrom: z.ZodOptional<z.ZodArray<z.ZodString>>;
         groupPolicy: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
+            allowlist: "allowlist";
             open: "open";
             disabled: "disabled";
-            allowlist: "allowlist";
         }>>>;
         historyLimit: z.ZodOptional<z.ZodNumber>;
         dmHistoryLimit: z.ZodOptional<z.ZodNumber>;
@@ -206,8 +210,8 @@ export declare const WhatsAppConfigSchema: z.ZodObject<{
             emoji: z.ZodOptional<z.ZodString>;
             direct: z.ZodDefault<z.ZodOptional<z.ZodBoolean>>;
             group: z.ZodDefault<z.ZodOptional<z.ZodEnum<{
-                never: "never";
                 always: "always";
+                never: "never";
                 mentions: "mentions";
             }>>>;
         }, z.core.$strict>>;
@@ -222,6 +226,7 @@ export declare const WhatsAppConfigSchema: z.ZodObject<{
         authDir: z.ZodOptional<z.ZodString>;
         mediaMaxMb: z.ZodOptional<z.ZodNumber>;
     }, z.core.$strict>>>>;
+    defaultAccount: z.ZodOptional<z.ZodString>;
     mediaMaxMb: z.ZodDefault<z.ZodOptional<z.ZodNumber>>;
     actions: z.ZodOptional<z.ZodObject<{
         reactions: z.ZodOptional<z.ZodBoolean>;

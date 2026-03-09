@@ -1,4 +1,5 @@
 import type { Block, KnownBlock, WebClient } from "@slack/web-api";
+import type { SlackMediaResult } from "./monitor/media.js";
 export type SlackActionClientOpts = {
     accountId?: string;
     token?: string;
@@ -14,6 +15,12 @@ export type SlackMessageSummary = {
         name?: string;
         count?: number;
         users?: string[];
+    }>;
+    /** File attachments on this message. Present when the message has files. */
+    files?: Array<{
+        id?: string;
+        name?: string;
+        mimetype?: string;
     }>;
 };
 export type SlackPin = {
@@ -33,6 +40,7 @@ export declare function removeOwnSlackReactions(channelId: string, messageId: st
 export declare function listSlackReactions(channelId: string, messageId: string, opts?: SlackActionClientOpts): Promise<SlackMessageSummary["reactions"]>;
 export declare function sendSlackMessage(to: string, content: string, opts?: SlackActionClientOpts & {
     mediaUrl?: string;
+    mediaLocalRoots?: readonly string[];
     threadTs?: string;
     blocks?: (Block | KnownBlock)[];
 }): Promise<import("./send.js").SlackSendResult>;
@@ -54,3 +62,13 @@ export declare function listSlackEmojis(opts?: SlackActionClientOpts): Promise<i
 export declare function pinSlackMessage(channelId: string, messageId: string, opts?: SlackActionClientOpts): Promise<void>;
 export declare function unpinSlackMessage(channelId: string, messageId: string, opts?: SlackActionClientOpts): Promise<void>;
 export declare function listSlackPins(channelId: string, opts?: SlackActionClientOpts): Promise<SlackPin[]>;
+/**
+ * Downloads a Slack file by ID and saves it to the local media store.
+ * Fetches a fresh download URL via files.info to avoid using stale private URLs.
+ * Returns null when the file cannot be found or downloaded.
+ */
+export declare function downloadSlackFile(fileId: string, opts: SlackActionClientOpts & {
+    maxBytes: number;
+    channelId?: string;
+    threadId?: string;
+}): Promise<SlackMediaResult | null>;

@@ -21,17 +21,20 @@ export declare function buildEmbeddedRunPayloads(params: {
     config?: OpenClawConfig;
     sessionKey: string;
     provider?: string;
+    model?: string;
     verboseLevel?: VerboseLevel;
     reasoningLevel?: ReasoningLevel;
     toolResultFormat?: ToolResultFormat;
     suppressToolErrorWarnings?: boolean;
     inlineToolResultsAllowed: boolean;
+    didSendViaMessagingTool?: boolean;
 }): Array<{
     text?: string;
     mediaUrl?: string;
     mediaUrls?: string[];
     replyToId?: string;
     isError?: boolean;
+    isReasoning?: boolean;
     audioAsVoice?: boolean;
     replyToTag?: boolean;
     replyToCurrent?: boolean;

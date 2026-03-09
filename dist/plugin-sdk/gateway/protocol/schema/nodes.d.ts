@@ -28,6 +28,9 @@ export declare const NodeRenameParamsSchema: import("@sinclair/typebox").TObject
     displayName: import("@sinclair/typebox").TString;
 }>;
 export declare const NodeListParamsSchema: import("@sinclair/typebox").TObject<{}>;
+export declare const NodePendingAckParamsSchema: import("@sinclair/typebox").TObject<{
+    ids: import("@sinclair/typebox").TArray<import("@sinclair/typebox").TString>;
+}>;
 export declare const NodeDescribeParamsSchema: import("@sinclair/typebox").TObject<{
     nodeId: import("@sinclair/typebox").TString;
 }>;

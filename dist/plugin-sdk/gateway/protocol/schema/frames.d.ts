@@ -15,7 +15,7 @@ export declare const ConnectParamsSchema: import("@sinclair/typebox").TObject<{
         platform: import("@sinclair/typebox").TString;
         deviceFamily: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
         modelIdentifier: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
-        mode: import("@sinclair/typebox").TUnion<import("@sinclair/typebox").TLiteral<"cli" | "node" | "ui" | "test" | "webchat" | "backend" | "probe">[]>;
+        mode: import("@sinclair/typebox").TUnion<import("@sinclair/typebox").TLiteral<"node" | "cli" | "ui" | "test" | "webchat" | "backend" | "probe">[]>;
         instanceId: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     }>;
     caps: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TArray<import("@sinclair/typebox").TString>>;
@@ -29,10 +29,11 @@ export declare const ConnectParamsSchema: import("@sinclair/typebox").TObject<{
         publicKey: import("@sinclair/typebox").TString;
         signature: import("@sinclair/typebox").TString;
         signedAt: import("@sinclair/typebox").TInteger;
-        nonce: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+        nonce: import("@sinclair/typebox").TString;
     }>>;
     auth: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TObject<{
         token: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
+        deviceToken: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
         password: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     }>>;
     locale: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
@@ -43,8 +44,6 @@ export declare const HelloOkSchema: import("@sinclair/typebox").TObject<{
     protocol: import("@sinclair/typebox").TInteger;
     server: import("@sinclair/typebox").TObject<{
         version: import("@sinclair/typebox").TString;
-        commit: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
-        host: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
         connId: import("@sinclair/typebox").TString;
     }>;
     features: import("@sinclair/typebox").TObject<{
@@ -85,6 +84,11 @@ export declare const HelloOkSchema: import("@sinclair/typebox").TObject<{
             scope: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
         }>>;
         authMode: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TUnion<[import("@sinclair/typebox").TLiteral<"none">, import("@sinclair/typebox").TLiteral<"token">, import("@sinclair/typebox").TLiteral<"password">, import("@sinclair/typebox").TLiteral<"trusted-proxy">]>>;
+        updateAvailable: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TObject<{
+            currentVersion: import("@sinclair/typebox").TString;
+            latestVersion: import("@sinclair/typebox").TString;
+            channel: import("@sinclair/typebox").TString;
+        }>>;
     }>;
     canvasHostUrl: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TString>;
     auth: import("@sinclair/typebox").TOptional<import("@sinclair/typebox").TObject<{

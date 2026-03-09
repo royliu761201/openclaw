@@ -8,8 +8,16 @@ export declare function formatAllowlistMatchMeta(match?: {
     matchKey?: string;
     matchSource?: string;
 } | null): string;
+export declare function resolveAllowlistMatchByCandidates<TSource extends string>(params: {
+    allowList: string[];
+    candidates: Array<{
+        value?: string;
+        source: TSource;
+    }>;
+}): AllowlistMatch<TSource>;
 export declare function resolveAllowlistMatchSimple(params: {
     allowFrom: Array<string | number>;
     senderId: string;
     senderName?: string | null;
+    allowNameMatching?: boolean;
 }): AllowlistMatch<"wildcard" | "id" | "name">;

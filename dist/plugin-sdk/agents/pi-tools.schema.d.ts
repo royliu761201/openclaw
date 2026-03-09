@@ -1,6 +1,7 @@
 import type { AnyAgentTool } from "./pi-tools.types.js";
 export declare function normalizeToolParameters(tool: AnyAgentTool, options?: {
     modelProvider?: string;
+    modelId?: string;
 }): AnyAgentTool;
 /**
  * @deprecated Use normalizeToolParameters with modelProvider instead.

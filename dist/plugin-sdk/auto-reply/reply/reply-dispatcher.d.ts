@@ -1,7 +1,8 @@
+import type { TypingCallbacks } from "../../channels/typing.js";
 import type { HumanDelayConfig } from "../../config/types.js";
 import type { GetReplyOptions, ReplyPayload } from "../types.js";
-import type { ResponsePrefixContext } from "./response-prefix-template.js";
 import { type NormalizeReplySkipReason } from "./normalize-reply.js";
+import type { ResponsePrefixContext } from "./response-prefix-template.js";
 export type ReplyDispatchKind = "tool" | "block" | "final";
 type ReplyDispatchErrorHandler = (err: unknown, info: {
     kind: ReplyDispatchKind;
@@ -29,6 +30,7 @@ export type ReplyDispatcherOptions = {
     humanDelay?: HumanDelayConfig;
 };
 export type ReplyDispatcherWithTypingOptions = Omit<ReplyDispatcherOptions, "onIdle"> & {
+    typingCallbacks?: TypingCallbacks;
     onReplyStart?: () => Promise<void> | void;
     onIdle?: () => void;
     /** Called when the typing controller is cleaned up (e.g., on NO_REPLY). */
@@ -38,6 +40,8 @@ type ReplyDispatcherWithTypingResult = {
     dispatcher: ReplyDispatcher;
     replyOptions: Pick<GetReplyOptions, "onReplyStart" | "onTypingController" | "onTypingCleanup">;
     markDispatchIdle: () => void;
+    /** Signal that the model run is complete so the typing controller can stop. */
+    markRunComplete: () => void;
 };
 export type ReplyDispatcher = {
     sendToolResult: (payload: ReplyPayload) => boolean;

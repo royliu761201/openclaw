@@ -1,6 +1,7 @@
 export declare const POSIX_OPENCLAW_TMP_DIR = "/tmp/openclaw";
 type ResolvePreferredOpenClawTmpDirOptions = {
     accessSync?: (path: string, mode?: number) => void;
+    chmodSync?: (path: string, mode: number) => void;
     lstatSync?: (path: string) => {
         isDirectory(): boolean;
         isSymbolicLink(): boolean;
@@ -13,6 +14,7 @@ type ResolvePreferredOpenClawTmpDirOptions = {
     }) => void;
     getuid?: () => number | undefined;
     tmpdir?: () => string;
+    warn?: (message: string) => void;
 };
 export declare function resolvePreferredOpenClawTmpDir(options?: ResolvePreferredOpenClawTmpDirOptions): string;
 export {};

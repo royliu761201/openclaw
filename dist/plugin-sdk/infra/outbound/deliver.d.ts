@@ -2,16 +2,18 @@ import type { ReplyPayload } from "../../auto-reply/types.js";
 import type { OpenClawConfig } from "../../config/config.js";
 import type { sendMessageDiscord } from "../../discord/send.js";
 import type { sendMessageIMessage } from "../../imessage/send.js";
+import { sendMessageSignal } from "../../signal/send.js";
 import type { sendMessageSlack } from "../../slack/send.js";
 import type { sendMessageTelegram } from "../../telegram/send.js";
 import type { sendMessageWhatsApp } from "../../web/outbound.js";
 import type { OutboundIdentity } from "./identity.js";
 import type { NormalizedOutboundPayload } from "./payloads.js";
+import type { OutboundSessionContext } from "./session-context.js";
 import type { OutboundChannel } from "./targets.js";
-import { sendMessageSignal } from "../../signal/send.js";
 export type { NormalizedOutboundPayload } from "./payloads.js";
 export { normalizeOutboundPayloads } from "./payloads.js";
 type SendMatrixMessage = (to: string, text: string, opts?: {
+    cfg?: OpenClawConfig;
     mediaUrl?: string;
     replyToId?: string;
     threadId?: string;
@@ -30,6 +32,7 @@ export type OutboundSendDeps = {
     sendMatrix?: SendMatrixMessage;
     sendMSTeams?: (to: string, text: string, opts?: {
         mediaUrl?: string;
+        mediaLocalRoots?: readonly string[];
     }) => Promise<{
         messageId: string;
         conversationId: string;
@@ -62,13 +65,17 @@ type DeliverOutboundPayloadsCoreParams = {
     bestEffort?: boolean;
     onError?: (err: unknown, payload: NormalizedOutboundPayload) => void;
     onPayload?: (payload: NormalizedOutboundPayload) => void;
-    /** Active agent id for media local-root scoping. */
-    agentId?: string;
+    /** Session/agent context used for hooks and media local-root scoping. */
+    session?: OutboundSessionContext;
     mirror?: {
         sessionKey: string;
         agentId?: string;
         text?: string;
         mediaUrls?: string[];
+        /** Whether this message is being sent in a group/channel context */
+        isGroup?: boolean;
+        /** Group or channel identifier for correlation with received events */
+        groupId?: string;
     };
     silent?: boolean;
 };

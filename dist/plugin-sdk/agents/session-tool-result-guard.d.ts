@@ -21,6 +21,11 @@ export declare function installSessionToolResultGuard(sessionManager: SessionMan
      */
     allowSyntheticToolResults?: boolean;
     /**
+     * Optional set/list of tool names accepted for assistant toolCall/toolUse blocks.
+     * When set, tool calls with unknown names are dropped before persistence.
+     */
+    allowedToolNames?: Iterable<string>;
+    /**
      * Synchronous hook invoked before any message is written to the session JSONL.
      * If the hook returns { block: true }, the message is silently dropped.
      * If it returns { message }, the modified message is written instead.
@@ -28,5 +33,6 @@ export declare function installSessionToolResultGuard(sessionManager: SessionMan
     beforeMessageWriteHook?: (event: PluginHookBeforeMessageWriteEvent) => PluginHookBeforeMessageWriteResult | undefined;
 }): {
     flushPendingToolResults: () => void;
+    clearPendingToolResults: () => void;
     getPendingIds: () => string[];
 };

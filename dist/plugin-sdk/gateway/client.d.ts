@@ -6,12 +6,14 @@ export type GatewayClientOptions = {
     connectDelayMs?: number;
     tickWatchMinIntervalMs?: number;
     token?: string;
+    deviceToken?: string;
     password?: string;
     instanceId?: string;
     clientName?: GatewayClientName;
     clientDisplayName?: string;
     clientVersion?: string;
     platform?: string;
+    deviceFamily?: string;
     mode?: GatewayClientMode;
     role?: string;
     scopes?: string[];

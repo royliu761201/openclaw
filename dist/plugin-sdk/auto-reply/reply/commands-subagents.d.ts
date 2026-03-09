@@ -1,11 +1,4 @@
+import { extractMessageText } from "./commands-subagents/shared.js";
 import type { CommandHandler } from "./commands-types.js";
-type ChatMessage = {
-    role?: unknown;
-    content?: unknown;
-};
-export declare function extractMessageText(message: ChatMessage): {
-    role: string;
-    text: string;
-} | null;
+export { extractMessageText };
 export declare const handleSubagentsCommand: CommandHandler;
-export {};

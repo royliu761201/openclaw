@@ -3,3 +3,4 @@ export declare function setActivePluginRegistry(registry: PluginRegistry, cacheK
 export declare function getActivePluginRegistry(): PluginRegistry | null;
 export declare function requireActivePluginRegistry(): PluginRegistry;
 export declare function getActivePluginRegistryKey(): string | null;
+export declare function getActivePluginRegistryVersion(): number;

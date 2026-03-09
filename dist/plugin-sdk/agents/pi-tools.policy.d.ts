@@ -7,6 +7,7 @@ export declare function filterToolsByPolicy(tools: AnyAgentTool[], policy?: Sand
 export declare function resolveEffectiveToolPolicy(params: {
     config?: OpenClawConfig;
     sessionKey?: string;
+    agentId?: string;
     modelProvider?: string;
     modelId?: string;
 }): {

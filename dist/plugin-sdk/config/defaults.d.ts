@@ -9,6 +9,7 @@ export type SessionDefaultsOptions = {
 export declare function applyMessageDefaults(cfg: OpenClawConfig): OpenClawConfig;
 export declare function applySessionDefaults(cfg: OpenClawConfig, options?: SessionDefaultsOptions): OpenClawConfig;
 export declare function applyTalkApiKey(config: OpenClawConfig): OpenClawConfig;
+export declare function applyTalkConfigNormalization(config: OpenClawConfig): OpenClawConfig;
 export declare function applyModelDefaults(cfg: OpenClawConfig): OpenClawConfig;
 export declare function applyAgentDefaults(cfg: OpenClawConfig): OpenClawConfig;
 export declare function applyLoggingDefaults(cfg: OpenClawConfig): OpenClawConfig;

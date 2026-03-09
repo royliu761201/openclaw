@@ -1,5 +1,4 @@
 import type { ElevatedLevel, ReasoningLevel } from "./directives.js";
-export declare const SYSTEM_MARK = "\u2699\uFE0F";
 export declare const formatDirectiveAck: (text: string) => string;
 export declare const formatOptionsLine: (options: string) => string;
 export declare const withOptions: (line: string, options: string) => string;

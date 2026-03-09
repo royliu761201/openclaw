@@ -1,9 +1,9 @@
 import type { ReasoningLevel, ThinkLevel } from "../../auto-reply/thinking.js";
 import type { OpenClawConfig } from "../../config/config.js";
-import type { ExecElevatedDefaults } from "../bash-tools.js";
-import type { EmbeddedPiCompactResult } from "./types.js";
 import { type enqueueCommand } from "../../process/command-queue.js";
+import type { ExecElevatedDefaults } from "../bash-tools.js";
 import { type SkillSnapshot } from "../skills.js";
+import type { EmbeddedPiCompactResult } from "./types.js";
 export type CompactEmbeddedPiSessionParams = {
     sessionId: string;
     runId?: string;
@@ -33,6 +33,8 @@ export type CompactEmbeddedPiSessionParams = {
     reasoningLevel?: ReasoningLevel;
     bashElevated?: ExecElevatedDefaults;
     customInstructions?: string;
+    tokenBudget?: number;
+    force?: boolean;
     trigger?: "overflow" | "manual";
     diagId?: string;
     attempt?: number;

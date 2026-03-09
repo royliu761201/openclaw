@@ -17,7 +17,7 @@ export declare function validateConfigObject(raw: unknown): {
     ok: false;
     issues: ConfigValidationIssue[];
 };
-export declare function validateConfigObjectWithPlugins(raw: unknown): {
+type ValidateConfigWithPluginsResult = {
     ok: true;
     config: OpenClawConfig;
     warnings: ConfigValidationIssue[];
@@ -26,12 +26,6 @@ export declare function validateConfigObjectWithPlugins(raw: unknown): {
     issues: ConfigValidationIssue[];
     warnings: ConfigValidationIssue[];
 };
-export declare function validateConfigObjectRawWithPlugins(raw: unknown): {
-    ok: true;
-    config: OpenClawConfig;
-    warnings: ConfigValidationIssue[];
-} | {
-    ok: false;
-    issues: ConfigValidationIssue[];
-    warnings: ConfigValidationIssue[];
-};
+export declare function validateConfigObjectWithPlugins(raw: unknown): ValidateConfigWithPluginsResult;
+export declare function validateConfigObjectRawWithPlugins(raw: unknown): ValidateConfigWithPluginsResult;
+export {};

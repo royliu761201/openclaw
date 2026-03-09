@@ -4,6 +4,7 @@ import type { OriginatingChannelType } from "../templating.js";
 import type { ReplyPayload } from "../types.js";
 export declare function applyReplyTagsToPayload(payload: ReplyPayload, currentMessageId?: string): ReplyPayload;
 export declare function isRenderablePayload(payload: ReplyPayload): boolean;
+export declare function shouldSuppressReasoningPayload(payload: ReplyPayload): boolean;
 export declare function applyReplyThreading(params: {
     payloads: ReplyPayload[];
     replyToMode: ReplyToMode;

@@ -1,6 +1,6 @@
 import type { OpenClawConfig, SkillConfig } from "../../config/config.js";
-import type { SkillEligibilityContext, SkillEntry } from "./types.js";
 import { hasBinary, resolveConfigPath, resolveRuntimePlatform } from "../../shared/config-eval.js";
+import type { SkillEligibilityContext, SkillEntry } from "./types.js";
 export { hasBinary, resolveConfigPath, resolveRuntimePlatform };
 export declare function isConfigPathTruthy(config: OpenClawConfig | undefined, pathStr: string): boolean;
 export declare function resolveSkillConfig(config: OpenClawConfig | undefined, skillKey: string): SkillConfig | undefined;

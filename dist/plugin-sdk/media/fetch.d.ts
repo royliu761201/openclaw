@@ -13,6 +13,7 @@ export type FetchLike = (input: RequestInfo | URL, init?: RequestInit) => Promis
 type FetchMediaOptions = {
     url: string;
     fetchImpl?: FetchLike;
+    requestInit?: RequestInit;
     filePathHint?: string;
     maxBytes?: number;
     maxRedirects?: number;

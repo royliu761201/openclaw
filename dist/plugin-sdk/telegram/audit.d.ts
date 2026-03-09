@@ -20,10 +20,11 @@ export declare function collectTelegramUnmentionedGroupIds(groups: Record<string
     unresolvedGroups: number;
     hasWildcardUnmentionedGroups: boolean;
 };
-export declare function auditTelegramGroupMembership(params: {
+export type AuditTelegramGroupMembershipParams = {
     token: string;
     botId: number;
     groupIds: string[];
     proxyUrl?: string;
     timeoutMs: number;
-}): Promise<TelegramGroupMembershipAudit>;
+};
+export declare function auditTelegramGroupMembership(params: AuditTelegramGroupMembershipParams): Promise<TelegramGroupMembershipAudit>;

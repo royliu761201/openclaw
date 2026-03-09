@@ -1,4 +1,4 @@
-export type ThinkLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh";
+export type ThinkLevel = "off" | "minimal" | "low" | "medium" | "high" | "xhigh" | "adaptive";
 export type VerboseLevel = "off" | "on" | "full";
 export type NoticeLevel = "off" | "on" | "full";
 export type ElevatedLevel = "off" | "on" | "ask" | "full";
@@ -6,7 +6,7 @@ export type ElevatedMode = "off" | "ask" | "full";
 export type ReasoningLevel = "off" | "on" | "stream";
 export type UsageDisplayLevel = "off" | "tokens" | "full";
 export declare function isBinaryThinkingProvider(provider?: string | null): boolean;
-export declare const XHIGH_MODEL_REFS: readonly ["openai/gpt-5.2", "openai-codex/gpt-5.3-codex", "openai-codex/gpt-5.3-codex-spark", "openai-codex/gpt-5.2-codex", "openai-codex/gpt-5.1-codex", "github-copilot/gpt-5.2-codex", "github-copilot/gpt-5.2"];
+export declare const XHIGH_MODEL_REFS: readonly ["openai/gpt-5.4", "openai/gpt-5.4-pro", "openai/gpt-5.2", "openai-codex/gpt-5.4", "openai-codex/gpt-5.3-codex", "openai-codex/gpt-5.3-codex-spark", "openai-codex/gpt-5.2-codex", "openai-codex/gpt-5.1-codex", "github-copilot/gpt-5.2-codex", "github-copilot/gpt-5.2"];
 export declare function normalizeThinkLevel(raw?: string | null): ThinkLevel | undefined;
 export declare function supportsXHighThinking(provider?: string | null, model?: string | null): boolean;
 export declare function listThinkingLevels(provider?: string | null, model?: string | null): ThinkLevel[];

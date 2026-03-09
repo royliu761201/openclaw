@@ -1,11 +1,15 @@
 import type { OpenClawConfig } from "../config/config.js";
 import type { ToolLoopDetectionConfig } from "../config/types.tools.js";
-import type { ModelAuthMode } from "./model-auth.js";
-import type { AnyAgentTool } from "./pi-tools.types.js";
-import type { SandboxContext } from "./sandbox.js";
 import { type ExecToolDefaults, type ProcessToolDefaults } from "./bash-tools.js";
+import type { ModelAuthMode } from "./model-auth.js";
 import { assertRequiredParams, normalizeToolParams, patchToolSchemaForClaudeCompatibility, wrapToolParamNormalization } from "./pi-tools.read.js";
 import { cleanToolSchemaForGemini } from "./pi-tools.schema.js";
+import type { AnyAgentTool } from "./pi-tools.types.js";
+import type { SandboxContext } from "./sandbox.js";
+declare function applyModelProviderToolPolicy(tools: AnyAgentTool[], params?: {
+    modelProvider?: string;
+    modelId?: string;
+}): AnyAgentTool[];
 export declare function resolveToolLoopDetectionConfig(params: {
     cfg?: OpenClawConfig;
     agentId?: string;
@@ -16,8 +20,10 @@ export declare const __testing: {
     readonly patchToolSchemaForClaudeCompatibility: typeof patchToolSchemaForClaudeCompatibility;
     readonly wrapToolParamNormalization: typeof wrapToolParamNormalization;
     readonly assertRequiredParams: typeof assertRequiredParams;
+    readonly applyModelProviderToolPolicy: typeof applyModelProviderToolPolicy;
 };
 export declare function createOpenClawCodingTools(options?: {
+    agentId?: string;
     exec?: ExecToolDefaults & ProcessToolDefaults;
     messageProvider?: string;
     agentAccountId?: string;
@@ -25,6 +31,10 @@ export declare function createOpenClawCodingTools(options?: {
     messageThreadId?: string | number;
     sandbox?: SandboxContext | null;
     sessionKey?: string;
+    /** Ephemeral session UUID — regenerated on /new and /reset. */
+    sessionId?: string;
+    /** Stable run identifier for this agent invocation. */
+    runId?: string;
     agentDir?: string;
     workspaceDir?: string;
     config?: OpenClawConfig;
@@ -47,6 +57,8 @@ export declare function createOpenClawCodingTools(options?: {
     currentChannelId?: string;
     /** Current thread timestamp for auto-threading (Slack). */
     currentThreadTs?: string;
+    /** Current inbound message id for action fallbacks (e.g. Telegram react). */
+    currentMessageId?: string | number;
     /** Group id for channel-level tool policy resolution. */
     groupId?: string | null;
     /** Group channel label (e.g. #general) for channel-level tool policy resolution. */
@@ -74,3 +86,4 @@ export declare function createOpenClawCodingTools(options?: {
     /** Whether the sender is an owner (required for owner-only tools). */
     senderIsOwner?: boolean;
 }): AnyAgentTool[];
+export {};

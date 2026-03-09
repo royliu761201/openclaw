@@ -1,134 +1,151 @@
 #!/usr/bin/env node
-import "./paths-B4BZAPZh.js";
-import { B as theme, E as toWhatsappJid, P as setVerbose, h as normalizeE164, l as escapeRegExp, n as assertWebChannel, z as isRich } from "./utils-CFnnyoTP.js";
-import "./thinking-EAliFiVK.js";
-import { Lt as resolveCommitHash, t as getReplyFromConfig } from "./reply-CN3Mqf06.js";
-import "./registry-D74-I5q-.js";
-import { f as defaultRuntime, r as enableConsoleCapture, u as visibleWidth } from "./subsystem-oVAQxyhr.js";
-import { n as runExec, t as runCommandWithTimeout } from "./exec-i2CMvUxK.js";
-import "./agent-scope-CrP-i2MF.js";
-import "./model-selection-DgLfVVAN.js";
-import "./github-copilot-token-D2zp6kMZ.js";
-import { n as replaceCliName, r as resolveCliName } from "./command-format-DEKzLnLg.js";
-import "./boolean-BsqeuxE6.js";
-import { r as normalizeEnv, t as isTruthyEnvValue } from "./env-BV0iTNjd.js";
-import { L as VERSION, i as loadConfig, z as loadDotEnv } from "./config-CcdSvMU-.js";
-import "./manifest-registry-DoaWeDHN.js";
-import { c as installUnhandledRejectionHandler, h as applyTemplate } from "./runner-BO8z6Hx6.js";
-import "./image-CWhUVtt2.js";
-import "./models-config-nSE4nabb.js";
-import "./pi-model-discovery-DaNAekda.js";
-import "./pi-embedded-helpers-BFt9c0rL.js";
-import "./sandbox-SHEsWn4a.js";
-import "./chrome-DuvmuAVy.js";
-import { l as ensureBinary, u as promptYesNo } from "./tailscale-B2RP0O39.js";
-import "./auth-Kz-t4hed.js";
-import "./server-context-BYhlNxNr.js";
-import "./frontmatter-DrdSsH4-.js";
-import "./skills-BCkGHN5q.js";
-import "./routes-D9_CcLQT.js";
-import "./redact-CjJyQlVU.js";
-import { r as formatUncaughtError } from "./errors-CdJjJ1Jq.js";
-import "./paths-CWc9mjAN.js";
-import "./ssrf-BT0IElaU.js";
-import "./image-ops-ib1_UDIa.js";
-import "./store-CHQKN-y-.js";
-import { i as handlePortError, n as describePortOwner, r as ensurePortAvailable, t as PortInUseError } from "./ports-Dru7vIR6.js";
-import "./trash-DhlImRqi.js";
-import { D as deriveSessionKey, O as resolveSessionKey, i as loadSessionStore, s as saveSessionStore } from "./sessions-Bg_FjxB6.js";
-import "./dock-CrH5-An2.js";
-import "./message-channel-CR13QiEZ.js";
-import "./accounts-BWv_S14y.js";
-import "./normalize-C23emibo.js";
-import "./accounts-FP3Dx3m5.js";
-import "./accounts-CgV6POP2.js";
-import "./bindings-CssSUqXx.js";
-import "./logging-D3KTM1pH.js";
-import "./send-xa3cPXQJ.js";
-import "./plugins-MECKrdj4.js";
-import "./send-DWaYQKQS.js";
-import { c as resolveStorePath } from "./paths-gjLMn4eA.js";
-import "./tool-images-jk50s7DI.js";
-import "./tool-display-BRqP7S2f.js";
-import "./fetch-guard-DMSZC6xq.js";
-import "./api-key-rotation-Bf-oc_NX.js";
-import "./fetch-CbeD35dL.js";
-import "./model-catalog-FPESp6t3.js";
-import "./tokens-sV_zGSb7.js";
-import "./with-timeout-C0WDORH0.js";
-import "./deliver-DiKYaL0S.js";
-import "./diagnostic-B81gAc3S.js";
-import "./diagnostic-session-state-d6bm-JJd.js";
-import "./send-yzgmdCdJ.js";
-import "./model-DxFRLcl_.js";
-import "./reply-prefix-Dk5Tb9So.js";
-import "./memory-cli-C-dw5FHa.js";
-import "./manager-CySFZ8Se.js";
-import "./sqlite-DWNRhtfU.js";
-import "./retry-CsJdgSl0.js";
-import "./common-CmR0t2Y-.js";
-import "./chunk-CGIuJ18X.js";
-import "./markdown-tables-CQQzFscn.js";
-import "./ir-B5OALpys.js";
-import "./render-CXDO_kgw.js";
-import "./commands-registry-3-nTURoO.js";
-import "./client-CXnp680x.js";
-import "./call-DOGjrb9N.js";
-import "./channel-activity-4gYIj57z.js";
-import "./fetch-D_cxmFbk.js";
-import "./tables-Dp5qKyp3.js";
-import "./send-DXG6_aWM.js";
-import "./pairing-store-BtvTgvfP.js";
-import "./proxy-bT3c25cJ.js";
-import { t as formatDocsLink } from "./links-C8IJn_HH.js";
-import "./cli-utils-BqMwAlgf.js";
-import "./help-format-BwCqDl6O.js";
-import "./progress-By07Lltm.js";
-import "./resolve-route-CMiOzrE9.js";
-import "./replies-MjYhQr3q.js";
-import "./skill-commands-C5_0rY2g.js";
-import "./workspace-dirs-CcREWmBd.js";
-import "./pi-tools.policy-BySWFghq.js";
-import "./send-DA7wRW8T.js";
-import "./onboard-helpers-DbaZPn0R.js";
-import "./prompt-style-K932lPCL.js";
-import "./outbound-attachment-DTLG_nKE.js";
-import "./pairing-labels-BkL8bEXR.js";
-import "./session-cost-usage-C72DlXmh.js";
-import "./nodes-screen-BVo2a8We.js";
-import "./control-service-D_k7MyRf.js";
-import "./stagger-xzJwPnK6.js";
-import "./channel-selection-ZU5WDIZb.js";
-import "./delivery-queue-fx8E3HqU.js";
-import { r as waitForever, t as monitorWebChannel } from "./channel-web-pSn1bBHN.js";
-import "./outbound-CGCMWHqn.js";
-import "./session-BAAt0PdY.js";
-import "./login-CEaDY-Y2.js";
-import { t as createDefaultDeps } from "./deps-D7q4FOUM.js";
-import { t as isMainModule } from "./is-main-CSCRjuD_.js";
-import { t as ensureOpenClawCliOnPath } from "./path-env-BN27ynJ2.js";
-import { t as assertSupportedRuntime } from "./runtime-guard-DLhZHmF6.js";
-import "./ports-BAxggYjz.js";
-import { a as hasHelpOrVersion, i as getVerboseFlag, n as getCommandPath } from "./argv-7fv5pBvb.js";
-import { i as getCoreCliCommandsWithSubcommands, n as setProgramContext, o as registerProgramCommands, s as getSubCliCommandsWithSubcommands } from "./program-context-ByFZQT0F.js";
-import "./catalog-DdTNZaU_.js";
-import "./plugin-registry-Nr0-Fdco.js";
-import { n as resolveCliChannelOptions } from "./channel-options-BXmJrGtx.js";
+import "./paths-BJV7vkaX.js";
+import { C as setVerbose, G as hasFlag, H as getCommandPathWithRootOptions, K as hasHelpOrVersion, L as ALLOWED_LOG_LEVELS, O as isRich, W as getVerboseFlag, f as defaultRuntime, k as theme, q as hasRootVersionAlias, r as enableConsoleCapture, u as visibleWidth, z as tryParseLogLevel } from "./subsystem-4K-e3L3i.js";
+import { T as toWhatsappJid, l as escapeRegExp, m as normalizeE164, n as assertWebChannel } from "./utils-BhZbo8Nw.js";
+import "./thinking-BYwvlJ3S.js";
+import { W as createDefaultDeps, nn as resolveCommitHash, t as getReplyFromConfig } from "./reply-BNraYLOV.js";
+import "./agent-scope-CZF6h_5g.js";
+import "./openclaw-root-DrFjwUcG.js";
+import "./logger-BDhFOulu.js";
+import { n as runExec, t as runCommandWithTimeout } from "./exec-WYU5B_af.js";
+import { mi as loadDotEnv, rn as loadConfig, si as VERSION } from "./model-selection-BoktjT0J.js";
+import "./github-copilot-token-D37fjdwy.js";
+import { n as replaceCliName, r as resolveCliName } from "./command-format-3Z_Kl5PP.js";
+import "./boolean-CJxfhBkG.js";
+import { r as normalizeEnv, t as isTruthyEnvValue } from "./env-BL7t1mkY.js";
+import "./host-env-security-3AOqVC6Z.js";
+import "./registry-D5r9Pc2H.js";
+import "./manifest-registry-BeIjHOSg.js";
+import "./dock-DqLW1i1m.js";
+import "./message-channel-DOl5pebL.js";
+import "./send-weLlKD0i.js";
+import "./plugins-B4oqCXNl.js";
+import { H as deriveSessionKey, U as resolveSessionKey, c as loadSessionStore, f as saveSessionStore } from "./sessions-CDsv-Lql.js";
+import { b as applyTemplate, l as installUnhandledRejectionHandler } from "./audio-transcription-runner-Ccpl-qxW.js";
+import "./image-DVt7M7j4.js";
+import "./models-config-Dyo8WfaT.js";
+import "./pi-embedded-helpers-ghQuBfta.js";
+import "./sandbox-BFFJwscR.js";
+import "./tool-catalog-Dm7UDWav.js";
+import "./chrome-Cp7c2wWw.js";
+import { l as ensureBinary, u as promptYesNo } from "./tailscale-C0adBA0J.js";
+import "./tailnet-CcCnORw0.js";
+import "./ws-CQTdazYG.js";
+import "./auth-DFkGw0JK.js";
+import "./credentials-Dgqa2Zkk.js";
+import "./resolve-configured-secret-input-string-BQY6HjIR.js";
+import "./server-context-B3vlnqdz.js";
+import "./frontmatter-NDnrpxIv.js";
+import "./env-overrides-lUwusxOI.js";
+import "./path-alias-guards-WL7vop6P.js";
+import "./skills-YP-u7cXd.js";
+import "./paths-D3yvzAGG.js";
+import "./proxy-env-R6aoMEPK.js";
+import "./redact-D64ODmQM.js";
+import { i as formatUncaughtError } from "./errors-BOqrY9lx.js";
+import "./fs-safe-XTpVePQ3.js";
+import "./image-ops-C7PfPJb_.js";
+import "./store-CF7lpR6V.js";
+import { i as handlePortError, n as describePortOwner, r as ensurePortAvailable, t as PortInUseError } from "./ports-CQ-Y9tpn.js";
+import "./trash-CklSLfYF.js";
+import "./server-middleware-BABAsPvn.js";
+import "./accounts-DCl2uuiL.js";
+import "./channel-config-helpers-IZvZlvD6.js";
+import "./accounts-BH8lVXqk.js";
+import "./send-DJlwmjIz.js";
+import { c as resolveStorePath } from "./paths-BXRmsWer.js";
+import "./chat-envelope-BkySjpPY.js";
+import "./tool-images-L9XyoWe9.js";
+import "./tool-display-CIuMJQho.js";
+import "./fetch-guard-C9aTTmhR.js";
+import "./api-key-rotation-Bn0TQZYk.js";
+import "./local-roots-CfU84Zin.js";
+import "./model-catalog-f2oV-eF5.js";
+import "./proxy-fetch-B79ly90H.js";
+import "./tokens-rNiM9362.js";
+import "./deliver-DY9FT0lC.js";
+import "./commands-BYk9iATH.js";
+import "./commands-registry-DK9sEzbg.js";
+import "./call-B0bfj395.js";
+import "./pairing-token-CYfrO-Yo.js";
+import "./send-DUDPbAoC.js";
+import "./pi-model-discovery-kQZAx6rB.js";
+import "./ir-BwbFKuO4.js";
+import "./render-DW1ufaCx.js";
+import "./target-errors-Be40pSLb.js";
+import "./with-timeout-B_hadnju.js";
+import "./diagnostic-W6cK2Rhp.js";
+import "./exec-approvals-allowlist-8p90ZCGS.js";
+import "./exec-safe-bin-runtime-policy-BkDPd2Au.js";
+import "./exec-approvals-DODENM6Z.js";
+import "./nodes-screen-BN7WLAXG.js";
+import "./restart-C7ane9OU.js";
+import "./system-run-command-BsJFCGkm.js";
+import "./runtime-lifecycle-DT-aNT8p.js";
+import "./stagger-Bg3n7FlQ.js";
+import "./channel-selection-BuAeucPt.js";
+import "./plugin-auto-enable-By1_VpWX.js";
+import "./send-CVusnGvl.js";
+import "./outbound-attachment-CD94LD9V.js";
+import "./fetch-CRD8Jhcq.js";
+import "./delivery-queue-Bdmrf3y0.js";
+import "./send-BXb1xgTY.js";
+import "./pairing-store-BbLoI6gD.js";
+import "./session-cost-usage-D8S-fJa3.js";
+import "./read-only-account-inspect-CAZUHTl5.js";
+import "./sqlite-DC98NVaK.js";
+import "./channel-activity-BZsMuF3F.js";
+import "./tables-jk7QRY4Q.js";
+import "./proxy-CRODgiWq.js";
+import "./timeouts-DeXgc5B0.js";
+import "./skill-commands-BEoWtfut.js";
+import "./workspace-dirs-g6Q7CsLa.js";
+import "./runtime-config-collectors-CMqbedaj.js";
+import "./command-secret-targets-A0mDXQMJ.js";
+import "./connection-auth-CJHUONGh.js";
+import "./onboard-helpers-DY47xnlF.js";
+import "./prompt-style-D9KjtA09.js";
+import "./pairing-labels-DCNYH3b7.js";
+import "./memory-cli-BHCCB-6d.js";
+import "./manager-S_ImWK1O.js";
+import { t as formatDocsLink } from "./links-BQUKbxMp.js";
+import "./cli-utils-B5O9_EBZ.js";
+import "./help-format-BWGBPI0G.js";
+import "./progress-B8wjC50f.js";
+import { r as waitForever, t as monitorWebChannel } from "./channel-web-BiXF1NkW.js";
+import "./outbound-BUDC8C3_.js";
+import "./session-D-pHPhah.js";
+import "./login-DNfbiFSw.js";
+import { t as isMainModule } from "./is-main-DtEgLH3S.js";
+import { t as ensureOpenClawCliOnPath } from "./path-env-ChENRhz2.js";
+import { t as assertSupportedRuntime } from "./runtime-guard-CsQ4WVFm.js";
+import "./ports-_L8BNTLB.js";
+import { i as getCoreCliCommandsWithSubcommands, n as setProgramContext, o as registerProgramCommands, s as getSubCliCommandsWithSubcommands } from "./program-context-By1-Sst1.js";
+import "./plugin-registry-qAjUeMn5.js";
+import { n as resolveCliChannelOptions } from "./channel-options-BNIDndS-.js";
 import process$1 from "node:process";
 import { fileURLToPath } from "node:url";
-import { Command } from "commander";
-
+import { Command, InvalidArgumentError } from "commander";
 //#region src/cli/program/context.ts
 function createProgramContext() {
-	const channelOptions = resolveCliChannelOptions();
+	let cachedChannelOptions;
+	const getChannelOptions = () => {
+		if (cachedChannelOptions === void 0) cachedChannelOptions = resolveCliChannelOptions();
+		return cachedChannelOptions;
+	};
 	return {
 		programVersion: VERSION,
-		channelOptions,
-		messageChannelOptions: channelOptions.join("|"),
-		agentChannelOptions: ["last", ...channelOptions].join("|")
+		get channelOptions() {
+			return getChannelOptions();
+		},
+		get messageChannelOptions() {
+			return getChannelOptions().join("|");
+		},
+		get agentChannelOptions() {
+			return ["last", ...getChannelOptions()].join("|");
+		}
 	};
 }
-
 //#endregion
 //#region src/cli/tagline.ts
 const DEFAULT_TAGLINE = "All your chats, one OpenClaw.";
@@ -185,34 +202,42 @@ const TAGLINES = [
 	"I'll butter your workflow like a lobster roll: messy, delicious, effective.",
 	"Shell yeah—I'm here to pinch the toil and leave you the glory.",
 	"If it's repetitive, I'll automate it; if it's hard, I'll bring jokes and a rollback plan.",
-	"Because texting yourself reminders is so 2024.",
-	"Your inbox, your infra, your rules.",
-	"Turning \"I'll reply later\" into \"my bot replied instantly\".",
 	"The only crab in your contacts you actually want to hear from. 🦞",
-	"Chat automation for people who peaked at IRC.",
-	"Because Siri wasn't answering at 3AM.",
-	"IPC, but it's your phone.",
-	"The UNIX philosophy meets your DMs.",
-	"curl for conversations.",
-	"Less middlemen, more messages.",
-	"Ship fast, log faster.",
-	"End-to-end encrypted, drama-to-drama excluded.",
-	"The only bot that stays out of your training set.",
 	"WhatsApp automation without the \"please accept our new privacy policy\".",
-	"Chat APIs that don't require a Senate hearing.",
-	"Meta wishes they shipped this fast.",
-	"Because the right answer is usually a script.",
-	"Your messages, your servers, your control.",
-	"OpenAI-compatible, not OpenAI-dependent.",
 	"iMessage green bubble energy, but for everyone.",
-	"Siri's competent cousin.",
-	"Works on Android. Crazy concept, we know.",
 	"No $999 stand required.",
 	"We ship features faster than Apple ships calculator updates.",
 	"Your AI assistant, now without the $3,499 headset.",
-	"Think different. Actually think.",
 	"Ah, the fruit tree company! 🍎",
 	"Greetings, Professor Falken",
+	"I don't sleep, I just enter low-power mode and dream of clean diffs.",
+	"Your personal assistant, minus the passive-aggressive calendar reminders.",
+	"Built by lobsters, for humans. Don't question the hierarchy.",
+	"I've seen your commit messages. We'll work on that together.",
+	"More integrations than your therapist's intake form.",
+	"Running on your hardware, reading your logs, judging nothing (mostly).",
+	"The only open-source project where the mascot could eat the competition.",
+	"Self-hosted, self-updating, self-aware (just kidding... unless?).",
+	"I autocomplete your thoughts—just slower and with more API calls.",
+	"Somewhere between 'hello world' and 'oh god what have I built.'",
+	"Your .zshrc wishes it could do what I do.",
+	"I've read more man pages than any human should—so you don't have to.",
+	"Powered by open source, sustained by spite and good documentation.",
+	"I'm the middleware between your ambition and your attention span.",
+	"Finally, a use for that always-on Mac Mini under your desk.",
+	"Like having a senior engineer on call, except I don't bill hourly or sigh audibly.",
+	"Making 'I'll automate that later' happen now.",
+	"Your second brain, except this one actually remembers where you left things.",
+	"Half butler, half debugger, full crustacean.",
+	"I don't have opinions about tabs vs spaces. I have opinions about everything else.",
+	"Open source means you can see exactly how I judge your config.",
+	"I've survived more breaking changes than your last three relationships.",
+	"Runs on a Raspberry Pi. Dreams of a rack in Iceland.",
+	"The lobster in your shell. 🦞",
+	"Alexa, but with taste.",
+	"I'm not AI-powered, I'm AI-possessed. Big difference.",
+	"Deployed locally, trusted globally, debugged eternally.",
+	"You had me at 'openclaw gateway start.'",
 	HOLIDAY_TAGLINES.newYear,
 	HOLIDAY_TAGLINES.lunarNewYear,
 	HOLIDAY_TAGLINES.christmas,
@@ -371,6 +396,8 @@ function activeTaglines(options = {}) {
 	return filtered.length > 0 ? filtered : TAGLINES;
 }
 function pickTagline(options = {}) {
+	if (options.mode === "off") return "";
+	if (options.mode === "default") return DEFAULT_TAGLINE;
 	const override = (options.env ?? process.env)?.OPENCLAW_TAGLINE_INDEX;
 	if (override !== void 0) {
 		const parsed = Number.parseInt(override, 10);
@@ -383,27 +410,52 @@ function pickTagline(options = {}) {
 	const rand = options.random ?? Math.random;
 	return pool[Math.floor(rand() * pool.length) % pool.length];
 }
-
 //#endregion
 //#region src/cli/banner.ts
 let bannerEmitted = false;
-const graphemeSegmenter = typeof Intl !== "undefined" && "Segmenter" in Intl ? new Intl.Segmenter(void 0, { granularity: "grapheme" }) : null;
+typeof Intl !== "undefined" && "Segmenter" in Intl && new Intl.Segmenter(void 0, { granularity: "grapheme" });
 const hasJsonFlag = (argv) => argv.some((arg) => arg === "--json" || arg.startsWith("--json="));
-const hasVersionFlag = (argv) => argv.some((arg) => arg === "--version" || arg === "-V" || arg === "-v");
+const hasVersionFlag = (argv) => argv.some((arg) => arg === "--version" || arg === "-V") || hasRootVersionAlias(argv);
+function parseTaglineMode(value) {
+	if (value === "random" || value === "default" || value === "off") return value;
+}
+function resolveTaglineMode(options) {
+	const explicit = parseTaglineMode(options.mode);
+	if (explicit) return explicit;
+	try {
+		return parseTaglineMode(loadConfig().cli?.banner?.taglineMode);
+	} catch {
+		return;
+	}
+}
 function formatCliBannerLine(version, options = {}) {
-	const commitLabel = options.commit ?? resolveCommitHash({ env: options.env }) ?? "unknown";
-	const tagline = pickTagline(options);
+	const commitLabel = options.commit ?? resolveCommitHash({
+		env: options.env,
+		moduleUrl: import.meta.url
+	}) ?? "unknown";
+	const tagline = pickTagline({
+		...options,
+		mode: resolveTaglineMode(options)
+	});
 	const rich = options.richTty ?? isRich();
 	const title = "🦞 OpenClaw";
 	const columns = options.columns ?? process.stdout.columns ?? 120;
-	const plainFullLine = `${title} ${version} (${commitLabel}) — ${tagline}`;
+	const plainBaseLine = `${title} ${version} (${commitLabel})`;
+	const plainFullLine = tagline ? `${plainBaseLine} — ${tagline}` : plainBaseLine;
 	const fitsOnOneLine = visibleWidth(plainFullLine) <= columns;
 	if (rich) {
-		if (fitsOnOneLine) return `${theme.heading(title)} ${theme.info(version)} ${theme.muted(`(${commitLabel})`)} ${theme.muted("—")} ${theme.accentDim(tagline)}`;
-		return `${`${theme.heading(title)} ${theme.info(version)} ${theme.muted(`(${commitLabel})`)}`}\n${`${" ".repeat(3)}${theme.accentDim(tagline)}`}`;
+		if (fitsOnOneLine) {
+			if (!tagline) return `${theme.heading(title)} ${theme.info(version)} ${theme.muted(`(${commitLabel})`)}`;
+			return `${theme.heading(title)} ${theme.info(version)} ${theme.muted(`(${commitLabel})`)} ${theme.muted("—")} ${theme.accentDim(tagline)}`;
+		}
+		const line1 = `${theme.heading(title)} ${theme.info(version)} ${theme.muted(`(${commitLabel})`)}`;
+		if (!tagline) return line1;
+		return `${line1}\n${`${" ".repeat(3)}${theme.accentDim(tagline)}`}`;
 	}
 	if (fitsOnOneLine) return plainFullLine;
-	return `${`${title} ${version} (${commitLabel})`}\n${`${" ".repeat(3)}${tagline}`}`;
+	const line1 = plainBaseLine;
+	if (!tagline) return line1;
+	return `${line1}\n${`${" ".repeat(3)}${tagline}`}`;
 }
 function emitCliBanner(version, options = {}) {
 	if (bannerEmitted) return;
@@ -418,7 +470,14 @@ function emitCliBanner(version, options = {}) {
 function hasEmittedCliBanner() {
 	return bannerEmitted;
 }
-
+//#endregion
+//#region src/cli/log-level-option.ts
+const CLI_LOG_LEVEL_VALUES = ALLOWED_LOG_LEVELS.join("|");
+function parseCliLogLevelOption(value) {
+	const parsed = tryParseLogLevel(value);
+	if (!parsed) throw new InvalidArgumentError(`Invalid --log-level (use ${CLI_LOG_LEVEL_VALUES})`);
+	return parsed;
+}
 //#endregion
 //#region src/cli/program/help.ts
 const CLI_NAME = resolveCliName();
@@ -437,7 +496,7 @@ const EXAMPLES = [
 	["openclaw message send --channel telegram --target @mychat --message \"Hi\"", "Send via your Telegram bot."]
 ];
 function configureProgramHelp(program, ctx) {
-	program.name(CLI_NAME).description("").version(ctx.programVersion).option("--dev", "Dev profile: isolate state under ~/.openclaw-dev, default gateway port 19001, and shift derived ports (browser/canvas)").option("--profile <name>", "Use a named profile (isolates OPENCLAW_STATE_DIR/OPENCLAW_CONFIG_PATH under ~/.openclaw-<name>)");
+	program.name(CLI_NAME).description("").version(ctx.programVersion).option("--dev", "Dev profile: isolate state under ~/.openclaw-dev, default gateway port 19001, and shift derived ports (browser/canvas)").option("--profile <name>", "Use a named profile (isolates OPENCLAW_STATE_DIR/OPENCLAW_CONFIG_PATH under ~/.openclaw-<name>)").option("--log-level <level>", `Global log level override for file + console (${CLI_LOG_LEVEL_VALUES})`, parseCliLogLevelOption);
 	program.option("--no-color", "Disable ANSI colors", false);
 	program.helpOption("-h, --help", "Display help for command");
 	program.helpCommand("help [command]", "Display help for command");
@@ -464,8 +523,9 @@ function configureProgramHelp(program, ctx) {
 		},
 		outputError: (str, write) => write(theme.error(str))
 	});
-	if (process.argv.includes("-V") || process.argv.includes("--version") || process.argv.includes("-v")) {
-		console.log(ctx.programVersion);
+	if (hasFlag(process.argv, "-V") || hasFlag(process.argv, "--version") || hasRootVersionAlias(process.argv)) {
+		const commit = resolveCommitHash({ moduleUrl: import.meta.url });
+		console.log(commit ? `OpenClaw ${ctx.programVersion} (${commit})` : `OpenClaw ${ctx.programVersion}`);
 		process.exit(0);
 	}
 	program.addHelpText("beforeAll", () => {
@@ -480,7 +540,6 @@ function configureProgramHelp(program, ctx) {
 		return `\n${theme.heading("Examples:")}\n${fmtExamples}\n\n${theme.muted("Docs:")} ${docs}\n`;
 	});
 }
-
 //#endregion
 //#region src/cli/program/preaction.ts
 function setProcessTitleForCommand(actionCommand) {
@@ -494,31 +553,81 @@ function setProcessTitleForCommand(actionCommand) {
 const PLUGIN_REQUIRED_COMMANDS = new Set([
 	"message",
 	"channels",
-	"directory"
+	"directory",
+	"agents",
+	"configure",
+	"onboard",
+	"status",
+	"health"
 ]);
+const CONFIG_GUARD_BYPASS_COMMANDS = new Set([
+	"backup",
+	"doctor",
+	"completion",
+	"secrets"
+]);
+const JSON_PARSE_ONLY_COMMANDS = new Set(["config set"]);
+let configGuardModulePromise;
+let pluginRegistryModulePromise;
+function shouldBypassConfigGuard(commandPath) {
+	const [primary, secondary] = commandPath;
+	if (!primary) return false;
+	if (CONFIG_GUARD_BYPASS_COMMANDS.has(primary)) return true;
+	if (primary === "config" && secondary === "validate") return true;
+	return false;
+}
+function loadConfigGuardModule() {
+	configGuardModulePromise ??= import("./config-guard-DiJXjqIX.js");
+	return configGuardModulePromise;
+}
+function loadPluginRegistryModule() {
+	pluginRegistryModulePromise ??= import("./plugin-registry-qAjUeMn5.js").then((n) => n.n);
+	return pluginRegistryModulePromise;
+}
+function getRootCommand(command) {
+	let current = command;
+	while (current.parent) current = current.parent;
+	return current;
+}
+function getCliLogLevel(actionCommand) {
+	const root = getRootCommand(actionCommand);
+	if (typeof root.getOptionValueSource !== "function") return;
+	if (root.getOptionValueSource("logLevel") !== "cli") return;
+	const logLevel = root.opts().logLevel;
+	return typeof logLevel === "string" ? logLevel : void 0;
+}
+function isJsonOutputMode(commandPath, argv) {
+	if (!hasFlag(argv, "--json")) return false;
+	const key = `${commandPath[0] ?? ""} ${commandPath[1] ?? ""}`.trim();
+	if (JSON_PARSE_ONLY_COMMANDS.has(key)) return false;
+	return true;
+}
 function registerPreActionHooks(program, programVersion) {
 	program.hook("preAction", async (_thisCommand, actionCommand) => {
 		setProcessTitleForCommand(actionCommand);
 		const argv = process.argv;
 		if (hasHelpOrVersion(argv)) return;
-		const commandPath = getCommandPath(argv, 2);
+		const commandPath = getCommandPathWithRootOptions(argv, 2);
 		if (!(isTruthyEnvValue(process.env.OPENCLAW_HIDE_BANNER) || commandPath[0] === "update" || commandPath[0] === "completion" || commandPath[0] === "plugins" && commandPath[1] === "update")) emitCliBanner(programVersion);
 		const verbose = getVerboseFlag(argv, { includeDebug: true });
 		setVerbose(verbose);
+		const cliLogLevel = getCliLogLevel(actionCommand);
+		if (cliLogLevel) process.env.OPENCLAW_LOG_LEVEL = cliLogLevel;
 		if (!verbose) process.env.NODE_NO_WARNINGS ??= "1";
-		if (commandPath[0] === "doctor" || commandPath[0] === "completion") return;
-		const { ensureConfigReady } = await import("./config-guard-DqAV91RO.js");
+		if (shouldBypassConfigGuard(commandPath)) return;
+		const suppressDoctorStdout = isJsonOutputMode(commandPath, argv);
+		const { ensureConfigReady } = await loadConfigGuardModule();
 		await ensureConfigReady({
 			runtime: defaultRuntime,
-			commandPath
+			commandPath,
+			...suppressDoctorStdout ? { suppressDoctorStdout: true } : {}
 		});
 		if (PLUGIN_REQUIRED_COMMANDS.has(commandPath[0])) {
-			const { ensurePluginRegistryLoaded } = await import("./plugin-registry-Nr0-Fdco.js").then((n) => n.n);
+			const { ensurePluginRegistryLoaded } = await loadPluginRegistryModule();
 			ensurePluginRegistryLoaded();
 		}
 	});
 }
-
 //#endregion
 //#region src/cli/program/build-program.ts
 function buildProgram() {
@@ -531,7 +640,6 @@ function buildProgram() {
 	registerProgramCommands(program, ctx, argv);
 	return program;
 }
-
 //#endregion
 //#region src/index.ts
 loadDotEnv({ quiet: true });
@@ -551,6 +659,5 @@ if (isMainModule({ currentFile: fileURLToPath(import.meta.url) })) {
 		process$1.exit(1);
 	});
 }
-
 //#endregion
 export { PortInUseError, applyTemplate, assertWebChannel, createDefaultDeps, deriveSessionKey, describePortOwner, ensureBinary, ensurePortAvailable, getReplyFromConfig, handlePortError, loadConfig, loadSessionStore, monitorWebChannel, normalizeE164, promptYesNo, resolveSessionKey, resolveStorePath, runCommandWithTimeout, runExec, saveSessionStore, toWhatsappJid, waitForever };
