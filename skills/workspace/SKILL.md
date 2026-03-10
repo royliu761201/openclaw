@@ -14,9 +14,8 @@ The `workspace` skill governs the top-level cognitive state of the Agent. It enf
 You MUST execute this skill FIRST whenever:
 
 - The user asks ANY question about tasks, eg: "check global board", "check tasks", "what's next", "下一步做什么", "看大盘", "任务".
-- The user asks ANY question about tasks, eg: "check global board", "check tasks", "what's next", "下一步做什么", "看大盘", "任务".
 - You need to leave a message, note, or error stack trace for another Agent session (`--board-write`).
-- You need to view or present ANY non-session global text document (.md files) on the SSoT (Global Board, PDCA files, Rules, Idea Lists).
+- The user wants to see, check, review, or project ANY non-session global text document (.md files) on the SSoT (Global Board, PDCA files, Rules, Idea Lists).
 - You enter a new project or start a session and need context.
 - The user explicitly issues "close", "archive" (Archive/Close) to shutdown the current session.
 
@@ -87,9 +86,9 @@ python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
 
 ### 5. Viewing & Grooming the Global Board
 
-- **Viewing (The Artifact Projection)**:
-  **CRITICAL RULE: DO NOT use `cat` or `view_file` to read the global board or any other SSoT Markdown files if the user is asking to see them.** Raw markdown text has a terrible visual experience for the Boss.
-  Instead, you MUST use the Universal Projection mechanism:
+- **Viewing (Implicit Artifact Projection)**:
+  **CRITICAL RULE: DO NOT use `cat` or `view_file` to read the global board or any other SSoT Markdown files if the user is asking to look at them.** Raw markdown text has a terrible visual experience for the Boss.
+  If the Boss says "check the board", "see the idea list", "look at frenet progress", or explicitly "project", you MUST implicitly default to the Universal Projection mechanism. YOU DO NOT NEED THE BOSS TO EXPLICITLY SAY "PROJECT":
 
   ```bash
   python3 $HOME/workspace/.local_skills/workspace/scripts/project.py \
@@ -113,7 +112,7 @@ python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
 
 ### 6. Universal SSoT Projection (Any Document)
 
-This Projection power is not limited to the Global Board. If the user asks to see the "Idea List", a "PDCA tracker", or any other permanent `.md` file, you MUST use `project.py` in the exact same way to cast it into a rich Artifact UI panel.
+This Projection power is implicitly applied to ALL non-session documents. If the user asks to "see", "check", or "review" the "Idea List", a "PDCA tracker", or any other permanent `.md` file, you MUST seamlessly use `project.py` behind the scenes to cast it into a rich Artifact UI panel. Never serve raw text!
 
 ## ⚠️ CONSTITUTIONAL ANCHORS
 
