@@ -59,7 +59,7 @@ def sync():
     # No private VPN/Mail/SSH/DB passwords should ever leave Node 01.
     edge_allowed_prefixes = (
         "FEISHU_", "GOOGLE_", "GROQ_", "OPENAI_", "WANDB_", "HF_", "TAVILY_",
-        "GITHUB_", "VERTEX_", "KAGGLE_", "NVIDIA_"
+        "GITHUB_", "VERTEX_", "KAGGLE_", "NVIDIA_", "EXA_", "EMAIL_", "PERSONAL_"
     )
 
     for k, v in secrets.items():
