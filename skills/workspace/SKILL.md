@@ -14,6 +14,7 @@ The `workspace` skill governs the top-level cognitive state of the Agent. It enf
 You MUST execute this skill FIRST whenever:
 
 - The user asks ANY question about tasks, eg: "check global board", "check tasks", "what's next", "下一步做什么", "看大盘", "任务".
+- You need to leave a message, note, or error stack trace for another Agent session (`--board-write`).
 - You enter a new project or start a session and need context.
 - The user explicitly issues "close", "archive" (Archive/Close) to shutdown the current session.
 
@@ -42,18 +43,38 @@ python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
 ### 3. Archiving the Session Brain (Closure Protocol)
 
 When the user issues a termination or archival command (e.g., "close"):
-First, commit your completed local `task.md` checkmarks back to the SSoT:
+First, you MUST sync with the remote Git network to prevent cross-node brain split, then commit your completed local `task.md` checkmarks back to the SSoT, and push:
 
 ```bash
+cd $HOME/workspace && git pull --rebase --autostash --strategy-option=theirs && \
 python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
   --global_board /Users/roy-jd/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md \
-  --commit
+  --commit && \
+git commit -am "chore(board): sync global task progress" && git push
 ```
 
 Then, legally physically commit your temporary session artifacts into the persistent vault.
 
 ```bash
 python3 $HOME/workspace/.local_skills/workspace/scripts/archive.py --source $BRAIN_DIR
+```
+
+### 4. Cross-Session Whiteboard (Shared Memory)
+
+To leave an ephemeral note, stack trace, or warning for yourself in another session or for another Agent working on the same task, write to the whiteboard block of a specific task:
+
+```bash
+python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
+  --global_board /Users/roy-jd/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md \
+  --board-write "CaLaM" "Discovered CUDA OOM error; falling back to batch_size 4."
+```
+
+When a task is successfully resolved or the whiteboard is too cluttered, clear it:
+
+```bash
+python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
+  --global_board /Users/roy-jd/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md \
+  --board-clear "CaLaM"
 ```
 
 ## ⚠️ CONSTITUTIONAL ANCHORS
