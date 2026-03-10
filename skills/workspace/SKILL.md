@@ -134,6 +134,14 @@ This Projection power is implicitly applied to ALL non-session documents. If the
 
 > **Reminder:** Again, never use this on your own `task.md` or `walkthrough.md`. Native artifacts bypass this script.
 
+### 7. Core Experiments W&B Dashboard Sync
+
+To actively refresh the `00_CORE_EXPERIMENTS_DASHBOARD.md` metrics table with the absolute truth from Wages & Biases (without leaving a long-running daemon):
+
+```bash
+python3 ~/openclaw/skills/workspace/scripts/wandb_sync.py --api-key $WANDB_API_KEY --board ~/workspace/docs/projects_pdca/00_CORE_EXPERIMENTS_DASHBOARD.md
+```
+
 ## ⚠️ CONSTITUTIONAL ANCHORS
 
 - **Zero Content Pollution**: Never inject native LLM chat artifacts back into the pure `01_GLOBAL_TASK_BOARD.md` SSoT file. The board must remain clean markdown links only.
