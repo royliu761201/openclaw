@@ -45,7 +45,12 @@ python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
 
 **⚠️ THE DEATHBED CONFESSION RULE ⚠️**
 Before you execute the close/archive protocol:
-If you have any UNFINISHED tasks `[ ]` in your local `task.md` or if your exploration ended in an unresolved error, you MUST use `--board-write` (see Section 4) to leave a "Deathbed Confession" (a short summary of what blocked you or what to do next) on the global board for the next Agent. Do not die in silence!
+If you have any UNFINISHED tasks `[ ]` in your local `task.md` or if your exploration ended in an unresolved error, you MUST use `--board-write` (see Section 4) to leave a "Deathbed Confession" on the global board for the next Agent. Do not die in silence!
+**CRITICAL**: You are FORBIDDEN from writing vague generic messages like "It crashed." Your Deathbed Confession MUST strictly follow this dissection format:
+
+- `[L0 尸检]`: What zombie background processes are left? Is the GPU memory cleared?
+- `[L1 现场]`: What SSoT configuration/markdown file were you modifying when it failed?
+- `[L3 阻击点]`: What specific code line, bash error, or dependency dimension blocked you?
 
 When you are explicitly ordered to terminate or archive (e.g., "close"):
 First, you MUST sync with the remote Git network to prevent cross-node brain split, then commit your completed local `task.md` checkmarks back to the SSoT, and push:
@@ -95,16 +100,21 @@ python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
 
   For truly external `.md` files, proceed with:
 
+  For truly external `.md` files, proceed with:
+
   ```bash
   python3 $HOME/workspace/.local_skills/workspace/scripts/project.py \
-    --source /Users/roy-jd/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md \
-    --brain_dir $BRAIN_DIR
+    --source /Users/roy-jd/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md
   ```
 
-  After running this, the script will output an artifact anchor path (e.g. `GLOBAL_TASK_BOARD_PROJECTION.md`).
-  **⚠️ CRITICAL UI WAKEUP RULE:** Because the script generates the file in the background, the UI will not immediately display it. You MUST use your `write_to_file` or `replace_file_content` tool to add a dummy newline at the end of the generated `_PROJECTION.md` file to force the UI to register and render it.
+  **🚨 CRITICAL UI WAKEUP RULE (THE NEW ARCHITECTURE) 🚨**:
+  The `project.py` script no longer writes the file to disk by itself. Doing so caused UI blank screen errors because it bypassed the artifact registry.
+  Instead, `project.py` will print the massive string of the fully resolved Markdown text to the terminal `stdout`.
 
-  Only after triggering the UI render, you **MUST** immediately invoke the `notify_user` system tool, passing this generated `.md` file in the `PathsToReview` array. This triggers the native UI to render a rich interactive dashboard for the Boss.
+  You MUST capture this printed text from the terminal output, and then **explicitly use your `write_to_file` system tool** to write it to a new file named `[BASENAME]_PROJECTION.md`.
+  **CRITICAL**: You MUST set `IsArtifact=True` and provide an `ArtifactMetadata` payload when calling `write_to_file`. This is the ONLY way the UI will correctly register and render the projection without black screens.
+
+  Only after successfully writing the file via your tool, you **MUST** immediately invoke the `notify_user` system tool, passing the newly created absolute path in the `PathsToReview` array to cast it to the Boss.
 
 - **Grooming (Clean up)**: If the user asks you to "clean the board", "archive tasks", or "review tasks":
   1. DO NOT try to use a script. You are intelligent enough to do it manually.

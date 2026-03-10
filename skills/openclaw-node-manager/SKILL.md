@@ -137,7 +137,7 @@ OpenClaw V3.8 Source Code (`src/agents/tools/web-search.ts`) rigidly hardcodes o
 When re-configuring primary model IDs (e.g., in `openclaw_core.json`), you MUST use the exact, hardcoded strings recognized by the OpenClaw Engine (e.g. `google/gemini-3-flash-preview`).
 
 - **The Danger**: If you use an intuitive but illegal ID (like `gemini-3.0-flash-preview`, adding an extra `.0`), the Gateway will NOT crash. Instead, it forcefully triggers a quiet **Fallback** to the last cached lightweight model (e.g. `3.1-flash-lite`), causing you to mistakenly believe the primary brain swap was successful, but actual response capabilities remain at Lite tier.
-- **The PM2 Ghost Environment Trap**: Even if the underlying `openclaw_core.json` or `.openclaw_env` is updated via Git, the PM2 daemon (`openclaw-gateway`) continues to run with the old in-memory configuration. You are **ABSOLUTELY FORBIDDEN** from claiming a configuration change is successful until you execute `pm2 reload openclaw-gateway --update-env` on the target node. Failure to pass `--update-env` means the old environmental states persist eternally, leading to silent fallback fallacies.
+- **🚨 4.6 The Fallback Fallacy Law (PM2 Hot-Reload Mandate) 🚨**: Even if the underlying `openclaw_core.json` or `.openclaw_env` is updated via Git, the PM2 daemon (`openclaw-gateway`) continues to run with the old in-memory configuration. You are **ABSOLUTELY FORBIDDEN** from claiming a configuration change or SSoT sync is successful until you execute `pm2 reload openclaw-gateway --update-env` on the target node. Failure to pass `--update-env` means the old environmental states persist eternally, leading to silent fallback fallacies and ghost caches.
 
 ## ⚡ npmmirror 强挂 (CN Regional Acceleration)
 
@@ -162,4 +162,4 @@ This skill now includes two heavily armed python scripts for active health probi
       1. Open the offender's physical brain: `agent_workspaces/<offender_name>/.agent/IDENTITY.md` or `USER.md` on Node 01.
       2. Inject a strict Regex-like anti-hallucination constraint.
       3. Do NOT SSH and hot-edit Node 02. Push changes to Git SSOT: `git commit -m "fix(agent): apply pdca correction" && git push`.
-      4. Trigger the Zero-Downtime immunity shot over SSH: `ssh 02 "cd ~/workspace && git pull && pm2 reload openclaw-gateway --update-env"`. The Agent is instantly healed for the next conversation round without losing prior context.
+      4. Trigger the Zero-Downtime immunity shot over SSH. **MUST INCLUDE `--update-env`**: `ssh 02 "cd ~/workspace && git pull && pm2 reload openclaw-gateway --update-env"`. The Agent is instantly healed for the next conversation round without losing prior context.
