@@ -30,13 +30,13 @@ def copy_artifacts(src_dir, dest_dir):
                 else:
                     shutil.copy2(s, d)
                 copied += 1
-            print(f"✅ ARCHIVED_TO: {dest_dir} (Copied {copied} items)")
+            print(f"✅ 已物理归档至: {dest_dir} (共搬运 {copied} 个部件)")
         else:
-            print(f"❌ ERROR: Source directory {src_dir} does not exist.")
+            print(f"❌ 错误：兵营源目录 {src_dir} 不存在，无法归档。")
             sys.exit(1)
             
     except Exception as e:
-        print(f"❌ FATAL_ARCHIVE_ERROR: {str(e)}")
+        print(f"❌ 归档致命错误 (FATAL_ARCHIVE_ERROR): {str(e)}")
         sys.exit(1)
 
 
@@ -55,8 +55,8 @@ def main():
     
     dest_dir = os.path.join(home_dir, "workspace", "docs", "session_archives", folder_name)
     
-    print(f"Archiving session from: {src_dir}")
-    print(f"Targeting persistent vault: {dest_dir}")
+    print(f"开始强制抽取会话兵营: {src_dir}")
+    print(f"目标永久冻结金库: {dest_dir}")
     
     copy_artifacts(src_dir, dest_dir)
 
