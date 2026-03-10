@@ -83,6 +83,18 @@ python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
   --board-clear "CaLaM"
 ```
 
+### 5. Viewing & Grooming the Global Board
+
+- **Viewing**: If you just need to instantly scan the whole board to see what's happening, simply read the `01_GLOBAL_TASK_BOARD.md` file using your file viewer tools.
+- **Grooming (Clean up)**: If the user asks you to "clean the board", "archive tasks", or "review tasks":
+  1. DO NOT try to use a script. You are intelligent enough to do it manually.
+  2. Read `01_GLOBAL_TASK_BOARD.md` in full.
+  3. Identify old, closed tasks `[x]` that have been successfully integrated and are taking up space.
+  4. Manually cut these completed tasks from the active sections.
+  5. Paste them at the bottom under the `## 🗄️ Archived (Max 3-5)` section.
+  6. **CUTOFF RULE**: The `Archived` section must never contain more than 5 items. If merging new closed tasks exceeds 5, permanently delete the oldest ones.
+  7. Commit directly to git: `cd $HOME/workspace && git add docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md && git commit -m "chore(board): groom and archive completed global tasks"`
+
 ## ⚠️ CONSTITUTIONAL ANCHORS
 
 - **Zero Content Pollution**: Never inject native LLM chat artifacts back into the pure `01_GLOBAL_TASK_BOARD.md` SSoT file. The board must remain clean markdown links only.
