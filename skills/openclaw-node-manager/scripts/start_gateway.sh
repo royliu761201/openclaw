@@ -9,6 +9,4 @@ export OPENCLAW_CONFIG_PATH=~/workspace/config/openclaw_core.json
 
 cd ~/openclaw || exit 1
 npm run build
-# ALWAYS directly spawn openclaw.mjs under PM2. 
-# NEVER use scripts/run-node.mjs as it spawns child nodes without signal forwarding causing zombie orphans!
-pm2 start openclaw.mjs --name "openclaw-gateway" -- gateway
+pm2 start scripts/run-node.mjs --name "openclaw-gateway" -- gateway
