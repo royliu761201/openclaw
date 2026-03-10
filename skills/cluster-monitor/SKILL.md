@@ -34,15 +34,16 @@ Pings and validates the SSH availability and network routes between the disparat
 python3 $HOME/openclaw/skills/cluster-monitor/scripts/cluster_net_dashboard.py
 ```
 
-### 3. Zero-Idle GPU Daemon (The Long Poller)
+### 3. GPU Auto-Scheduler (The Active Consumer)
 
-A background daemon that periodically checks local `nvidia-smi` and fires `git push` or local execution tasks from a JSON queue if VRAM utilization stays below a threshold.
+An active scheduler that periodically checks local `nvidia-smi` and fires `git push` or local execution tasks from a JSON queue if VRAM utilization stays below a threshold.
+**Key Difference**: Unlike `gpu_status_board.py` which is a _passive, one-off_ readout tool, this is an _active, long-running_ action trigger.
 
 **🚨 THE NODE 01 DAEMON BAN 🚨**:
 You are STRICTLY FORBIDDEN from running this script on Node 01. It must only be deployed on the Edge Gateway (Node 02) or directly on a local GPU Server.
 
 ```bash
-python3 $HOME/openclaw/skills/cluster-monitor/scripts/zero_idle_daemon.py \
+python3 $HOME/openclaw/skills/cluster-monitor/scripts/gpu_auto_scheduler.py \
   --queue ~/workspace/projects_core/experiment_queue.json \
   --poll 1800 \
   --threshold 10.0
@@ -50,4 +51,4 @@ python3 $HOME/openclaw/skills/cluster-monitor/scripts/zero_idle_daemon.py \
 
 ## ⚠️ CONSTITUTIONAL ANCHORS
 
-- **Strategic Action Exemption**: While `cluster_net_dashboard` and `gpu_status_board` remain strictly read-only, the `zero_idle_daemon` possesses a specialized surgical exemption to execute pre-approved CLI commands from the `experiment_queue.json` solely to prevent expensive GPU idle time. It cannot arbitrarily modify parameters.
+- **Strategic Action Exemption**: While `cluster_net_dashboard` and `gpu_status_board` remain strictly read-only, the `gpu_auto_scheduler` possesses a specialized surgical exemption to execute pre-approved CLI commands from the `experiment_queue.json` solely to prevent expensive GPU idle time. It cannot arbitrarily modify parameters.
