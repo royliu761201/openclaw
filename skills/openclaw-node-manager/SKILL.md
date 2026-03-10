@@ -131,7 +131,12 @@ _Retrospective Issue_: The agent hallucinated that it could not fetch URLs due t
 OpenClaw V3.8 Source Code (`src/agents/tools/web-search.ts`) rigidly hardcodes only five acceptable providers.
 
 - **Legal Providers**: `["brave", "perplexity", "grok", "gemini", "kimi"]`.
-- **Mandate**: **Tavily is DEAD in this architecture.** NEVER attempt to configure or troubleshoot `"provider": "tavily"`. For keyless, zero-cost Google Grounding integration, universally standardized on `"provider": "gemini"` as the default web search engine.
+
+### 16. The Fallback Fallacy (模型静默降级通告)
+
+When re-configuring primary model IDs (e.g., in `openclaw_core.json`), you MUST use the exact, hardcoded strings recognized by the OpenClaw Engine (e.g. `google/gemini-3-flash-preview`).
+
+- **The Danger**: If you use an intuitive but illegal ID (like `gemini-3.0-flash-preview`, adding an extra `.0`), the Gateway will NOT crash. Instead, it forcefully triggers a quiet **Fallback** to the last cached lightweight model (e.g. `3.1-flash-lite`), causing you to mistakenly believe the primary brain swap was successful, but actual response capabilities remain at Lite tier.
 
 ## ⚡ npmmirror 强挂 (CN Regional Acceleration)
 
