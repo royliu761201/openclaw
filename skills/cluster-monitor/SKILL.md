@@ -60,6 +60,19 @@ The `experiment_queue.json` file is the shared contract between the Agent (Produ
   3. `COMPLETED` / `FAILED`: Terminal states.
 - **Garbage Collection (The 7-Day Prune)**: To prevent JSON bloat and UI crashing, the `gpu_auto_scheduler.py` automatically sweeps and deletes any `COMPLETED` or `FAILED` tasks that are older than 7 days during its poll cycle. No manual grooming is required.
 
+### 5. Task Generation (The Producer CLI)
+
+To safely inject tasks into the `experiment_queue.json` without risking JSON syntax corruption, both the Boss and the AI Agent **MUST** use the provided CLI:
+
+```bash
+python3 $HOME/openclaw/skills/cluster-monitor/scripts/enqueue_task.py \
+  --project "CaLaM" \
+  --command "conda run -n calam bash scripts/run_exp_02.sh" \
+  --dir "/Users/roy-jd/workspace/projects_core/calam"
+```
+
+_This instantly appends the payload with a generated UUID and an exact timestamp._
+
 ## ⚠️ CONSTITUTIONAL ANCHORS
 
 - **Strategic Action Exemption**: While `cluster_net_dashboard` and `gpu_status_board` remain strictly read-only, the `gpu_auto_scheduler` possesses a specialized surgical exemption to execute pre-approved CLI commands from the `experiment_queue.json` solely to prevent expensive GPU idle time. It cannot arbitrarily modify parameters.
