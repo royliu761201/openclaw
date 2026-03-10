@@ -97,7 +97,10 @@ python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
     --brain_dir $BRAIN_DIR
   ```
 
-  After running this, the script will output an artifact anchor path (e.g. `GLOBAL_TASK_BOARD_PROJECTION.md`). You **MUST** immediately invoke the `notify_user` system tool, passing this generated `.md` file in the `PathsToReview` array. This triggers the native UI to render a rich interactive dashboard for the Boss.
+  After running this, the script will output an artifact anchor path (e.g. `GLOBAL_TASK_BOARD_PROJECTION.md`).
+  **⚠️ CRITICAL UI WAKEUP RULE:** Because the script generates the file in the background, the UI will not immediately display it. You MUST use your `write_to_file` or `replace_file_content` tool to add a dummy newline at the end of the generated `_PROJECTION.md` file to force the UI to register and render it.
+
+  Only after triggering the UI render, you **MUST** immediately invoke the `notify_user` system tool, passing this generated `.md` file in the `PathsToReview` array. This triggers the native UI to render a rich interactive dashboard for the Boss.
 
 - **Grooming (Clean up)**: If the user asks you to "clean the board", "archive tasks", or "review tasks":
   1. DO NOT try to use a script. You are intelligent enough to do it manually.
