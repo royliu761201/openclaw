@@ -8,9 +8,9 @@ from pathlib import Path
 
 WORKSPACE_DIR = Path(os.path.expanduser("~/workspace"))
 RAW_DATA_DIR = WORKSPACE_DIR / "docs" / "research_ideation" / "radar_raw_data"
-ACADEMIC_SEARCH_PATH = os.path.expanduser("~/Documents/projects/openclaw/skills/academic-search/scripts/search_arxiv.py")
-TAVILY_SEARCH_PATH = os.path.expanduser("~/Documents/projects/openclaw/skills/tavily-search/scripts/search.mjs")
-EXA_SEARCH_PATH = os.path.expanduser("~/Documents/projects/openclaw/skills/exa-search/scripts/exa_search.py")
+ACADEMIC_SEARCH_PATH = os.path.expanduser("~/openclaw/skills/academic-search/scripts/search_arxiv.py")
+TAVILY_SEARCH_PATH = os.path.expanduser("~/openclaw/skills/tavily-search/scripts/search.mjs")
+EXA_SEARCH_PATH = os.path.expanduser("~/openclaw/skills/exa-search/scripts/exa_search.py")
 
 SEEN_INTEL_PATH = WORKSPACE_DIR / "docs" / "research_ideation" / "seen_intel.json"
 TARGETS_LIST_PATH = WORKSPACE_DIR / "docs" / "research_ideation" / "radar_targets.json"

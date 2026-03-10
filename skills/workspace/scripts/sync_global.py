@@ -51,7 +51,8 @@ def extract_section(content, keyword):
             
         if in_section:
             current_indent = len(line) - len(line.lstrip())
-            if line.strip() != "" and not line.startswith(" ") and not line.startswith("\t") and current_indent <= base_indent:
+            # FIX: Allow '>' prefix to not break the section context so Whiteboards sync down
+            if line.strip() != "" and not line.startswith(" ") and not line.startswith("\t") and not line.startswith(">") and current_indent <= base_indent:
                 break
             extracted.append(line)
             

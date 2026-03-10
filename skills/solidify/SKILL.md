@@ -37,7 +37,14 @@ If the finding dictates how a specific project (e.g., a paper repository) must b
 If the finding is a universal truth about the physical environment (e.g., Node IP changes, OpenClaw schema strictness):
 
 - Update the Knowledge Graph by appending a JSONL row to `~/workspace/docs/system_core/memory_core/ontology/graph.jsonl`.
-- Or, if it is a global constitutional law, append it to `~/workspace/docs/system_core/GEMINI_L1_CONSTITUTION.md` (via its soft link if applicable).
+- Or, if it is a global constitutional law, append it directly to `~/workspace/.clinerules`.
+
+### 4. Payload / Context Hydration (The Final Lock)
+
+If your reflection concludes that a specific system-level tool or script (like `skill-aligner` or `net-probe`) must be habitually accessible moving forward, it is **YOUR RESPONSIBILITY** to ensure it is physically mounted in the Agent's context.
+
+- Execute a shell command to symlink the tool into the active payload: `ln -sf ~/openclaw/skills/<skill-name> ~/.local_skills/<skill-name>`.
+- Without this physical mounting, your textual constitutional updates are useless, as subsequent Agents will not be equipped to follow them.
 
 ## ⚠️ CONSTITUTIONAL ANCHORS
 

@@ -22,7 +22,7 @@ Agents handling LaTeX tasks **must** adhere strictly to the following execution 
 To compile a project:
 
 ```sh
-python ~/Documents/projects/openclaw/skills/latex/scripts/latex_tool.py <path_to_main.tex>
+python ~/openclaw/skills/latex/scripts/latex_tool.py <path_to_main.tex>
 ```
 
 ### Interpretation of Results

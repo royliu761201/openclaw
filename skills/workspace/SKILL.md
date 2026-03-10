@@ -90,6 +90,11 @@ python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
   **CRITICAL RULE: DO NOT use `cat` or `view_file` to read the global board or any other SSoT Markdown files if the user is asking to look at them.** Raw markdown text has a terrible visual experience for the Boss.
   If the Boss says "check the board", "see the idea list", "look at frenet progress", or explicitly "project", you MUST implicitly default to the Universal Projection mechanism. YOU DO NOT NEED THE BOSS TO EXPLICITLY SAY "PROJECT":
 
+  **🚨 THE ANTI-REDUNDANCY LAW (NO NATIVE ARTIFACT PROJECTION) 🚨**:
+  You are STRICTLY FORBIDDEN from using `project.py` on any files that already live inside your current `$BRAIN_DIR` session folder (e.g., `task.md`, `walkthrough.md`, `implementation_plan.md`). These native artifacts already possess intrinsic UI rendering rights. If the user asks to see them, simply pass their absolute paths directly to the `PathsToReview` array of the `notify_user` tool! Do NOT create a redundant `_PROJECTION.md` for them!
+
+  For truly external `.md` files, proceed with:
+
   ```bash
   python3 $HOME/workspace/.local_skills/workspace/scripts/project.py \
     --source /Users/roy-jd/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md \
@@ -113,6 +118,8 @@ python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
 ### 6. Universal SSoT Projection (Any Document)
 
 This Projection power is implicitly applied to ALL non-session documents. If the user asks to "see", "check", or "review" the "Idea List", a "PDCA tracker", or any other permanent `.md` file, you MUST seamlessly use `project.py` behind the scenes to cast it into a rich Artifact UI panel. Never serve raw text!
+
+> **Reminder:** Again, never use this on your own `task.md` or `walkthrough.md`. Native artifacts bypass this script.
 
 ## ⚠️ CONSTITUTIONAL ANCHORS
 
