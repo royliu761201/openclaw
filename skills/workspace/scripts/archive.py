@@ -15,22 +15,24 @@ def copy_artifacts(src_dir, dest_dir):
         os.makedirs(dest_dir, exist_ok=True)
         
     copied = 0
-    # Let's target the exact artifacts (.md, .json, .log, .txt) to avoid blindly 
-    # copying everything including temp scratchpads, but since gems generate mostly 
-    # .md files in the artifact dir, copying the whole dir except certain dirs is also an option.
-    # To be totally safe and not lose anything, we'll try to just copy the whole directory recursively.
+    # The Filtered Vacuum: Only whitelisted extensions are allowed into the permanent vault.
+    # No media, no giant logs, no temp bins.
+    ALLOWED_EXTS = ('.md', '.json', '.py', '.sh', '.txt')
     
     try:
         if os.path.exists(src_dir):
-            for item in os.listdir(src_dir):
-                s = os.path.join(src_dir, item)
-                d = os.path.join(dest_dir, item)
-                if os.path.isdir(s):
-                    shutil.copytree(s, d, dirs_exist_ok=True)
-                else:
-                    shutil.copy2(s, d)
-                copied += 1
-            print(f"✅ 已物理归档至: {dest_dir} (共搬运 {copied} 个部件)")
+            for root, dirs, files in os.walk(src_dir):
+                for file in files:
+                    if file.endswith(ALLOWED_EXTS):
+                        src_path = os.path.join(root, file)
+                        # We flatten the structure to just keep the core artifacts in one folder
+                        dest_path = os.path.join(dest_dir, file)
+                        shutil.copy2(src_path, dest_path)
+                        copied += 1
+            print(f"✅ 已物理归档至: {dest_dir} (共搬运 {copied} 个核心净件)")
+            print(f"==========================================")
+            print(f"🔒 您的金库提取凭证锚点为: {os.path.basename(dest_dir)}")
+            print(f"==========================================")
         else:
             print(f"❌ 错误：兵营源目录 {src_dir} 不存在，无法归档。")
             sys.exit(1)

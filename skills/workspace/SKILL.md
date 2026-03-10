@@ -42,7 +42,11 @@ python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
 
 ### 3. Archiving the Session Brain (Closure Protocol)
 
-When the user issues a termination or archival command (e.g., "close"):
+**⚠️ THE DEATHBED CONFESSION RULE ⚠️**
+Before you execute the close/archive protocol:
+If you have any UNFINISHED tasks `[ ]` in your local `task.md` or if your exploration ended in an unresolved error, you MUST use `--board-write` (see Section 4) to leave a "Deathbed Confession" (a short summary of what blocked you or what to do next) on the global board for the next Agent. Do not die in silence!
+
+When you are explicitly ordered to terminate or archive (e.g., "close"):
 First, you MUST sync with the remote Git network to prevent cross-node brain split, then commit your completed local `task.md` checkmarks back to the SSoT, and push:
 
 ```bash
@@ -53,11 +57,13 @@ python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
 git commit -am "chore(board): sync global task progress" && git push
 ```
 
-Then, legally physically commit your temporary session artifacts into the persistent vault.
+Then, legally physically commit your temporary session artifacts into the persistent vault. The script will output a `Vault Receipt` anchor.
 
 ```bash
 python3 $HOME/workspace/.local_skills/workspace/scripts/archive.py --source $BRAIN_DIR
 ```
+
+**REPORTING**: You must explicitly report the `Vault Receipt` (e.g., `session_20260310_b3f9...`) to the user as your final act before shutdown.
 
 ### 4. Cross-Session Whiteboard (Shared Memory)
 
