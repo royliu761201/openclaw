@@ -21,19 +21,39 @@ You MUST execute this skill FIRST whenever:
 
 ### 1. Reading the Global Board (Task Synchronization)
 
-Always parse the authoritative SSoT task board to inject the global scope into your local session `task.md`.
+When the user specifies a global task (e.g. "Work on global task CaLaM"), isolate that task from the SSoT board:
 
 ```bash
-python3 $HOME/openclaw/skills/workspace/scripts/load_global_task.py \
-  --global_board /Users/roy-jd/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md
+python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
+  --global_board /Users/roy-jd/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md \
+  --checkout "CaLaM"
 ```
 
-### 2. Archiving the Session Brain (Closure Protocol)
+### 2. Creating a new Global Task
 
-When the user issues a termination or archival command (e.g., "close"), physically commit your temporary session artifacts into the persistent vault.
+When the user explicitly creates a task (e.g., "Create a global task to investigate Node 02 speed"):
 
 ```bash
-python3 $HOME/openclaw/skills/workspace/scripts/archive.py --source $BRAIN_DIR
+python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
+  --global_board /Users/roy-jd/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md \
+  --create "Investigate Node 02 speed" --category "System Infrastructure"
+```
+
+### 3. Archiving the Session Brain (Closure Protocol)
+
+When the user issues a termination or archival command (e.g., "close"):
+First, commit your completed local `task.md` checkmarks back to the SSoT:
+
+```bash
+python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
+  --global_board /Users/roy-jd/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md \
+  --commit
+```
+
+Then, legally physically commit your temporary session artifacts into the persistent vault.
+
+```bash
+python3 $HOME/workspace/.local_skills/workspace/scripts/archive.py --source $BRAIN_DIR
 ```
 
 ## ⚠️ CONSTITUTIONAL ANCHORS
