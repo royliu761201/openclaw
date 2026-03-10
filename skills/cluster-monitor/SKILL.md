@@ -49,6 +49,17 @@ python3 $HOME/openclaw/skills/cluster-monitor/scripts/gpu_auto_scheduler.py \
   --threshold 10.0
 ```
 
+### 4. Queue Lifecycle & Schema (Self-Managing JSON)
+
+The `experiment_queue.json` file is the shared contract between the Agent (Producer) and the Daemon (Consumer).
+
+- **The Schema**: Every task must be an object containing: `id` (uuid), `project` (str), `command` (str), `directory` (str), `status` (str), and `created_at` (ISO-8601).
+- **The State Machine**:
+  1. `PENDING`: Appended by the Agent/Boss. Waiting to be executed.
+  2. `RUNNING`: Claimed by the Daemon via locking.
+  3. `COMPLETED` / `FAILED`: Terminal states.
+- **Garbage Collection (The 7-Day Prune)**: To prevent JSON bloat and UI crashing, the `gpu_auto_scheduler.py` automatically sweeps and deletes any `COMPLETED` or `FAILED` tasks that are older than 7 days during its poll cycle. No manual grooming is required.
+
 ## ⚠️ CONSTITUTIONAL ANCHORS
 
 - **Strategic Action Exemption**: While `cluster_net_dashboard` and `gpu_status_board` remain strictly read-only, the `gpu_auto_scheduler` possesses a specialized surgical exemption to execute pre-approved CLI commands from the `experiment_queue.json` solely to prevent expensive GPU idle time. It cannot arbitrarily modify parameters.

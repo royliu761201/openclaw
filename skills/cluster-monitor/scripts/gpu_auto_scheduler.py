@@ -68,11 +68,47 @@ def trigger_task(task):
     except Exception as e:
         logging.error(f"Failed to launch task: {str(e)}")
 
+def prune_queue(queue_path):
+    """Garbage collects tasks that are COMPLETED or FAILED and older than 7 days bounds."""
+    if not os.path.exists(queue_path):
+        return
+        
+    try:
+        with open(queue_path, 'r') as f:
+            data = json.load(f)
+            
+        original_count = len(data.get("tasks", []))
+        if original_count == 0:
+            return
+            
+        now = datetime.now()
+        new_tasks = []
+        
+        for task in data.get("tasks", []):
+            if task.get("status") in ["COMPLETED", "FAILED"]:
+                created_str = task.get("created_at", "")
+                try:
+                    created_dt = datetime.fromisoformat(created_str)
+                    if (now - created_dt).days >= 7:
+                        continue # Prune this item
+                except Exception:
+                    pass
+            new_tasks.append(task)
+            
+        if len(new_tasks) < original_count:
+            logging.info(f"🧹 GC Triggered: Pruned {original_count - len(new_tasks)} old tasks from queue.")
+            data["tasks"] = new_tasks
+            with open(queue_path, 'w') as f:
+                json.dump(data, f, indent=4)
+                
+    except Exception as e:
+        logging.error(f"Queue pruning failed: {str(e)}")
 
 def daemon_loop(queue_path, vram_threshold, sleep_interval):
     logging.info(f"Zero-Idle Poll Active. Monitoring threshold: <{vram_threshold}% util. Polling every {sleep_interval}s.")
     
     while True:
+        prune_queue(queue_path)
         utilization = check_nvidia_smi()
         
         logging.info(f"Current GPU Utilization: {utilization}%")
