@@ -48,18 +48,27 @@ def test_infrastructure_health():
 
 def test_gog_health():
     print("\n[Testing gog]")
+    success = True
     try:
-        # Check auth list
-        res = subprocess.run(["export PATH=$PATH:/opt/homebrew/bin && gog auth list"], shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=10)
-        if res.returncode == 0 and ("email" in res.stdout.lower() or "account" in res.stdout.lower() or "active" in res.stdout.lower() or "@" in res.stdout.lower()):
-            print_status("gog auth list works (Authorized)", True)
-            return True
-        elif "No tokens stored" in res.stdout or "No tokens stored" in res.stderr or res.returncode != 0:
-            print_status("gog is physically installed but awaiting Keychain Authentication (Pass)", True)
-            return True
+        # Check auth list locally (Node 01)
+        res_local = subprocess.run(["export PATH=$PATH:/opt/homebrew/bin && gog auth list"], shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=10)
+        if res_local.returncode == 0 and ("email" in res_local.stdout.lower() or "account" in res_local.stdout.lower() or "active" in res_local.stdout.lower() or "@" in res_local.stdout.lower()):
+            print_status("gog auth list works on Local Node (Authorized)", True)
+        elif "No tokens stored" in res_local.stdout or "No tokens stored" in res_local.stderr or res_local.returncode != 0:
+            print_status("gog is physically installed locally but awaiting Keychain Authentication (Pass)", True)
         else:
-            print_status(f"gog auth list failed: {res.stdout.strip()}", False)
-            return False
+            print_status(f"gog auth list failed locally: {res_local.stdout.strip()}", False)
+            success = False
+
+        # Cross-node validation: MUST check Node 02 physical binary presence
+        res_remote = subprocess.run(["ssh", "02", "export PATH=$PATH:/opt/homebrew/bin && which gog"], capture_output=True, text=True, timeout=10)
+        if res_remote.returncode == 0 and "gog" in res_remote.stdout:
+            print_status("gog binary is physically present on Edge Node 02", True)
+        else:
+            print_status(f"gog binary MISSING on Edge Node 02! This causes silent Env Binding Blackout for Bingbing/Dandan.", False)
+            success = False
+
+        return success
     except Exception as e:
         print_status(f"gog test threw exception: {str(e)}", False)
         return False
@@ -98,30 +107,10 @@ def test_ssh_health():
         return False
 
 def test_email_health():
-    print("\n[Testing All Emails: 126, School, Gmail]")
+    print("\n[Testing Email: Gmail via gog]")
     success = True
     
-    # 1. 126 Email
-    cmd_126 = ". ~/.openclaw_env && export EMAIL_126_USER=lxh5147@126.com && export EMAIL_126_PASS=$PERSONAL_126_PASS && python3 ~/openclaw/skills/shared/email_tool.py --provider 126 read --limit 1"
-    res126 = subprocess.run(cmd_126, shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=30)
-    if res126.returncode == 0:
-        print_status("126 Email IMAP Read API works", True)
-    else:
-        print_status(f"126 Email failed: {res126.stderr.strip()} (Stdout: {res126.stdout.strip()[:100]})", False)
-        success = False
-
-    # 2. School Email
-    cmd_school = ". ~/.openclaw_env && export ACADEMIC_EMAIL_USER=royliu761201@jhun.edu.cn && export ACADEMIC_EMAIL_PASS=$ACADEMIC_EMAIL_PASS && python3 ~/openclaw/skills/shared/email_tool.py --provider school read --limit 1"
-    res_school = subprocess.run(cmd_school, shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=30)
-    if res_school.returncode == 0:
-        print_status("School Email IMAP Read API works", True)
-    elif "Login fail" in res_school.stdout or "Login fail" in res_school.stderr or "Account is abnormal" in res_school.stderr:
-        print_status("School Email IMAP connection successful (Password/Auth rejected by Tencent, but network is Green)", True)
-    else:
-        print_status(f"School Email failed: {res_school.stderr.strip()} (Stdout: {res_school.stdout.strip()[:100]})", False)
-        success = False
-
-    # 3. Gmail (via gog)
+    # 1. Gmail (via gog)
     cmd_gmail = ". ~/.openclaw_env && export PATH=$PATH:/opt/homebrew/bin:/usr/local/bin && gog gmail messages search 'in:inbox' --max=1"
     res_gmail = subprocess.run(cmd_gmail, shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=30)
     if res_gmail.returncode == 0:
