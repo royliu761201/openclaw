@@ -3,21 +3,23 @@
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
+# --- ENVIRONMENT INJECTION (The True SSoT) ---
+# Natively source pre-distributed secrets and core paths on the node
+if [ ! -f ~/.openclaw_env ]; then
+    echo "❌ [CRITICAL] 严重违规！底层密钥库 ~/.openclaw_env 不存在！进程已启动自毁..."
+    exit 1
+fi
+source ~/.openclaw_env
+
 # --- SSoT DEFENSE MATRIX (Fail-Fast Scorched Earth) ---
-export OPENCLAW_CONFIG_PATH="$HOME/workspace/config/openclaw_core.json"
-
-# 1. 物理焦土：粉碎所有试图引起降级误读的兜底点位
-rm -f ~/.openclaw/openclaw.json ~/openclaw/config/openclaw_core.json ~/.openclaw/auth-profiles.json 2>/dev/null || true
-
-# 2. 存在断言：严禁脱离大盘环境自启
-if [ ! -f "$OPENCLAW_CONFIG_PATH" ]; then
-    echo "❌ [CRITICAL] 严重违规！SSoT 主干配置文件未正确指向 $OPENCLAW_CONFIG_PATH 或文件遗失！进程已启动自毁..."
+# 1. 存在断言：严禁脱离大盘环境自启。完全信任上方的 source 注入。
+if [ -z "$OPENCLAW_CONFIG_PATH" ] || [ ! -f "$OPENCLAW_CONFIG_PATH" ]; then
+    echo "❌ [CRITICAL] 严重违规！SSoT 主干配置路径 \$OPENCLAW_CONFIG_PATH ($OPENCLAW_CONFIG_PATH) 解析失败或物理文件遗失！进程已自毁..."
     exit 1
 fi
 
-# --- ENVIRONMENT & ENV INJECTION ---
-# Natively source pre-distributed secrets on the sandbox node
-source ~/.openclaw_env
+# 2. 物理焦土：粉碎所有试图引起降级误读的兜底点位
+rm -f ~/.openclaw/openclaw.json ~/openclaw/config/openclaw_core.json ~/.openclaw/auth-profiles.json 2>/dev/null || true
 
 cd ~/openclaw || exit 1
 
