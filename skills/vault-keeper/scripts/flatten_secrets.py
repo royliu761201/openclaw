@@ -1,8 +1,8 @@
 import json
 import os
 
-OLD_SECRETS_PATH = "/Users/roy-jd/Documents/projects/secrets.json"
-NEW_SECRETS_PATH = "/Users/roy-jd/Documents/projects/secrets_flat.json"
+OLD_SECRETS_PATH = os.environ.get("OPENCLAW_OLD_SECRETS_JSON", os.path.expanduser("~/Documents/projects/secrets.json"))
+NEW_SECRETS_PATH = os.environ.get("OPENCLAW_SECRETS_JSON", os.path.expanduser("~/workspace/.secrets/secrets_flat.json"))
 
 def flatten_secrets():
     print("Flattening secrets.json into a key-value format...")
