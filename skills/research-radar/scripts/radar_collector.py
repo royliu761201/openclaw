@@ -7,6 +7,24 @@ import datetime
 from pathlib import Path
 
 import shutil
+import re
+
+def load_openclaw_env():
+    # Cron environments are absolutely bare. We explicitly parse the Node's SSoT env file.
+    env_file = Path(os.path.expanduser("~/.openclaw_env"))
+    if env_file.exists():
+        with open(env_file, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("export "):
+                    parts = line[7:].split("=", 1)
+                    if len(parts) == 2:
+                        key, val = parts[0].strip(), parts[1].strip()
+                        # Remove bounding quotes
+                        val = re.sub(r'^["\']|["\']$', '', val)
+                        os.environ[key] = val
+
+load_openclaw_env()
 
 WORKSPACE_DIR = Path(os.path.expanduser("~/workspace"))
 RAW_DATA_DIR = WORKSPACE_DIR / "docs" / "research_ideation" / "radar_raw_data"
@@ -22,7 +40,10 @@ if not NODE_BIN:
             NODE_BIN = path
             break
 if not NODE_BIN:
-    NODE_BIN = "node" # Fallback to bare command, though it will likely fail in cron if all else fails
+    NODE_BIN = "node"
+
+# SSoT ONLY: Use the python interpreter that invoked us
+PYTHON_BIN = sys.executable
 
 SEEN_INTEL_PATH = WORKSPACE_DIR / "docs" / "research_ideation" / "seen_intel.json"
 TARGETS_LIST_PATH = WORKSPACE_DIR / "docs" / "research_ideation" / "radar_targets.json"
@@ -50,7 +71,7 @@ def save_seen_intel(data):
 def run_search_arxiv(query: str, max_results: int = 5) -> str:
     try:
         result = subprocess.run(
-            ["python3", ACADEMIC_SEARCH_PATH, "search", "--query", query, "--max_results", str(max_results), "--sort_by", "date"],
+            [PYTHON_BIN, ACADEMIC_SEARCH_PATH, "search", "--query", query, "--max_results", str(max_results), "--sort_by", "date"],
             capture_output=True, text=True, check=True
         )
         return result.stdout
@@ -74,7 +95,7 @@ def run_search_tavily(query: str, max_results: int = 3) -> str:
 def run_search_exa(query: str, max_results: int = 3) -> str:
     try:
         result = subprocess.run(
-            ["python3", EXA_SEARCH_PATH, "web", query, "--num", str(max_results)],
+            [PYTHON_BIN, EXA_SEARCH_PATH, "web", query, "--num", str(max_results)],
             capture_output=True, text=True, check=True
         )
         return result.stdout
