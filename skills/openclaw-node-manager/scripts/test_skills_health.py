@@ -61,7 +61,12 @@ def test_gog_health():
             success = False
 
         # Cross-node validation: MUST check Node 02 physical binary presence
-        res_remote = subprocess.run(["ssh", "02", "export PATH=$PATH:/opt/homebrew/bin && which gog"], capture_output=True, text=True, timeout=10)
+        is_node_02 = "002" in socket.gethostname() or "node02" in socket.gethostname()
+        if is_node_02:
+            res_remote = subprocess.run(["export PATH=$PATH:/opt/homebrew/bin && which gog"], shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=10)
+        else:
+            res_remote = subprocess.run(["ssh", "02", "export PATH=$PATH:/opt/homebrew/bin && which gog"], capture_output=True, text=True, timeout=10)
+            
         if res_remote.returncode == 0 and "gog" in res_remote.stdout:
             print_status("gog binary is physically present on Edge Node 02", True)
         else:
