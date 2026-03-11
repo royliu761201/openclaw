@@ -17,15 +17,19 @@ def copy_artifacts(src_dir, dest_dir):
         os.makedirs(dest_dir, exist_ok=True)
         
     copied = 0
-    # The Filtered Vacuum: Only whitelisted extensions are allowed into the permanent vault.
-    # No media, no giant logs, no temp bins.
-    ALLOWED_EXTS = ('.md', '.json', '.py', '.sh', '.txt')
+    # The Filtered Vacuum: Only whitelisted core files are allowed into the permanent vault.
+    # Exclude all UI projections, intermediate states, and media.
+    import re
+    
+    # 允许: 标准 md (但排除 PROJECTION), json, py, sh, txt
+    # 拦截: 任何包含 .resolved 的文件, 任何以 _PROJECTION.md 结尾的文件, 任何多媒体档案
+    valid_patt = re.compile(r'^(?!.*_PROJECTION\.md$)(?!.*\.resolved).*?\.(md|json|py|sh|txt)$', re.IGNORECASE)
     
     try:
         if os.path.exists(src_dir):
             for root, dirs, files in os.walk(src_dir):
                 for file in files:
-                    if file.endswith(ALLOWED_EXTS):
+                    if valid_patt.match(file):
                         src_path = os.path.join(root, file)
                         # We flatten the structure to just keep the core artifacts in one folder
                         dest_path = os.path.join(dest_dir, file)
