@@ -28,10 +28,6 @@ def flatten_secrets():
         # Global Auth
         "GLOBAL_SSH_PASS": old.get("global_ssh_pass") or old.get("GLOBAL_SSH_PASS"),
         "GPU_SERVER_PASS": old.get("gpu_server_pass") or old.get("GPU_SERVER_PASS"),
-        "VPN_ACCOUNT_PRI": old.get("vpn_account_pri") or old.get("VPN_ACCOUNT_PRI"),
-        "VPN_PASSWORD_PRI": old.get("vpn_password_pri") or old.get("VPN_PASSWORD_PRI"),
-        "VPN_ACCOUNT_BAK": old.get("vpn_account_bak") or old.get("VPN_ACCOUNT_BAK"),
-        "VPN_PASSWORD_BAK": old.get("vpn_password_bak") or old.get("VPN_PASSWORD_BAK"),
         
         # Apps
         "KAGGLE_XIAOHUALIU_KEY": old.get("kaggle", {}).get("xiaohualiu"),
