@@ -40,14 +40,25 @@ EXA_SEARCH_PATH = os.path.expanduser("~/openclaw/skills/exa-search/scripts/exa_s
 
 # Resolve node binary for cron execution
 NODE_BIN = shutil.which("node")
+BASE_PATHS = ["/opt/homebrew/bin/node", "/usr/local/bin/node"]
 if not NODE_BIN:
-    for path in ["/opt/homebrew/bin/node", "/usr/local/bin/node"]:
+    for path in BASE_PATHS:
         if os.path.isfile(path) and os.access(path, os.X_OK):
             NODE_BIN = path
             break
 if not NODE_BIN:
+    import glob
+    nvm_nodes = glob.glob(os.path.expanduser("~/.nvm/versions/node/*/bin/node"))
+    if nvm_nodes:
+        NODE_BIN = sorted(nvm_nodes)[-1]
+
+if not NODE_BIN:
     print("❌ FATAL [Fail-Early]: 'node' binary not found. Research Radar cannot execute Tavily.")
     sys.exit(1)
+
+# CRITICAL FIX for nested scripts (exa_search.py calls node implicitly through `#!/usr/bin/env node` inside mcporter)
+# We must inject the discovered Node binary directory back into OS PATH so subprocesses can find it.
+os.environ["PATH"] = os.path.dirname(NODE_BIN) + os.pathsep + os.environ.get("PATH", "")
 
 # SSoT ONLY: Use the python interpreter that invoked us
 PYTHON_BIN = sys.executable
