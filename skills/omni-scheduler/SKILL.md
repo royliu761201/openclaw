@@ -81,7 +81,7 @@ To safely inject tasks into the `experiment_queue.json` without risking JSON syn
 python3 $HOME/openclaw/skills/omni-scheduler/scripts/enqueue_task.py \
   --project "CaLaM" \
   --command "conda run -n calam bash scripts/run_exp_02.sh" \
-  --dir "/Users/roy-jd/workspace/projects_core/calam"
+  --dir "~/workspace/projects_core/calam"
 ```
 
 _This instantly appends the payload with a generated UUID and an exact timestamp._

@@ -86,7 +86,8 @@ def evaluate_with_llm(agent_id, transcript, api_key):
 
 def generate_report(results):
     date_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    report_path = f"/Users/roy-jd/workspace/docs/projects_pdca/PDCA_Report_{date_str}.md"
+    import os
+    report_path = os.path.expanduser(f"~/workspace/docs/projects_pdca/PDCA_Report_{date_str}.md")
     
     os.makedirs(os.path.dirname(report_path), exist_ok=True)
     

@@ -20,8 +20,9 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-DEFAULT_GRAPH_PATH = "/Users/roy-jd/workspace/docs/system_core/memory_core/ontology/graph.jsonl"
-DEFAULT_SCHEMA_PATH = "/Users/roy-jd/workspace/docs/system_core/memory_core/ontology/schema.yaml"
+import os
+DEFAULT_GRAPH_PATH = os.path.expanduser("~/workspace/docs/system_core/memory_core/ontology/graph.jsonl")
+DEFAULT_SCHEMA_PATH = os.path.expanduser("~/workspace/docs/system_core/memory_core/ontology/schema.yaml")
 
 
 def resolve_safe_path(

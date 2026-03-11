@@ -155,7 +155,7 @@ This skill now includes two heavily armed python scripts for active health probi
 
 2.  **`test_skills_health.py` (The Proactive Skill Validation Pipeline)**
     - **Function**: A comprehensive automated validation suite testing `gog`, `kaggle`, `ssh`, `email`, `tavily`, `gemini`, and optionally `exa` across the grid.
-    - **Mandatory Trigger Rule**: While this test can be manually invoked on demand, **any Agent executing a major configuration update, or triggering a "PDCA Loop" (Plan-Do-Check-Act) involving system changes, MUST proactively execute `/Users/roy-jd/workspace/.local_skills/openclaw-node-manager/scripts/test_skills_health.py` as a mandatory validation step** to ensure the ground-truth tool capabilities are intact before concluding the task.
+    - **Mandatory Trigger Rule**: While this test can be manually invoked on demand, **any Agent executing a major configuration update, or triggering a "PDCA Loop" (Plan-Do-Check-Act) involving system changes, MUST proactively execute `~/workspace/.local_skills/openclaw-node-manager/scripts/test_skills_health.py` as a mandatory validation step** to ensure the ground-truth tool capabilities are intact before concluding the task.
 
 3.  **`audit_sessions.py` (The LLM Judge)**
     - **Function**: Breaks the black box of Agent-User communication. It reaches into Node 02's `~/.openclaw/agents/<id>/sessions/*.jsonl` to extract recent raw dialogue, passing it to Gemini via the `GOOGLE_API_KEY` mapped in `~/.openclaw_env`. Gemini evaluates the agents on 3 strict criteria: Hallucination/Incompetence, PURE Law Compliance, and PDCA prompt suggestions.
@@ -193,7 +193,7 @@ _Retrospective Issue_: Probes running on Node 01 falsely reported Success for No
 ### 18. The White-Box Config Split-Brain Trap (OPENCLAW_CONFIG_PATH 失忆症)
 
 _Context_: When deploying the SSoT blueprint (`openclaw_core.json`) to Node 02, injecting the `OPENCLAW_CONFIG_PATH` directly into the `openclaw-gateway` PM2 ecosystem is NOT sufficient. The CLI `node scripts/run-node.mjs` operates in a distinct headless SSH bash process. If the CLI shell does not explicitly source `~/.openclaw_env`, it will fall back to `~/.openclaw/config/openclaw.json`, resulting in an `Unknown agent id` error.
-_Even worse_: If you mechanically patch `~/.openclaw_env` but inject the legacy default path instead of the SSoT path (`/Users/roy-002/workspace/config/openclaw_core.json`), you manually sever the SSoT link.
+_Even worse_: If you mechanically patch `~/.openclaw_env` but inject the legacy default path instead of the SSoT path (`~/workspace/config/openclaw_core.json`), you manually sever the SSoT link.
 
 - **The White-Box Audit Loop (Mandatory)**:
   You MUST NEVER blindly guess why an Agent ID is unknown. You MUST perform a mechanical white-box trace:

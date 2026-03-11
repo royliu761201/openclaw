@@ -27,7 +27,7 @@ When the user specifies a global task (e.g. "Work on global task CaLaM"), isolat
 
 ```bash
 python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
-  --global_board /Users/roy-jd/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md \
+  --global_board ~/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md \
   --checkout "CaLaM"
 ```
 
@@ -37,7 +37,7 @@ When the user explicitly creates a task (e.g., "Create a global task to investig
 
 ```bash
 python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
-  --global_board /Users/roy-jd/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md \
+  --global_board ~/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md \
   --create "Investigate Node 02 speed" --category "System Infrastructure"
 ```
 
@@ -58,7 +58,7 @@ First, you MUST sync with the remote Git network to prevent cross-node brain spl
 ```bash
 cd $HOME/workspace && git pull --rebase --autostash --strategy-option=theirs && \
 python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
-  --global_board /Users/roy-jd/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md \
+  --global_board ~/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md \
   --commit && \
 git commit -am "chore(board): sync global task progress" && git push
 ```
@@ -77,7 +77,7 @@ To leave an ephemeral note, stack trace, or warning for yourself in another sess
 
 ```bash
 python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
-  --global_board /Users/roy-jd/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md \
+  --global_board ~/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md \
   --board-write "CaLaM" "Discovered CUDA OOM error; falling back to batch_size 4."
 ```
 
@@ -85,7 +85,7 @@ When a task is successfully resolved or the whiteboard is too cluttered, clear i
 
 ```bash
 python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
-  --global_board /Users/roy-jd/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md \
+  --global_board ~/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md \
   --board-clear "CaLaM"
 ```
 
@@ -107,7 +107,7 @@ python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
 
   ```bash
   python3 $HOME/workspace/.local_skills/workspace/scripts/project.py \
-    --source /Users/roy-jd/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md
+    --source ~/workspace/docs/system_core/memory_core/01_GLOBAL_TASK_BOARD.md
   ```
 
   **🚨 CRITICAL UI WAKEUP RULE (THE NEW ARCHITECTURE) 🚨**:
