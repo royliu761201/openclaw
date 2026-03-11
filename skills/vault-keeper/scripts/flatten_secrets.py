@@ -26,12 +26,12 @@ def flatten_secrets():
         "GROQ_API_KEY": old.get("groq", {}).get("keys", [""])[0],
         
         # Global Auth
-        "GLOBAL_SSH_PASS": "~lxh797612011012",
-        "GPU_SERVER_PASS": "d$LgO7gljR0q9oWH$p!s%0H1WyNY8pnl",
-        "VPN_ACCOUNT_PRI": "SKL03",
-        "VPN_PASSWORD_PRI": "Skl@2026",
-        "VPN_ACCOUNT_BAK": "SKL16",
-        "VPN_PASSWORD_BAK": "Skl@2025",
+        "GLOBAL_SSH_PASS": old.get("global_ssh_pass") or old.get("GLOBAL_SSH_PASS"),
+        "GPU_SERVER_PASS": old.get("gpu_server_pass") or old.get("GPU_SERVER_PASS"),
+        "VPN_ACCOUNT_PRI": old.get("vpn_account_pri") or old.get("VPN_ACCOUNT_PRI"),
+        "VPN_PASSWORD_PRI": old.get("vpn_password_pri") or old.get("VPN_PASSWORD_PRI"),
+        "VPN_ACCOUNT_BAK": old.get("vpn_account_bak") or old.get("VPN_ACCOUNT_BAK"),
+        "VPN_PASSWORD_BAK": old.get("vpn_password_bak") or old.get("VPN_PASSWORD_BAK"),
         
         # Apps
         "KAGGLE_XIAOHUALIU_KEY": old.get("kaggle", {}).get("xiaohualiu"),
