@@ -139,12 +139,20 @@ def collect_raw_data():
                 seen_db['web_urls'].append(u)
                 new_items_found = True
                 
-        # If json from ArXiv, we could precisely filter, but for raw markdown, 
-        # dropping the entire chunk if NO new items are found is the safest physical block.
+        # [V9 EVOLUTION]: Relax front-line filtering. 
+        # Even if we think it's a duplicate, we let the Swarm (Dandan) decide.
+        # We only mark it as "not new" to avoid appending it as a fresh High-Fidelity item
+        # if and only if EVERY identifier in the text is old. But actually, to pass 80% through,
+        # we will force `new_items_found = True` for Non-ArXiv sources to ensure high recall.
+        
+        if engine_name != "arxiv":
+            new_items_found = True  # Let Dandan do the Triage for Web/News/Exa
+            
         if not new_items_found:
-            return "", False, raw_text # Return raw_text for the buffer even if duplicate (maybe useful context)
+            return "", False, raw_text # Return raw_text for the buffer even if duplicate
             
         return raw_text, True, raw_text
+
 
     for category, query in RADAR_KEYWORDS.items():
         print(f"  -> [Tri-Engine] Scraping raw data for: {category}")
@@ -313,16 +321,19 @@ def collect_raw_data():
         f.write("\n".join(buffer_content))
     
     # 🧹 Execute Scavenger Cleanup Logic (The 3-Day TTL Buffer)
-    print("🧹 [Cleanup] Running 3-Day TTL Scavenger on Buffer Files...")
+    print("🧹 [Cleanup] Executing 3-Day TTL Physical Scavenger on Buffer Files...")
     now = time.time()
+    deleted_count = 0
     for f in RAW_DATA_DIR.glob("*_BUFFER.md"):
         # Delete if older than 3 days (3 * 24 * 60 * 60 = 259200 seconds)
-        if f.stat().st_mtime < now - 259200:
+        if f.is_file() and f.stat().st_mtime < now - 259200:
             print(f"   |_ 🗑️ Purging expired buffer file: {f.name}")
             try:
                 f.unlink()
+                deleted_count += 1
             except Exception as e:
                 print(f"      |_ Error deleting {f.name}: {e}")
+    print(f"   |_ [GC Report] Erased {deleted_count} stale buffers.")
                 
     print(f"✅ Collection complete. High-Fidelity written to {raw_path}. Low-Fi dumped to {buffer_path}")
 
