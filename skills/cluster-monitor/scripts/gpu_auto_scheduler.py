@@ -9,6 +9,7 @@ import subprocess
 import json
 import time
 import os
+import sys
 import logging
 from datetime import datetime
 
@@ -43,7 +44,7 @@ def pull_next_task(queue_path):
         data = json.load(f)
         
     for index, task in enumerate(data.get("tasks", [])):
-        if task.get("status") == "PENDING":
+        if task.get("status") == "PENDING" and task.get("target", "local") == "local":
             data["tasks"][index]["status"] = "RUNNING"
             data["tasks"][index]["start_time"] = datetime.now().isoformat()
             
