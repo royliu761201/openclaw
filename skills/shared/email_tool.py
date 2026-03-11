@@ -13,16 +13,14 @@ from pathlib import Path
 def load_credentials(provider=None):
     if provider == "126":
         user_keys = ["EMAIL_126_USER"]
-        pass_keys = ["EMAIL_126_PASS"]
+        pass_keys = ["PERSONAL_126_PASS"]
     elif provider == "school" or provider == "jhun":
         user_keys = ["ACADEMIC_EMAIL_USER"]
         pass_keys = ["ACADEMIC_EMAIL_PASS"]
     else:
         user_keys = ["ACADEMIC_EMAIL_USER", "EMAIL_126_USER"]
-        pass_keys = ["ACADEMIC_EMAIL_PASS", "EMAIL_126_PASS"]
-
+        pass_keys = ["ACADEMIC_EMAIL_PASS", "PERSONAL_126_PASS"]
     user = None
-    pwd = None
     imap_server = None
     smtp_server = None
 
