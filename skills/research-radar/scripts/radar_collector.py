@@ -54,10 +54,10 @@ def run_search_arxiv(query: str, max_results: int = 5) -> str:
             capture_output=True, text=True, check=True
         )
         return result.stdout
-    except subprocess.CalledProcessError:
-        return f"*Error retrieving ArXiv results.*"
-    except FileNotFoundError:
-        return f"*Error: academic-search script not found.*"
+    except subprocess.CalledProcessError as e:
+        return f"*Error retrieving ArXiv results. Returncode: {e.returncode}, Stderr: {e.stderr}*"
+    except Exception as e:
+        return f"*Error: academic-search script issue -> {e}*"
 
 def run_search_tavily(query: str, max_results: int = 3) -> str:
     try:
@@ -66,10 +66,10 @@ def run_search_tavily(query: str, max_results: int = 3) -> str:
             capture_output=True, text=True, check=True
         )
         return result.stdout
-    except subprocess.CalledProcessError:
-        return f"*Error retrieving Tavily (Web) results.*"
-    except FileNotFoundError:
-        return f"*Error: tavily-search script not found.*"
+    except subprocess.CalledProcessError as e:
+        return f"*Error retrieving Tavily (Web) results. Returncode: {e.returncode}, Stderr: {e.stderr}*"
+    except Exception as e:
+        return f"*Error: tavily-search script issue -> {e}*"
 
 def run_search_exa(query: str, max_results: int = 3) -> str:
     try:
@@ -78,10 +78,10 @@ def run_search_exa(query: str, max_results: int = 3) -> str:
             capture_output=True, text=True, check=True
         )
         return result.stdout
-    except subprocess.CalledProcessError:
-        return f"*Error retrieving Exa (Neural) results.*"
-    except FileNotFoundError:
-        return f"*Error: exa-search script not found.*"
+    except subprocess.CalledProcessError as e:
+        return f"*Error retrieving Exa (Neural) results. Returncode: {e.returncode}, Stderr: {e.stderr}*"
+    except Exception as e:
+        return f"*Error: exa-search script issue -> {e}*"
 
 def collect_raw_data():
     # 🚨 PREEMPTIVE SSoT SYNC 🚨
@@ -130,7 +130,8 @@ def collect_raw_data():
 
     def filter_new_content(raw_text, engine_name):
         if not raw_text or "*Error" in raw_text:
-            return raw_text, False, raw_text
+            error_msg = f"> 🚫 **FATAL: ENGINE OFFLINE ({engine_name.upper()})**. Trace: {raw_text.strip() if raw_text else 'Empty output'}"
+            return error_msg, True, error_msg # Force it through to High-Fidelity buffer so Boss sees it
             
         a_ids, urls = extract_identifiers(raw_text)
         
