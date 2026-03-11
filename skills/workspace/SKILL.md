@@ -7,7 +7,7 @@ description: The core gatekeeper skill for the OpenClaw SSoT (Single Source of T
 
 The `workspace` skill governs the top-level cognitive state of the Agent. It enforces the rules defined in `~/workspace/.clinerules` regarding reading global tasks and permanently archiving session brains.
 
-> **[L1 Architecture Note]**: As of V7, cluster monitoring (`gpu_status_board`, `cluster_net`) and secret distribution (`sync_secrets`) have been strictly decoupled into the `cluster-monitor` and `vault-keeper` skills respectively. Do not invoke `workspace` for those tasks.
+> **[L1 Architecture Note]**: As of V7, cluster monitoring (`gpu_status_board`, `cluster_net`) and secret distribution (`sync_secrets`) have been strictly decoupled into the `omni-scheduler` and `vault-keeper` skills respectively. Do not invoke `workspace` for those tasks.
 
 ## ⚡️ TRIGGER RULES
 
@@ -46,7 +46,7 @@ python3 $HOME/workspace/.local_skills/workspace/scripts/sync_global.py \
 **⚠️ THE DEATHBED CONFESSION RULE ⚠️**
 Before you execute the close/archive protocol:
 If you have any UNFINISHED tasks `[ ]` in your local `task.md` or if your exploration ended in an unresolved error, you MUST use `--board-write` (see Section 4) to leave a "Deathbed Confession" on the global board for the next Agent. Do not die in silence!
-**CRITICAL**: You are FORBIDDEN from writing vague generic messages like "It crashed." Your Deathbed Confession MUST strictly follow this dissection format:
+**CRITICAL**: You are STRICTLY FORBIDDEN from writing vague generic messages like "It crashed." Your Deathbed Confession MUST follow this L0-L3 dissection format:
 
 - `[L0 尸检]`: What zombie background processes are left? Is the GPU memory cleared?
 - `[L1 现场]`: What SSoT configuration/markdown file were you modifying when it failed?

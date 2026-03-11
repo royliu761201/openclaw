@@ -112,7 +112,7 @@ def test_ssh_health():
         return False
 
 def test_email_health():
-    print("\n[Testing Email: Gmail via gog]")
+    print("\n[Testing Email: Gmail, 126, School]")
     success = True
     
     # 1. Gmail (via gog)
@@ -124,6 +124,24 @@ def test_email_health():
         print_status("Gmail via gog is installed but awaiting Keychain Auth or Account binding (Pass)", True)
     else:
         print_status(f"Gmail via gog failed: {res_gmail.stderr.strip()}", False)
+        success = False
+
+    # 2. 126 Email (Native Python API)
+    cmd_126 = ". ~/.openclaw_env && python3 ~/openclaw/skills/shared/email_tool.py --provider 126 read --limit 1"
+    res_126 = subprocess.run(cmd_126, shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=30)
+    if res_126.returncode == 0:
+        print_status("126 Email API works", True)
+    else:
+        print_status(f"126 Email API failed: {res_126.stderr.strip()}", False)
+        success = False
+
+    # 3. School Email (Native Python API)
+    cmd_school = ". ~/.openclaw_env && python3 ~/openclaw/skills/shared/email_tool.py --provider school read --limit 1"
+    res_school = subprocess.run(cmd_school, shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=30)
+    if res_school.returncode == 0:
+        print_status("School Email API works", True)
+    else:
+        print_status(f"School Email API failed: {res_school.stderr.strip()}", False)
         success = False
 
     return success

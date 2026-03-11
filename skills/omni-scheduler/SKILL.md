@@ -1,11 +1,11 @@
 ---
-name: cluster-monitor
+name: omni-scheduler
 description: Dedicated hardware and network sentinel skill. Monitors GPU utilization and inter-node network vitality across the OpenClaw cluster architecture.
 ---
 
-# `cluster-monitor` Skill
+# `omni-scheduler` Skill
 
-The `cluster-monitor` skill is a strictly scoped, read-only hardware observation tool. It is exclusively tasked with probing the physical infrastructure layer.
+The `omni-scheduler` skill is a strictly scoped, read-only hardware observation tool. It is exclusively tasked with probing the physical infrastructure layer.
 
 ## ⚡️ TRIGGER RULES
 
@@ -23,7 +23,7 @@ You MUST execute this skill when:
 Probes all registered nodes via SSH to extract `nvidia-smi` readouts and process lists.
 
 ```bash
-python3 $HOME/openclaw/skills/cluster-monitor/scripts/gpu_status_board.py
+python3 $HOME/openclaw/skills/omni-scheduler/scripts/gpu_status_board.py
 ```
 
 ### 2. Cluster Network Dashboard
@@ -31,7 +31,7 @@ python3 $HOME/openclaw/skills/cluster-monitor/scripts/gpu_status_board.py
 Pings and validates the SSH availability and network routes between the disparate cluster nodes.
 
 ```bash
-python3 $HOME/openclaw/skills/cluster-monitor/scripts/cluster_net_dashboard.py
+python3 $HOME/openclaw/skills/omni-scheduler/scripts/cluster_net_dashboard.py
 ```
 
 ### 3. Unified Auto-Scheduler (The Polymorphic Dispatcher)
@@ -46,7 +46,7 @@ You are STRICTLY FORBIDDEN from running this script on Node 01. It must only be 
 **To run for Local GPUs**:
 
 ```bash
-python3 $HOME/openclaw/skills/cluster-monitor/scripts/auto_scheduler.py \
+python3 $HOME/openclaw/skills/omni-scheduler/scripts/auto_scheduler.py \
   --mode local \
   --queue ~/workspace/projects_core/experiment_queue.json \
   --poll 1800 \
@@ -56,7 +56,7 @@ python3 $HOME/openclaw/skills/cluster-monitor/scripts/auto_scheduler.py \
 **To run for Kaggle Cloud**:
 
 ```bash
-python3 $HOME/openclaw/skills/cluster-monitor/scripts/auto_scheduler.py \
+python3 $HOME/openclaw/skills/omni-scheduler/scripts/auto_scheduler.py \
   --mode kaggle \
   --queue ~/workspace/projects_core/experiment_queue.json \
   --target kaggle_account_A
@@ -78,7 +78,7 @@ The `experiment_queue.json` file is the shared contract between the Agent (Produ
 To safely inject tasks into the `experiment_queue.json` without risking JSON syntax corruption, both the Boss and the AI Agent **MUST** use the provided CLI:
 
 ```bash
-python3 $HOME/openclaw/skills/cluster-monitor/scripts/enqueue_task.py \
+python3 $HOME/openclaw/skills/omni-scheduler/scripts/enqueue_task.py \
   --project "CaLaM" \
   --command "conda run -n calam bash scripts/run_exp_02.sh" \
   --dir "/Users/roy-jd/workspace/projects_core/calam"

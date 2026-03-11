@@ -90,6 +90,7 @@ def collect_raw_data():
     RAW_DATA_DIR.mkdir(parents=True, exist_ok=True)
     today_str = datetime.datetime.now().strftime("%Y-%m-%d")
     raw_path = RAW_DATA_DIR / f"{today_str}_RAW.md"
+    buffer_path = RAW_DATA_DIR / f"{today_str}_BUFFER.md"
     
     print(f"⛏️ Initiating Radar Raw Collection (Producer Mode) - {today_str}...")
     
@@ -98,8 +99,13 @@ def collect_raw_data():
     RADAR_KEYWORDS = targets_data.get("radar_keywords", {})
     
     raw_content = [
-        f"# ⛏️ Radar Raw Data: {today_str}",
+        f"# ⛏️ Radar High-Fidelity Data: {today_str}",
         "> **Auto-harvested by Research-Radar (Collector)**\n"
+    ]
+    
+    buffer_content = [
+        f"# 🗑️ Radar Low-Fi Buffer: {today_str}",
+        "> **Contains ALL raw intercepts (Bypassed V8 Quality Filters). Retained for 3 days.**\n"
     ]
     
     import re
@@ -112,13 +118,13 @@ def collect_raw_data():
 
     def filter_new_content(raw_text, engine_name):
         if not raw_text or "*Error" in raw_text:
-            return raw_text, False
+            return raw_text, False, raw_text
             
         a_ids, urls = extract_identifiers(raw_text)
         
         # If no identifiers found, we assume it's new (can't prove it's a duplicate)
         if not a_ids and not urls:
-            return raw_text, True
+            return raw_text, True, raw_text
             
         new_items_found = False
         # Check ArXiv
@@ -136,9 +142,9 @@ def collect_raw_data():
         # If json from ArXiv, we could precisely filter, but for raw markdown, 
         # dropping the entire chunk if NO new items are found is the safest physical block.
         if not new_items_found:
-            return "", False
+            return "", False, raw_text # Return raw_text for the buffer even if duplicate (maybe useful context)
             
-        return raw_text, True
+        return raw_text, True, raw_text
 
     for category, query in RADAR_KEYWORDS.items():
         print(f"  -> [Tri-Engine] Scraping raw data for: {category}")
@@ -148,14 +154,17 @@ def collect_raw_data():
         bypass_strict = any(keyword.lower() in category.lower() for keyword in ["Medical", "Safety", "NLP", "OrgGPT", "Society", "Game", "Math", "LifeScience", "Cancer", "Affective", "Embodied", "Education"])
         
         category_buffer = []
+        category_low_fi_buffer = []
         
         # 1. ArXiv (Academic)
         print("     |_ arXiv...")
         arxiv_res = run_search_arxiv(query, max_results=5)
-        arxiv_res, has_new_arxiv = filter_new_content(arxiv_res, "arxiv")
+        arxiv_res, has_new_arxiv, arxiv_raw = filter_new_content(arxiv_res, "arxiv")
         if has_new_arxiv:
             category_buffer.append("### 📚 1. ArXiv (Academic)")
             category_buffer.append(arxiv_res)
+        category_low_fi_buffer.append("### 📚 1. ArXiv (Academic) [UNFILTERED]")
+        category_low_fi_buffer.append(arxiv_raw)
         
         # 2. Tavily (Web/News)
         print("     |_ Tavily...")
@@ -166,10 +175,12 @@ def collect_raw_data():
             tavily_query += " recent breakthroughs"
             
         tavily_res = run_search_tavily(tavily_query, max_results=3)
-        tavily_res, has_new_tavily = filter_new_content(tavily_res, "tavily")
+        tavily_res, has_new_tavily, tavily_raw = filter_new_content(tavily_res, "tavily")
         if has_new_tavily:
             category_buffer.append("### 🌐 2. Tavily (Web & Industry News)")
             category_buffer.append(tavily_res)
+        category_low_fi_buffer.append("### 🌐 2. Tavily (Web & Industry News) [UNFILTERED]")
+        category_low_fi_buffer.append(tavily_raw)
         
         # 3. Exa (Code/Neural)
         print("     |_ Exa...")
@@ -180,15 +191,22 @@ def collect_raw_data():
             exa_query += " github repo official code"
             
         exa_res = run_search_exa(exa_query, max_results=3)
-        exa_res, has_new_exa = filter_new_content(exa_res, "exa")
+        exa_res, has_new_exa, exa_raw = filter_new_content(exa_res, "exa")
         if has_new_exa:
             category_buffer.append("### 💻 3. Exa (Code & Neural Intel)")
             category_buffer.append(exa_res)
+        category_low_fi_buffer.append("### 💻 3. Exa (Code & Neural Intel) [UNFILTERED]")
+        category_low_fi_buffer.append(exa_raw)
         
         if category_buffer:
             raw_content.append(f"## 📦 Raw Sector: {category}")
             raw_content.extend(category_buffer)
             raw_content.append("\n---\n")
+            
+        if category_low_fi_buffer:
+            buffer_content.append(f"## 📦 Buffer Sector: {category}")
+            buffer_content.extend(category_low_fi_buffer)
+            buffer_content.append("\n---\n")
         
         # 🛡️ Absolute Physical Rate Limit (Anti-Ban Armor)
         # Protects Node 02/05 from being blacklisted by arXiv/IEEE
@@ -205,10 +223,12 @@ def collect_raw_data():
             
             # For Policies and Grants, we rely heavily on Tavily to hit Gov/Funding sites
             tavily_res = run_search_tavily(omni_query, max_results=3)
-            tavily_res, has_new_tavily = filter_new_content(tavily_res, "tavily")
+            tavily_res, has_new_tavily, tavily_raw = filter_new_content(tavily_res, "tavily")
             if has_new_tavily:
                 raw_content.append("#### 🌐 Tavily (Web/Gov Intel)")
                 raw_content.append(tavily_res)
+            buffer_content.append("#### 🌐 Tavily (Web/Gov Intel) [UNFILTERED]")
+            buffer_content.append(tavily_raw)
                 
             time.sleep(10)
             
@@ -219,10 +239,12 @@ def collect_raw_data():
         print(f"  -> [Blogs] Sweeping Top AI Lab Blogs...")
         blog_query = " OR ".join([f"site:{b}" for b in INST_BLOGS]) + " latest news breakthrough AI"
         blog_res = run_search_tavily(blog_query, max_results=5)
-        blog_res, has_new_blogs = filter_new_content(blog_res, "tavily")
+        blog_res, has_new_blogs, blog_raw = filter_new_content(blog_res, "tavily")
         if has_new_blogs:
              raw_content.append("#### 🌐 Tavily (Blog Intel)")
              raw_content.append(blog_res)
+        buffer_content.append("#### 🌐 Tavily (Blog Intel) [UNFILTERED]")
+        buffer_content.append(blog_raw)
         time.sleep(10)
 
     # === Reference List ===
@@ -242,10 +264,12 @@ def collect_raw_data():
                 combined_scholars = " OR ".join(chunk)
                 scholar_query = f"({combined_scholars}) New publications AI"
                 sch_res = run_search_tavily(scholar_query, max_results=3)
-                sch_res, has_new_sch = filter_new_content(sch_res, "tavily")
+                sch_res, has_new_sch, sch_raw = filter_new_content(sch_res, "tavily")
                 if has_new_sch:
                     raw_content.append(f"### 🎓 Top Scholars Intel (Batch {idx+1})")
                     raw_content.append(sch_res)
+                buffer_content.append(f"### 🎓 Top Scholars Intel (Batch {idx+1}) [UNFILTERED]")
+                buffer_content.append(sch_raw)
                 time.sleep(10)
 
     # === Asynchronous Feishu Inbox Processing ===
@@ -263,7 +287,7 @@ def collect_raw_data():
             new_inbox_items = []
             for url in inbox_urls:
                 # Check deduplication by simulating a raw text block containing the URL
-                _, is_new = filter_new_content(url, "inbox_check")
+                _, is_new, raw_url = filter_new_content(url, "inbox_check")
                 
                 if is_new:
                     # 🐞 [BUGFIX]: We must actually save it to the database so it's not processed forever tomorrow
@@ -285,8 +309,22 @@ def collect_raw_data():
     save_seen_intel(seen_db)
     with open(raw_path, "w") as f:
         f.write("\n".join(raw_content))
+    with open(buffer_path, "w") as f:
+        f.write("\n".join(buffer_content))
     
-    print(f"✅ Collection complete. Raw data written to {raw_path}")
+    # 🧹 Execute Scavenger Cleanup Logic (The 3-Day TTL Buffer)
+    print("🧹 [Cleanup] Running 3-Day TTL Scavenger on Buffer Files...")
+    now = time.time()
+    for f in RAW_DATA_DIR.glob("*_BUFFER.md"):
+        # Delete if older than 3 days (3 * 24 * 60 * 60 = 259200 seconds)
+        if f.stat().st_mtime < now - 259200:
+            print(f"   |_ 🗑️ Purging expired buffer file: {f.name}")
+            try:
+                f.unlink()
+            except Exception as e:
+                print(f"      |_ Error deleting {f.name}: {e}")
+                
+    print(f"✅ Collection complete. High-Fidelity written to {raw_path}. Low-Fi dumped to {buffer_path}")
 
 def git_sync_workspace():
     print("🔄 Synchronizing Raw Data to Global Workspace (Git-as-SSoT)...")

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Unified Auto-Scheduler (The Polymorphic Dispatcher)
-Deployed as part of the `cluster-monitor` skill.
+Deployed as part of the `omni-scheduler` skill.
 Runs EXCLUSIVELY on Node 02 or Local GPU Servers; strictly banned from running as a daemon on Node 01.
 
 Supports `--mode local` (GPU target puller) and `--mode kaggle` (Kaggle P100 cloud pusher).
