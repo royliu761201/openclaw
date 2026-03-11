@@ -185,10 +185,26 @@ def main():
             
             if args.push:
                 print(f"🚀 正在推送到远程仓库...")
-                subprocess.run(["git", "push"], cwd=workspace_dir, check=True)
-                print(f"✅ Git Push 成功！")
+                try:
+                    subprocess.run(["git", "push"], cwd=workspace_dir, check=True)
+                    print(f"✅ Git Push 成功！")
+                except subprocess.CalledProcessError:
+                    print(f"⚠️ Git Push 被远端拒绝，开始执行防冲突强行拉取协议 (Auto-Rebase)...")
+                    try:
+                        # 1. 保护可能存在的未追踪修改
+                        subprocess.run(["git", "stash"], cwd=workspace_dir, check=True)
+                        # 2. 强行对齐云端大树
+                        subprocess.run(["git", "pull", "--rebase"], cwd=workspace_dir, check=True)
+                        # 3. 重新强推本会话存档
+                        subprocess.run(["git", "push"], cwd=workspace_dir, check=True)
+                        # 4. 解冻本地的凌乱状态
+                        subprocess.run(["git", "stash", "pop"], cwd=workspace_dir)
+                        print(f"✅ 在完美避开 Git 冲突后，Push 制裁执行完毕！")
+                    except subprocess.CalledProcessError as e2:
+                        print(f"❌ 自动挽救失败，云端树可能已存在深层合并冲突，请手动处理: {e2}")
+
     except subprocess.CalledProcessError as e:
-        print(f"❌ Git 操作失败: {e}")
+        print(f"❌ Git 基础操作链塌方: {e}")
 
 if __name__ == "__main__":
     main()
