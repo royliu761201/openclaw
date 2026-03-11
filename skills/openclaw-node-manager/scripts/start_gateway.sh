@@ -30,9 +30,16 @@ export OPENCLAW_SKIP_BUILD=1
 
 # --- PROCESS IGNITION ---
 echo "🧹 执行彻底的物理进程级清理 (Scorched Earth Process Wipe)..."
+# 1. 解除守护
+pm2 stop openclaw-gateway 2>/dev/null || true
 pm2 delete openclaw-gateway 2>/dev/null || true
-# PM2 delete 只能取消守护状态，如果有悬空 (detached) 的僵尸进程，必须依靠 pkill 斩草除根
-pkill -9 -f "openclaw.mjs" 2>/dev/null || true
+
+# 2. 斩草除根：杀掉所有名字里带有 openclaw 的相关残留碎片 (包括可能被孵化出的挂起子进程)
+pkill -9 -f "openclaw" 2>/dev/null || true
+
+# 3. 释放阵地：强制解绑被幽灵霸占的 Gateway 默认端口 (18789)，防止 EADDRINUSE 导致新进程静默死亡
+lsof -ti:18789 | xargs kill -9 2>/dev/null || true
+sleep 1 # 物理延时，确保系统句柄 100% 释放
 
 pm2 start ~/openclaw/openclaw.mjs --interpreter node --name "openclaw-gateway" --update-env -- gateway
 pm2 save
