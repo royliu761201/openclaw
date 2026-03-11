@@ -26,6 +26,12 @@ def load_openclaw_env():
 
 load_openclaw_env()
 
+# 🛡️ FAIL-EARLY: Pre-flight check for Engine API Keys
+missing_keys = [k for k in ["TAVILY_API_KEY", "EXA_API_KEY"] if not os.environ.get(k)]
+if missing_keys:
+    print(f"❌ FATAL [Fail-Early]: Missing API keys for radar engines: {missing_keys}. Check ~/.openclaw_env.")
+    sys.exit(1)
+
 WORKSPACE_DIR = Path(os.path.expanduser("~/workspace"))
 RAW_DATA_DIR = WORKSPACE_DIR / "docs" / "research_ideation" / "radar_raw_data"
 ACADEMIC_SEARCH_PATH = os.path.expanduser("~/openclaw/skills/academic-search/scripts/search_arxiv.py")
@@ -40,7 +46,8 @@ if not NODE_BIN:
             NODE_BIN = path
             break
 if not NODE_BIN:
-    NODE_BIN = "node"
+    print("❌ FATAL [Fail-Early]: 'node' binary not found. Research Radar cannot execute Tavily.")
+    sys.exit(1)
 
 # SSoT ONLY: Use the python interpreter that invoked us
 PYTHON_BIN = sys.executable
