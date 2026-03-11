@@ -29,6 +29,10 @@ cd ~/openclaw || exit 1
 export OPENCLAW_SKIP_BUILD=1
 
 # --- PROCESS IGNITION ---
+echo "🧹 执行彻底的物理进程级清理 (Scorched Earth Process Wipe)..."
 pm2 delete openclaw-gateway 2>/dev/null || true
+# PM2 delete 只能取消守护状态，如果有悬空 (detached) 的僵尸进程，必须依靠 pkill 斩草除根
+pkill -9 -f "openclaw.mjs" 2>/dev/null || true
+
 pm2 start ~/openclaw/openclaw.mjs --interpreter node --name "openclaw-gateway" --update-env -- gateway
 pm2 save
