@@ -20,11 +20,12 @@ Based on white-box auditing (`src/agents/model-auth.ts`: `resolveEnvApiKey`), Op
 - **Critical Ban**: You are **STRICTLY PROHIBITED** from using tools like `vault-keeper` to extract, translate, and distribute separate `auth-profiles.json` files! Since the framework supports environment variable pass-through, scattering JSON configurations creates fragmented architecture and audit blind spots.
 - **The Only Legal Authentication Path**: Standardize AI API keys alongside Feishu Gateway keys. Mount them directly via the `start_gateway.sh` script (`export`) or pass them into PM2 via `ecosystem.config.js`.
 
-### 2. Git-Ops Exclusively (No SCP Delivery)
+### 2. Git-Ops Exclusively & The PM2 Hot-Reload Mandate
 
 When deploying to Edge Nodes, **NEVER** use `scp` or `ssh 02 "cat << EOF > file"` to drop physical scripts.
 
-- **Native Git-Ops**: The `start_gateway.sh` has been stripped of plaintext secrets and acts as a pure static asset using `source ~/.openclaw_env`. Node 02 should ONLY be updated via `git pull` followed by executing this static script.
+- **Native Git-Ops**: Node 02 should ONLY be updated via `git pull`.
+- **🚨 PM2 OBLITERATION LAW (Rule 4.6)**: You are **ABSOLUTELY FORBIDDEN** from simply running `git pull` and walking away. To purge ghost configurations from PM2's memory, you MUST concatenate the pull with the strict environment update flag: `ssh 02 "cd ~/workspace && git pull && pm2 reload openclaw-gateway --update-env"`. Failure to use `--update-env` triggers silent fallback fallacies.
 
 ### 3. Cascading Deletion Risk: The `--force` Trap
 
@@ -152,14 +153,40 @@ This skill now includes two heavily armed python scripts for active health probi
     - **Function**: A lightweight, on-demand CLI probe run from Node 01. It SSHs into Node 02 to parse PM2 memory footprints, check the `18789` port listener, and sweep the latest 100 lines of OpenClaw native logs for stealthy `Error`/`Warn` events.
     - **Usage**: Execute `~/openclaw/skills/openclaw-node-manager/scripts/agent_radar.py` whenever the boss suspects a Node 02 physical outage.
 
-2.  **`audit_sessions.py` (The LLM Judge)**
+2.  **`test_skills_health.py` (The Proactive Skill Validation Pipeline)**
+    - **Function**: A comprehensive automated validation suite testing `gog`, `kaggle`, `ssh`, `email`, `tavily`, `gemini`, and optionally `exa` across the grid.
+    - **Mandatory Trigger Rule**: While this test can be manually invoked on demand, **any Agent executing a major configuration update, or triggering a "PDCA Loop" (Plan-Do-Check-Act) involving system changes, MUST proactively execute `/Users/roy-jd/workspace/.local_skills/openclaw-node-manager/scripts/test_skills_health.py` as a mandatory validation step** to ensure the ground-truth tool capabilities are intact before concluding the task.
+
+3.  **`audit_sessions.py` (The LLM Judge)**
     - **Function**: Breaks the black box of Agent-User communication. It reaches into Node 02's `~/.openclaw/agents/<id>/sessions/*.jsonl` to extract recent raw dialogue, passing it to Gemini via the `GOOGLE_API_KEY` mapped in `~/.openclaw_env`. Gemini evaluates the agents on 3 strict criteria: Hallucination/Incompetence, PURE Law Compliance, and PDCA prompt suggestions.
     - **Usage**: Execute `~/openclaw/skills/openclaw-node-manager/scripts/audit_sessions.py` to auto-generate a timestamped Markdown PDCA report in `workspace/docs/projects_pdca/`.
 
-3.  **The Resolution (Act & Healing - PDCA 终极闭环)**
+4.  **`audit_identity_probe.py` (The Dynamic Cognitive Probe)**
+    - **Function**: Physically sends an adversarial conversational payload to the live PM2 gateway asking for its exact model alias. If the model hallucinates (e.g., claiming to be "3.1-flash-lite"), this script enforces an immediate, automated `$ pm2 reload --update-env` sequence.
+    - **Usage**: Strongly recommended to run `~/openclaw/skills/openclaw-node-manager/scripts/audit_identity_probe.py` whenever model configurations in `openclaw_core.json` are swapped to ensure no PM2 Ghost Caches remain.
+
+5.  **`audit_skills_bindings.py` (The Static LLM-Environment Parser)**
+    - **Function**: Simulates the OpenClaw Agent Engine's start-up life cycle. It rips every `requires.env` key from `~/openclaw/skills/*/SKILL.md` and explicitly cross-checks them against the native `~/.openclaw_env`.
+    - **Usage**: **Mandatory Trigger Rule**: Run this meta-linter BEFORE confirming any new skill deployment or environment variable modification to avoid "Silent Tool Drift."
+
+6.  **`semantic_memory_linter.py` (RAG Quarantine / Garbage Collector)**
+    - **Function**: Actively searches `workspace/docs/session_archives` (and implicitly future vectors) to hunt down explicitly banned legacy vocabulary (e.g., deleted model IDs, deprecated APIs). Quarantines infected documents to prevent secondary RAG hallucinations.
+    - **Usage**: Execute during deep system maintenance loops or immediately after discovering a severe context-poisoning event.
+
+7.  **The Resolution (Act & Healing - PDCA 终极闭环)**
     - **How to Process the Audit**: Once the Judge report flags a Semantic or Rule violation (e.g., "Hallucinated the Boss's name" or "Replied using internal tags"), you MUST immediately enter the **Correction Phase**.
     - **SOP**:
       1. Open the offender's physical brain: `agent_workspaces/<offender_name>/.agent/IDENTITY.md` or `USER.md` on Node 01.
       2. Inject a strict Regex-like anti-hallucination constraint.
       3. Do NOT SSH and hot-edit Node 02. Push changes to Git SSOT: `git commit -m "fix(agent): apply pdca correction" && git push`.
       4. Trigger the Zero-Downtime immunity shot over SSH. **MUST INCLUDE `--update-env`**: `ssh 02 "cd ~/workspace && git pull && pm2 reload openclaw-gateway --update-env"`. The Agent is instantly healed for the next conversation round without losing prior context.
+
+### 17. The Edge Node Verification Protocol (端到端防幻觉物理测试法则)
+
+_Retrospective Issue_: Probes running on Node 01 falsely reported Success for Node 02 because they executed localized sanity checks (e.g., `which gog`), leading to a "Spatial Overlap Hallucination" and masking a severe "Env Binding Blackout" on the Edge Node.
+
+- **The Boss's Ultimate Directive**: When you claim Node 02 is tested and operational, passing a Python probe script is NOT enough. You MUST conduct an active End-to-End LLM Prompt test strictly on the target Edge environment.
+- **SOP for Edge Verification**:
+  1. DO NOT assume tool visibility! OpenClaw will silently drop tools if their required environment variables (e.g., from `~/.openclaw_env`) are physically missing on Node 02.
+  2. You MUST SSH into Node 02 and run the native Gateway CLI executor (`node scripts/run-node.mjs agent --profile <agent_name> --session-id test_run_1 -m "<Test Prompt>"`) to force the actual engine to resolve models, environment variables, and tool schemas together.
+  3. You MUST verify tool invocation (e.g., Gmail reading) by reading the returned physical text or parsing the `~/.openclaw/agents/<id>/sessions/test_run_1.jsonl` log. Only tangible payload evidence counts as a "Pass".
