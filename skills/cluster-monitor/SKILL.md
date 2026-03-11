@@ -34,31 +34,44 @@ Pings and validates the SSH availability and network routes between the disparat
 python3 $HOME/openclaw/skills/cluster-monitor/scripts/cluster_net_dashboard.py
 ```
 
-### 3. GPU Auto-Scheduler (The Active Consumer)
+### 3. Unified Auto-Scheduler (The Polymorphic Dispatcher)
 
-An active scheduler that periodically checks local `nvidia-smi` and fires `git push` or local execution tasks from a JSON queue if VRAM utilization stays below a threshold.
+An active scheduler that periodically polls the shared JSON queue and fires tasks based on the operating mode: Local GPU or Kaggle Cloud.
+
 **Key Difference**: Unlike `gpu_status_board.py` which is a _passive, one-off_ readout tool, this is an _active, long-running_ action trigger.
 
 **🚨 THE NODE 01 DAEMON BAN 🚨**:
 You are STRICTLY FORBIDDEN from running this script on Node 01. It must only be deployed on the Edge Gateway (Node 02) or directly on a local GPU Server.
 
+**To run for Local GPUs**:
+
 ```bash
-python3 $HOME/openclaw/skills/cluster-monitor/scripts/gpu_auto_scheduler.py \
+python3 $HOME/openclaw/skills/cluster-monitor/scripts/auto_scheduler.py \
+  --mode local \
   --queue ~/workspace/projects_core/experiment_queue.json \
   --poll 1800 \
   --threshold 10.0
+```
+
+**To run for Kaggle Cloud**:
+
+```bash
+python3 $HOME/openclaw/skills/cluster-monitor/scripts/auto_scheduler.py \
+  --mode kaggle \
+  --queue ~/workspace/projects_core/experiment_queue.json \
+  --target kaggle_account_A
 ```
 
 ### 4. Queue Lifecycle & Schema (Self-Managing JSON)
 
 The `experiment_queue.json` file is the shared contract between the Agent (Producer) and the Daemon (Consumer).
 
-- **The Schema**: Every task must be an object containing: `id` (uuid), `project` (str), `command` (str), `directory` (str), `status` (str), and `created_at` (ISO-8601).
+- **The Schema**: Every task must be an object containing: `id` (uuid), `project` (str), `target` (str), `command` (str), `directory` (str), `status` (str), and `created_at` (ISO-8601).
 - **The State Machine**:
   1. `PENDING`: Appended by the Agent/Boss. Waiting to be executed.
   2. `RUNNING`: Claimed by the Daemon via locking.
   3. `COMPLETED` / `FAILED`: Terminal states.
-- **Garbage Collection (The 7-Day Prune)**: To prevent JSON bloat and UI crashing, the `gpu_auto_scheduler.py` automatically sweeps and deletes any `COMPLETED` or `FAILED` tasks that are older than 7 days during its poll cycle. No manual grooming is required.
+- **Garbage Collection (The 7-Day Prune)**: To prevent JSON bloat and UI crashing, the unified `auto_scheduler.py` automatically sweeps and deletes any `COMPLETED` or `FAILED` tasks that are older than 7 days during its poll cycle. No manual grooming is required.
 
 ### 5. Task Generation (The Producer CLI)
 
@@ -75,4 +88,4 @@ _This instantly appends the payload with a generated UUID and an exact timestamp
 
 ## ⚠️ CONSTITUTIONAL ANCHORS
 
-- **Strategic Action Exemption**: While `cluster_net_dashboard` and `gpu_status_board` remain strictly read-only, the `gpu_auto_scheduler` possesses a specialized surgical exemption to execute pre-approved CLI commands from the `experiment_queue.json` solely to prevent expensive GPU idle time. It cannot arbitrarily modify parameters.
+- **Strategic Action Exemption**: While `cluster_net_dashboard` and `gpu_status_board` remain strictly read-only, the unified `auto_scheduler` possesses a specialized surgical exemption to execute pre-approved CLI commands from the `experiment_queue.json` solely to prevent expensive GPU idle time. It cannot arbitrarily modify parameters.
