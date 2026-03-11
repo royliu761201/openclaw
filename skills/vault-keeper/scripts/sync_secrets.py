@@ -10,15 +10,21 @@ LOCAL_ENV = os.path.expanduser("~/.openclaw_env")
 
 def sync_node(node):
     try:
-        # 1. SCP the file (Timeout protected + BatchMode to Fail-Fast on auth issues)
+        # 1. SCP the file to a tmp location (Timeout protected + BatchMode to Fail-Fast on auth issues)
         subprocess.run(
-            ["scp", "-o", "ConnectTimeout=5", "-o", "BatchMode=yes", "/tmp/.openclaw_env_edge", f"{node}:~/.openclaw_env"], 
+            ["scp", "-o", "ConnectTimeout=5", "-o", "BatchMode=yes", "/tmp/.openclaw_env_edge", f"{node}:/tmp/.openclaw_env_incoming"], 
             check=True, stderr=subprocess.DEVNULL, timeout=10
         )
         
-        # 2. Remote Injection (Explicitly skip Windows Node 05 to prevent heterogeneous bash loop hang)
+        # 2. Remote Injection (Merge incoming secrets while preserving local OpenClaw framework vars)
         if node != "05":
             inject_cmd = (
+                # Safely merge incoming vault keys into the edge env while preserving OPENCLAW_ variables
+                "touch ~/.openclaw_env && "
+                "grep '^export OPENCLAW_' ~/.openclaw_env > /tmp/.openclaw_env_preserved || true && "
+                "cat /tmp/.openclaw_env_incoming > ~/.openclaw_env && "
+                "cat /tmp/.openclaw_env_preserved >> ~/.openclaw_env && "
+                "rm -f /tmp/.openclaw_env_incoming /tmp/.openclaw_env_preserved && "
                 "chmod 600 ~/.openclaw_env && "
                 "for rc in ~/.zshrc ~/.bashrc ~/.bash_profile; do "
                 "  if [ -f \"$rc\" ] && ! grep -q 'source ~/.openclaw_env' \"$rc\"; then "
@@ -59,7 +65,7 @@ def sync():
     # No private VPN/Mail/SSH/DB passwords should ever leave Node 01.
     edge_allowed_prefixes = (
         "FEISHU_", "GOOGLE_", "GROQ_", "OPENAI_", "WANDB_", "HF_", "TAVILY_",
-        "GITHUB_", "VERTEX_", "KAGGLE_", "NVIDIA_", "EXA_", "EMAIL_", "PERSONAL_"
+        "GITHUB_", "VERTEX_", "KAGGLE_", "NVIDIA_", "EXA_", "EMAIL_", "PERSONAL_", "GMAIL_", "ACADEMIC_"
     )
 
     for k, v in secrets.items():
@@ -69,6 +75,13 @@ def sync():
         
         if k.startswith(edge_allowed_prefixes):
             env_content_edge += export_line
+
+    # 0.5 Preserve local OpenClaw framework vars on Node 01
+    if os.path.exists(LOCAL_ENV):
+        with open(LOCAL_ENV, "r", encoding="utf-8") as f:
+            for line in f:
+                if line.startswith("export OPENCLAW_"):
+                    env_content_local += line
 
     # 1. Write locally to Node 01 (Full Privileges)
     with open(LOCAL_ENV, "w", encoding="utf-8") as f:
