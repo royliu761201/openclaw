@@ -72,10 +72,10 @@ Dynamically generating `start_gateway.sh` on Node 02 using `echo "export KEY=...
 
 ### 9. The Fail-Fast Scorched Earth (No Soft-Link Fallbacks)
 
-OpenClaw defaults to fallback configuration paths like `~/.openclaw/openclaw.json` when `OPENCLAW_CONFIG_PATH` is lost from memory (e.g., improper PM2 restarts).
+OpenClaw defaults to fallback configuration paths like `$HOME/workspace/config/openclaw_core.json` when `OPENCLAW_CONFIG_PATH` is lost from memory (e.g., improper PM2 restarts).
 
 - **Absolute Boss Directive**: **"Never use symbolic links to mask falls; fail as early as possible!"**
-  1. **Pre-Flight Scorch**: Always run `rm -f ~/.openclaw/openclaw.json ~/openclaw/config/openclaw_core.json` to scorch any fallback attempts.
+  1. **Pre-Flight Scorch**: Always run `rm -f $HOME/workspace/config/openclaw_core.json ~/openclaw/config/openclaw_core.json` to scorch any fallback attempts.
   2. **Fail-Fast Assertion**: Assert the desired file existence explicitly before launch: `[ ! -f "$OPENCLAW_CONFIG_PATH" ] && exit 1`. Stop execution at the starting line.
 
 ### 10. The Evidence-Based E2E Doctrine (White-Box & Driven Verification)
@@ -188,5 +188,16 @@ _Retrospective Issue_: Probes running on Node 01 falsely reported Success for No
 - **The Boss's Ultimate Directive**: When you claim Node 02 is tested and operational, passing a Python probe script is NOT enough. You MUST conduct an active End-to-End LLM Prompt test strictly on the target Edge environment.
 - **SOP for Edge Verification**:
   1. DO NOT assume tool visibility! OpenClaw will silently drop tools if their required environment variables (e.g., from `~/.openclaw_env`) are physically missing on Node 02.
-  2. You MUST SSH into Node 02 and run the native Gateway CLI executor (`node scripts/run-node.mjs agent --profile <agent_name> --session-id test_run_1 -m "<Test Prompt>"`) to force the actual engine to resolve models, environment variables, and tool schemas together.
-  3. You MUST verify tool invocation (e.g., Gmail reading) by reading the returned physical text or parsing the `~/.openclaw/agents/<id>/sessions/test_run_1.jsonl` log. Only tangible payload evidence counts as a "Pass".
+  2. You MUST verify tool invocation (e.g., Gmail reading) by reading the returned physical text or parsing the `~/.openclaw/agents/<id>/sessions/test_run_1.jsonl` log. Only tangible payload evidence counts as a "Pass".
+
+### 18. The White-Box Config Split-Brain Trap (OPENCLAW_CONFIG_PATH 失忆症)
+
+_Context_: When deploying the SSoT blueprint (`openclaw_core.json`) to Node 02, injecting the `OPENCLAW_CONFIG_PATH` directly into the `openclaw-gateway` PM2 ecosystem is NOT sufficient. The CLI `node scripts/run-node.mjs` operates in a distinct headless SSH bash process. If the CLI shell does not explicitly source `~/.openclaw_env`, it will fall back to `~/.openclaw/config/openclaw.json`, resulting in an `Unknown agent id` error.
+_Even worse_: If you mechanically patch `~/.openclaw_env` but inject the legacy default path instead of the SSoT path (`/Users/roy-002/workspace/config/openclaw_core.json`), you manually sever the SSoT link.
+
+- **The White-Box Audit Loop (Mandatory)**:
+  You MUST NEVER blindly guess why an Agent ID is unknown. You MUST perform a mechanical white-box trace:
+  1. Inspect `~/.openclaw_env` to confirm `OPENCLAW_CONFIG_PATH` points EXACTLY to the Git SSoT path, NEVER the default `~/.openclaw/config/` path.
+  2. Inspect the SSoT JSON file (`cat $OPENCLAW_CONFIG_PATH | grep 'list'`) to physically confirm the `id` exists.
+  3. Ensure all CLI execution commands strictly prepend `source ~/.openclaw_env`.
+- **The Enforcer Script**: `~/workspace/scripts/audit_whitebox_env.sh` has been built to automatically cross-check the PM2 daemon environment hashes against the `~/.openclaw_env` definitions and the physical SSoT JSON file to catch "Split-Brain Config" instantly.
