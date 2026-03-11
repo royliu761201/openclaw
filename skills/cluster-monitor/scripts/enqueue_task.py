@@ -12,7 +12,7 @@ from datetime import datetime
 
 logging.basicConfig(level=logging.INFO, format='➕ [Queue Producer] %(message)s')
 
-def enqueue_task(queue_path, project, command, directory):
+def enqueue_task(queue_path, project, command, directory, target):
     # Ensure queue exists
     if not os.path.exists(queue_path):
         data = {"tasks": []}
@@ -30,6 +30,7 @@ def enqueue_task(queue_path, project, command, directory):
     new_task = {
         "id": f"task_{task_id}",
         "project": project,
+        "target": target,
         "command": command,
         "directory": directory,
         "status": "PENDING",
@@ -44,6 +45,7 @@ def enqueue_task(queue_path, project, command, directory):
         
     logging.info(f"Successfully enqueued new PENDING task for project [{project}].")
     logging.info(f"  -> Task ID: {new_task['id']}")
+    logging.info(f"  -> Target:  {target}")
     logging.info(f"  -> Command: {command}")
     logging.info(f"  -> At: {directory}")
     return True
@@ -52,9 +54,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Safely inject a new task into the experiment Queue.")
     parser.add_argument("--queue", default=os.path.expanduser("~/workspace/projects_core/experiment_queue.json"), help="Path to PDCA JSON queue")
     parser.add_argument("--project", required=True, help="Target project name (e.g., CaLaM, Frenet)")
+    parser.add_argument("--target", default="local", help="Execution target (e.g., local, kaggle_account_A)")
     parser.add_argument("--command", required=True, help="The literal bash command to execute (e.g., 'conda run -n calam bash scripts/run.sh')")
     parser.add_argument("--dir", required=True, help="The absolute directory to execute the command inside.")
     
     args = parser.parse_args()
     
-    enqueue_task(args.queue, args.project, args.command, args.dir)
+    enqueue_task(args.queue, args.project, args.command, args.dir, args.target)
