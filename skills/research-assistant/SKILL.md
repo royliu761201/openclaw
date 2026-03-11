@@ -174,9 +174,19 @@ To perform these tasks, the agent should:
 1.  **Review PDCA Board**: Read `workspace/docs/projects_pdca/[project]_PDCA.md` to understand current goals.
 2.  **Create/Enter Workspace**: Navigate to `~/workspace/projects_core/[project_name]`.
 3.  **Generate/Modify Code**: Write or fix the experiment scripts based on the PDCA feedback.
-4.  **Experiment Execution (The Enqueue Law)**: You are STRICTLY FORBIDDEN from running long training or evaluation scripts directly in your Node 01 Shell. Instead, you MUST push your target command to the `cluster-monitor`'s asynchronous JSON queue using its producer tool:
-    `python3 ~/openclaw/skills/cluster-monitor/scripts/enqueue_task.py --project "CaLaM" --command "conda run -n calam bash run_exp.sh" --dir "$(pwd)"`. The far-end daemon will handle it.
-5.  **Compile Paper**: Use `latex compile ./docs/paper/main.tex` once experiments are done and W&B metrics are gathered.
+4.  **Experiment Execution (The Execution Assembly Law)**: You are STRICTLY FORBIDDEN from running long scripts directly in your Shell. You MUST assemble an execution package and push it to the queue. When preparing to run, you MUST decide between two targets:
+    - **A. Target: Local GPU (`local`)**:
+      - You MUST hand-write a self-contained bash script (e.g., `run_manifest_[UUID].sh`).
+      - The script MUST explicitly set environments: `unset http_proxy https_proxy`, `source .env`, and `conda activate [env_name]`.
+      - The script MUST handle data mounts via symlinks: `[ ! -d "./data" ] && ln -s /Volumes/.../data_vault/datasets ./data`.
+      - Enqueue using: `python3 ~/openclaw/skills/cluster-monitor/scripts/enqueue_task.py --project "CaLaM" --target "local" --command "bash run_manifest.sh" --dir "$(pwd)"`.
+    - **B. Target: Kaggle P100 (`kaggle_account_A`)**:
+      - You MUST hand-write a pure Python script (e.g., `run_kaggle_payload_[UUID].py`).
+      - The script MUST explicitly embed dependencies at the top: `import subprocess; subprocess.run(["pip", "install", "-q", "-r", "requirements.txt"])`.
+      - The script MUST embed W&B secrets directly via `os.environ["WANDB_API_KEY"] = "YOUR_KEY"`.
+      - You MUST generate a valid Kaggle `kernel-metadata.json` specifying `"language": "python", "kernel_type": "script"`, and `"dataset_sources"`.
+      - Enqueue using: `python3 ~/openclaw/skills/cluster-monitor/scripts/enqueue_task.py --project "CaLaM" --target "kaggle_account_A" --command "kaggle kernels push -p ." --dir "$(pwd)"`.
+5.  **Compile Paper**: Use `latex compile ./docs/paper/main.tex` once experiments are done and W&B metrics are gathered over the Cloud.
 6.  **Verify**: If compile fails, use `gemini` to fix the LaTeX error log.
 7.  **Commit**: Use `github` or `git` to save progress.
 
