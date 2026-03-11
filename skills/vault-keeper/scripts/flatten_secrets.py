@@ -18,7 +18,7 @@ def flatten_secrets():
         "HF_TOKEN": old.get("hf_token") or old.get("HF_TOKEN"),
         "WANDB_API_KEY": old.get("wandb_api_key") or old.get("WANDB_API_KEY"),
         "GITHUB_TOKEN": old.get("github_token"),
-        "GOOGLE_API_KEY": "AIzaSyCERCZwwRSPP2VMtCa2CaoIDIbEMV6v7W8", # Cleaned up from JSON quotes
+        "GOOGLE_API_KEY": old.get("google_api_key") or old.get("GOOGLE_API_KEY"),
         "VERTEX_API_KEY": old.get("google_vertex_api_key"),
         "VERTEX_PROJECT": old.get("google_vertex_project"),
         
