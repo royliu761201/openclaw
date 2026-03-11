@@ -6,11 +6,23 @@ import subprocess
 import datetime
 from pathlib import Path
 
+import shutil
+
 WORKSPACE_DIR = Path(os.path.expanduser("~/workspace"))
 RAW_DATA_DIR = WORKSPACE_DIR / "docs" / "research_ideation" / "radar_raw_data"
 ACADEMIC_SEARCH_PATH = os.path.expanduser("~/openclaw/skills/academic-search/scripts/search_arxiv.py")
 TAVILY_SEARCH_PATH = os.path.expanduser("~/openclaw/skills/tavily-search/scripts/search.mjs")
 EXA_SEARCH_PATH = os.path.expanduser("~/openclaw/skills/exa-search/scripts/exa_search.py")
+
+# Resolve node binary for cron execution
+NODE_BIN = shutil.which("node")
+if not NODE_BIN:
+    for path in ["/opt/homebrew/bin/node", "/usr/local/bin/node"]:
+        if os.path.isfile(path) and os.access(path, os.X_OK):
+            NODE_BIN = path
+            break
+if not NODE_BIN:
+    NODE_BIN = "node" # Fallback to bare command, though it will likely fail in cron if all else fails
 
 SEEN_INTEL_PATH = WORKSPACE_DIR / "docs" / "research_ideation" / "seen_intel.json"
 TARGETS_LIST_PATH = WORKSPACE_DIR / "docs" / "research_ideation" / "radar_targets.json"
@@ -50,7 +62,7 @@ def run_search_arxiv(query: str, max_results: int = 5) -> str:
 def run_search_tavily(query: str, max_results: int = 3) -> str:
     try:
         result = subprocess.run(
-            ["node", TAVILY_SEARCH_PATH, query, "-n", str(max_results)],
+            [NODE_BIN, TAVILY_SEARCH_PATH, query, "-n", str(max_results)],
             capture_output=True, text=True, check=True
         )
         return result.stdout

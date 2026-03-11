@@ -45,8 +45,9 @@ def run_mcporter(server_name, tool_name, args):
     arg_str = ", ".join([f'{k}: {json.dumps(v)}' for k, v in args.items() if v is not None])
     call_str = f"{server_name}.{tool_name}({arg_str})"
     
-    # Explicitly point to the config file we know about
-    config_path = "/Users/roy-jd/Documents/openclaw/config/mcporter.json"
+    import os
+    # Explicitly point to the valid SSoT config file we know about
+    config_path = os.path.expanduser("~/openclaw/config/mcporter.json")
     cmd = [MCPORTER_BIN, "--config", config_path, "call", call_str]
     
     try:
