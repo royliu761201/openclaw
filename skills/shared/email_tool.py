@@ -161,6 +161,29 @@ def delete_emails(user, pwd, imap_server, target_id):
         print(json.dumps({"error": f"IMAP Error: {e}"}))
         sys.exit(1)
 
+def mark_read_emails(user, pwd, imap_server, target_id):
+    try:
+        mail = imaplib.IMAP4_SSL(imap_server, 993)
+        mail.login(user, pwd)
+        
+        if "126.com" in imap_server or "163.com" in imap_server:
+             imaplib.Commands['ID'] = ('AUTH')
+             mail._simple_command("ID", '("name" "MacMail" "version" "5.1" "vendor" "Apple" "support-email" "apple@apple.com")')
+            
+        mail.select("INBOX")
+        
+        status, response = mail.store(str(target_id), '+FLAGS', '\\Seen')
+        if status != "OK":
+            print(json.dumps({"error": f"Failed to mark email {target_id} as read. It may not exist."}))
+            sys.exit(1)
+
+        print(json.dumps({"status": "success", "message": f"Successfully marked email ID: {target_id} as read."}))
+        mail.logout()
+
+    except Exception as e:
+        print(json.dumps({"error": f"IMAP Error: {e}"}))
+        sys.exit(1)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Academic Email Skill")
     parser.add_argument("--provider", type=str, choices=["126", "school", "jhun"], default=None, help="Email provider to use")
@@ -178,6 +201,9 @@ if __name__ == "__main__":
     delete_parser = subparsers.add_parser("delete")
     delete_parser.add_argument("--id", required=True, help="Exact IMAP sequence ID of the email to delete (obtainable via 'read' command).")
 
+    mark_read_parser = subparsers.add_parser("mark_read")
+    mark_read_parser.add_argument("--id", required=True, help="Exact IMAP sequence ID of the email to mark as read.")
+
     args = parser.parse_args()
     user, pwd, imap_server, smtp_server = load_credentials(args.provider)
 
@@ -187,5 +213,7 @@ if __name__ == "__main__":
         send_email(user, pwd, smtp_server, args.to, args.subject, args.body)
     elif args.command == "delete":
         delete_emails(user, pwd, imap_server, args.id)
+    elif args.command == "mark_read":
+        mark_read_emails(user, pwd, imap_server, args.id)
     else:
         parser.print_help()
