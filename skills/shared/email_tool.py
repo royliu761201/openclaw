@@ -57,16 +57,30 @@ def decode_str(s):
         return decoded.decode("utf-8", errors="ignore")
     return decoded
 
+def connect_imap(user, pwd, imap_server):
+    mail = imaplib.IMAP4_SSL(imap_server, 993)
+    mail.login(user, pwd)
+    if "126.com" in imap_server or "163.com" in imap_server:
+        imaplib.Commands['ID'] = ('AUTH')
+        mail._simple_command("ID", '("name" "MacMail" "version" "5.1" "vendor" "Apple" "support-email" "apple@apple.com")')
+    return mail
+
+def get_email_body(msg):
+    body = ""
+    if msg.is_multipart():
+        for part in msg.walk():
+            ctype = part.get_content_type()
+            if ctype == "text/plain":
+                payload = part.get_payload(decode=True)
+                if payload: body += payload.decode("utf-8", errors="ignore")
+    else:
+        payload = msg.get_payload(decode=True)
+        if payload: body = payload.decode("utf-8", errors="ignore")
+    return body
+
 def read_emails(user, pwd, imap_server, limit):
     try:
-        mail = imaplib.IMAP4_SSL(imap_server, 993)
-        mail.login(user, pwd)
-        
-        # NetEase anti-spam bypass: identifying the client
-        if "126.com" in imap_server or "163.com" in imap_server:
-            imaplib.Commands['ID'] = ('AUTH')
-            mail._simple_command("ID", '("name" "MacMail" "version" "5.1" "vendor" "Apple" "support-email" "apple@apple.com")')
-            
+        mail = connect_imap(user, pwd, imap_server)
         status, response = mail.select("INBOX")
         if status != "OK":
             print(json.dumps({"error": f"Failed to select INBOX: {response}"}))
@@ -91,16 +105,7 @@ def read_emails(user, pwd, imap_server, limit):
             sender = decode_str(msg.get("From", ""))
             date = msg.get("Date", "")
             
-            body = ""
-            if msg.is_multipart():
-                for part in msg.walk():
-                    ctype = part.get_content_type()
-                    if ctype == "text/plain":
-                        payload = part.get_payload(decode=True)
-                        if payload: body += payload.decode("utf-8", errors="ignore")
-            else:
-                payload = msg.get_payload(decode=True)
-                if payload: body = payload.decode("utf-8", errors="ignore")
+            body = get_email_body(msg)
 
             emails_data.append({
                 "id": e_id.decode('utf-8'),
@@ -138,13 +143,7 @@ def send_email(user, pwd, smtp_server, to, subject, body):
 
 def delete_emails(user, pwd, imap_server, target_id):
     try:
-        mail = imaplib.IMAP4_SSL(imap_server, 993)
-        mail.login(user, pwd)
-        
-        if "126.com" in imap_server or "163.com" in imap_server:
-             imaplib.Commands['ID'] = ('AUTH')
-             mail._simple_command("ID", '("name" "MacMail" "version" "5.1" "vendor" "Apple" "support-email" "apple@apple.com")')
-            
+        mail = connect_imap(user, pwd, imap_server)
         mail.select("INBOX")
         
         # Directly mark the exact IMAP sequence ID for deletion
@@ -163,13 +162,7 @@ def delete_emails(user, pwd, imap_server, target_id):
 
 def mark_read_emails(user, pwd, imap_server, target_id):
     try:
-        mail = imaplib.IMAP4_SSL(imap_server, 993)
-        mail.login(user, pwd)
-        
-        if "126.com" in imap_server or "163.com" in imap_server:
-             imaplib.Commands['ID'] = ('AUTH')
-             mail._simple_command("ID", '("name" "MacMail" "version" "5.1" "vendor" "Apple" "support-email" "apple@apple.com")')
-            
+        mail = connect_imap(user, pwd, imap_server)
         mail.select("INBOX")
         
         status, response = mail.store(str(target_id), '+FLAGS', '\\Seen')
@@ -178,6 +171,61 @@ def mark_read_emails(user, pwd, imap_server, target_id):
             sys.exit(1)
 
         print(json.dumps({"status": "success", "message": f"Successfully marked email ID: {target_id} as read."}))
+        mail.logout()
+
+    except Exception as e:
+        print(json.dumps({"error": f"IMAP Error: {e}"}))
+        sys.exit(1)
+
+def search_emails(user, pwd, imap_server, limit, sender_filter, keyword_filter, max_scan=100):
+    try:
+        mail = connect_imap(user, pwd, imap_server)
+        mail.select("INBOX")
+        status, response = mail.search(None, "ALL")
+        if status != "OK":
+            print(json.dumps({"error": "Failed to search emails"}))
+            sys.exit(1)
+
+        email_ids = response[0].split()
+        if not email_ids:
+            print(json.dumps({"message": "No emails found.", "count": 0}))
+            return
+
+        emails_data = []
+        # Parse backwards to find latest matches quickly within max_scan limit
+        scan_list = email_ids[-max_scan:] if len(email_ids) > max_scan else email_ids
+        for e_id in reversed(scan_list):
+            status, msg_data = mail.fetch(e_id, "(BODY.PEEK[HEADER.FIELDS (SUBJECT FROM DATE)])")
+            if not msg_data or not msg_data[0]: continue
+            
+            msg = email.message_from_bytes(msg_data[0][1])
+            subject = decode_str(msg.get("Subject", ""))
+            sender = decode_str(msg.get("From", ""))
+            date = msg.get("Date", "")
+            
+            if sender_filter and sender_filter not in sender:
+                continue
+                
+            # Fetch full body to check keyword if not in subject
+            status, full_data = mail.fetch(e_id, "(RFC822)")
+            full_msg = email.message_from_bytes(full_data[0][1])
+            body = get_email_body(full_msg)
+                
+            if keyword_filter and keyword_filter not in subject and keyword_filter not in body:
+                continue
+                
+            emails_data.append({
+                "id": e_id.decode('utf-8'),
+                "subject": subject,
+                "from": sender,
+                "date": date,
+                "body_preview": body[:1000] if body else ""
+            })
+            
+            if len(emails_data) >= limit:
+                break
+
+        print(json.dumps({"count": len(emails_data), "emails": emails_data}, ensure_ascii=False, indent=2))
         mail.logout()
 
     except Exception as e:
@@ -204,6 +252,12 @@ if __name__ == "__main__":
     mark_read_parser = subparsers.add_parser("mark_read")
     mark_read_parser.add_argument("--id", required=True, help="Exact IMAP sequence ID of the email to mark as read.")
 
+    search_parser = subparsers.add_parser("search")
+    search_parser.add_argument("--limit", type=int, default=5, help="Maximum number of matched emails to return")
+    search_parser.add_argument("--sender", type=str, default="", help="Filter by sender (substring match)")
+    search_parser.add_argument("--keyword", type=str, default="", help="Filter by keyword in subject or body")
+    search_parser.add_argument("--max_scan", type=int, default=100, help="Maximum number of recent emails to scan to prevent hanging")
+
     args = parser.parse_args()
     user, pwd, imap_server, smtp_server = load_credentials(args.provider)
 
@@ -215,5 +269,7 @@ if __name__ == "__main__":
         delete_emails(user, pwd, imap_server, args.id)
     elif args.command == "mark_read":
         mark_read_emails(user, pwd, imap_server, args.id)
+    elif args.command == "search":
+        search_emails(user, pwd, imap_server, args.limit, args.sender, args.keyword, args.max_scan)
     else:
         parser.print_help()
