@@ -201,3 +201,21 @@ _Even worse_: If you mechanically patch `~/.openclaw_env` but inject the legacy 
   2. Inspect the SSoT JSON file (`cat $OPENCLAW_CONFIG_PATH | grep 'list'`) to physically confirm the `id` exists.
   3. Ensure all CLI execution commands strictly prepend `source ~/.openclaw_env`.
 - **The Enforcer Script**: `~/workspace/scripts/audit_whitebox_env.sh` has been built to automatically cross-check the PM2 daemon environment hashes against the `~/.openclaw_env` definitions and the physical SSoT JSON file to catch "Split-Brain Config" instantly.
+
+### 19. The SIGINT Death-Rattle (Memory Flush Resurrection)
+
+_Retrospective Issue_: An old, expired Google API key continuously resurrected itself inside `auth-profiles.json` upon every PM2 process restart, despite local manual file deletion.
+
+- **The Core Poison**: OpenClaw intercepts normal `SIGINT` signals (like those fired by `pm2 restart`). Just before the Node.js process gracefully dies, it synchronously flushes its entire in-memory agent state back to `auth-profiles.json` on the physical disk via `fs.writeFileSync()`.
+- **The Solution**: When manually wiping tainted authentication states, you **MUST NOT** rely on graceful restarts. To defeat the PM2 Death-Rattle, execute an instantaneous, non-graceful kernel kill:
+  `pkill -9 -f node && rm -f <path-to-auth-profiles.json>`
+  Only then are you allowed to spin the gateway daemon back up.
+
+### 20. PM2 Path Cloning & The Native Script Abstraction Trap
+
+_Retrospective Issue_: The PM2 ecosystem silently swallowed `ENOENT` faults on Node 02 because it attempted to invoke Mac Homebrew paths synced via `ecosystem.config.cjs` from Node 01, completely ignoring Node 02's actual NVM deployment.
+
+- **The Native Run Script Mandate**: You are **ABSOLUTELY FORBIDDEN** from pointing `ecosystem.config.cjs` directly at ES Module entrypoints (`openclaw.mjs` or `run-node.mjs`) when deploying across multi-node grids! PM2's internal JavaScript spawner cannot cleanly resolve differing OS paths.
+- **The SOP**:
+  1. For Edge Nodes, you must write a pure Bash wrapper (`start-gateway-native.sh`) that sources the native `~/.nvm/nvm.sh` and contains **ABSOLUTE TARGET PATHS** to the executing Node binary (`/Users/roy-002/.nvm/versions/node/v22.14.0/bin/node`).
+  2. Map `ecosystem.config.cjs` interpreter to `bash` and repoint it directly to that target Bash file script, abstracting PM2 entirely from the Node.js instantiation.
