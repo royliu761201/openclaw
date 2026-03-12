@@ -200,22 +200,20 @@ _Even worse_: If you mechanically patch `~/.openclaw_env` but inject the legacy 
   1. Inspect `~/.openclaw_env` to confirm `OPENCLAW_CONFIG_PATH` points EXACTLY to the Git SSoT path, NEVER the default `~/.openclaw/config/` path.
   2. Inspect the SSoT JSON file (`cat $OPENCLAW_CONFIG_PATH | grep 'list'`) to physically confirm the `id` exists.
   3. Ensure all CLI execution commands strictly prepend `source ~/.openclaw_env`.
-- **The Enforcer Script**: `~/workspace/scripts/audit_whitebox_env.sh` has been built to automatically cross-check the PM2 daemon environment hashes against the `~/.openclaw_env` definitions and the physical SSoT JSON file to catch "Split-Brain Config" instantly.
+- **The Enforcer Script**: `~/workspace/scripts/audit_whitebox_env.sh` has been built to ### 19. SIGINT 的临死反扑 (内存状态冲刷复活陷阱)
 
-### 19. The SIGINT Death-Rattle (Memory Flush Resurrection)
+_近期复盘事故_: 即使手动从磁盘删除了 `auth-profiles.json` 文件，每次 PM2 重启后，那个过期作废的 Google API 密钥依然会像幽灵一样再次复活在该文件里。
 
-_Retrospective Issue_: An old, expired Google API key continuously resurrected itself inside `auth-profiles.json` upon every PM2 process restart, despite local manual file deletion.
-
-- **The Core Poison**: OpenClaw intercepts normal `SIGINT` signals (like those fired by `pm2 restart`). Just before the Node.js process gracefully dies, it synchronously flushes its entire in-memory agent state back to `auth-profiles.json` on the physical disk via `fs.writeFileSync()`.
-- **The Solution**: When manually wiping tainted authentication states, you **MUST NOT** rely on graceful restarts. To defeat the PM2 Death-Rattle, execute an instantaneous, non-graceful kernel kill:
+- **核心毒点**: OpenClaw 会主动拦截通常由 `pm2 restart` 发送的 `SIGINT` 信号。就在 Node.js 进程优雅死亡前的一瞬间，它会通过 `fs.writeFileSync()` 发起最后一次同步调用，将有毒的完整内存状态硬写回磁盘上的 `auth-profiles.json` 中。
+- **排雷标准操作流程 (SOP)**: 当你需要手动清理被深度污染的身份认证状态时，**绝不允许**依赖任何优雅的重启机制。要粉碎 PM2 的临死反扑，你必须执行无痛的瞬时内核级绞杀：
   `pkill -9 -f node && rm -f <path-to-auth-profiles.json>`
-  Only then are you allowed to spin the gateway daemon back up.
+  只有在确保幽灵进程被彻底爆头后，才允许重新拉起网关守护进程。
 
-### 20. PM2 Path Cloning & The Native Script Abstraction Trap
+### 20. PM2 路径克隆综合征与原生脚本剥离法则
 
-_Retrospective Issue_: The PM2 ecosystem silently swallowed `ENOENT` faults on Node 02 because it attempted to invoke Mac Homebrew paths synced via `ecosystem.config.cjs` from Node 01, completely ignoring Node 02's actual NVM deployment.
+_近期复盘事故_: PM2 进程池在 Node 02 上把致命的 `ENOENT` 错误静默咽下了，因为它试图去强行执行通过 `ecosystem.config.cjs` 从 Node 01 复制过来的 Mac Homebrew 系统路径，完全无视了 Node 02 的纯净 NVM 部署环境。
 
-- **The Native Run Script Mandate**: You are **ABSOLUTELY FORBIDDEN** from pointing `ecosystem.config.cjs` directly at ES Module entrypoints (`openclaw.mjs` or `run-node.mjs`) when deploying across multi-node grids! PM2's internal JavaScript spawner cannot cleanly resolve differing OS paths.
-- **The SOP**:
-  1. For Edge Nodes, you must write a pure Bash wrapper (`start-gateway-native.sh`) that sources the native `~/.nvm/nvm.sh` and contains **ABSOLUTE TARGET PATHS** to the executing Node binary (`/Users/roy-002/.nvm/versions/node/v22.14.0/bin/node`).
-  2. Map `ecosystem.config.cjs` interpreter to `bash` and repoint it directly to that target Bash file script, abstracting PM2 entirely from the Node.js instantiation.
+- **原生 Bash 执行外壳铁律**: 在部署多节点拓扑时，**绝对禁止**将 `ecosystem.config.cjs` 直接指向任何 ES Module 入口文件 (`openclaw.mjs` 或 `run-node.mjs`)！PM2 内部羸弱的 JavaScript 孵化器根本无法跨越不同 OS 层级的路径陷阱。
+- **排雷标准操作流程 (SOP)**:
+  1. 面对边缘节点，必须编写一个纯粹的 Bash 脚本外壳 (`start-gateway-native.sh`)，内部首先挂载原生的 `~/.nvm/nvm.sh`，并且必须以**绝对硬编码路径**去执行 Node 二进制文件 (`/Users/roy-002/.nvm/versions/node/v22.14.0/bin/node`)。
+  2. 在 `ecosystem.config.cjs` 中，必须将解析器强制设为 `bash`，并让其指向那个原生的 Bash 外壳脚本。此举将 PM2 完全挡在 Node.js 环境的初始化屏障之外。
