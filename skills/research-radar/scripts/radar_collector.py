@@ -35,30 +35,8 @@ if missing_keys:
 WORKSPACE_DIR = Path(os.path.expanduser("~/workspace"))
 RAW_DATA_DIR = WORKSPACE_DIR / "docs" / "research_ideation" / "radar_raw_data"
 ACADEMIC_SEARCH_PATH = os.path.expanduser("~/openclaw/skills/academic-search/scripts/search_arxiv.py")
-TAVILY_SEARCH_PATH = os.path.expanduser("~/openclaw/skills/tavily-search/scripts/search.mjs")
+TAVILY_SEARCH_PATH = os.path.expanduser("~/openclaw/skills/tavily-search/scripts/search_tavily.py")
 EXA_SEARCH_PATH = os.path.expanduser("~/openclaw/skills/exa-search/scripts/exa_search.py")
-
-# Resolve node binary for cron execution
-NODE_BIN = shutil.which("node")
-BASE_PATHS = ["/opt/homebrew/bin/node", "/usr/local/bin/node"]
-if not NODE_BIN:
-    for path in BASE_PATHS:
-        if os.path.isfile(path) and os.access(path, os.X_OK):
-            NODE_BIN = path
-            break
-if not NODE_BIN:
-    import glob
-    nvm_nodes = glob.glob(os.path.expanduser("~/.nvm/versions/node/*/bin/node"))
-    if nvm_nodes:
-        NODE_BIN = sorted(nvm_nodes)[-1]
-
-if not NODE_BIN:
-    print("❌ FATAL [Fail-Early]: 'node' binary not found. Research Radar cannot execute Tavily.")
-    sys.exit(1)
-
-# CRITICAL FIX for nested scripts (exa_search.py calls node implicitly through `#!/usr/bin/env node` inside mcporter)
-# We must inject the discovered Node binary directory back into OS PATH so subprocesses can find it.
-os.environ["PATH"] = os.path.dirname(NODE_BIN) + os.pathsep + os.environ.get("PATH", "")
 
 # SSoT ONLY: Use the python interpreter that invoked us
 PYTHON_BIN = sys.executable
@@ -101,7 +79,7 @@ def run_search_arxiv(query: str, max_results: int = 5) -> str:
 def run_search_tavily(query: str, max_results: int = 3) -> str:
     try:
         result = subprocess.run(
-            [NODE_BIN, TAVILY_SEARCH_PATH, query, "-n", str(max_results)],
+            [PYTHON_BIN, TAVILY_SEARCH_PATH, query, "-n", str(max_results)],
             capture_output=True, text=True, check=True
         )
         return result.stdout

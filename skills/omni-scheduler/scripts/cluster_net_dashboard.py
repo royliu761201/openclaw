@@ -16,11 +16,12 @@ def check_node(node):
     for name, url in TARGETS.items():
         if name == "GitHub" and node in ["01", "02", "03"]:
             if node == "01":
-                full_cmd = "ssh -T -o ConnectTimeout=3 -o StrictHostKeyChecking=accept-new git@github.com 2>&1"
+                full_cmd = "ssh -T -o ConnectTimeout=3 -o StrictHostKeyChecking=accept-new git@github.com"
             else:
                 full_cmd = f"ssh -n -o BatchMode=yes -o ConnectTimeout=3 {node} 'ssh -T -o ConnectTimeout=3 -o StrictHostKeyChecking=accept-new git@github.com 2>&1'"
             try:
-                out = subprocess.check_output(full_cmd, shell=True, stderr=subprocess.STDOUT, timeout=10).decode().strip()
+                import shlex
+                out = subprocess.check_output(shlex.split(full_cmd), stderr=subprocess.STDOUT, timeout=10).decode().strip()
             except subprocess.CalledProcessError as e:
                 out = e.output.decode().strip() if e.output else ""
             except Exception:
@@ -41,7 +42,8 @@ def check_node(node):
             full_cmd = f"ssh -n -o BatchMode=yes -o ConnectTimeout=3 {node} 'curl -I -s -m 3 {url}'"
         
         try:
-            out = subprocess.check_output(full_cmd, shell=True, stderr=subprocess.DEVNULL, timeout=5).decode().strip()
+            import shlex
+            out = subprocess.check_output(shlex.split(full_cmd), stderr=subprocess.DEVNULL, timeout=5).decode().strip()
             if "HTTP" in out:
                 results[name] = "🟩 OK"
             else:

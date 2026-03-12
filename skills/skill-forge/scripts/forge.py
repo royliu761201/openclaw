@@ -72,7 +72,7 @@ def create_scaffold(skill_name):
         f.write('DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"\n')
         f.write('cd "$DIR"\n\n')
         f.write('echo "1/3 Destroying old world..."\n')
-        f.write('rm -rf venv\n')
+        f.write('rm -rf venv # clear existing sandbox cache\n')
         f.write('python3 -m venv venv\n\n')
         f.write('echo "2/3 Engaging Sandbox Vacuum (No-Network Policy Limit)..."\n')
         f.write('# IMPORTANT: Change RAW_DATA_DIR to point to your physical WHEELS_CACHE_DIR on the target node.\n')

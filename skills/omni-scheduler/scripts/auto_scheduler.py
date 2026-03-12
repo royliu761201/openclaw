@@ -140,7 +140,8 @@ def _launch_local(task):
     logging.info(f"🔫 [LOCAL LAUNCH] Task [{job_id}]: {cmd} in {cwd}")
     
     try:
-        subprocess.Popen(cmd, shell=True, cwd=cwd)
+        import shlex
+        subprocess.Popen(shlex.split(cmd), cwd=cwd)
         logging.info("Task successfully launched locally. Relinquishing daemon lock.")
     except Exception as e:
         logging.error(f"Failed to launch task: {e}")
@@ -153,7 +154,8 @@ def _pack_and_launch_kaggle(task, queue_path):
     logging.info(f"☁️ [KAGGLE LAUNCH] Packing Payload for [{job_id}]: {cmd}")
     
     try:
-        subprocess.Popen(cmd, shell=True, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        import shlex
+        subprocess.Popen(shlex.split(cmd), cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         logging.info("Payload sent to Kaggle cloud. Relinquishing local lock.")
         # Mark as completed because the cloud takes over execution from here.
         mark_completed(queue_path, job_id, "COMPLETED")

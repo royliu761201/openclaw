@@ -19,7 +19,7 @@ def update_skills():
             # Check for npm
             if os.path.exists(os.path.join(skill_path, 'package.json')):
                 try:
-                    subprocess.run(['npm', 'update'], cwd=skill_path, check=True, shell=True)
+                    subprocess.run(['npm', 'update'], cwd=skill_path, check=True)
                 except subprocess.CalledProcessError as e:
                     print(f"Npm update failed for {skill}: {e}")
 

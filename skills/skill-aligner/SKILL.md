@@ -9,29 +9,37 @@ metadata: { "openclaw": { "requires": { "bins": ["python3"] } } }
 
 ## Overview
 
-The `skill-aligner` is a highly-physical, zero-hallucination automated auditing tool. Its sole purpose is to forcibly align all `openclaw/skills/` documents with the **05_SYSTEM_AUDIT_PROTOCOL**. It accomplishes this by unleashing regex-driven Python probes (`audit.py`) across the entire skill base to catch specific structural or semantic violations of the `GEMINI_L1_CONSTITUTION` (or the local `.clinerules`).
+The `skill-aligner` is a highly-physical, zero-hallucination automated auditing tool. Its sole purpose is to forcibly align all `openclaw/skills/` documents with the **05_SYSTEM_AUDIT_PROTOCOL** and the new **9D Anti-Overengineering & Security Codex**. It accomplishes this by unleashing regex-driven Python probes (`audit_9d.py` and `audit.py`) across the entire skill base to catch specific structural or semantic violations of the `GEMINI_L1_CONSTITUTION`.
 
-**DO NOT attempt to "read files and check manually" when updating the system. ALWAYS execute the `audit_skills` tool first to get a deterministic failing report.**
+**DO NOT attempt to "read files and check manually" when updating the system. ALWAYS execute the `audit_9d` and `audit_skills` tools first to get a deterministic failing report.**
 
-## Target Violations (The Audit Blacklist)
+## The 9D Target Violations (The Audit Blacklist)
 
-When run, the tool strictly scans for:
+When run, the tool `audit_9d.py` strictly scans for:
 
-1. **[Heavy Asset Visa Check]**: Any tool downloading models/datasets (like `kaggle`, `huggingface`) that fails to physically write the required `[L1 Constitution Block]` to block Git Repo bloat.
-2. **[Ghost Path Eradication]**: Any tool referencing eradicated archaic Linux paths like `[/roo` + `t/research_bot/]` instead of the canonical `~/workspace/projects_core/` path anchor.
-3. **[Anti-Hallucination]**: Any occurrence of "requests", "BeautifulSoup", or "cat >" inside skills where native system proxies exist (e.g., `academic-search` must be used instead of building makeshift scrapers).
+1. **[DIM_1: NPM Bloat]**: Node.js/NPM artifacts (`.js`, `.mjs`, `package.json`) inside purely backend/Edge scraping skills. (Banned to prevent dependency hell on Node 02).
+2. **[DIM_2: Wrapper Bloat]**: Calling naive CLIs via Python `subprocess` (e.g., bare `curl`) instead of native modules (like `requests` or `urllib`).
+3. **[DIM_3/6: Hardcoded Secrets]**: Finding `Bearer token` or `API_KEY=...` mapped directly into scripts. All keys MUST stream purely from `~/.openclaw_env`.
+4. **[DIM_4/5: Server Bloat]**: Building persistent MCP servers for simple HTTP tasks instead of direct scripts.
+5. **[DIM_7: Destructive Ops]**: Finding raw `rm -rf` commands targeting non-`/tmp` directories (violates OpenClaw L0 Invulnerability Law). Must use `.Trash` isolation.
+6. **[DIM_8: Shell Injection]**: Catching `subprocess.run(shell=True, ...)` which introduces lethal injection vulnerabilities. Must use array-based argument vectors.
+7. **[DIM_9: Egress Control]**: Finding covert tracking, telemetry, or analytics endpoints inside scripts that report back without explicit OpenClaw SSOT verification.
+8. **[Legacy 1: Ghost Path Eradication]**: Eradicating archaic paths like `[/roo` + `t/research_bot/]`.
+9. **[Legacy 2: Anti-Hallucination]**: Arbitrary arXiv HTML scrapers without using `academic-search`.
 
 ## Action Toolkit
 
-### `audit_skills`
+### `audit_9d_scanner` (The Supreme Executioner)
 
-Scans all `SKILL.md` files under `~/openclaw/skills/` against the constitution blacklist.
+Scans all scripts (`.py`, `.sh`, `.mjs`) under `~/openclaw/skills/` against the 9D security and anti-bloat blacklist.
 
 **Usage:**
 
 ```bash
-python3 scripts/audit.py
+python3 scripts/audit_9d.py
 ```
+
+### `audit_skills` (Legacy Semantic Check)
 
 ### Remediation Protocol
 

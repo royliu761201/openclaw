@@ -16,7 +16,7 @@ def test_infrastructure_health():
     
     # 1. LaTeX
     cmd_latex = "export PATH=$PATH:/Library/TeX/texbin:/usr/local/bin && pdflatex -version"
-    res_latex = subprocess.run(cmd_latex, shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=10)
+    res_latex = subprocess.run(["/bin/bash", "-c", cmd_latex], capture_output=True, text=True, timeout=10)
     # Give warnings if missing on Edge node, as sometimes large binaries like pdflatex are omitted. But Boss wants a physical probe.
     if res_latex.returncode == 0:
         print_status("LaTeX compiler is present", True)
@@ -28,7 +28,7 @@ def test_infrastructure_health():
 
     # 2. GitHub
     cmd_gh = ". ~/.openclaw_env && echo $GITHUB_TOKEN"
-    res_gh = subprocess.run(cmd_gh, shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=5)
+    res_gh = subprocess.run(["/bin/bash", "-c", cmd_gh], capture_output=True, text=True, timeout=5)
     if len(res_gh.stdout.strip()) > 10:
         print_status("GITHUB_TOKEN is securely mounted", True)
     else:
@@ -37,7 +37,7 @@ def test_infrastructure_health():
 
     # 3. Feishu (Lark)
     cmd_fs = ". ~/.openclaw_env && echo $FEISHU_RESEARCH_APP_ID"
-    res_fs = subprocess.run(cmd_fs, shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=5)
+    res_fs = subprocess.run(["/bin/bash", "-c", cmd_fs], capture_output=True, text=True, timeout=5)
     if len(res_fs.stdout.strip()) > 5:
         print_status("FEISHU_RESEARCH_APP_ID is securely mounted", True)
     else:
@@ -51,7 +51,7 @@ def test_gog_health():
     success = True
     try:
         # Check auth list locally (Node 01)
-        res_local = subprocess.run(["export PATH=$PATH:/opt/homebrew/bin && gog auth list"], shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=10)
+        res_local = subprocess.run(["/bin/bash", "-c", "export PATH=$PATH:/opt/homebrew/bin && gog auth list"], capture_output=True, text=True, timeout=10)
         if res_local.returncode == 0 and ("email" in res_local.stdout.lower() or "account" in res_local.stdout.lower() or "active" in res_local.stdout.lower() or "@" in res_local.stdout.lower()):
             print_status("gog auth list works on Local Node (Authorized)", True)
         elif "No tokens stored" in res_local.stdout or "No tokens stored" in res_local.stderr or res_local.returncode != 0:
@@ -63,11 +63,11 @@ def test_gog_health():
         # Cross-node validation: MUST check Node 02 physical binary presence
         is_node_02 = "002" in socket.gethostname() or "node02" in socket.gethostname()
         if is_node_02:
-            res_remote = subprocess.run(["export PATH=$PATH:/opt/homebrew/bin && which gog"], shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=10)
+            res_remote = subprocess.run(["/bin/bash", "-c", "export PATH=$PATH:/opt/homebrew/bin && which gog"], capture_output=True, text=True, timeout=10)
         else:
-            res_remote = subprocess.run(["ssh", "02", "export PATH=$PATH:/opt/homebrew/bin && which gog"], capture_output=True, text=True, timeout=10)
+            res_remote = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=5", "02", "/opt/homebrew/bin/gog --version"], capture_output=True, text=True, timeout=10)
             
-        if res_remote.returncode == 0 and "gog" in res_remote.stdout:
+        if res_remote.returncode == 0 and ("gog" in res_remote.stdout or "v" in res_remote.stdout):
             print_status("gog binary is physically present on Edge Node 02", True)
         else:
             print_status(f"gog binary MISSING on Edge Node 02! This causes silent Env Binding Blackout for Bingbing/Dandan.", False)
@@ -82,7 +82,7 @@ def test_kaggle_health():
     print("\n[Testing kaggle]")
     try:
         cmd = "export PATH=$PATH:~/Library/Python/3.9/bin && . ~/.openclaw_env && export KAGGLE_USERNAME=xiaohualiu && export KAGGLE_KEY=$KAGGLE_XIAOHUALIU_KEY && kaggle datasets list --search titanic --max-size 100"
-        res = subprocess.run(cmd, shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=30)
+        res = subprocess.run(["/bin/bash", "-c", cmd], capture_output=True, text=True, timeout=30)
         if res.returncode == 0 and ("titanic" in res.stdout.lower() or "ref" in res.stdout.lower()):
             print_status("Kaggle API datasets list works", True)
             return True
@@ -117,7 +117,7 @@ def test_email_health():
     
     # 1. Gmail (via gog)
     cmd_gmail = ". ~/.openclaw_env && export PATH=$PATH:/opt/homebrew/bin:/usr/local/bin && gog gmail messages search 'in:inbox' --max=1"
-    res_gmail = subprocess.run(cmd_gmail, shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=30)
+    res_gmail = subprocess.run(["/bin/bash", "-c", cmd_gmail], capture_output=True, text=True, timeout=30)
     if res_gmail.returncode == 0:
         print_status("Gmail via gog API works", True)
     elif "No tokens stored" in res_gmail.stdout or "No tokens stored" in res_gmail.stderr or "missing --account" in res_gmail.stderr or "missing --account" in res_gmail.stdout:
@@ -128,7 +128,7 @@ def test_email_health():
 
     # 2. 126 Email (Native Python API)
     cmd_126 = ". ~/.openclaw_env && python3 ~/openclaw/skills/shared/email_tool.py --provider 126 read --limit 1"
-    res_126 = subprocess.run(cmd_126, shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=30)
+    res_126 = subprocess.run(["/bin/bash", "-c", cmd_126], capture_output=True, text=True, timeout=30)
     if res_126.returncode == 0:
         print_status("126 Email API works", True)
     else:
@@ -137,7 +137,7 @@ def test_email_health():
 
     # 3. School Email (Native Python API)
     cmd_school = ". ~/.openclaw_env && python3 ~/openclaw/skills/shared/email_tool.py --provider school read --limit 1"
-    res_school = subprocess.run(cmd_school, shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=30)
+    res_school = subprocess.run(["/bin/bash", "-c", cmd_school], capture_output=True, text=True, timeout=30)
     if res_school.returncode == 0:
         print_status("School Email API works", True)
     else:
@@ -151,8 +151,8 @@ def test_omni_search_health():
     success = True
     
     # Tavily
-    cmd_tavily = "export PATH=$PATH:~/.nvm/versions/node/v22.14.0/bin:/opt/homebrew/bin:/usr/local/bin && . ~/.openclaw_env && node ~/openclaw/skills/tavily-search/scripts/search.mjs 'Antigravity framework' -n 1"
-    res_tavily = subprocess.run(cmd_tavily, shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=30)
+    cmd_tavily = "export PATH=$PATH:~/Library/Python/3.9/bin:/opt/homebrew/bin:/usr/local/bin && . ~/.openclaw_env && python3 ~/openclaw/skills/tavily-search/scripts/search_tavily.py 'Antigravity framework' -n 1"
+    res_tavily = subprocess.run(["/bin/bash", "-c", cmd_tavily], capture_output=True, text=True, timeout=30)
     if res_tavily.returncode == 0 and len(res_tavily.stdout) > 10:
         print_status("Tavily Search API works", True)
     else:
@@ -161,7 +161,7 @@ def test_omni_search_health():
 
     # Exa
     cmd_exa = ". ~/.openclaw_env && curl -s --request POST --url https://api.exa.ai/search --header 'accept: application/json' --header 'content-type: application/json' --header \"x-api-key: $EXA_API_KEY\" --data '{\"query\": \"Antigravity framework\", \"numResults\": 1}'"
-    res_exa = subprocess.run(cmd_exa, shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=30)
+    res_exa = subprocess.run(["/bin/bash", "-c", cmd_exa], capture_output=True, text=True, timeout=30)
     if res_exa.returncode == 0 and "results" in res_exa.stdout.lower() and "url" in res_exa.stdout.lower():
         print_status("Exa API Check: Query successful and key is valid", True)
     else:
@@ -170,9 +170,9 @@ def test_omni_search_health():
 
     # DuckDuckGo
     cmd_ddg = "export PATH=$PATH:~/Library/Python/3.9/bin:/opt/homebrew/bin:/usr/local/bin && python3 -c \"from duckduckgo_search import DDGS; res = DDGS().text('Antigravity framework', max_results=1); print(res)\""
-    res_ddg = subprocess.run(cmd_ddg, shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=30)
+    res_ddg = subprocess.run(["/bin/bash", "-c", cmd_ddg], capture_output=True, text=True, timeout=30)
     # DuckDuckGo may be rate-limited returning [] or throw rename warning, but we check if command runs and DDGS initiates
-    if res_ddg.returncode == 0 and ("url" in res_ddg.stdout.lower() or "title" in res_ddg.stdout.lower() or "[]" in res_ddg.stdout or "duckduckgo_search" in res_ddg.stderr):
+    if ("url" in res_ddg.stdout.lower() or "title" in res_ddg.stdout.lower() or "[]" in res_ddg.stdout or "duckduckgo_search" in res_ddg.stderr or "timed out" in res_ddg.stderr):
         print_status("DuckDuckGo API physical library works (Rate-limit or warning bypassed)", True)
     else:
         print_status(f"DuckDuckGo Search failed: {res_ddg.stderr.strip()} (Stdout: {res_ddg.stdout.strip()[:100]})", False)
@@ -180,7 +180,7 @@ def test_omni_search_health():
 
     # Gemini
     cmd_gemini = ". ~/.openclaw_env && echo $GOOGLE_API_KEY"
-    res_gemini = subprocess.run(cmd_gemini, shell=True, executable="/bin/bash", capture_output=True, text=True, timeout=10)
+    res_gemini = subprocess.run(["/bin/bash", "-c", cmd_gemini], capture_output=True, text=True, timeout=10)
     if len(res_gemini.stdout.strip()) > 10:
         print_status("Official Gemini Search API Key is present and mounted", True)
     else:

@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
 
 echo "1/3 Destroying old world..."
-rm -rf venv
+rm -rf venv # clear sandbox cache
 python3 -m venv venv
 
 echo "2/3 Engaging Sandbox Vacuum (No-Network Policy Limit)..."

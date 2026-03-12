@@ -1,64 +1,60 @@
 #!/usr/bin/env python3
-import argparse
-import subprocess
-import json
+import os
 import sys
-import shutil
+import argparse
+import warnings
+import re
+from pathlib import Path
 
-# Check for mcporter binary
-MCPORTER_BIN = shutil.which("mcporter")
-if not MCPORTER_BIN:
-    # Try looking in common locations
-    import os
-    home = os.path.expanduser("~")
-    # Try looking in common locations
-    paths_to_check = [
-        f"{home}/.cargo/bin/mcporter",
-        "/usr/local/bin/mcporter",
-        "/opt/homebrew/bin/mcporter"
-    ]
-    
-    for path in paths_to_check:
-        if os.path.isfile(path) and os.access(path, os.X_OK):
-            MCPORTER_BIN = path
-            break
+# Suppress urllib3 warnings about OpenSSL
+warnings.filterwarnings("ignore", category=UserWarning, module="urllib3")
+warnings.filterwarnings("ignore", message="urllib3 v2 only supports OpenSSL 1.1.1+")
 
-if not MCPORTER_BIN:
-    # Fallback: check if 'mcporter' is in PATH even if shutil.which failed earlier context
-    try:
-        result = subprocess.run(["which", "mcporter"], capture_output=True, text=True)
-        if result.returncode == 0:
-            MCPORTER_BIN = result.stdout.strip()
-    except Exception:
-        pass
+def load_openclaw_env():
+    # Cron environments are absolutely bare. We explicitly parse the Node's SSoT env file.
+    env_file = Path(os.path.expanduser("~/.openclaw_env"))
+    if env_file.exists():
+        with open(env_file, "r") as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("export "):
+                    parts = line[7:].split("=", 1)
+                    if len(parts) == 2:
+                        key, val = parts[0].strip(), parts[1].strip()
+                        # Remove bounding quotes
+                        val = re.sub(r'^["\']|["\']$', '', val)
+                        os.environ[key] = val
 
-if not MCPORTER_BIN:
-    print("Error: 'mcporter' binary not found in PATH or standard locations.")
-    print("Please install via: npm install -g mcporter")
+try:
+    from exa_py import Exa
+except ImportError:
+    print("Error: 'exa_py' module not found. Please install it via: pip install exa_py")
     sys.exit(1)
 
-def run_mcporter(server_name, tool_name, args):
-    """Executes an MCP tool call via mcporter."""
-    # Construct arguments string for mcporter call format
-    # Example: exa.web_search_exa(query: "search term", numResults: 5)
-    
-    arg_str = ", ".join([f'{k}: {json.dumps(v)}' for k, v in args.items() if v is not None])
-    call_str = f"{server_name}.{tool_name}({arg_str})"
-    
-    import os
-    # Explicitly point to the valid SSoT config file we know about
-    config_path = os.path.expanduser("~/openclaw/config/mcporter.json")
-    cmd = [MCPORTER_BIN, "--config", config_path, "call", call_str]
-    
-    try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        return result.stdout
-    except subprocess.CalledProcessError as e:
-        print(f"Error calling {tool_name}: {e.stderr}")
-        sys.exit(e.returncode)
+def get_exa_client():
+    # SSoT: Pure environment variable injection
+    load_openclaw_env()
+    api_key = os.environ.get("EXA_API_KEY")
+    if not api_key:
+        print("Error: EXA_API_KEY environment variable not set. Please configure ~/.openclaw_env")
+        sys.exit(1)
+    return Exa(api_key)
+
+def format_results(results):
+    for idx, res in enumerate(results):
+        print(f"### Result {idx + 1}: {res.title}")
+        print(f"**URL:** {res.url}")
+        if getattr(res, 'author', None):
+            print(f"**Author:** {res.author}")
+        if getattr(res, 'published_date', None):
+            print(f"**Published Date:** {res.published_date}")
+        if getattr(res, 'text', None):
+            text = res.text[:3000] + ("..." if len(res.text) > 3000 else "")
+            print(f"\n{text}\n")
+        print("-" * 40)
 
 def main():
-    parser = argparse.ArgumentParser(description="Exa Web Search CLI Wrapper")
+    parser = argparse.ArgumentParser(description="Pure-Python Exa Search CLI Wrapper")
     subparsers = parser.add_subparsers(dest="command", help="Search type")
 
     # Web Search
@@ -80,10 +76,7 @@ def main():
     args = parser.parse_args()
 
     if not args.command:
-        # Default to web search if no subcommand provided but query exists? 
-        # Actually ArgumentParser handles this by showing help usually, but let's be flexible
         if len(sys.argv) > 1 and not sys.argv[1].startswith("-"):
-            # Treat as web search query
             args.command = "web"
             args.query = sys.argv[1]
             args.num = 5
@@ -92,30 +85,40 @@ def main():
             parser.print_help()
             sys.exit(0)
 
-    server = "exa" 
-    # Check if 'exa' or 'exa-full' is available? Assuming 'exa' for basic tools.
-    
-    if args.command == "web":
-        output = run_mcporter(server, "web_search_exa", {
-            "query": args.query,
-            "numResults": args.num,
-            # "type": args.type # mcporter/exa API might verify this
-        })
-        print(output)
+    try:
+        exa = get_exa_client()
+        
+        if args.command == "web":
+            # Native exa API call for generic web search
+            response = exa.search_and_contents(
+                args.query,
+                num_results=args.num,
+                text=True
+            )
+            format_results(response.results)
 
-    elif args.command == "code":
-        output = run_mcporter(server, "get_code_context_exa", {
-            "query": args.query,
-            "tokensNum": args.tokens
-        })
-        print(output)
+        elif args.command == "code":
+            # Focused Exa API search for code/github
+            response = exa.search_and_contents(
+                args.query,
+                num_results=args.num if hasattr(args, 'num') else 3,
+                text={"max_characters": args.tokens * 4}
+            )
+            format_results(response.results)
 
-    elif args.command == "company":
-        output = run_mcporter(server, "company_research_exa", {
-            "companyName": args.name,
-            "numResults": args.num
-        })
-        print(output)
+        elif args.command == "company":
+            # Company focus 
+            response = exa.search_and_contents(
+                args.name,
+                category="company",
+                num_results=args.num,
+                text=True
+            )
+            format_results(response.results)
+
+    except Exception as e:
+        print(f"Error querying Exa: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

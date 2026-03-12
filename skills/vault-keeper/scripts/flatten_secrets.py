@@ -19,8 +19,6 @@ def flatten_secrets():
         "WANDB_API_KEY": old.get("wandb_api_key") or old.get("WANDB_API_KEY"),
         "GITHUB_TOKEN": old.get("github_token"),
         "GOOGLE_API_KEY": old.get("google_api_key") or old.get("GOOGLE_API_KEY"),
-        "VERTEX_API_KEY": old.get("google_vertex_api_key"),
-        "VERTEX_PROJECT": old.get("google_vertex_project"),
         
         # Groq
         "GROQ_API_KEY": old.get("groq", {}).get("keys", [""])[0],

@@ -40,3 +40,7 @@ Send an email using the 126 account.
 ```bash
 python3 skills/shared/email_tool.py --provider 126 send --to "collaborator@university.edu" --subject "Status" --body "..."
 ```
+
+## [Anti-Hallucination]
+
+- **The Native Extension Mandate**: You are strictly PROHIBITED from fabricating Python scripts in `/tmp` to read, send, or search emails. You MUST use or extend `~/openclaw/skills/shared/email_tool.py` directly. Do NOT bypass the official tooling structure!

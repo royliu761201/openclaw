@@ -60,3 +60,7 @@ Delete a specific email from the university inbox using its exact IMAP ID (obtai
 ```bash
 python3 skills/shared/email_tool.py --provider school delete --id 42
 ```
+
+## [Anti-Hallucination]
+
+- **The Native Extension Mandate**: You are strictly PROHIBITED from fabricating Python scripts in `/tmp` to read, send, or search emails. You MUST use or extend `~/openclaw/skills/shared/email_tool.py` directly. Do NOT bypass the official tooling structure!

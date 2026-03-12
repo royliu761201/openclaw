@@ -72,8 +72,8 @@ def sync():
     # 🛡️ Boss Directive (Least Privilege): Strictly limit what goes to edge nodes.
     # No private VPN/Mail/SSH/DB passwords should ever leave Node 01.
     edge_allowed_prefixes = (
-        "FEISHU_", "GOOGLE_", "GROQ_", "OPENAI_", "WANDB_", "HF_", "TAVILY_",
-        "GITHUB_", "VERTEX_", "KAGGLE_", "NVIDIA_", "EXA_", "EMAIL_", "PERSONAL_", "GMAIL_", "ACADEMIC_"
+        "FEISHU_", "GEMINI_", "GOOGLE_", "GROQ_", "OPENAI_", "WANDB_", "HF_", "TAVILY_",
+        "GITHUB_", "KAGGLE_", "NVIDIA_", "EXA_", "EMAIL_", "PERSONAL_", "GMAIL_", "ACADEMIC_"
     )
 
     for k, v in secrets.items():

@@ -10,8 +10,8 @@ import datetime
 # 读取本地主脑 (Node 01) 的环境变量
 def get_env_var(var_name):
     try:
-        cmd = f"source ~/.openclaw_env 2>/dev/null && echo ${var_name}"
-        result = subprocess.run(cmd, shell=True, capture_output=True, text=True, executable="/bin/bash")
+        import shlex
+        result = subprocess.run(["/bin/bash", "-c", cmd], capture_output=True, text=True)
         return result.stdout.strip()
     except Exception:
         return ""
@@ -23,7 +23,8 @@ def fetch_latest_session(agent_id):
         f"ssh 02 \"ls -t ~/.openclaw/agents/{agent_id}/sessions/ | grep '\\.jsonl$' | head -n 1 | "
         f"xargs -I {{}} tail -n 20 ~/.openclaw/agents/{agent_id}/sessions/{{}} 2>/dev/null\""
     )
-    result = subprocess.run(fetch_cmd, shell=True, capture_output=True, text=True)
+    import shlex
+    result = subprocess.run(shlex.split(fetch_cmd), capture_output=True, text=True)
     if result.returncode != 0 or not result.stdout.strip():
         print(f"⚠️ [Audit] {agent_id} 未找到活跃的近代记忆碎片。")
         return []

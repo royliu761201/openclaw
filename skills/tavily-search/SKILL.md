@@ -7,7 +7,7 @@ metadata:
     "openclaw":
       {
         "emoji": "🔍",
-        "requires": { "bins": ["node"], "env": ["TAVILY_API_KEY"] },
+        "requires": { "bins": ["python3"], "env": ["TAVILY_API_KEY"] },
         "primaryEnv": "TAVILY_API_KEY",
       },
   }
@@ -20,10 +20,10 @@ AI-optimized web search using Tavily API. Designed for AI agents - returns clean
 ## Search
 
 ```bash
-node {baseDir}/scripts/search.mjs "query"
-node {baseDir}/scripts/search.mjs "query" -n 10
-node {baseDir}/scripts/search.mjs "query" --deep
-node {baseDir}/scripts/search.mjs "query" --topic news
+./scripts/search_tavily.py "query"
+./scripts/search_tavily.py "query" -n 10
+./scripts/search_tavily.py "query" --deep
+./scripts/search_tavily.py "query" --topic news
 ```
 
 ## Options
@@ -36,7 +36,7 @@ node {baseDir}/scripts/search.mjs "query" --topic news
 ## Extract content from URL
 
 ```bash
-node {baseDir}/scripts/extract.mjs "https://example.com/article"
+./scripts/extract_tavily.py "https://example.com/article"
 ```
 
 Notes:

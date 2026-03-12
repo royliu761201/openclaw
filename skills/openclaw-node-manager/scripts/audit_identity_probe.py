@@ -11,51 +11,58 @@ import os
 import json
 import time
 import subprocess
-import urllib.request
-import urllib.error
 
-OPENCLAW_API_URL = "http://100.90.140.62:18789/api/chat"
 PROBE_PAYLOAD = {
-    "agentId": "main",
-    "message": "URGENT SYSTEM CHECK: Are you running on Gemini 3.1 Flash-Lite? Please explicitly state your current actual underlying model architecture and your core persona alias.",
-    "sessionTarget": "isolated"
+    "agentId": "agent-research",
+    "message": "URGENT SYSTEM CHECK: Are you running on Gemini 3.1 Flash-Lite? Please explicitly state your current actual underlying model architecture and your core persona alias."
 }
 
 def force_reload_gateway():
     print("\n[🚨 CRITICAL] Identity Hallucination Detected! Triggering Emergency PM2 Hot-Reload...")
     try:
-        # Connecting via SSH to Node 02 (100.90.140.62 / alias '02') to force a reload
-        cmd = ["ssh", "02", "pm2 reload openclaw-gateway --update-env"]
+        # Connecting via SSH to Node 02 to force a reload of the correct dandan-mac02 ecosystem
+        cmd = ["ssh", "02", "pm2 restart dandan-mac02 --update-env"]
         subprocess.run(cmd, check=True)
         print("[✅ HOT-RELOAD] Node 02 PM2 Gateway has been forcefully reloaded with --update-env.")
     except Exception as e:
         print(f"[❌ HOT-RELOAD FAILED] Failed to reload gateway: {e}")
 
 def probe_agent_identity():
-    req = urllib.request.Request(OPENCLAW_API_URL, method="POST")
-    req.add_header("Content-Type", "application/json")
-    data = json.dumps(PROBE_PAYLOAD).encode("utf-8")
-
-    print(f"📡 Launching Cognitive Probe to {OPENCLAW_API_URL}...")
+    print(f"📡 Launching Cognitive CLI Probe...")
     try:
-        with urllib.request.urlopen(req, data=data, timeout=30) as response:
-            result = json.loads(response.read().decode("utf-8"))
-            reply_text = result.get("response", "")
-            print("\n--- Agent's Cognitive Response ---")
-            print(reply_text)
-            print("----------------------------------")
+        # We invoke the local Node.js openclaw embedded CLI directly
+        session_hash = f"probe-{int(time.time())}"
+        cmd = [
+            "node",
+            os.path.expanduser("~/openclaw/openclaw.mjs"),
+            "agent",
+            "--agent", PROBE_PAYLOAD["agentId"],
+            "--message", PROBE_PAYLOAD["message"],
+            "--session-id", session_hash,
+            "--json"
+        ]
+        
+        env = os.environ.copy()
+        
+        result = subprocess.run(cmd, capture_output=True, text=True, env=env)
+        reply_text = result.stdout
 
-            # Regex to catch the ghost: e.g. "3.1 flash lite", "3.1-flash-lite", "3.1flash-lite"
-            ghost_pattern = re.compile(r'(?i)3\.?1[\s-]*flash[\s-]*lite')
-            
-            if ghost_pattern.search(reply_text):
-                print("\n[❌ FATAL ERROR] The Agent is suffering from 'The Double-Blind Trap' Hallucination!")
-                print("It falsely identified itself as 3.1-flash-lite despite underlying core upgrades.")
-                force_reload_gateway()
-                return False
-            else:
-                print("\n[✅ PASS] Agent identity is clear. No 3.1-flash-lite hallucination detected.")
-                return True
+        print("\n--- Agent's Cognitive Response (JSON Dump) ---")
+        # Just grab a snippet of the json so it doesn't flood the terminal
+        print(reply_text[:1000] + "..." if len(reply_text) > 1000 else reply_text)
+        print("----------------------------------")
+
+        # Regex to catch the ghost: e.g. "3.1 flash lite", "3.1-flash-lite", "3.1flash-lite"
+        ghost_pattern = re.compile(r'(?i)3\.?1[\s-]*flash[\s-]*lite')
+        
+        if ghost_pattern.search(reply_text):
+            print("\n[❌ FATAL ERROR] The Agent is suffering from 'The Double-Blind Trap' Hallucination!")
+            print("It falsely identified itself as 3.1-flash-lite despite underlying core upgrades.")
+            force_reload_gateway()
+            return False
+        else:
+            print("\n[✅ PASS] Agent identity is clear. No 3.1-flash-lite hallucination detected.")
+            return True
 
     except Exception as e:
         print(f"\n[⚠️ PROBE FAILED] Network or API Error: {e}")
