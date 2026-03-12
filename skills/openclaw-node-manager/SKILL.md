@@ -42,13 +42,14 @@ In OpenClaw, if an LLM’s persona conflicts, it is usually due to the split ide
   2. SSoT strictly relies on two files in `agent_workspaces/<name>/`: `USER.md` (soul) and `IDENTITY.md` (naming).
   3. When an identity configuration is altered, you MUST move lingering `.jsonl` session files from `~/.openclaw/agents/<id>/sessions/` into `~/.Trash` to complete a cognitive wipe.
 
-### 5. The Scorched Earth Wipe (Complete Anti-Ghosting SOP)
+### 5. 焦土政策 (彻底反幽灵清理 SOP)
 
-To safely and completely clean an OpenClaw instance without leaving behind "ghosts" (rogue processes or cron jobs):
+_升级警告_: 旧版的焦土政策遗漏了底层的队列缓存，导致了 “幽灵 Cron 循环推送” 的极其恶劣事故。为了不留任何历史活口，重置 OpenClaw 实例时必须严格遵守以下 3 步：
 
-1. **Kill Zombies**: `pm2 kill` followed immediately by `pkill -9 -f openclaw` to destroy any detached `nohup` shards.
-2. **Purge History**: Use `trash ~/.openclaw/sessions/*` and `trash ~/.openclaw/agents/*` to aggressively wipe out previous contextual states without breaking architecture.
-3. **Eradicate Cron Bombs**: Inspect and cut out associated cron jobs via `crontab -l | grep -v 'openclaw' | crontab -`. Skipping any of these steps during a reset is a violation of duty.
+1. **瞬杀僵尸 (规避 SIGINT 内存写回)**: **绝对不能**只用 `pm2 stop`！PM2 的优雅退出会让进程在临死前把内存里的有毒队列复活到硬盘上。必须执行物理绞杀：`pm2 stop all && pkill -9 -f node`。
+2. **三维历史物理超度 (全目录抹杀)**: 不要只清理 `sessions`。必须同时清空身份缓存、定时任务、以及发送队列缓存来摧毁任何基于 SQLite/JSON 的僵尸意图：
+   `rm -rf ~/.openclaw/sessions/* ~/.openclaw/agents/* ~/.openclaw/cron/* ~/.openclaw/delivery-queue/* ~/.openclaw/memory/subagents/*`
+3. **系统层级的 Cron 炸弹排除**: 检查并斩断系统层级的守护进程：`crontab -l | grep -v 'openclaw' | crontab -`。跳过以上任何一步的重置，都是对系统纪律的亵渎。
 
 ### 6. Routing Fallback Death Trap (Strict Bindings Injection)
 
