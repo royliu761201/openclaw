@@ -189,36 +189,31 @@ _Retrospective Issue_: Probes running on Node 01 falsely reported Success for No
 - **The Boss's Ultimate Directive**: When you claim Node 02 is tested and operational, passing a Python probe script is NOT enough. You MUST conduct an active End-to-End LLM Prompt test strictly on the target Edge environment.
 - **SOP for Edge Verification**:
   1. DO NOT assume tool visibility! OpenClaw will silently drop tools if their required environment variables (e.g., from `~/.openclaw_env`) are physically missing on Node 02.
-  2. You MUST verify tool invocation (e.g., Gmail r### 18. The White-Box Config Split-Brain Trap (OPENCLAW_CONFIG_PATH 失忆症)
+  2. You MUST verify tool invocation (e.g., Gmail r### 18. The White-Box Config Split-Brain Trap (OPENCLAW_CONFIG_PATH)
 
-_核心背景_: 当向 Node 02 部署 SSoT 蓝图 (`openclaw_core.json`) 时，仅仅把 `OPENCLAW_CONFIG_PATH` 注入到 PM2 守护进程是不够的。CLI 命令行 `node scripts/run-node.mjs` 是在一个完全独立的无头 SSH Bash 环境下运行的。如果 CLI 外壳没有先去显式 `source ~/.openclaw_env`，它就会默认退回到 `~/.openclaw/config/openclaw.json`，从而引发 `Unknown agent id`（找不到 Agent）的致命报错。
-_更危险的情况_: 如果你机械地补齐了 `~/.openclaw_env`，但里面填的却是老旧的默认路径，而不是真实的 SSoT 绝对路径 (`~/workspace/config/openclaw_core.json`)，你就亲手切断了单点事实来源。
+_Context_: When deploying the SSoT blueprint (`openclaw_core.json`) to Node 02, injecting the `OPENCLAW_CONFIG_PATH` directly into the `openclaw-gateway` PM2 ecosystem is NOT sufficient. The CLI `node scripts/run-node.mjs` operates in a distinct headless SSH bash process. If the CLI shell does not explicitly source `~/.openclaw_env`, it will fall back to `~/.openclaw/config/openclaw.json`, resulting in an `Unknown agent id` error.
+_Even worse_: If you mechanically patch `~/.openclaw_env` but inject the legacy default path instead of the SSoT path (`~/workspace/config/openclaw_core.json`), you manually sever the SSoT link.
 
-- **白盒审计铁律 (强制要求)**:
-  绝对不允许瞎猜“为什么找不到 Agent ID”。必须执行机械化的白盒追踪：
-  1. 检查 `~/.openclaw_env`，确认 `OPENCLAW_CONFIG_PATH` 指向的是绝对的 Git SSoT 路径，**绝不能**是默认的 `~/.openclaw/config/`。
-  2. 检查那个 SSoT JSON 实体文件 (`cat $OPENCLAW_CONFIG_PATH | grep 'list'`)，从物理层面确认那个 `id` 真真切切存在。
-  3. 所有的 CLI 执行命令前，都必须强行插入 `source ~/.openclaw_env`。
+- **The White-Box Audit Loop (Mandatory)**:
+  You MUST NEVER blindly guess why an Agent ID is unknown. You MUST perform a mechanical white-box trace:
+  1. Inspect `~/.openclaw_env` to confirm `OPENCLAW_CONFIG_PATH` points EXACTLY to the Git SSoT path, NEVER the default `~/.openclaw/config/` path.
+  2. Inspect the SSoT JSON file (`cat $OPENCLAW_CONFIG_PATH | grep 'list'`) to physically confirm the `id` exists.
+  3. Ensure all CLI execution commands strictly prepend `source ~/.openclaw_env`.
 
-### 19. SIGINT 的临死反扑 (内存状态冲刷复活陷阱)
+### 19. The SIGINT Death-Rattle (Memory Flush Resurrection Trap)
 
-_近期复盘事故_: 即使手动从磁盘删除了 `auth-profiles.json` 文件，每次 PM2 重启后，那个过期作废的 Google API 密钥依然会像幽灵一样再次复活在该文件里。
+_Retrospective Issue_: Even when `auth-profiles.json` was manually deleted from the disk, the locally expired Google API key resurrected itself like a ghost inside the file upon every PM2 restart.
 
-- **核心毒点**: OpenClaw 会主动拦截通常由 `pm2 restart` 发送的 `SIGINT` 信号。就在 Node.js 进程优雅死亡前的一瞬间，它会通过 `fs.writeFileSync()` 发起最后一次同步调用，将有毒的完整内存状态硬写回磁盘上的 `auth-profiles.json` 中。
-- **排雷标准操作流程 (SOP)**: 当你需要手动清理被深度污染的身份认证状态时，**绝不允许**依赖任何优雅的重启机制。要粉碎 PM2 的临死反扑，你必须执行无痛的瞬时内核级绞杀：
+- **The Core Poison**: OpenClaw actively intercepts `SIGINT` signals (typically sent by `pm2 restart`). In the very last millisecond before the Node.js process gracefully dies, it triggers a final synchronous `fs.writeFileSync()` call, hard-flushing its entirely corrupted memory state back to `auth-profiles.json` on the disk.
+- **The SOP**: When manually wiping tainted authentication states, you **MUST NOT** rely on graceful restart mechanisms. To crush the PM2 Death-Rattle, you must execute a painless instantaneous kernel kill:
   `pkill -9 -f node && rm -f <path-to-auth-profiles.json>`
-  只有在确保幽灵进程被彻底爆头后，才允许重新拉起网关守护进程。
+  Only after guaranteeing the ghost process is fully eliminated are you allowed to spin the gateway daemon back up.
 
-### 20. PM2 路径克隆综合征与原生脚本剥离法则
+### 20. PM2 Path Cloning & The Native Script Abstraction Trap
 
-_近期复盘事故_: PM2 进程池在 Node 02 上把致命的 `ENOENT` 错误静默咽下了，因为它试图去强行执行通过 `ecosystem.config.cjs` 从 Node 01 复制过来的 Mac Homebrew 系统路径，完全无视了 Node 02 的纯净 NVM 部署环境。
+_Retrospective Issue_: The PM2 ecosystem silently swallowed fatal `ENOENT` faults on Node 02 because it brazenly attempted to execute Mac Homebrew system paths cloned via `ecosystem.config.cjs` from Node 01, completely ignoring Node 02's pristine NVM deployment.
 
-- **原生 Bash 执行外壳铁律**: 在部署多节点拓扑时，**绝对禁止**将 `ecosystem.config.cjs` 直接指向任何 ES Module 入口文件 (`openclaw.mjs` 或 `run-node.mjs`)！PM2 内部羸弱的 JavaScript 孵化器根本无法跨越不同 OS 层级的路径陷阱。
-- **排雷标准操作流程 (SOP)**:
-  1. 面对边缘节点，必须编写一个纯粹的 Bash 脚本外壳 (`start-gateway-native.sh`)，内部首先挂载原生的 `~/.nvm/nvm.sh`，并且必须以**绝对硬编码路径**去执行 Node 二进制文件 (`/Users/roy-002/.nvm/versions/node/v22.14.0/bin/node`)。
-  2. 在 `ecosystem.config.cjs` 中，必须将解析器强制设为 `bash`，并让其指向那个原生的 Bash 外壳脚本。此举将 PM2 完全挡在 Node.js 环境的初始化屏障之外。de 01 复制过来的 Mac Homebrew 系统路径，完全无视了 Node 02 的纯净 NVM 部署环境。
-
-- **原生 Bash 执行外壳铁律**: 在部署多节点拓扑时，**绝对禁止**将 `ecosystem.config.cjs` 直接指向任何 ES Module 入口文件 (`openclaw.mjs` 或 `run-node.mjs`)！PM2 内部羸弱的 JavaScript 孵化器根本无法跨越不同 OS 层级的路径陷阱。
-- **排雷标准操作流程 (SOP)**:
-  1. 面对边缘节点，必须编写一个纯粹的 Bash 脚本外壳 (`start-gateway-native.sh`)，内部首先挂载原生的 `~/.nvm/nvm.sh`，并且必须以**绝对硬编码路径**去执行 Node 二进制文件 (`/Users/roy-002/.nvm/versions/node/v22.14.0/bin/node`)。
-  2. 在 `ecosystem.config.cjs` 中，必须将解析器强制设为 `bash`，并让其指向那个原生的 Bash 外壳脚本。此举将 PM2 完全挡在 Node.js 环境的初始化屏障之外。
+- **The Native Bash Wrapper Mandate**: When deploying across multi-node topologies, you are **ABSOLUTELY FORBIDDEN** from pointing `ecosystem.config.cjs` directly to any ES Module entrypoint (`openclaw.mjs` or `run-node.mjs`)! PM2's fragile internal JavaScript spawner cannot traverse cross-OS path traps.
+- **The SOP**:
+  1. For Edge Nodes, you must write a pure Bash wrapper script (`start-gateway-native.sh`). This wrapper must first source the native `~/.nvm/nvm.sh` and strictly use an **absolute hardcoded path** to execute the Node binary (`/Users/roy-002/.nvm/versions/node/v22.14.0/bin/node`).
+  2. Inside `ecosystem.config.cjs`, you must force the interpreter to `bash` and point it to the native Bash wrapper. This completely abstracts PM2 away from the Node.js initialization barrier.
