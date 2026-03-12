@@ -180,21 +180,23 @@ def mark_read_emails(user, pwd, imap_server, target_id):
 def search_emails(user, pwd, imap_server, limit, sender_filter, keyword_filter, max_scan=100):
     try:
         mail = connect_imap(user, pwd, imap_server)
-        mail.select("INBOX")
-        status, response = mail.search(None, "ALL")
+        status, response = mail.select("INBOX")
         if status != "OK":
-            print(json.dumps({"error": "Failed to search emails"}))
+            print(json.dumps({"error": "Failed to select INBOX"}))
             sys.exit(1)
 
-        email_ids = response[0].split()
-        if not email_ids:
+        total_msgs = int(response[0].decode("utf-8"))
+        if total_msgs == 0:
             print(json.dumps({"message": "No emails found.", "count": 0}))
             return
 
         emails_data = []
-        # Parse backwards to find latest matches quickly within max_scan limit
-        scan_list = email_ids[-max_scan:] if len(email_ids) > max_scan else email_ids
-        for e_id in reversed(scan_list):
+        # Parse backwards using direct sequence IDs within max_scan limit
+        start_id = total_msgs
+        end_id = max(1, total_msgs - max_scan + 1)
+        scan_list = [str(i).encode('utf-8') for i in range(start_id, end_id - 1, -1)]
+        
+        for e_id in scan_list:
             status, msg_data = mail.fetch(e_id, "(BODY.PEEK[HEADER.FIELDS (SUBJECT FROM DATE)])")
             if not msg_data or not msg_data[0]: continue
             
