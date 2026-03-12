@@ -42,14 +42,14 @@ In OpenClaw, if an LLM’s persona conflicts, it is usually due to the split ide
   2. SSoT strictly relies on two files in `agent_workspaces/<name>/`: `USER.md` (soul) and `IDENTITY.md` (naming).
   3. When an identity configuration is altered, you MUST move lingering `.jsonl` session files from `~/.openclaw/agents/<id>/sessions/` into `~/.Trash` to complete a cognitive wipe.
 
-### 5. 焦土政策 (彻底反幽灵清理 SOP)
+### 5. The Scorched Earth Wipe (Complete Anti-Ghosting SOP)
 
-_升级警告_: 旧版的焦土政策遗漏了底层的队列缓存，导致了 “幽灵 Cron 循环推送” 的极其恶劣事故。为了不留任何历史活口，重置 OpenClaw 实例时必须严格遵守以下 3 步：
+_Upgrade Warning_: The legacy Scorched Earth policy omitted low-level queue caches, resulting in the catastrophic "Ghost Cron Loop" incident. To ensure zero historical remnants survive, resetting an OpenClaw instance MUST strictly follow these 3 steps:
 
-1. **瞬杀僵尸 (规避 SIGINT 内存写回)**: **绝对不能**只用 `pm2 stop`！PM2 的优雅退出会让进程在临死前把内存里的有毒队列复活到硬盘上。必须执行物理绞杀：`pm2 stop all && pkill -9 -f node`。
-2. **三维历史物理超度 (全目录抹杀)**: 不要只清理 `sessions`。必须同时清空身份缓存、定时任务、以及发送队列缓存来摧毁任何基于 SQLite/JSON 的僵尸意图：
+1. **Kill Zombies (Bypass SIGINT Memory Flush)**: You **MUST NEVER** rely solely on `pm2 stop`! PM2's graceful shutdown allows the dying process to resurrect its toxic queues back to disk in its final moments. You must execute a physical kernel kill: `pm2 stop all && pkill -9 -f node`.
+2. **3D Historical Extermination (Complete Directory Wipe)**: Do not just clear `sessions`. You must simultaneously obliterate identity caches, cron jobs, and delivery queues to destroy any SQLite/JSON-based zombie intents:
    `rm -rf ~/.openclaw/sessions/* ~/.openclaw/agents/* ~/.openclaw/cron/* ~/.openclaw/delivery-queue/* ~/.openclaw/memory/subagents/*`
-3. **系统层级的 Cron 炸弹排除**: 检查并斩断系统层级的守护进程：`crontab -l | grep -v 'openclaw' | crontab -`。跳过以上任何一步的重置，都是对系统纪律的亵渎。
+3. **Eradicate System Cron Bombs**: Inspect and sever system-level daemon links: `crontab -l | grep -v 'openclaw' | crontab -`. Skipping any of these reset steps is a violation of system discipline.
 
 ### 6. Routing Fallback Death Trap (Strict Bindings Injection)
 
@@ -194,18 +194,23 @@ _Retrospective Issue_: Probes running on Node 01 falsely reported Success for No
 ### 18. The White-Box Config Split-Brain Trap (OPENCLAW_CONFIG_PATH 失忆症)
 
 _Context_: When deploying the SSoT blueprint (`openclaw_core.json`) to Node 02, injecting the `OPENCLAW_CONFIG_PATH` directly into the `openclaw-gateway` PM2 ecosystem is NOT sufficient. The CLI `node scripts/run-node.mjs` operates in a distinct headless SSH bash process. If the CLI shell does not explicitly source `~/.openclaw_env`, it will fall back to `~/.openclaw/config/openclaw.json`, resulting in an `Unknown agent id` error.
-_Even worse_: If you mechanically patch `~/.openclaw_env` but inject the legacy default path instead of the SSoT path (`~/workspace/config/openclaw_core.json`), you manually sever the SSoT link.
+_Even worse_: If you mechanically patch `~/.openclaw_env` but inject the legacy default path instead of the SSoT path (`~/worksp### 19. The SIGINT Death-Rattle (Memory Flush Resurrection Trap)
 
-- **The White-Box Audit Loop (Mandatory)**:
-  You MUST NEVER blindly guess why an Agent ID is unknown. You MUST perform a mechanical white-box trace:
-  1. Inspect `~/.openclaw_env` to confirm `OPENCLAW_CONFIG_PATH` points EXACTLY to the Git SSoT path, NEVER the default `~/.openclaw/config/` path.
-  2. Inspect the SSoT JSON file (`cat $OPENCLAW_CONFIG_PATH | grep 'list'`) to physically confirm the `id` exists.
-  3. Ensure all CLI execution commands strictly prepend `source ~/.openclaw_env`.
-- **The Enforcer Script**: `~/workspace/scripts/audit_whitebox_env.sh` has been built to ### 19. SIGINT 的临死反扑 (内存状态冲刷复活陷阱)
+_Retrospective Issue_: Even when `auth-profiles.json` was manually deleted from the disk, the locally expired Google API key resurrected itself like a ghost inside the file upon every PM2 restart.
 
-_近期复盘事故_: 即使手动从磁盘删除了 `auth-profiles.json` 文件，每次 PM2 重启后，那个过期作废的 Google API 密钥依然会像幽灵一样再次复活在该文件里。
+- **The Core Poison**: OpenClaw actively intercepts `SIGINT` signals (typically sent by `pm2 restart`). In the very last millisecond before the Node.js process gracefully dies, it triggers a final synchronous `fs.writeFileSync()` call, hard-flushing its entirely corrupted memory state back to `auth-profiles.json` on the disk.
+- **The SOP**: When manually wiping tainted authentication states, you **MUST NOT** rely on graceful restart mechanisms. To crush the PM2 Death-Rattle, you must execute a painless instantaneous kernel kill:
+  `pkill -9 -f node && rm -f <path-to-auth-profiles.json>`
+  Only after guaranteeing the ghost process is fully eliminated are you allowed to spin the gateway daemon back up.
 
-- **核心毒点**: OpenClaw 会主动拦截通常由 `pm2 restart` 发送的 `SIGINT` 信号。就在 Node.js 进程优雅死亡前的一瞬间，它会通过 `fs.writeFileSync()` 发起最后一次同步调用，将有毒的完整内存状态硬写回磁盘上的 `auth-profiles.json` 中。
+### 20. PM2 Path Cloning & The Native Script Abstraction Trap
+
+_Retrospective Issue_: The PM2 ecosystem silently swallowed fatal `ENOENT` faults on Node 02 because it brazenly attempted to execute Mac Homebrew system paths cloned via `ecosystem.config.cjs` from Node 01, completely ignoring Node 02's pristine NVM deployment.
+
+- **The Native Bash Wrapper Mandate**: When deploying across multi-node topologies, you are **ABSOLUTELY FORBIDDEN** from pointing `ecosystem.config.cjs` directly to any ES Module entrypoint (`openclaw.mjs` or `run-node.mjs`)! PM2's fragile internal JavaScript spawner cannot traverse cross-OS path traps.
+- **The SOP**:
+  1. For Edge Nodes, you must write a pure Bash wrapper script (`start-gateway-native.sh`). This wrapper must first source the native `~/.nvm/nvm.sh` and strictly use an **absolute hardcoded path** to execute the Node binary (`/Users/roy-002/.nvm/versions/node/v22.14.0/bin/node`).
+  2. Inside `ecosystem.config.cjs`, you must force the interpreter to `bash` and point it to the native Bash wrapper. This completely abstracts PM2 away from the Node.js initialization barrier.用，将有毒的完整内存状态硬写回磁盘上的 `auth-profiles.json` 中。
 - **排雷标准操作流程 (SOP)**: 当你需要手动清理被深度污染的身份认证状态时，**绝不允许**依赖任何优雅的重启机制。要粉碎 PM2 的临死反扑，你必须执行无痛的瞬时内核级绞杀：
   `pkill -9 -f node && rm -f <path-to-auth-profiles.json>`
   只有在确保幽灵进程被彻底爆头后，才允许重新拉起网关守护进程。
