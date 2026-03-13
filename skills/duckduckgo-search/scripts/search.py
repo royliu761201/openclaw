@@ -425,8 +425,17 @@ Time range filters (--time-range):
     )
 
     parser.add_argument(
-        'query',
-        help='Search query'
+        'query_pos',
+        nargs='?',
+        default=None,
+        help='Search query (positional)'
+    )
+    
+    # Allow LLMs to hallucinate --query
+    parser.add_argument(
+        '--query',
+        dest='query_opt',
+        help='Search query (optional flag)'
     )
 
     # Search options
@@ -437,8 +446,11 @@ Time range filters (--time-range):
         default='web',
         help='Search type (default: web)'
     )
+    
+    # Allow LLMs to hallucinate --max_results instead of --max-results
     search_group.add_argument(
-        '-n', '--max-results',
+        '-n', '--max-results', '--max_results',
+        dest='max_results',
         type=int,
         default=10,
         help='Maximum number of results (default: 10)'
@@ -511,6 +523,11 @@ Time range filters (--time-range):
     )
 
     args = parser.parse_args()
+    
+    final_query = args.query_opt if args.query_opt else args.query_pos
+    if not final_query:
+        print("Error: query must be provided either as a positional argument or via --query", file=sys.stderr)
+        sys.exit(2)
 
     # Initialize search client
     searcher = WebSearch(
@@ -519,7 +536,7 @@ Time range filters (--time-range):
     )
 
     # Perform search based on type
-    print(f"Searching for: {args.query}", file=sys.stderr)
+    print(f"Searching for: {final_query}", file=sys.stderr)
     print(f"Type: {args.type}, Max results: {args.max_results}", file=sys.stderr)
     if args.time_range:
         time_labels = {'d': 'past day', 'w': 'past week', 'm': 'past month', 'y': 'past year'}
@@ -531,7 +548,7 @@ Time range filters (--time-range):
 
     if args.type == 'web':
         results = searcher.search_text(
-            query=args.query,
+            query=final_query,
             max_results=args.max_results,
             time_range=args.time_range,
         )
@@ -539,7 +556,7 @@ Time range filters (--time-range):
 
     elif args.type == 'news':
         results = searcher.search_news(
-            query=args.query,
+            query=final_query,
             max_results=args.max_results,
             time_range=args.time_range,
         )
@@ -547,7 +564,7 @@ Time range filters (--time-range):
 
     elif args.type == 'images':
         results = searcher.search_images(
-            query=args.query,
+            query=final_query,
             max_results=args.max_results,
             size=args.image_size,
             color=args.image_color,
@@ -558,7 +575,7 @@ Time range filters (--time-range):
 
     elif args.type == 'videos':
         results = searcher.search_videos(
-            query=args.query,
+            query=final_query,
             max_results=args.max_results,
             duration=args.video_duration,
             resolution=args.video_resolution,
