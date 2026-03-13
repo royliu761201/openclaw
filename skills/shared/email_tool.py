@@ -123,13 +123,22 @@ def read_emails(user, pwd, imap_server, limit):
         sys.exit(1)
 
 
-def send_email(user, pwd, smtp_server, to, subject, body):
+def send_email(user, pwd, smtp_server, to, subject, body, attachment=None):
     try:
         msg = EmailMessage()
         msg.set_content(body)
         msg['Subject'] = subject
         msg['From'] = user
         msg['To'] = to
+
+        if attachment and os.path.exists(attachment):
+            import mimetypes
+            ctype, encoding = mimetypes.guess_type(attachment)
+            if ctype is None or encoding is not None:
+                ctype = 'application/octet-stream'
+            maintype, subtype = ctype.split('/', 1)
+            with open(attachment, 'rb') as f:
+                msg.add_attachment(f.read(), maintype=maintype, subtype=subtype, filename=os.path.basename(attachment))
 
         server = smtplib.SMTP_SSL(smtp_server, 465, timeout=30)
         server.set_debuglevel(1)  # Uncomment for verbose network logging
@@ -247,6 +256,7 @@ if __name__ == "__main__":
     send_parser.add_argument("--to", required=True, help="Recipient email")
     send_parser.add_argument("--subject", required=True, help="Email subject")
     send_parser.add_argument("--body", required=True, help="Email body")
+    send_parser.add_argument("--attachment", required=False, help="Path to a file attachment")
 
     delete_parser = subparsers.add_parser("delete")
     delete_parser.add_argument("--id", required=True, help="Exact IMAP sequence ID of the email to delete (obtainable via 'read' command).")
@@ -266,7 +276,7 @@ if __name__ == "__main__":
     if args.command == "read":
         read_emails(user, pwd, imap_server, args.limit)
     elif args.command == "send":
-        send_email(user, pwd, smtp_server, args.to, args.subject, args.body)
+        send_email(user, pwd, smtp_server, args.to, args.subject, args.body, getattr(args, "attachment", None))
     elif args.command == "delete":
         delete_emails(user, pwd, imap_server, args.id)
     elif args.command == "mark_read":
