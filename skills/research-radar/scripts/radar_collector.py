@@ -55,8 +55,12 @@ def load_targets():
 def load_seen_intel():
     import json
     if SEEN_INTEL_PATH.exists():
-        with open(SEEN_INTEL_PATH, "r") as f:
-            return json.load(f)
+        try:
+            with open(SEEN_INTEL_PATH, "r") as f:
+                return json.load(f)
+        except json.JSONDecodeError as e:
+            print(f"⚠️ [JSON Parse Error] seen_intel.json is corrupted (possibly due to Git conflict). Returning empty history to prevent crash. Error: {e}")
+            return {"arxiv": [], "web_urls": []}
     return {"arxiv": [], "web_urls": []}
 
 def save_seen_intel(data):
@@ -107,14 +111,17 @@ def collect_raw_data():
     try:
         env = os.environ.copy()
         env["GIT_TERMINAL_PROMPT"] = "0"
+        # Preemptively clear any stuck rebases from previous failed runs
+        subprocess.run(["git", "rebase", "--abort"], cwd=str(WORKSPACE_DIR), capture_output=True)
         # Use atomic autostash and force 'theirs' strategy to silently override any Node 02 local drift
         subprocess.run(["git", "pull", "--rebase", "--autostash", "-X", "theirs"], cwd=str(WORKSPACE_DIR), check=True, timeout=30, env=env)
     except subprocess.TimeoutExpired:
         print("⚠️ [Pre-Flight] Warning: Git pull TIMED OUT after 30s. Triggering abort and falling back.")
         subprocess.run(["git", "rebase", "--abort"], cwd=str(WORKSPACE_DIR), capture_output=True)
     except subprocess.CalledProcessError as e:
-        print(f"⚠️ [Pre-Flight] Warning: Git pull FAILED. Triggering abort and falling back. Error: {e.stderr if e.stderr else e}")
+        print(f"⚠️ [Pre-Flight] Warning: Git pull FAILED. Executing SELF-HEALING hard reset. Error: {e.stderr if e.stderr else e}")
         subprocess.run(["git", "rebase", "--abort"], cwd=str(WORKSPACE_DIR), capture_output=True)
+        subprocess.run(["git", "reset", "--hard", "origin/main"], cwd=str(WORKSPACE_DIR), capture_output=True)
 
     RAW_DATA_DIR.mkdir(parents=True, exist_ok=True)
     today_str = datetime.datetime.now().strftime("%Y-%m-%d")
