@@ -251,3 +251,11 @@ _Retrospective Issue_: An agent eagerly accepted a workflow but repeatedly faile
 
 - **The Integrity Mandate**: When deploying or modifying an agent's `TOOLS.md`, you MUST execute the `scripts/audit_tool_integrity.py` probe.
 - **Execution**: The probe will physically parse the markdown, locate the `.py` or `.sh` paths, and blindly execute them with `-h` or `--help`. Any tool that returns `[Errno 2] No such file` or `unrecognized arguments` MUST block the agent from entering active service until the physical script is restored or the YAML tool definition is purged.
+
+### 26. The Physical Node Stewardship Protocol (Node 01/02/03/05 Ops)
+
+_Retrospective Issue_: Highly specific physical operational rules (like Mac sleep settings or Gradle Java memory leaks) bloated the global L1 Constitution. They must be handled strictly when executing Node Management.
+
+- **Headless Mac Immunity (Node 02/03)**: Macs utilized as a 24/7 headless edge node MUST have FileVault OFF and Auto-Login ON to survive cold reboots physically. Their power management (`pmset`) MUST be strictly split between AC (`sleep 0 standby 0 hibernatemode 0`) and Battery (`sleep 15`). Wi-Fi bugs must be purged via `networksetup` reset.
+- **The Daemon Purge Law (All Nodes)**: Silent background demons hoarding memory and CPU (specifically Gradle `org.gradle.daemon=false` and orphaned `java` processes) are strictly forbidden on compute nodes. Auditing via `top` and eradicating (`kill -9`) is mandatory to preserve heavy-compute resources.
+- **The PM2 Reconnaissance Law**: Never blindly restart PM2 processes on remote nodes (e.g., `pm2 reload openclaw-gateway`). Always execute `pm2 list` and read `ecosystem.config.cjs` first to identify the exact, official daemon name before taking action.
