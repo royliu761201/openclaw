@@ -23,6 +23,14 @@ Takes the master `secrets_flat.json` vault and securely deploys it via fail-fast
 python3 $HOME/openclaw/skills/vault-keeper/scripts/sync_secrets.py
 ```
 
+### 2. Flatten Vault Secrets
+
+If the vault contains nested JSON or complex `.env` key mappings, `flatten_secrets.py` must run before syncing to ensure the structure strictly conforms to OpenClaw 1D environmental variables.
+
+```bash
+python3 $HOME/openclaw/skills/vault-keeper/scripts/flatten_secrets.py
+```
+
 ## ⚠️ CONSTITUTIONAL ANCHORS
 
 - **Strict Isolation**: Because this skill pushes raw API keys across SSH, it MUST be executed entirely independently of generic reasoning tasks to prevent prompt-injection exfiltration.
