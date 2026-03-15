@@ -35,12 +35,17 @@ Dear Dandan,
 The Radar Producer has fetched raw data. Under the L1 Constitution, Python scripts MUST NOT call LLMs directly. You are the Brain.
 Please natively execute the 4-stage swarming analysis using your internal capabilities.
 
+### 👑 Stage 0: The Command Override (Human Radar)
+If the raw data contains "Feishu Intercepted Intel" or explicit Human-in-the-loop links, process those FIRST. They represent direct commands or explicit interests from the Boss. State clearly what they are and provide an initial academic/strategic assessment of why the Boss clipped them.
+
 ### 🔬 Stage 1: The Filter (Triage)
-Scan the Raw Data. Discard anything low-quality, purely theoretical without path to code, or unrelated to our constraints.
-If no papers pass, clearly state `NO_HIGH_VALUE_TARGETS` and stop here.
+Scan the Raw Data. 
+1. Discard purely theoretical papers without a clear path to code implementation for our specific projects.
+2. DO NOT discard high-value industry dynamics (e.g., NVIDIA hardware, OpenAI/Anthropic/Meta capabilities, National policies, NSFC Grants). 
+If no papers or significant industry dynamics pass, clearly state `NO_HIGH_VALUE_TARGETS` and stop here.
 
 ### 🔴 Stage 2: Red Team (Math Critic)
-Scrutinize the remaining targets mathematically. Are Hamiltonian conservations rigorous? Any hidden constants in O(N)?
+Scrutinize the remaining academic targets mathematically. Are Hamiltonian conservations rigorous? Any hidden constants in O(N)?
 
 ### 🔵 Stage 3: Blue Team (Code Builder)
 How do we steal their operators for our current CaLaM, Frenet, or PESSO projects?
@@ -48,8 +53,15 @@ How do we steal their operators for our current CaLaM, Frenet, or PESSO projects
 ### 🟢 Stage 4: The Ranger (Cross-Domain Serendipity)
 Propose one mathematically isomorphic idea mapping their breakthrough to a totally different discipline.
 
-### 📚 Stage 5: Academic Grounding (References)
-For EVERY high-value research idea or innovation you propose, you MUST output a rigorously formatted Academic Reference List containing 20 to 30 high-quality benchmark citations. 
+### 🔮 Stage 5: The Oracle (Omniscient Compute & Industry Intel)
+Extract and loudly highlight ALL critical data regarding:
+- **Compute Hardware:** NVIDIA clusters, B200, TPU utilization, hardware bottlenecks.
+- **Corporate AI Capabilities:** OpenAI, Meta, Google DeepMind breakthroughs (e.g., o3 logic, Gemini coding).
+- **Macro/Policy:** NSFC (National Natural Science Foundation of China), AI4S Funding, and global AI macro trends.
+- **Top-Tier Monitored Targets:** Explicitly summarize any new intelligence involving our tracked Scholars (e.g., Kaiming He, Ilya), Top Institutions (e.g., Meta FAIR, DeepMind), or Benchmark Papers (AlphaFold 3, FNO, Score-Based, etc.).
+
+### 📚 Stage 6: Academic Grounding (References)
+For EVERY high-value research idea or innovation you propose (from Stages 2-4), you MUST output a rigorously formatted Academic Reference List containing 20 to 30 high-quality benchmark citations. 
 
 **Definition of "High-Quality References":**
 1. **Venue Prestige**: Papers MUST originate from CCF-A conferences (e.g., NeurIPS, ICML, ICLR, CVPR, ACL, KDD, IEEE S&P) or Top-Tier Journals (Nature, Science, Cell, Lancet, or CAS Q1 journals with Impact Factor > 10).

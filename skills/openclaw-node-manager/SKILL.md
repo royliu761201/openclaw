@@ -216,4 +216,38 @@ _Retrospective Issue_: The PM2 ecosystem silently swallowed fatal `ENOENT` fault
 - **The Native Bash Wrapper Mandate**: When deploying across multi-node topologies, you are **ABSOLUTELY FORBIDDEN** from pointing `ecosystem.config.cjs` directly to any ES Module entrypoint (`openclaw.mjs` or `run-node.mjs`)! PM2's fragile internal JavaScript spawner cannot traverse cross-OS path traps.
 - **The SOP**:
   1. For Edge Nodes, you must write a pure Bash wrapper script (`start-gateway-native.sh`). This wrapper must first source the native `~/.nvm/nvm.sh` and strictly use an **absolute hardcoded path** to execute the Node binary (`/Users/roy-002/.nvm/versions/node/v22.14.0/bin/node`).
-  2. Inside `ecosystem.config.cjs`, you must force the interpreter to `bash` and point it to the native Bash wrapper. This completely abstracts PM2 away from the Node.js initialization barrier.
+
+### 21. 架构认知的绝对盲区：V3.8 单一物理网关拓扑
+
+_Retrospective Issue_: Assuming multi-agents run on separate PM2 processes on Edge Nodes, leading to ghost hunting and port conflicts.
+
+- **The Topology Law**: In the OpenClaw V3.8 architecture, all Multi-Agent routing (e.g., `dandan`, `bingbing`) multiplexes through a **single, unified Node.js gateway process** (typically named `openclaw-gateway` or `dandan-mac02`).
+- **Routing Mechanism**: Separation is achieved purely in memory via the `openclaw_core.json` -> `bindings` array mapping channels to `agentId`.
+- **Absolute Ban**: You are **STRICTLY PROHIBITED** from attempting to `pm2 start` a second parallel gateway process for a second agent on the same Edge Node. This will instantly trigger port conflicts and destroy the WebSocket tunnel.
+
+### 22. 网络物理陷阱：Tailscale MTU 截断黑洞防御 (MTU-Bypass SOP)
+
+_Retrospective Issue_: Executing `git pull` or `scp` on Node 02 hung indefinitely because the Tailscale VPN dropped packets exceeding the 1280-byte MTU limit without throwing an error (Blackholing).
+
+- **The Baseline**: Always attempt native `git pull` first.
+- **The MTU-Bypass Arsenal**: If network transfers hang when pushing large configurations (like `openclaw_core.json`), you MUST abandon standard TCP streams. Use the fortified `scripts/chunked_sync.py` to compress, base64-encode, and transmit the file in 500-byte chunks over standard SSH `echo` pipes to reassemble the payload safely on the Edge Node.
+
+### 23. SSoT 结构脆弱性：配置畸变的自动拦截 (Pre-Flight Schema Validation)
+
+_Retrospective Issue_: An innocent code-cleanup accidentally nested `dmPolicy` and `allowFrom` under a dead `accounts.default` block, permanently locking the Boss out of Feishu without throwing a startup error.
+
+- **The Pre-Flight Law**: Before you execute any config push or `pm2 reload` on Edge Nodes, you MUST manually or programmatically verify the schema integrity of `openclaw_core.json`.
+- **Validation**: Ensure critical wildcard properties (like `"allowFrom": ["*"]`) are located at the correct root channel hierarchy, not buried inside provider-specific or default account sub-objects.
+
+### 24. 探针脚本的受迫性坠毁 (Environment Auto-Healing)
+
+_Retrospective Issue_: Python audit scripts (`audit_sessions.py`) crashed during critical emergency investigations because they rigidly demanded `GOOGLE_API_KEY` when the environment only supplied `GEMINI_API_KEY`.
+
+- **Audit Script Resilience**: All Python evaluation probes MUST implement dual-key fallback logic (`os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")`). Audit scripts are diagnostic tools; they must never panic over trivial environment aliases when a valid semantic equivalent exists.
+
+### 25. “工具链”物理探活的缺失 (防“带病接客”法则)
+
+_Retrospective Issue_: An agent eagerly accepted a workflow but repeatedly failed because the underlying `ddg_search.py` script physically did not exist on the node, burning tokens in a blind retry loop.
+
+- **The Integrity Mandate**: When deploying or modifying an agent's `TOOLS.md`, you MUST execute the `scripts/audit_tool_integrity.py` probe.
+- **Execution**: The probe will physically parse the markdown, locate the `.py` or `.sh` paths, and blindly execute them with `-h` or `--help`. Any tool that returns `[Errno 2] No such file` or `unrecognized arguments` MUST block the agent from entering active service until the physical script is restored or the YAML tool definition is purged.

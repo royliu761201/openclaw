@@ -10,9 +10,19 @@ import datetime
 # 读取本地主脑 (Node 01) 的环境变量
 def get_env_var(var_name):
     try:
-        import shlex
+        cmd = f". ~/.openclaw_env && echo ${var_name}"
         result = subprocess.run(["/bin/bash", "-c", cmd], capture_output=True, text=True)
-        return result.stdout.strip()
+        val = result.stdout.strip()
+        if val:
+            return val
+            
+        # Fallback alias resolution
+        if var_name == "GOOGLE_API_KEY":
+            cmd_fallback = f". ~/.openclaw_env && echo $GEMINI_API_KEY"
+            result_fallback = subprocess.run(["/bin/bash", "-c", cmd_fallback], capture_output=True, text=True)
+            return result_fallback.stdout.strip()
+            
+        return ""
     except Exception:
         return ""
 

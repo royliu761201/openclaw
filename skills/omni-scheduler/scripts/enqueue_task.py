@@ -12,9 +12,10 @@ from datetime import datetime
 
 logging.basicConfig(level=logging.INFO, format='➕ [Queue Producer] %(message)s')
 
-def enqueue_task(queue_path, project, command, directory, target):
+def enqueue_task(queue_path, project, command, directory, target, entry, datasets):
     # Ensure queue exists
     if not os.path.exists(queue_path):
+
         data = {"tasks": []}
         logging.info("Queue file not found. Creating a fresh JSON schema.")
     else:
@@ -32,22 +33,31 @@ def enqueue_task(queue_path, project, command, directory, target):
         "project": project,
         "target": target,
         "command": command,
+        "entry": entry,
         "directory": directory,
         "status": "PENDING",
         "created_at": datetime.now().isoformat()
     }
+
+    if datasets:
+        new_task["kaggle_payload"] = {
+            "dataset_mounts": datasets,
+            "gpu_type": "P100",
+            "internet": True
+        }
     
     data.setdefault("tasks", []).append(new_task)
     
     # Save safely
     with open(queue_path, 'w') as f:
         json.dump(data, f, indent=4)
+
         
     logging.info(f"Successfully enqueued new PENDING task for project [{project}].")
     logging.info(f"  -> Task ID: {new_task['id']}")
     logging.info(f"  -> Target:  {target}")
+    logging.info(f"  -> Entry:   {entry}")
     logging.info(f"  -> Command: {command}")
-    logging.info(f"  -> At: {directory}")
     return True
 
 if __name__ == "__main__":
@@ -55,9 +65,11 @@ if __name__ == "__main__":
     parser.add_argument("--queue", default=os.path.expanduser("~/workspace/projects_core/experiment_queue.json"), help="Path to PDCA JSON queue")
     parser.add_argument("--project", required=True, help="Target project name (e.g., CaLaM, Frenet)")
     parser.add_argument("--target", default="local", help="Execution target (e.g., local, kaggle_account_A)")
+    parser.add_argument("--entry", required=True, help="Entry script for cloud execution packaging.")
+    parser.add_argument("--datasets", nargs='*', help="List of Kaggle dataset mounts (e.g., rajat936/pdebench-coarse)")
     parser.add_argument("--command", required=True, help="The literal bash command to execute (e.g., 'conda run -n calam bash scripts/run.sh')")
     parser.add_argument("--dir", required=True, help="The absolute directory to execute the command inside.")
     
     args = parser.parse_args()
     
-    enqueue_task(args.queue, args.project, args.command, args.dir, args.target)
+    enqueue_task(args.queue, args.project, args.command, args.dir, args.target, args.entry, args.datasets)

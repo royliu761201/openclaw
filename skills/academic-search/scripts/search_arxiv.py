@@ -6,7 +6,26 @@ import os
 
 def search_arxiv_papers(query, max_results=5, sort_by="relevance"):
     try:
-        client = arxiv.Client()
+        import requests
+        session = requests.Session()
+        
+        # arXiV wrapper uses properties or private session. We patch the underlying get/post.
+        class TimeoutAdapter(requests.adapters.HTTPAdapter):
+            def send(self, *args, **kwargs):
+                kwargs['timeout'] = 15.0
+                return super().send(*args, **kwargs)
+                
+        session.mount('https://', TimeoutAdapter())
+        session.mount('http://', TimeoutAdapter())
+        session.headers.update({'User-Agent': 'OpenClaw Radar V3'})
+
+        client = arxiv.Client(
+            page_size=max_results,
+            delay_seconds=3.0,
+            num_retries=2
+        )
+        client._session = session
+        
         sort_criterion = arxiv.SortCriterion.SubmittedDate if sort_by.lower() == "date" else arxiv.SortCriterion.Relevance
         search = arxiv.Search(
             query=query,

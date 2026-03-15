@@ -33,6 +33,7 @@ SSH_PORT=22                   # Optional (Default: 22)
 > 7. **Cross-Node Execution Proxy Ban (AB-036)**: When requested to run experiments or tail logs on target nodes, you MUST strictly use `ssh_tool.py exec`. ABSOLUTELY DO NOT fake or touch mock logs on the local host to simulate a successful remote execution.
 >    **Explicit Invocation Master Strategy:**
 >    `SSH_HOST=100.90.140.62 SSH_USER=roy-002 SSH_PORT=22 python3 ssh_tool.py exec ...`
+> 8. **The Sudo Over SSH Law**: When requiring root privileges to modify core system settings (e.g., `pmset`, `networksetup`) on remote nodes, NEVER execute raw `sudo` via SSH as it will silently hang awaiting an interactive prompt. You MUST fetch the plaintext password from the Master Secrets Vault (`~/.secrets/secrets_flat.json` or `.openclaw_secrets`) and pipe it via stdin (e.g., `echo 'mypass' | sudo -S <cmd>`).
 
 ## Tools
 

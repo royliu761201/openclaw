@@ -310,6 +310,38 @@ def collect_raw_data():
                 buffer_content.append(sch_raw)
                 time.sleep(10)
 
+        # Split large institution lists
+        institutions = targets.get("top_institutions", [])
+        if institutions:
+            chunk_size = 5
+            inst_chunks = [institutions[i:i + chunk_size] for i in range(0, len(institutions), chunk_size)]
+            
+            for idx, chunk in enumerate(inst_chunks):
+                combined_insts = " OR ".join([f'"{inst}"' for inst in chunk])
+                inst_query = f"({combined_insts}) AI research news breakthrough"
+                inst_res = run_search_tavily(inst_query, max_results=3)
+                inst_res, has_new_inst, inst_raw = filter_new_content(inst_res, "tavily")
+                if has_new_inst:
+                    raw_content.append(f"### 🏢 Top Institutions Intel (Batch {idx+1})")
+                    raw_content.append(inst_res)
+                buffer_content.append(f"### 🏢 Top Institutions Intel (Batch {idx+1}) [UNFILTERED]")
+                buffer_content.append(inst_raw)
+                time.sleep(10)
+
+        # Benchmark Papers
+        benchmarks = targets.get("benchmark_papers_to_track", [])
+        if benchmarks:
+            for idx, benchmark in enumerate(benchmarks):
+                bench_query = f'"{benchmark}" AI model breakthrough follow-up repository'
+                bench_res = run_search_tavily(bench_query, max_results=2)
+                bench_res, has_new_bench, bench_raw = filter_new_content(bench_res, "tavily")
+                if has_new_bench:
+                    raw_content.append(f"### ✨ Benchmark Paper Update: {benchmark}")
+                    raw_content.append(bench_res)
+                buffer_content.append(f"### ✨ Benchmark Paper Update: {benchmark} [UNFILTERED]")
+                buffer_content.append(bench_raw)
+                time.sleep(5)
+
     # === Asynchronous Feishu Inbox Processing ===
     FEISHU_INBOX_PATH = RAW_DATA_DIR / "_inbox.md"
     if FEISHU_INBOX_PATH.exists():

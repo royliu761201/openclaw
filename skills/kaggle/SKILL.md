@@ -24,14 +24,15 @@ The script requires Kaggle authentication credentials. You can provide these in 
 
 ## Remote Standards (Heavy Asset Visa Enforcement)
 
-> **[L1 Constitution Block - INTEL-FETCH REQUIRED]**: 
+> **[L1 Constitution Block - INTEL-FETCH REQUIRED]**:
 > Kaggle datasets are often massive archives. **You are strictly forbidden** from downloading Kaggle datasets natively within this skill or dumping them into `~/workspace/projects_core/`.
-> 
+>
 > 👉 **To download Kaggle Datasets, you MUST invoke the `intel-fetch` Macro-Skill.** `intel-fetch` implements the required "Node 05 US Proxy Jump" and "Node 03 Vault Symlinking" to safely load the assets without crashing the Git SSoT or stalling behind GFW.
 >
 > This `kaggle` skill is NOW STRICTLY limited to executing code (Kernels) and uploading outputs (`dataset_push`).
 
 ### Dependencies
+
 - The `kaggle` Python package installed globally or in the active python environment.
 - Sufficient disk space for datasets.
 
@@ -76,6 +77,22 @@ List kernels to check status.
 
 ```bash
 ./scripts/kaggle_tool.py kernels_list --user "username" --search "openclaw"
+```
+
+### `dispatch_kaggle_downloader` (Kaggle Downloader Proxy)
+
+🔥 **High-Speed Network Bridge**🔥
+Use this script when you need to download massive datasets (e.g. `pip install mantra-dataset` or `wget`) but local Mac proxy routes are broken or bandwidth is constrained. It automatically builds a python payload, pushes it as a Kaggle Kernel, runs it on Kaggle's gigabit network, zips the output, and gives you the exact SSH command to fetch it onto the `10.190` GPU Server.
+
+- **username** (string): The Kaggle account username.
+- **slug_name** (string): Unique identifier for the Kaggle Kernel.
+- **pip_package_or_url** (string): The package name to `pip install` or direct `http` url to `wget`.
+- **gpu_target_dir** (string, optional): The destination directory on the 10.190 GPU Server.
+
+**Usage**:
+
+```bash
+./scripts/dispatch_kaggle_downloader.sh roylxh5147 mantra-downloader mantra-dataset /jhdx0003008/data/mantra
 ```
 
 ### `kaggle_remote_fetch` (MD-Driven KISS Protocol)
