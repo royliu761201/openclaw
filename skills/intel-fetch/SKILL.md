@@ -27,10 +27,15 @@ description: Advanced data reconnaissance and retrieval macro-skill. Replaces le
 
 1. 使用 `ssh_tool.py` 登录目标执行节点（例如 Node 02 或 GPU）。
 2. 在该节点的冷备区 (`~/data_vault/` 或 `/tmp/`) 下达最基础的下载命令：
-   - **Kaggle**: `kaggle datasets download -d <dataset>`
+   - **Kaggle**: 见下方特别说明⚠️
    - **HuggingFace**: `huggingface-cli download <model>`
    - **通用**: `wget -c`, `curl -L -O`
      _(如果你预判目标节点（比如局域网 Node 02/03）根本没有公网能力，直接跳过直连，进入 T2)_
+
+   > ⚠️ **[GPU-Kaggle 特别法则]**: GPU Pod 的 DNS（10.192.0.3）只对**系统 `curl`** 解析 `www.kaggle.com`。
+   > `kaggle` CLI、`wget`、Python `requests` 在该节点均 DNS 失败。
+   > **必须使用**: `curl --resolve www.kaggle.com:443:35.244.233.98 --user <username>:<key> -C - -o <out.zip> "https://www.kaggle.com/api/v1/datasets/download/<owner>/<slug>"`
+   > 完整 SOP 见 workflow: `/kaggle-heavy-dataset-download`
 
 ### T2: 桥接跳板渗透 (The Node 05 Proxy Bypass)
 
