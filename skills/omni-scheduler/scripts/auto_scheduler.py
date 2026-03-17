@@ -88,7 +88,7 @@ def prune_queue_locked(f):
     try:
         data = json.load(f)
     except json.JSONDecodeError:
-        return data
+        return data, False
 
     now = datetime.now()
     active_tasks = []
@@ -111,8 +111,9 @@ def prune_queue_locked(f):
         f.seek(0)
         json.dump(data, f, indent=4)
         f.truncate()
+        return data, True
         
-    return data
+    return data, False
 
 def sync_queue_to_git(queue_path):
     """Automatically commit and push the updated queue state back to the central nervous system."""
@@ -124,6 +125,17 @@ def sync_queue_to_git(queue_path):
         logging.info("📡 Queue state successfully beamed back to Command Center.")
     except Exception as e:
         logging.warning(f"Failed to sync queue state back to git: {e}")
+
+def pull_git_updates(queue_path):
+    """Pull the latest task queue and codebase from the central source of truth."""
+    try:
+        directory = os.path.dirname(queue_path)
+        cmd = f"cd {directory} && GIT_SSH_COMMAND=\"ssh -o Port=443 -o HostName=ssh.github.com -o ConnectTimeout=15 -o StrictHostKeyChecking=no\" git pull origin main"
+        res = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
+        if "Already up to date." not in res.stdout:
+            logging.info("📥 Detected and pulled new updates from Command Center.")
+    except Exception as e:
+        logging.warning(f"Failed to pull latest git updates: {e}")
 
 def pull_next_task_locked(f, data, target_name, gpu_id=None):
     """Pulls the next PENDING task, marks it RUNNING, assigns GPU, saves, and returns."""
@@ -226,10 +238,14 @@ def daemon_loop(args):
     logging.info(f"Mode: {args.mode.upper()} | Poll: {args.poll}s | Threshold: < {args.threshold}%")
     
     while True:
+        pull_git_updates(args.queue)
+        git_sync_needed = False
         f = get_file_lock(args.queue)
         if f:
             try:
-                data = prune_queue_locked(f)
+                data, pruned_flag = prune_queue_locked(f)
+                if pruned_flag:
+                    git_sync_needed = True
                 
                 if args.mode == "local":
                     gpu_stats = check_nvidia_smi()
@@ -253,6 +269,7 @@ def daemon_loop(args):
                         for gpu_id in available_gpus:
                             task = pull_next_task_locked(f, data, "local", gpu_id=gpu_id)
                             if task:
+                                git_sync_needed = True
                                 _launch_local(task, gpu_id, args.queue)
                             else:
                                 break # No more PENDING tasks
@@ -268,6 +285,7 @@ def daemon_loop(args):
                         target_name = args.target
                         task = pull_next_task_locked(f, data, target_name)
                         if task:
+                            git_sync_needed = True
                             _pack_and_launch_kaggle(task, args.queue)
                     else:
                         logging.info(f"Cloud Quota FULL ({running}/{args.max_concurrent}).")
@@ -277,7 +295,10 @@ def daemon_loop(args):
             finally:
                 if f:
                     release_file_lock(f)
-                    
+        
+        if git_sync_needed:
+            sync_queue_to_git(args.queue)
+            
         time.sleep(args.poll)
 
 if __name__ == "__main__":
