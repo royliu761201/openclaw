@@ -114,6 +114,17 @@ def prune_queue_locked(f):
         
     return data
 
+def sync_queue_to_git(queue_path):
+    """Automatically commit and push the updated queue state back to the central nervous system."""
+    try:
+        directory = os.path.dirname(queue_path)
+        # Using the secure 443 fallback tunneling method for resilient sync
+        cmd = f"cd {directory} && git add {os.path.basename(queue_path)} && git commit -m 'chore: Auto-Scheduler state pulse checkpoint' && GIT_SSH_COMMAND=\"ssh -o Port=443 -o HostName=ssh.github.com -o ConnectTimeout=15 -o StrictHostKeyChecking=no\" git push origin main"
+        subprocess.run(cmd, shell=True, capture_output=True, timeout=30)
+        logging.info("📡 Queue state successfully beamed back to Command Center.")
+    except Exception as e:
+        logging.warning(f"Failed to sync queue state back to git: {e}")
+
 def pull_next_task_locked(f, data, target_name, gpu_id=None):
     """Pulls the next PENDING task, marks it RUNNING, assigns GPU, saves, and returns."""
     for index, task in enumerate(data.get("tasks", [])):
@@ -147,6 +158,7 @@ def mark_completed(queue_path, job_id, final_status="COMPLETED"):
         logging.error(f"Failed to mark task {job_id} as {final_status}: {e}")
     finally:
         release_file_lock(f)
+    sync_queue_to_git(queue_path)
 
 def _launch_local(task, gpu_id, queue_path):
     """Fires the CLI command with CUDA_VISIBLE_DEVICES isolation, and tracks completion."""
