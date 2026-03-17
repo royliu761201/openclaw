@@ -18,6 +18,18 @@ from datetime import datetime, timedelta
 
 logging.basicConfig(level=logging.INFO, format='⚙️ [Unified Scheduler] %(asctime)s %(message)s')
 
+def check_git_liveness(directory: str) -> bool:
+    """[Liveness Probe] Ensure the target execution directory is governed by a secure Git repository."""
+    try:
+        res = subprocess.run(
+            ["git", "-C", directory, "rev-parse", "--is-inside-work-tree"],
+            capture_output=True, text=True, timeout=10
+        )
+        return res.returncode == 0 and res.stdout.strip() == "true"
+    except Exception as e:
+        logging.error(f"Git liveness probe crashed: {e}")
+        return False
+
 def get_file_lock(file_path):
     """Acquire an atomic file lock to prevent JSON race conditions."""
     if not os.path.exists(file_path):
@@ -40,21 +52,23 @@ def release_file_lock(f):
         f.close()
 
 def check_nvidia_smi():
-    """Returns VRAM utilization %. Mock 0.0 if not on Linux."""
+    """Returns a dict of {gpu_id: utilization_float} for all detected GPUs."""
     try:
-        res = subprocess.run(["nvidia-smi", "--query-gpu=utilization.gpu", "--format=csv,noheader"], 
-                             capture_output=True, text=True, timeout=5)
+        res = subprocess.run(
+            ["nvidia-smi", "--query-gpu=index,utilization.gpu", "--format=csv,noheader,nounits"], 
+            capture_output=True, text=True, timeout=30
+        )
         if res.returncode == 0:
-            val_str = res.stdout.strip().replace(' %', '')
-            try:
-                return float(val_str)
-            except ValueError:
-                return -1.0
-    except Exception:
-        pass
+            gpu_stats = {}
+            for line in res.stdout.strip().split('\n'):
+                if not line: continue
+                idx, util = line.split(',')
+                gpu_stats[int(idx.strip())] = float(util.strip())
+            return gpu_stats
+    except Exception as e:
+        logging.error(f"nvidia-smi check failed: {e}")
     
-    logging.warning("nvidia-smi check failed. Returning mock value 0.0 (Idle detected).")
-    return 0.0
+    return {}
 
 def check_kaggle_quota():
     """Returns the number of currently running Kaggle kernels."""
@@ -100,12 +114,14 @@ def prune_queue_locked(f):
         
     return data
 
-def pull_next_task_locked(f, data, target_name):
-    """Pulls the next PENDING task for the specified target, marks it RUNNING, saves, and returns."""
+def pull_next_task_locked(f, data, target_name, gpu_id=None):
+    """Pulls the next PENDING task, marks it RUNNING, assigns GPU, saves, and returns."""
     for index, task in enumerate(data.get("tasks", [])):
         if task.get("status") == "PENDING" and task.get("target", "local") == target_name:
             data["tasks"][index]["status"] = "RUNNING"
             data["tasks"][index]["start_time"] = datetime.now().isoformat()
+            if gpu_id is not None:
+                data["tasks"][index]["assigned_gpu"] = gpu_id
             
             f.seek(0)
             json.dump(data, f, indent=4)
@@ -132,19 +148,49 @@ def mark_completed(queue_path, job_id, final_status="COMPLETED"):
     finally:
         release_file_lock(f)
 
-def _launch_local(task):
-    """Fires the CLI command natively into the background."""
+def _launch_local(task, gpu_id, queue_path):
+    """Fires the CLI command with CUDA_VISIBLE_DEVICES isolation, and tracks completion."""
     cmd = task.get("command")
     cwd = task.get("directory", os.path.expanduser("~/workspace/projects_core"))
     job_id = task.get("id")
-    logging.info(f"🔫 [LOCAL LAUNCH] Task [{job_id}]: {cmd} in {cwd}")
+    
+    # Environment Isolation
+    env = os.environ.copy()
+    env["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
+    
+    # [Constitutional Guard] Git Liveness SSoT Probe
+    if not check_git_liveness(cwd):
+        logging.critical(f"🚨 FATAL: Constitutional Violation! Target directory '{cwd}' is NOT a Git repository.")
+        logging.critical("Refusing to launch task in an unversioned (Dead) workspace.")
+        mark_completed(queue_path, job_id, "FAILED_NON_GIT_WORKSPACE")
+        return
+    
+    logging.info(f"🔫 [LOCAL LAUNCH] GPU {gpu_id} | Task [{job_id}]: {cmd}")
     
     try:
         import shlex
-        subprocess.Popen(shlex.split(cmd), cwd=cwd)
-        logging.info("Task successfully launched locally. Relinquishing daemon lock.")
+        import threading
+        
+        def run_task():
+            try:
+                proc = subprocess.Popen(shlex.split(cmd), cwd=cwd, env=env)
+                proc.wait()
+                final_status = "COMPLETED" if proc.returncode == 0 else "FAILED"
+            except Exception as e:
+                logging.error(f"Task {job_id} crashed: {e}")
+                final_status = "FAILED"
+            
+            logging.info(f"🏁 Task [{job_id}] on GPU {gpu_id} finished with status: {final_status}")
+            mark_completed(queue_path, job_id, final_status)
+            
+        t = threading.Thread(target=run_task)
+        t.daemon = True
+        t.start()
+        
+        logging.info(f"Task successfully launched and monitored on GPU {gpu_id}.")
     except Exception as e:
-        logging.error(f"Failed to launch task: {e}")
+        logging.error(f"Failed to launch task on GPU {gpu_id}: {e}")
+        mark_completed(queue_path, job_id, "FAILED")
 
 def _pack_and_launch_kaggle(task, queue_path):
     """Cloud proxy launcher. Executes push and marks completion immediately."""
@@ -163,58 +209,57 @@ def _pack_and_launch_kaggle(task, queue_path):
         logging.error(f"Failed to launch payload: {e}")
 
 def daemon_loop(args):
-    """Unified polling loop."""
-    logging.info(f"Initializing Unified Auto-Scheduler Daemon.")
-    logging.info(f"Mode: {args.mode.upper()}")
-    if args.mode == "kaggle":
-        logging.info(f"Targeting: {args.target}")
-        logging.info(f"Max Concurrent: {args.max_concurrent}")
-    else:
-        logging.info(f"Targeting: local")
-        logging.info(f"Trigger Threshold: < {args.threshold}% VRAM")
-    logging.info(f"Poll Interval: {args.poll}s")
+    """Unified multi-slot polling loop."""
+    logging.info(f"Initializing Unified Multi-GPU Auto-Scheduler v2.0.")
+    logging.info(f"Mode: {args.mode.upper()} | Poll: {args.poll}s | Threshold: < {args.threshold}%")
     
     while True:
         f = get_file_lock(args.queue)
         if f:
             try:
-                # 1. Prune junk
                 data = prune_queue_locked(f)
                 
-                # 2. Check Quotas
-                can_pull = False
                 if args.mode == "local":
-                    util = check_nvidia_smi()
-                    logging.info(f"[Local] Current GPU Utilization: {util}%")
-                    if 0 <= util < args.threshold:
-                        can_pull = True
-                        logging.info(f"🚨 IDLE STATE DETECTED (< {args.threshold}%). Querying Queue...")
+                    gpu_stats = check_nvidia_smi()
+                    
+                    # [Solidify Scheduling] Calculate currently assigned GPUs from JSON queue to enforce EXCLUSIVE LOCK
+                    assigned_gpus = set()
+                    for t in data.get("tasks", []):
+                        if t.get("status") == "RUNNING" and "assigned_gpu" in t:
+                            assigned_gpus.add(int(t["assigned_gpu"]))
+                            
+                    # A GPU is truly available only if its utilization is low AND it's not locked by a RUNNING task
+                    available_gpus = [idx for idx, util in gpu_stats.items() 
+                                      if util < args.threshold and idx not in assigned_gpus]
+                    
+                    if available_gpus:
+                        if assigned_gpus:
+                            logging.info(f"Detected {len(available_gpus)} idle GPUs: {available_gpus} | Active Exclusive Locks: {list(assigned_gpus)}")
+                        else:
+                            logging.info(f"Detected {len(available_gpus)} idle GPUs: {available_gpus}")
+                            
+                        for gpu_id in available_gpus:
+                            task = pull_next_task_locked(f, data, "local", gpu_id=gpu_id)
+                            if task:
+                                _launch_local(task, gpu_id, args.queue)
+                            else:
+                                break # No more PENDING tasks
                     else:
-                        logging.info("GPU is active. Skipping trigger.")
+                        if assigned_gpus:
+                            logging.info(f"All GPUs busy or locked. Active Exclusive Locks: {list(assigned_gpus)}")
+                        else:
+                            logging.info("All GPUs are busy or nvidia-smi failed.")
                         
                 elif args.mode == "kaggle":
                     running = check_kaggle_quota()
                     if running < args.max_concurrent:
-                        can_pull = True
-                    else:
-                        logging.info(f"Cloud Quota FULL ({running}/{args.max_concurrent}). Sleeping...")
-
-                # 3. Pull and Execute
-                if can_pull:
-                    target_name = "local" if args.mode == "local" else args.target
-                    task = pull_next_task_locked(f, data, target_name)
-                    if task:
-                        logging.info(f"Lock acquired. Launching Task: {task['id']}")
-                        # We release the lock BEFORE launching so long-running prep commands don't block JSON
-                        release_file_lock(f)
-                        f = None # prevent double release
-                        
-                        if args.mode == "local":
-                            _launch_local(task)
-                        else:
+                        target_name = args.target
+                        task = pull_next_task_locked(f, data, target_name)
+                        if task:
                             _pack_and_launch_kaggle(task, args.queue)
                     else:
-                        logging.info(f"No PENDING tasks for [{target_name}]. Sleeping...")
+                        logging.info(f"Cloud Quota FULL ({running}/{args.max_concurrent}).")
+
             except Exception as e:
                 logging.error(f"Daemon Loop Error: {e}")
             finally:
