@@ -44,7 +44,15 @@ Execute a command on a remote server.
 - **command** (string, required): Command to run (e.g., "nvidia-smi").
 - **host** (string, optional): Override default host.
 - **user** (string, optional): Override default user.
-- **detach** (flag, optional): Run in background (nohup). Returns PID immediately.
+- **detach** (flag, optional): Run in background using **Linux `setsid()` (true OS-level daemonization)**. Returns PID immediately. Process survives SSH disconnect.
+
+> [!IMPORTANT]
+> **Anti-Hallucination Law #9 (Detach Mode)**
+>
+> `exec --detach` uses `subprocess.Popen(start_new_session=True)` + base64-encoded command on Linux.
+> This calls the OS-level `setsid()` syscall — the process is placed in a **completely independent session**, immune to SIGHUP.
+> The old pattern (`nohup sh -c '...' &`) was **NOT reliable** — Paramiko's channel close could still kill background processes via session group cleanup.
+> Detached process stdout/stderr is routed to `/tmp/openclaw_detach.log`.
 
 **Usage**:
 
