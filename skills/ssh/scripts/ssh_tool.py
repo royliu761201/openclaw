@@ -198,19 +198,18 @@ os.system(f'wmic process call create "cmd.exe /c {{bat_path}}" > NUL 2>&1')
             encoded_py = base64.b64encode(py_script.encode('utf-8')).decode('utf-8')
             nohup_cmd = f"python -c \"import base64; exec(base64.b64decode('{encoded_py}').decode('utf-8'))\""
         else:
-            # [SECURITY FIX] The old `nohup sh -c '...' &` is NOT reliable:
-            # Paramiko's channel close can still SIGHUP the process group.
-            # The correct fix: use Python's subprocess.Popen(start_new_session=True)
-            # which calls Linux setsid(), creating a new process group + session
-            # completely detached from the SSH session tree.
-            import shlex
-            escaped_cmd = full_cmd.replace("'", "'\\''")
+            # [SECURITY FIX v2] Use base64 encoding to pass the command, avoiding ALL
+            # quoting/escaping issues with shlex.split or shell metacharacters.
+            # The remote Python decodes and executes via Popen(start_new_session=True).
+            import base64
+            encoded_cmd = base64.b64encode(full_cmd.encode('utf-8')).decode('ascii')
             nohup_cmd = (
                 f"python3 -c \""
-                f"import subprocess,os,shlex;"
-                f"p=subprocess.Popen(shlex.split('{escaped_cmd}'),"
-                f"stdout=open('/tmp/openclaw_detach.log','a'),stderr=subprocess.STDOUT,"
-                f"start_new_session=True);"
+                f"import subprocess,base64,shlex;"
+                f"cmd=base64.b64decode('{encoded_cmd}').decode();"
+                f"p=subprocess.Popen(shlex.split(cmd),"
+                f"stdout=open('/tmp/openclaw_detach.log','a'),"
+                f"stderr=subprocess.STDOUT,start_new_session=True);"
                 f"print('PID:',p.pid)"
                 f"\""
             )
