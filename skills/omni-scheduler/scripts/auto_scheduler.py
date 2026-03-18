@@ -115,27 +115,43 @@ def prune_queue_locked(f):
         
     return data, False
 
-def sync_queue_to_git(queue_path):
-    """Automatically commit and push the updated queue state back to the central nervous system."""
-    try:
-        directory = os.path.dirname(queue_path)
-        # Using the secure 443 fallback tunneling method for resilient sync
-        cmd = f"cd {directory} && git add {os.path.basename(queue_path)} && git commit -m 'chore: Auto-Scheduler state pulse checkpoint' && GIT_SSH_COMMAND=\"ssh -o Port=443 -o HostName=ssh.github.com -o ConnectTimeout=15 -o StrictHostKeyChecking=no\" git push origin main"
-        subprocess.run(cmd, shell=True, capture_output=True, timeout=30)
-        logging.info("📡 Queue state successfully beamed back to Command Center.")
-    except Exception as e:
-        logging.warning(f"Failed to sync queue state back to git: {e}")
+def sync_queue_to_git(queue_path, max_retries=3):
+    """Automatically commit and push the updated queue state back to the central nervous system.
+    Uses exponential backoff retry to survive transient DNS/network failures."""
+    directory = os.path.dirname(queue_path)
+    cmd = f"cd {directory} && git add {os.path.basename(queue_path)} && git commit -m 'chore: Auto-Scheduler state pulse checkpoint' && GIT_SSH_COMMAND=\"ssh -o Port=443 -o HostName=ssh.github.com -o ConnectTimeout=15 -o StrictHostKeyChecking=no\" git push origin main"
+    for attempt in range(max_retries):
+        try:
+            res = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
+            if res.returncode == 0:
+                logging.info("📡 Queue state successfully beamed back to Command Center.")
+                return
+            else:
+                raise RuntimeError(res.stderr.strip()[:200])
+        except Exception as e:
+            wait = 2 ** attempt * 5  # 5s, 10s, 20s
+            logging.warning(f"Sync failed (attempt {attempt+1}/{max_retries}): {e}")
+            if attempt < max_retries - 1:
+                time.sleep(wait)
+    logging.error("❌ All sync retries exhausted. Local JSON is authoritative; will retry next cycle.")
 
-def pull_git_updates(queue_path):
-    """Pull the latest task queue and codebase from the central source of truth."""
-    try:
-        directory = os.path.dirname(queue_path)
-        cmd = f"cd {directory} && GIT_SSH_COMMAND=\"ssh -o Port=443 -o HostName=ssh.github.com -o ConnectTimeout=15 -o StrictHostKeyChecking=no\" git pull origin main"
-        res = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
-        if "Already up to date." not in res.stdout:
-            logging.info("📥 Detected and pulled new updates from Command Center.")
-    except Exception as e:
-        logging.warning(f"Failed to pull latest git updates: {e}")
+def pull_git_updates(queue_path, max_retries=2):
+    """Pull the latest task queue and codebase from the central source of truth.
+    Retries once on failure to handle transient DNS issues."""
+    directory = os.path.dirname(queue_path)
+    cmd = f"cd {directory} && GIT_SSH_COMMAND=\"ssh -o Port=443 -o HostName=ssh.github.com -o ConnectTimeout=15 -o StrictHostKeyChecking=no\" git pull origin main"
+    for attempt in range(max_retries):
+        try:
+            res = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
+            if "Already up to date." not in res.stdout and res.returncode == 0:
+                logging.info("📥 Detected and pulled new updates from Command Center.")
+            return
+        except Exception as e:
+            wait = 2 ** attempt * 5
+            logging.warning(f"Git pull failed (attempt {attempt+1}/{max_retries}): {e}")
+            if attempt < max_retries - 1:
+                time.sleep(wait)
+    logging.error("❌ Git pull retries exhausted. Continuing with local queue state.")
 
 def pull_next_task_locked(f, data, target_name, gpu_id=None):
     """Pulls the next PENDING task, marks it RUNNING, assigns GPU, saves, and returns."""
