@@ -27,9 +27,13 @@ def load_openclaw_env():
 load_openclaw_env()
 
 # 🛡️ FAIL-EARLY: Pre-flight check for Engine API Keys
-missing_keys = [k for k in ["TAVILY_API_KEY", "EXA_API_KEY"] if not os.environ.get(k)]
-if missing_keys:
-    print(f"❌ FATAL [Fail-Early]: Missing API keys for radar engines: {missing_keys}. Check ~/.openclaw_env.")
+# Tavily: either KEY_1 or KEY_2 is sufficient (dual-key rotation mode)
+_tavily_ok = os.environ.get("TAVILY_API_KEY_1") or os.environ.get("TAVILY_API_KEY_2") or os.environ.get("TAVILY_API_KEY")
+if not _tavily_ok:
+    print("❌ FATAL [Fail-Early]: No Tavily API key found. Set TAVILY_API_KEY_1 or TAVILY_API_KEY_2 in ~/.openclaw_env.")
+    sys.exit(1)
+if not os.environ.get("EXA_API_KEY"):
+    print("❌ FATAL [Fail-Early]: Missing API key: EXA_API_KEY. Check ~/.openclaw_env.")
     sys.exit(1)
 
 WORKSPACE_DIR = Path(os.path.expanduser("~/workspace"))
@@ -68,29 +72,65 @@ def save_seen_intel(data):
     with open(SEEN_INTEL_PATH, "w") as f:
         json.dump(data, f)
 
+# 🛡️ ArXiv Stagger Config: Prevents concurrent connection pool exhaustion on Node 02.
+# Each sector waits ARXIV_SECTOR_STAGGER_SECONDS before hitting arXiv.
+# Default: 90s. Override via RADAR_ARXIV_STAGGER env var.
+ARXIV_SECTOR_STAGGER_SECONDS = int(os.environ.get("RADAR_ARXIV_STAGGER", "90"))
+# Hard limit on subprocess execution time for each ArXiv call.
+ARXIV_SUBPROCESS_TIMEOUT_SECONDS = int(os.environ.get("RADAR_ARXIV_TIMEOUT", "60"))
+
 def run_search_arxiv(query: str, max_results: int = 5) -> str:
     try:
         result = subprocess.run(
             [PYTHON_BIN, ACADEMIC_SEARCH_PATH, "search", "--query", query, "--max_results", str(max_results), "--sort_by", "date"],
-            capture_output=True, text=True, check=True
+            capture_output=True, text=True, check=True,
+            timeout=ARXIV_SUBPROCESS_TIMEOUT_SECONDS  # 🛡️ Hard timeout: no more silent hangs
         )
         return result.stdout
+    except subprocess.TimeoutExpired:
+        return f'{{"error": "ArXiv subprocess timed out after {ARXIV_SUBPROCESS_TIMEOUT_SECONDS}s. Node 02 network congestion suspected."}}'
     except subprocess.CalledProcessError as e:
         return f"*Error retrieving ArXiv results. Returncode: {e.returncode}, Stderr: {e.stderr}*"
     except Exception as e:
         return f"*Error: academic-search script issue -> {e}*"
 
-def run_search_tavily(query: str, max_results: int = 3) -> str:
+def _call_tavily_with_key(query: str, max_results: int, key: str) -> tuple:
+    """Returns (stdout, is_quota_error). is_quota_error=True when HTTP 432 quota exceeded."""
+    env = os.environ.copy()
+    env["TAVILY_API_KEY"] = key
     try:
         result = subprocess.run(
             [PYTHON_BIN, TAVILY_SEARCH_PATH, query, "-n", str(max_results)],
-            capture_output=True, text=True, check=True
+            capture_output=True, text=True, check=True, env=env
         )
-        return result.stdout
+        return result.stdout, False
     except subprocess.CalledProcessError as e:
-        return f"*Error retrieving Tavily (Web) results. Returncode: {e.returncode}, Stderr: {e.stderr}*"
+        stderr = e.stderr or ""
+        is_quota = "432" in stderr or "usage limit" in stderr.lower()
+        return f"*Error retrieving Tavily (Web) results. Returncode: {e.returncode}, Stderr: {stderr}*", is_quota
     except Exception as e:
-        return f"*Error: tavily-search script issue -> {e}*"
+        return f"*Error: tavily-search script issue -> {e}*", False
+
+def run_search_tavily(query: str, max_results: int = 3) -> str:
+    """Dual-key rotation: tries KEY_1 first, falls back to KEY_2 on quota exhaustion (HTTP 432)."""
+    key1 = os.environ.get("TAVILY_API_KEY_1") or os.environ.get("TAVILY_API_KEY", "")
+    key2 = os.environ.get("TAVILY_API_KEY_2", "")
+
+    if key1:
+        result, quota_err = _call_tavily_with_key(query, max_results, key1)
+        if not quota_err:
+            return result
+        print("     |_ ⚠️ [Tavily KEY_1] Quota exhausted (432). Rotating to KEY_2...")
+
+    if key2 and key2 != key1:
+        result, quota_err = _call_tavily_with_key(query, max_results, key2)
+        if not quota_err:
+            return result
+        print("     |_ ⚠️ [Tavily KEY_2] Quota exhausted (432). Both keys depleted.")
+        return "*Error retrieving Tavily (Web) results. Returncode: 1, Stderr: Both TAVILY_API_KEY_1 and TAVILY_API_KEY_2 quota exhausted.*"
+
+    # Single key mode (legacy)
+    return result if 'result' in dir() else "*Error: No Tavily key configured.*"
 
 def run_search_exa(query: str, max_results: int = 3) -> str:
     try:
@@ -104,7 +144,7 @@ def run_search_exa(query: str, max_results: int = 3) -> str:
     except Exception as e:
         return f"*Error: exa-search script issue -> {e}*"
 
-def collect_raw_data():
+def collect_raw_data(sectors_filter=None):
     # 🚨 PREEMPTIVE SSoT SYNC 🚨
     # Force Node 02 to pull the latest radar_targets.json before reading. Guaranteed non-blocking.
     print("🔄 [Pre-Flight] Synchronizing latest SSoT Targets from Git (Non-blocking)...")
@@ -191,8 +231,17 @@ def collect_raw_data():
         return raw_text, True, raw_text
 
 
-    for category, query in RADAR_KEYWORDS.items():
-        print(f"  -> [Tri-Engine] Scraping raw data for: {category}")
+    # 🎯 Sectors filter: if --sectors passed, only scan matching sectors
+    if sectors_filter:
+        filtered = {k: v for k, v in RADAR_KEYWORDS.items() if any(s.lower() in k.lower() for s in sectors_filter)}
+        if filtered:
+            print(f"🎯 [Sectors Filter] Only scanning {len(filtered)} targeted sectors: {list(filtered.keys())}")
+            RADAR_KEYWORDS = filtered
+        else:
+            print(f"⚠️ [Sectors Filter] No matching sectors found for: {sectors_filter}. Falling back to full scan.")
+
+    for sector_idx, (category, query) in enumerate(RADAR_KEYWORDS.items()):
+        print(f"  -> [Tri-Engine] Scraping raw data for: {category} (sector {sector_idx + 1}/{len(RADAR_KEYWORDS)})")
         
         # Determine if this category should bypass strict AI4S top-venue filtering
         strict_venues = ["Nature", "Science", "ICLR", "NeurIPS", "ICML", "CVPR", "ICCV", "KDD", "Q1"]
@@ -202,6 +251,12 @@ def collect_raw_data():
         category_low_fi_buffer = []
         
         # 1. ArXiv (Academic)
+        # 🛡️ [Anti-Timeout] Stagger ArXiv calls across sectors to prevent concurrent connection
+        # pool exhaustion on Node 02. Sector 0 runs immediately; subsequent sectors stagger.
+        if sector_idx > 0:
+            stagger = ARXIV_SECTOR_STAGGER_SECONDS
+            print(f"     |_ [Anti-Timeout] Staggering arXiv call by {stagger}s (sector {sector_idx + 1})...")
+            time.sleep(stagger)
         print("     |_ arXiv...")
         arxiv_res = run_search_arxiv(query, max_results=5)
         arxiv_res, has_new_arxiv, arxiv_raw = filter_new_content(arxiv_res, "arxiv")
@@ -254,8 +309,10 @@ def collect_raw_data():
             buffer_content.append("\n---\n")
         
         # 🛡️ Absolute Physical Rate Limit (Anti-Ban Armor)
-        # Protects Node 02/05 from being blacklisted by arXiv/IEEE
-        print("  -> [Anti-Ban] Sleeping for 15 seconds before next burst...")
+        # Protects Node 02/05 from being blacklisted by arXiv/IEEE.
+        # NOTE: ArXiv stagger is now handled BEFORE each arXiv call above.
+        # This 15s sleep only guards Tavily + Exa burst rate.
+        print("  -> [Anti-Ban] Sleeping for 15 seconds before next burst (Tavily/Exa cooldown)...")
         time.sleep(15)
 
     # === Omni-Scope Intelligence Integration ===
@@ -428,6 +485,5 @@ if __name__ == "__main__":
     parser.add_argument("--sectors", nargs="+", help="Specific sectors to scan", default=[])
     args = parser.parse_args()
     
-    # Validation handled inside collect_raw_data, but kept sectors filtering out if needed.
-    collect_raw_data()
+    collect_raw_data(sectors_filter=args.sectors if args.sectors else None)
     git_sync_workspace()
