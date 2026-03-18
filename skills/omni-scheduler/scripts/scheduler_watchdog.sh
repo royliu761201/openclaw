@@ -24,7 +24,8 @@ while true; do
         echo "[Watchdog] $(date): Scheduler is DEAD. Initiating Auto-Heal restart..."
         # Respawn the scheduler
         export PYTHONPATH="${WORKSPACE_DIR}:${PYTHONPATH}"
-        nohup python3 "${SCHEDULER_SCRIPT}" --poll ${POLL_INTERVAL} >> "${LOG_FILE}" 2>&1 &
+        # [SECURITY FIX] Added REQUIRED '--mode local' argument to prevent argparse infinitely crashing the respawn.
+        nohup python3 "${SCHEDULER_SCRIPT}" --mode local --poll ${POLL_INTERVAL} >> "${LOG_FILE}" 2>&1 &
         echo "[Watchdog] $(date): Scheduler successfully respawned."
     fi
     

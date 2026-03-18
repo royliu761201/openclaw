@@ -208,7 +208,8 @@ def _launch_local(task, gpu_id, queue_path):
             mark_completed(queue_path, job_id, final_status)
             
         t = threading.Thread(target=run_task)
-        t.daemon = True
+        # [SECURITY FIX] Abolish daemon threads so child monitor threads safely survive main thread termination.
+        t.daemon = False
         t.start()
         
         logging.info(f"Task successfully launched and monitored on GPU {gpu_id}.")
@@ -312,6 +313,13 @@ if __name__ == "__main__":
     
     args = parser.parse_args()
     
+    # [SECURITY FIX] Install OS-level armor against SIGHUP (e.g., SSH interactive disconnects)
+    import signal
+    try:
+        signal.signal(signal.SIGHUP, signal.SIG_IGN)
+    except AttributeError:
+        pass
+        
     # 🚨 ANTI-NODE 01 GUARD BLOCK 🚨
     host = os.uname().nodename
     if 'node01' in host.lower() or 'master' in host.lower():
