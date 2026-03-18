@@ -198,7 +198,22 @@ os.system(f'wmic process call create "cmd.exe /c {{bat_path}}" > NUL 2>&1')
             encoded_py = base64.b64encode(py_script.encode('utf-8')).decode('utf-8')
             nohup_cmd = f"python -c \"import base64; exec(base64.b64decode('{encoded_py}').decode('utf-8'))\""
         else:
-            nohup_cmd = f"nohup sh -c '{full_cmd}' > nohup.out 2>&1 & echo $!"
+            # [SECURITY FIX] The old `nohup sh -c '...' &` is NOT reliable:
+            # Paramiko's channel close can still SIGHUP the process group.
+            # The correct fix: use Python's subprocess.Popen(start_new_session=True)
+            # which calls Linux setsid(), creating a new process group + session
+            # completely detached from the SSH session tree.
+            import shlex
+            escaped_cmd = full_cmd.replace("'", "'\\''")
+            nohup_cmd = (
+                f"python3 -c \""
+                f"import subprocess,os,shlex;"
+                f"p=subprocess.Popen(shlex.split('{escaped_cmd}'),"
+                f"stdout=open('/tmp/openclaw_detach.log','a'),stderr=subprocess.STDOUT,"
+                f"start_new_session=True);"
+                f"print('PID:',p.pid)"
+                f"\""
+            )
             
         stdin, stdout, stderr = client.exec_command(nohup_cmd)
         pid = stdout.read().decode('utf-8', errors='replace').strip()
