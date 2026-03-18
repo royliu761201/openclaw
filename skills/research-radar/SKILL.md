@@ -89,3 +89,26 @@ python3 scripts/radar_analyzer.py --date 2026-03-07
 
 - **The Grounding Law for Radar Associations**: When linking external research to internal `EXTENSION_IDEA_MASTER.md` items or existing papers, the Radar Brain Agent must NEVER guess the internal project scope based purely on title similarity. You MUST first physically query `workspace/docs/system_core/09_GROUNDED_PAPER_INDEX.md` or the corresponding SSoT to ensure the internal context being compared against is factually correct.
 - **The Grounding Law for Academic References**: When generating ideas, Dandan MUST inject 20-30 citations that are exclusively sourced from CCF-A or CAS Q1 journals, restricted to the last 3-5 years, heavily leveraging the Top Scholars explicitly listed in `radar_targets.json`. DOIs and ArXiv IDs MUST NEVER be hallucinated.
+
+## 🔧 Troubleshooting (Known Issues & Fixes)
+
+### Node 02 Tavily Offline (`.git/rebase-merge` corruption)
+
+**Symptom**: Tavily returns `[Errno 2] No such file or directory` for `search_tavily.py`, even though the file exists on Node 01.
+**Root Cause**: Node 02's `.git/rebase-merge` directory becomes corrupted during failed `git pull --rebase`, blocking subsequent syncs. New skills/files don't deploy to Node 02.
+**Fix**:
+
+```bash
+ssh 02 "cd ~/workspace && rm -rf .git/rebase-merge && git fetch origin && git reset --hard origin/main"
+```
+
+### ArXiv Stagger Timeout (collection takes >1 hour)
+
+**Symptom**: `radar_collector.py --sectors X Y` hangs for an hour with no output.
+**Root Cause**: `ARXIV_SECTOR_STAGGER_SECONDS` defaults to 90s between sectors. Combined with ArXiv call timeouts (60s) and anti-ban sleeps (15s), a full 36-sector scan takes ~60 minutes.
+**Mitigation**: For targeted scans, override the stagger: `RADAR_ARXIV_STAGGER=15 python3 scripts/radar_collector.py --sectors X`
+
+### Tavily KEY_1 Quota Exhaustion
+
+**Symptom**: `⚠️ [KEY_1] Quota exhausted (432). Rotating to next key...`
+**Status**: Expected behavior. `search_tavily.py` implements dual-key rotation. Monitor both keys in `~/.openclaw_env`.
