@@ -86,6 +86,29 @@ python3 $HOME/openclaw/skills/omni-scheduler/scripts/enqueue_task.py \
 
 _This instantly appends the payload with a generated UUID and an exact timestamp._
 
+## 🛡️ ANTI-HALLUCINATION LAWS (Production Incident Fixes)
+
+> [!IMPORTANT]
+> **Law #1 (Daemon Launch Protocol)**
+>
+> The scheduler daemon **MUST** be launched via `ssh_tool.py exec --detach` (which uses `setsid()` / `start_new_session=True`).
+> **NEVER** use `nohup ... &` or raw `tmux` via Paramiko — both fail to survive SSH channel closure.
+> The daemon **MUST** also set `signal(SIGHUP, SIG_IGN)` internally and use `t.daemon = False` for monitoring threads.
+
+> [!IMPORTANT]
+> **Law #2 (Git Sync Resilience)**
+>
+> `sync_queue_to_git()` and `pull_git_updates()` use **exponential backoff retry** (3 attempts: 5s/10s/20s).
+> If all retries fail, the daemon continues running — **local JSON is always authoritative**.
+> Git sync is "best-effort async"; it must **NEVER** block or crash the daemon.
+
+> [!IMPORTANT]
+> **Law #3 (Agent-Side SSoT Pull)**
+>
+> When querying experiment status, Agents must **SCP-download the remote JSON** (`ssh download`), not rely on `git pull`.
+> The scheduler's `git push` can silently fail due to DNS/network issues.
+> **Remote JSON is the SSoT**, Git is a replication channel, not the source of truth.
+
 ## ⚠️ CONSTITUTIONAL ANCHORS
 
 - **Strategic Action Exemption**: While `cluster_net_dashboard` and `gpu_status_board` remain strictly read-only, the unified `auto_scheduler` possesses a specialized surgical exemption to execute pre-approved CLI commands from the `experiment_queue.json` solely to prevent expensive GPU idle time. It cannot arbitrarily modify parameters.
