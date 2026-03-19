@@ -15,7 +15,7 @@ description: 如何设计论文对齐的实验矩阵（Experiment Matrix Design 
 > 在设计实验矩阵之前，必须先确认基础设施就绪。
 > **这一步不需要 Boss 命令触发，是 Agent 的基本职责。**
 
-```bash
+```text
 # 必须全部通过才能进入 Step 1
 [ ] 环境:  conda env 可用？依赖齐全？
 [ ] GPU:   几块？空闲状态？
@@ -26,6 +26,7 @@ description: 如何设计论文对齐的实验矩阵（Experiment Matrix Design 
 [ ] 断点续训: --resume / --start_index 已实现？
 [ ] 日志:  PYTHONUNBUFFERED？tee 双写？
 [ ] 代码:  所有待改代码已改完并 SCP 到 GPU？
+[ ] GPU 隔离: 实验脚本有 --gpu 参数？(Law #5: Python 级 CVD, 不是 shell 级!)
 ```
 
 **任何一项 ❌ → 先修再进 Step 1。**
