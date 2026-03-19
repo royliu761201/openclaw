@@ -109,6 +109,25 @@ _This instantly appends the payload with a generated UUID and an exact timestamp
 > The scheduler's `git push` can silently fail due to DNS/network issues.
 > **Remote JSON is the SSoT**, Git is a replication channel, not the source of truth.
 
+> [!CAUTION]
+> **Law #4 (Air-Gapped Dispatch SOP — Production Incident Fix 2026-03-19)**
+>
+> On air-gapped GPU nodes (no public DNS), `auto_scheduler.py` **CANNOT** git pull new tasks.
+> Git push from local is for **record-keeping only**. The actual dispatch MUST use SCP.
+>
+> **Mandatory 5-Step Dispatch Flow:**
+>
+> ```
+> 1. ssh download  GPU queue → local     (GPU JSON is SSoT)
+> 2. enqueue_task.py                     (inject task locally)
+> 3. git commit + push                   (record-keeping)
+> 4. ssh upload   local queue → GPU      (PRIMARY dispatch channel)
+> 5. sleep 90s → ssh exec check status   (verify RUNNING)
+> ```
+>
+> **Step 5 is NOT optional.** If task status != RUNNING after 90s, alert Boss immediately.
+> **NEVER** assume git sync will work on air-gapped nodes. SCP is the primary channel.
+
 ## ⚠️ CONSTITUTIONAL ANCHORS
 
 - **Strategic Action Exemption**: While `cluster_net_dashboard` and `gpu_status_board` remain strictly read-only, the unified `auto_scheduler` possesses a specialized surgical exemption to execute pre-approved CLI commands from the `experiment_queue.json` solely to prevent expensive GPU idle time. It cannot arbitrarily modify parameters.
