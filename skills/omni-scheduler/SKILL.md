@@ -150,6 +150,23 @@ _This instantly appends the payload with a generated UUID and an exact timestamp
 > **Applies to ALL projects** (CaLaM, PhysDiff, PESSO, Frenet).
 > If a new experiment script is created without `--gpu` support, it **CANNOT** be used in parallel sweeps.
 
+> [!CAUTION]
+> **Law #6 (MD-Driven Verification — Design Decision 2026-03-19)**
+>
+> **Experiment completion verification is driven by PDCA markdown, NOT by automated scripts.**
+>
+> When an experiment task transitions to COMPLETED:
+>
+> 1. Agent **proactively** pulls results from W&B (SSoT)
+> 2. Agent compares results against the PDCA **Check section** criteria
+> 3. Agent updates PDCA with actual metrics, flags anomalies with ⚠️
+> 4. Agent notifies Boss if any Check criterion fails
+>
+> **Why not scripts?** Different projects need different verification. The PDCA Check section
+> already defines project-specific criteria in human-readable form. Scripts that nobody reads = waste.
+>
+> **Execution discipline > automation tooling.** Don't wait for Boss to ask "what are the results?"
+
 ## ⚠️ CONSTITUTIONAL ANCHORS
 
 - **Strategic Action Exemption**: While `cluster_net_dashboard` and `gpu_status_board` remain strictly read-only, the unified `auto_scheduler` possesses a specialized surgical exemption to execute pre-approved CLI commands from the `experiment_queue.json` solely to prevent expensive GPU idle time. It cannot arbitrarily modify parameters.
