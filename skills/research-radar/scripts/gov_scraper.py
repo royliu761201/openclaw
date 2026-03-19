@@ -12,8 +12,10 @@ import os
 import sys
 import re
 import json
+import time
 import datetime
 import argparse
+import traceback
 from pathlib import Path
 from urllib.parse import urljoin
 
@@ -37,7 +39,7 @@ GOV_SOURCES = {
     },
     "MOST": {
         "name": "科学技术部",
-        "list_url": "https://www.most.gov.cn/xxgk/xinxifenlei/fdzdgknr/fgzc/gfxwj/gfxwj2026/",
+        "list_url": f"https://www.most.gov.cn/xxgk/xinxifenlei/fdzdgknr/fgzc/gfxwj/gfxwj{datetime.datetime.now().year}/",
         "base_url": "https://www.most.gov.cn",
         "item_selector": "li a",
         "date_selector": "span",
@@ -105,18 +107,28 @@ SEEN_GOV_PATH = RAW_DATA_DIR / "seen_gov_urls.json"
 
 
 def load_seen_urls():
+    """Load seen URLs as dict {url: iso_timestamp}. 90-day rolling purge."""
     if SEEN_GOV_PATH.exists():
         try:
             with open(SEEN_GOV_PATH, "r") as f:
-                return json.load(f)
-        except json.JSONDecodeError:
-            return []
-    return []
+                data = json.load(f)
+            # Backward compat: convert list to dict
+            if isinstance(data, list):
+                now_str = datetime.datetime.now().isoformat()
+                data = {url: now_str for url in data}
+            # Purge entries older than 90 days
+            cutoff = (datetime.datetime.now() - datetime.timedelta(days=90)).isoformat()
+            data = {url: ts for url, ts in data.items() if ts > cutoff}
+            return data
+        except (json.JSONDecodeError, ValueError):
+            return {}
+    return {}
 
 
-def save_seen_urls(urls):
+def save_seen_urls(seen_dict):
+    """Save seen URLs dict {url: iso_timestamp}."""
     with open(SEEN_GOV_PATH, "w") as f:
-        json.dump(urls, f, ensure_ascii=False)
+        json.dump(seen_dict, f, ensure_ascii=False, indent=2)
 
 
 def scrape_source(source_key, source_config):
@@ -166,7 +178,8 @@ def scrape_source(source_key, source_config):
 
     except requests.exceptions.Timeout:
         return f"> ⚠️ Timeout fetching {name}\n"
-    except Exception as e:
+    except (requests.RequestException, ValueError, AttributeError) as e:
+        traceback.print_exc()
         return f"> ⚠️ Error scraping {name}: {e}\n"
 
 
@@ -193,6 +206,7 @@ def run_gov_scraper(sources_filter=None):
             sources_to_scan = GOV_SOURCES
 
     new_count = 0
+    now_str = datetime.datetime.now().isoformat()
     for src_key, src_config in sources_to_scan.items():
         results = scrape_source(src_key, src_config)
 
@@ -200,12 +214,14 @@ def run_gov_scraper(sources_filter=None):
             # Error message
             output_lines.append(f"### 🎯 {src_config['name']} ({src_key})")
             output_lines.append(results)
+            # Rate limit between sources
+            time.sleep(3)
             continue
 
         new_items = []
         for item in results:
             if item["url"] not in seen_urls:
-                seen_urls.append(item["url"])
+                seen_urls[item["url"]] = now_str
                 new_items.append(item)
                 new_count += 1
 
@@ -217,6 +233,9 @@ def run_gov_scraper(sources_filter=None):
         else:
             output_lines.append(f"### 🎯 {src_config['name']} ({src_key}) — 无新通知")
             output_lines.append("")
+
+        # Rate limit between sources (anti-ban)
+        time.sleep(3)
 
     save_seen_urls(seen_urls)
 
