@@ -115,15 +115,22 @@ _This instantly appends the payload with a generated UUID and an exact timestamp
 > On air-gapped GPU nodes (no public DNS), `auto_scheduler.py` **CANNOT** git pull new tasks.
 > Git push from local is for **record-keeping only**. The actual dispatch MUST use SCP.
 >
-> **Mandatory 5-Step Dispatch Flow:**
+> **Mandatory 6-Step Dispatch Flow:**
 >
 > ```
-> 1. ssh download  GPU queue → local     (GPU JSON is SSoT)
-> 2. enqueue_task.py                     (inject task locally)
-> 3. git commit + push                   (record-keeping)
-> 4. ssh upload   local queue → GPU      (PRIMARY dispatch channel)
-> 5. sleep 90s → ssh exec check status   (verify RUNNING)
+> 1. ssh download  GPU queue → local       (GPU JSON is SSoT)
+> 2. enqueue_task.py                       (inject task locally)
+> 2.5 ssh exec: data path preflight        (verify ALL data_path exist + are files, NOT dirs)
+> 3. git commit + push                     (record-keeping)
+> 4. ssh upload   local queue → GPU        (PRIMARY dispatch channel)
+> 5. sleep 90s → ssh exec check status     (verify RUNNING)
 > ```
+>
+> **Step 2.5 is MANDATORY.** For each task, SSH to GPU and verify:
+>
+> - `os.path.isfile(data_path)` → True (not directory, not missing)
+> - If data_path is a CSV/JSON, confirm it can be opened with at least 1 row
+> - If check fails, FIX before proceeding to Step 3. Do NOT waste GPU time on bad paths.
 >
 > **Step 5 is NOT optional.** If task status != RUNNING after 90s, alert Boss immediately.
 > **NEVER** assume git sync will work on air-gapped nodes. SCP is the primary channel.
