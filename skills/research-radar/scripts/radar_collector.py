@@ -313,15 +313,32 @@ def collect_raw_data(sectors_filter=None):
         print("  -> [Anti-Ban] Sleeping for 15 seconds before next burst (Tavily/Exa cooldown)...")
         time.sleep(15)
 
-    # === Omni-Scope Intelligence Integration ===
+    # === Gov.cn Direct HTML Scraper (Zero-cost, high-reliability) ===
+    # Runs BEFORE Tavily omni-scope to get direct .gov.cn announcements
+    print("🏛️ [Gov Scraper] Initiating direct HTML scrape of gov.cn sources...")
+    try:
+        gov_scraper_path = Path(__file__).parent / "gov_scraper.py"
+        if gov_scraper_path.exists():
+            sys.path.insert(0, str(gov_scraper_path.parent))
+            from gov_scraper import run_gov_scraper
+            gov_results = run_gov_scraper()
+            if gov_results:
+                raw_content.append(gov_results)
+                raw_content.append("\n---\n")
+        else:
+            print("  -> [Gov Scraper] gov_scraper.py not found, skipping.")
+    except Exception as e:
+        print(f"  -> [Gov Scraper] Error: {e}")
+
+    # === Omni-Scope Intelligence Integration (Tavily supplement) ===
     OMNI_SECTORS = targets_data.get("omni_intel_sectors", {})
     if OMNI_SECTORS:
-        raw_content.append(f"## 🏛️ Omni-Scope Intelligence (Policies, Crants, Deadlines)")
+        raw_content.append(f"## 🏛️ Omni-Scope Intelligence (Tavily Supplement)")
         for omni_cat, omni_query in OMNI_SECTORS.items():
             print(f"  -> [Omni-Scope] Scraping: {omni_cat}")
             raw_content.append(f"### 🎯 Sector: {omni_cat}")
             
-            # For Policies and Grants, we rely heavily on Tavily to hit Gov/Funding sites
+            # For Policies and Grants, Tavily supplements the direct gov scraper
             tavily_res = run_search_tavily(omni_query, max_results=3)
             tavily_res, has_new_tavily, tavily_raw = filter_new_content(tavily_res, "tavily")
             if has_new_tavily:
