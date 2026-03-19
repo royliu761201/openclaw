@@ -128,6 +128,28 @@ _This instantly appends the payload with a generated UUID and an exact timestamp
 > **Step 5 is NOT optional.** If task status != RUNNING after 90s, alert Boss immediately.
 > **NEVER** assume git sync will work on air-gapped nodes. SCP is the primary channel.
 
+> [!CAUTION]
+> **Law #5 (GPU Isolation — Production Incident Fix 2026-03-19)**
+>
+> When running parallel experiments on multi-GPU nodes via `conda run`:
+>
+> **Shell-level `CUDA_VISIBLE_DEVICES` DOES NOT WORK.** `conda run` resets environment variables.
+>
+> **The ONLY reliable method:** Set `os.environ['CUDA_VISIBLE_DEVICES']` **inside Python, BEFORE `import torch`**.
+>
+> Every experiment script that supports multi-GPU parallel execution **MUST** have a `--gpu` argument:
+>
+> ```python
+> # BEFORE any torch imports:
+> import sys, os
+> if '--gpu' in sys.argv:
+>     os.environ['CUDA_VISIBLE_DEVICES'] = sys.argv[sys.argv.index('--gpu') + 1]
+> import torch  # Now torch only sees the specified GPU
+> ```
+>
+> **Applies to ALL projects** (CaLaM, PhysDiff, PESSO, Frenet).
+> If a new experiment script is created without `--gpu` support, it **CANNOT** be used in parallel sweeps.
+
 ## ⚠️ CONSTITUTIONAL ANCHORS
 
 - **Strategic Action Exemption**: While `cluster_net_dashboard` and `gpu_status_board` remain strictly read-only, the unified `auto_scheduler` possesses a specialized surgical exemption to execute pre-approved CLI commands from the `experiment_queue.json` solely to prevent expensive GPU idle time. It cannot arbitrarily modify parameters.
