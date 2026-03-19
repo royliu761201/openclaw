@@ -31,6 +31,24 @@ description: 如何设计论文对齐的实验矩阵（Experiment Matrix Design 
 
 **任何一项 ❌ → 先修再进 Step 1。**
 
+### Step 0.5: 实验启动后立即验证 GPU 分布 ⚡
+
+> 实验投递后 90s 内，**必须**运行 `nvidia-smi` 确认：
+>
+> 1. 每张卡的显存使用量是否符合预期（14B ~28G / 7B ~14G）
+> 2. 进程是否分布在正确的物理 GPU 上
+> 3. 没有多个进程挤在同一张卡上
+>
+> **这是定位 OOM / 隔离失败的最快手段，比看日志快 10 倍。**
+>
+> ```bash
+> # 必须执行的诊断命令
+> nvidia-smi --query-gpu=index,memory.used,memory.total --format=csv
+> nvidia-smi --query-compute-apps=pid,gpu_uuid,used_memory --format=csv
+> ```
+>
+> 如果发现异常（全挤 GPU 0、显存比预期大），**立即停下来排查**，不要等日志。
+
 ---
 
 ## Step 1: 读论文结构（Top-Down）
