@@ -94,43 +94,21 @@ def run_search_arxiv(query: str, max_results: int = 5) -> str:
     except Exception as e:
         return f"*Error: academic-search script issue -> {e}*"
 
-def _call_tavily_with_key(query: str, max_results: int, key: str) -> tuple:
-    """Returns (stdout, is_quota_error). is_quota_error=True when HTTP 432 quota exceeded."""
-    env = os.environ.copy()
-    env["TAVILY_API_KEY"] = key
+def run_search_tavily(query: str, max_results: int = 3) -> str:
+    """
+    Calls search_tavily.py which handles dual-key rotation internally
+    (KEY_1 → KEY_2 → TAVILY_API_KEY legacy).
+    """
     try:
         result = subprocess.run(
             [PYTHON_BIN, TAVILY_SEARCH_PATH, query, "-n", str(max_results)],
-            capture_output=True, text=True, check=True, env=env
+            capture_output=True, text=True, check=True
         )
-        return result.stdout, False
+        return result.stdout
     except subprocess.CalledProcessError as e:
-        stderr = e.stderr or ""
-        is_quota = "432" in stderr or "usage limit" in stderr.lower()
-        return f"*Error retrieving Tavily (Web) results. Returncode: {e.returncode}, Stderr: {stderr}*", is_quota
+        return f"*Error retrieving Tavily (Web) results. Returncode: {e.returncode}, Stderr: {e.stderr}*"
     except Exception as e:
-        return f"*Error: tavily-search script issue -> {e}*", False
-
-def run_search_tavily(query: str, max_results: int = 3) -> str:
-    """Dual-key rotation: tries KEY_1 first, falls back to KEY_2 on quota exhaustion (HTTP 432)."""
-    key1 = os.environ.get("TAVILY_API_KEY_1") or os.environ.get("TAVILY_API_KEY", "")
-    key2 = os.environ.get("TAVILY_API_KEY_2", "")
-
-    if key1:
-        result, quota_err = _call_tavily_with_key(query, max_results, key1)
-        if not quota_err:
-            return result
-        print("     |_ ⚠️ [Tavily KEY_1] Quota exhausted (432). Rotating to KEY_2...")
-
-    if key2 and key2 != key1:
-        result, quota_err = _call_tavily_with_key(query, max_results, key2)
-        if not quota_err:
-            return result
-        print("     |_ ⚠️ [Tavily KEY_2] Quota exhausted (432). Both keys depleted.")
-        return "*Error retrieving Tavily (Web) results. Returncode: 1, Stderr: Both TAVILY_API_KEY_1 and TAVILY_API_KEY_2 quota exhausted.*"
-
-    # Single key mode (legacy)
-    return result if 'result' in dir() else "*Error: No Tavily key configured.*"
+        return f"*Error: tavily-search script issue -> {e}*"
 
 def run_search_exa(query: str, max_results: int = 3) -> str:
     try:
@@ -172,7 +150,16 @@ def collect_raw_data(sectors_filter=None):
     
     seen_db = load_seen_intel()
     targets_data = load_targets()
-    RADAR_KEYWORDS = targets_data.get("radar_keywords", {})
+    # V2: Support hierarchical radar_sectors (query+tags) with backward compat for flat radar_keywords
+    raw_sectors = targets_data.get("radar_sectors", {})
+    if raw_sectors:
+        # New format: {"SectorName": {"query": "...", "tags": [...]}}
+        RADAR_KEYWORDS = {name: sec["query"] for name, sec in raw_sectors.items() if isinstance(sec, dict) and "query" in sec}
+        print(f"📡 [V2 Hierarchical Mode] Loaded {len(RADAR_KEYWORDS)} super-sectors (from {sum(len(sec.get('tags',[])) for sec in raw_sectors.values() if isinstance(sec, dict))} sub-tags)")
+    else:
+        # Legacy flat format: {"SectorName": "query string"}
+        RADAR_KEYWORDS = targets_data.get("radar_keywords", {})
+        print(f"📡 [Legacy Mode] Loaded {len(RADAR_KEYWORDS)} flat sectors")
     
     raw_content = [
         f"# ⛏️ Radar High-Fidelity Data: {today_str}",
@@ -231,9 +218,20 @@ def collect_raw_data(sectors_filter=None):
         return raw_text, True, raw_text
 
 
-    # 🎯 Sectors filter: if --sectors passed, only scan matching sectors
+    # 🎯 Sectors filter: if --sectors passed, match against super-sector names AND sub-tags
     if sectors_filter:
-        filtered = {k: v for k, v in RADAR_KEYWORDS.items() if any(s.lower() in k.lower() for s in sectors_filter)}
+        filtered = {}
+        for k, v in RADAR_KEYWORDS.items():
+            # Match by super-sector name
+            if any(s.lower() in k.lower() for s in sectors_filter):
+                filtered[k] = v
+                continue
+            # Match by sub-tag (V2 hierarchical mode)
+            sec_data = raw_sectors.get(k, {}) if raw_sectors else {}
+            if isinstance(sec_data, dict):
+                tags = sec_data.get("tags", [])
+                if any(s.lower() in tag.lower() for s in sectors_filter for tag in tags):
+                    filtered[k] = v
         if filtered:
             print(f"🎯 [Sectors Filter] Only scanning {len(filtered)} targeted sectors: {list(filtered.keys())}")
             RADAR_KEYWORDS = filtered
