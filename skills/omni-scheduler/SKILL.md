@@ -174,6 +174,24 @@ _This instantly appends the payload with a generated UUID and an exact timestamp
 >
 > **Execution discipline > automation tooling.** Don't wait for Boss to ask "what are the results?"
 
+> [!CAUTION]
+> **Law #7 (Paper-Code Semantic Audit — Production Incident Fix 2026-03-19)**
+>
+> **Pre-flight MUST include paper↔code semantic verification, not just "exit 0".**
+>
+> Before launching any experiment that implements a paper's algorithm:
+>
+> 1. **Trace parameter flow**: config value → argparse → function call → math operation
+> 2. **Match against paper equation**: verify the code implements the exact formula
+> 3. **Verify value ranges**: if paper says `α ∈ [0,1]`, confirm code bounds it (sigmoid, clamp, etc.)
+> 4. **Different configs → different outputs**: quick sanity check that varying a parameter actually changes the result
+>
+> **Incident**: `α` parameter was set to 2/5/10 in config, but `risk_model` output (≈6.95, unbounded)
+> replaced it every step. Paper defined `α_t = sigmoid(a·r_t + c)` but code used raw `risk_score` as `alpha`.
+> Result: 6 experiments produced identical data, all wasted.
+>
+> **"Exit 0" is not validation. Correct output requires correct math.**
+
 ## ⚠️ CONSTITUTIONAL ANCHORS
 
 - **Strategic Action Exemption**: While `cluster_net_dashboard` and `gpu_status_board` remain strictly read-only, the unified `auto_scheduler` possesses a specialized surgical exemption to execute pre-approved CLI commands from the `experiment_queue.json` solely to prevent expensive GPU idle time. It cannot arbitrarily modify parameters.
