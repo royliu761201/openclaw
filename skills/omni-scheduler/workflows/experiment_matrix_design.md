@@ -6,6 +6,29 @@ description: 如何设计论文对齐的实验矩阵（Experiment Matrix Design 
 
 > **触发场景**: 当需要为一个研究项目设计或提交实验计划时
 > **核心原则**: 实验矩阵由论文需求驱动，不是拍脑袋
+> **铁律**: Step 0 就绪度检查是**自动触发**的，不需要 Boss 命令
+
+---
+
+## Step 0: 就绪度检查 ⚡ 自动触发，不等 Boss 问
+
+> 在设计实验矩阵之前，必须先确认基础设施就绪。
+> **这一步不需要 Boss 命令触发，是 Agent 的基本职责。**
+
+```bash
+# 必须全部通过才能进入 Step 1
+[ ] 环境:  conda env 可用？依赖齐全？
+[ ] GPU:   几块？空闲状态？
+[ ] 模型:  base model 权重在指定路径？
+[ ] 辅助模型: risk_model / classifier 等已训练并就位？
+[ ] 数据:  EXPERIMENT_MATRIX 里每个 dataset 的数据文件都存在？
+[ ] W&B:   .netrc 认证？项目名对齐？
+[ ] 断点续训: --resume / --start_index 已实现？
+[ ] 日志:  PYTHONUNBUFFERED？tee 双写？
+[ ] 代码:  所有待改代码已改完并 SCP 到 GPU？
+```
+
+**任何一项 ❌ → 先修再进 Step 1。**
 
 ---
 
