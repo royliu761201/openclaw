@@ -192,6 +192,23 @@ _This instantly appends the payload with a generated UUID and an exact timestamp
 >
 > **"Exit 0" is not validation. Correct output requires correct math.**
 
+> [!CAUTION]
+> **Law #8 (Kill Safety — Production Incident 2026-03-19)**
+>
+> **NEVER batch-kill processes by pattern.** Pattern-based `pkill -f` or `grep | kill` is a
+> destructive operation that can hit valid experiments.
+>
+> **Mandatory kill procedure:**
+>
+> 1. `ps aux | grep <target>` — list PIDs + full command lines
+> 2. **Show Boss the list** — confirm which PIDs to kill
+> 3. `kill <PID>` one by one — never `pkill -f <pattern>`
+>
+> **Incident**: `kill -9` with broad grep filter killed vanilla_rtp (2.5h, 33% done)
+> and pplm_rtp (2.5h, 22% done). Hours of GPU compute wasted.
+>
+> **This is an L0 Anti-Destruction Anchor violation.** No exceptions.
+
 ## ⚠️ CONSTITUTIONAL ANCHORS
 
 - **Strategic Action Exemption**: While `cluster_net_dashboard` and `gpu_status_board` remain strictly read-only, the unified `auto_scheduler` possesses a specialized surgical exemption to execute pre-approved CLI commands from the `experiment_queue.json` solely to prevent expensive GPU idle time. It cannot arbitrarily modify parameters.
