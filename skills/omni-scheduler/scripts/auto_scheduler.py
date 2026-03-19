@@ -198,6 +198,10 @@ def _launch_local(task, gpu_id, queue_path):
     env = os.environ.copy()
     env["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
     
+    # [Law #5] conda run strips CUDA_VISIBLE_DEVICES — inject --gpu into command
+    if "--gpu" not in cmd:
+        cmd = cmd + f" --gpu {gpu_id}"
+    
     # [Constitutional Guard] Git Liveness SSoT Probe
     if not check_git_liveness(cwd):
         logging.critical(f"🚨 FATAL: Constitutional Violation! Target directory '{cwd}' is NOT a Git repository.")
