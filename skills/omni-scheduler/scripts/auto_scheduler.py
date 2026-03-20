@@ -14,7 +14,10 @@ import os
 import sys
 import logging
 import fcntl
+import re
 from datetime import datetime, timedelta
+
+ALERT_PATH = "/tmp/scheduler_alert.txt"
 
 logging.basicConfig(level=logging.INFO, format='⚙️ [Unified Scheduler] %(asctime)s %(message)s')
 
@@ -188,11 +191,71 @@ def mark_completed(queue_path, job_id, final_status="COMPLETED"):
         release_file_lock(f)
     sync_queue_to_git(queue_path)
 
+def _is_task_already_running(task_entry):
+    """[Layer 1: Pre-Launch Guard] Check if a task with the same --task name already has a running process."""
+    try:
+        res = subprocess.run(
+            ["pgrep", "-f", f"--task {task_entry}"],
+            capture_output=True, text=True, timeout=5
+        )
+        return res.returncode == 0  # 0 = found matching process
+    except Exception:
+        return False  # If pgrep fails, allow launch (fail-open for availability)
+
+def _health_check(data):
+    """[Layer 4: Health Alert] Detect anomalies and write ALERT file."""
+    alerts = []
+    
+    # Check 1: Any FAILED tasks this cycle?
+    failed_tasks = [t for t in data.get("tasks", []) if t.get("status") == "FAILED"]
+    if failed_tasks:
+        names = [t.get("entry", "?") for t in failed_tasks]
+        alerts.append(f"FAILED tasks detected: {names}")
+    
+    # Check 2: Duplicate processes for same task?
+    running_tasks = [t for t in data.get("tasks", []) if t.get("status") == "RUNNING"]
+    for t in running_tasks:
+        entry = t.get("entry", "")
+        try:
+            res = subprocess.run(
+                ["pgrep", "-c", "-f", f"--task {entry}"],
+                capture_output=True, text=True, timeout=5
+            )
+            count = int(res.stdout.strip()) if res.returncode == 0 else 0
+            if count > 2:  # conda wrapper + python = 2 is normal
+                alerts.append(f"DUPLICATE: task '{entry}' has {count} processes!")
+        except Exception:
+            pass
+    
+    # Check 3: All GPUs idle but no PENDING tasks (stalled queue)
+    pending = [t for t in data.get("tasks", []) if t.get("status") == "PENDING"]
+    if not pending and not running_tasks and failed_tasks:
+        alerts.append("STALLED: No PENDING/RUNNING tasks, only FAILED. Queue needs attention!")
+    
+    if alerts:
+        with open(ALERT_PATH, "w") as af:
+            af.write(f"SCHEDULER ALERT — {datetime.now().isoformat()}\n")
+            for a in alerts:
+                af.write(f"  🚨 {a}\n")
+                logging.warning(f"🚨 ALERT: {a}")
+    else:
+        # Clear old alert if everything is healthy
+        if os.path.exists(ALERT_PATH):
+            os.remove(ALERT_PATH)
+
 def _launch_local(task, gpu_id, queue_path):
     """Fires the CLI command with CUDA_VISIBLE_DEVICES isolation, and tracks completion."""
     cmd = task.get("command")
     cwd = task.get("directory", os.path.expanduser("~/workspace/projects_core"))
     job_id = task.get("id")
+    entry = task.get("entry", "")
+    
+    # [Layer 1] Pre-Launch Guard: skip if already running
+    if _is_task_already_running(entry):
+        logging.warning(f"⚠️ [DUPLICATE GUARD] Task '{entry}' already has a running process. Skipping launch.")
+        # Revert status back to PENDING so it's not stuck as RUNNING
+        mark_completed(queue_path, job_id, "PENDING")
+        return
     
     # Environment Isolation
     env = os.environ.copy()
@@ -209,7 +272,7 @@ def _launch_local(task, gpu_id, queue_path):
         mark_completed(queue_path, job_id, "FAILED_NON_GIT_WORKSPACE")
         return
     
-    logging.info(f"🔫 [LOCAL LAUNCH] GPU {gpu_id} | Task [{job_id}]: {cmd}")
+    logging.info(f"🔫 [LOCAL LAUNCH] GPU {gpu_id} | Task [{entry}]: {cmd}")
     
     try:
         import shlex
@@ -224,7 +287,7 @@ def _launch_local(task, gpu_id, queue_path):
                 logging.error(f"Task {job_id} crashed: {e}")
                 final_status = "FAILED"
             
-            logging.info(f"🏁 Task [{job_id}] on GPU {gpu_id} finished with status: {final_status}")
+            logging.info(f"🏁 Task [{entry}] on GPU {gpu_id} finished with status: {final_status}")
             mark_completed(queue_path, job_id, final_status)
             
         t = threading.Thread(target=run_task)
@@ -259,6 +322,11 @@ def daemon_loop(args):
     logging.info(f"Mode: {args.mode.upper()} | Poll: {args.poll}s | Threshold: < {args.threshold}%")
     
     while True:
+        # [Layer 4] Read alert file at start of each cycle
+        if os.path.exists(ALERT_PATH):
+            with open(ALERT_PATH) as af:
+                logging.warning(f"📋 Active alert:\n{af.read()}")
+        
         pull_git_updates(args.queue)
         git_sync_needed = False
         f = get_file_lock(args.queue)
@@ -311,6 +379,9 @@ def daemon_loop(args):
                     else:
                         logging.info(f"Cloud Quota FULL ({running}/{args.max_concurrent}).")
 
+                # [Layer 4] Health check every cycle
+                _health_check(data)
+                
             except Exception as e:
                 logging.error(f"Daemon Loop Error: {e}")
             finally:
@@ -345,5 +416,15 @@ if __name__ == "__main__":
     if 'node01' in host.lower() or 'master' in host.lower():
         logging.critical("FATAL: Constitutional Violation! You are attempting to run a background daemon on Node 01.")
         sys.exit(1)
+    
+    # [Layer 3: Singleton Check] Only one scheduler instance allowed
+    try:
+        res = subprocess.run(["pgrep", "-c", "-f", "auto_scheduler.py"], capture_output=True, text=True, timeout=5)
+        count = int(res.stdout.strip()) if res.returncode == 0 else 0
+        if count > 1:  # 1 = self
+            logging.critical("🚨 FATAL: Another scheduler instance is already running! Aborting to prevent conflicts.")
+            sys.exit(1)
+    except Exception:
+        pass  # If pgrep fails, allow startup
         
     daemon_loop(args)

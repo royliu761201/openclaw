@@ -12,7 +12,7 @@ from datetime import datetime
 
 logging.basicConfig(level=logging.INFO, format='➕ [Queue Producer] %(message)s')
 
-def enqueue_task(queue_path, project, command, directory, target, entry, datasets):
+def enqueue_task(queue_path, project, command, directory, target, entry, datasets, conda_env):
     # Ensure queue exists
     if not os.path.exists(queue_path):
 
@@ -28,6 +28,16 @@ def enqueue_task(queue_path, project, command, directory, target, entry, dataset
 
     task_id = str(uuid.uuid4())[:8]
     
+    # Auto-wrap the command in the designated Conda environment for headless GPU servers
+    if not conda_env:
+        conda_env = project.lower()  # fallback to project name
+        
+    # Prevent double wrapping if the user already typed conda run
+    if not command.startswith('/root/miniconda3/bin/conda run') and not command.startswith('conda run'):
+        command = f"/root/miniconda3/bin/conda run -n {conda_env} {command}"
+    elif command.startswith('conda run'):
+        command = command.replace('conda run', '/root/miniconda3/bin/conda run')
+        
     new_task = {
         "id": f"task_{task_id}",
         "project": project,
@@ -69,7 +79,8 @@ if __name__ == "__main__":
     parser.add_argument("--datasets", nargs='*', help="List of Kaggle dataset mounts (e.g., rajat936/pdebench-coarse)")
     parser.add_argument("--command", required=True, help="The literal bash command to execute (e.g., 'conda run -n calam bash scripts/run.sh')")
     parser.add_argument("--dir", required=True, help="The absolute directory to execute the command inside.")
+    parser.add_argument("--env", help="The specific conda environment to execute in (defaults to lowercase project name)")
     
     args = parser.parse_args()
     
-    enqueue_task(args.queue, args.project, args.command, args.dir, args.target, args.entry, args.datasets)
+    enqueue_task(args.queue, args.project, args.command, args.dir, args.target, args.entry, args.datasets, args.env)

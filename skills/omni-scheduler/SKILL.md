@@ -209,6 +209,23 @@ _This instantly appends the payload with a generated UUID and an exact timestamp
 >
 > **This is an L0 Anti-Destruction Anchor violation.** No exceptions.
 
+> [!CAUTION]
+> **Law #9 (Single Dispatch Entry — Production Incident 2026-03-19/20)**
+>
+> **ALL experiments MUST be launched via `experiment_queue.json` + `auto_scheduler` ONLY.**
+> Manual `nohup` is PROHIBITED. It causes:
+>
+> 1. Queue state desynchronization (hand-launched won't update JSON)
+> 2. Scheduler re-launches the same task → duplicate processes
+> 3. Concurrent journal writes → data corruption
+>
+> **Four-Layer Defense enforced in code:**
+>
+> - Layer 1: Pre-launch guard (`pgrep` detects duplicates)
+> - Layer 2: Journal `flock()` (exclusive write lock)
+> - Layer 3: Singleton check (only one scheduler instance)
+> - Layer 4: Health alert (`/tmp/scheduler_alert.txt`)
+
 ## ⚠️ CONSTITUTIONAL ANCHORS
 
 - **Strategic Action Exemption**: While `cluster_net_dashboard` and `gpu_status_board` remain strictly read-only, the unified `auto_scheduler` possesses a specialized surgical exemption to execute pre-approved CLI commands from the `experiment_queue.json` solely to prevent expensive GPU idle time. It cannot arbitrarily modify parameters.
