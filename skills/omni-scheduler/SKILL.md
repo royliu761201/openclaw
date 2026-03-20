@@ -46,11 +46,11 @@ You are STRICTLY FORBIDDEN from running this script on Node 01. It must only be 
 **To run for Local GPUs**:
 
 ```bash
-python3 $HOME/openclaw/skills/omni-scheduler/scripts/auto_scheduler.py \
+tmux new-session -d -s scheduler "python3 $HOME/openclaw/skills/omni-scheduler/scripts/auto_scheduler.py \
   --mode local \
   --queue ~/workspace/projects_core/experiment_queue.json \
-  --poll 1800 \
-  --threshold 10.0
+  --poll 30 \
+  --max-gpus 4"
 ```
 
 **To run for Kaggle Cloud**:
@@ -89,11 +89,15 @@ _This instantly appends the payload with a generated UUID and an exact timestamp
 ## 🛡️ ANTI-HALLUCINATION LAWS (Production Incident Fixes)
 
 > [!IMPORTANT]
-> **Law #1 (Daemon Launch Protocol)**
+> **Law #1 (Daemon Launch Protocol - Updated 2026-03-20)**
 >
-> The scheduler daemon **MUST** be launched via `ssh_tool.py exec --detach` (which uses `setsid()` / `start_new_session=True`).
-> **NEVER** use `nohup ... &` or raw `tmux` via Paramiko — both fail to survive SSH channel closure.
-> The daemon **MUST** also set `signal(SIGHUP, SIG_IGN)` internally and use `t.daemon = False` for monitoring threads.
+> The scheduler daemon **MUST** be launched via **tmux**.
+> **NEVER** use `nohup ... &` as it makes log monitoring and process management messy.
+>
+> **Correct Launch Command**:
+> `tmux new-session -d -s scheduler "python3 scripts/auto_scheduler.py ..."`
+>
+> This guarantees the scheduler survives SSH disconnection and its logs can be attached to at any time via `tmux attach -t scheduler`.
 
 > [!IMPORTANT]
 > **Law #2 (Git Sync Resilience)**
