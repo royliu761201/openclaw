@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""CaLaM Experiment Monitor v3
+"""CaLaM Experiment Monitor v4 (READ-ONLY)
 - macOS desktop notification on anomaly / experiment completion
 - Auto-analysis: compute metrics when experiments finish
-- Auto-promote: HOLD → PENDING when running slots free up
-- Writes alerts to /tmp/calam_alert.txt
+- READ-ONLY: never writes to queue.json (scheduler owns it)
+- Writes alerts to /tmp/calam_alert.txt (local only)
 """
 import subprocess, sys, time, datetime, os, json
 
@@ -13,7 +13,6 @@ INTERVAL = 300
 ALERT_FILE = "/tmp/calam_alert.txt"
 LOG_FILE = "/tmp/calam_monitor.log"
 RESULTS_FILE = "/tmp/calam_results.json"
-MAX_GPUS = 4
 
 prev_completed = set()
 prev_journals = {}
@@ -118,26 +117,7 @@ print(json.dumps(result))
 PYEOF
 """
 
-# ── Remote: promote HOLD → PENDING ──
-REMOTE_PROMOTE = r"""python3 << 'PYEOF'
-import json
-QUEUE = '/jhdx0003008/workspace/projects_core/experiment_queue.json'
-q = json.load(open(QUEUE))
-running = sum(1 for t in q['tasks'] if t['status'] == 'RUNNING')
-pending = sum(1 for t in q['tasks'] if t['status'] == 'PENDING')
-slots = MAX_GPUS - running - pending
-promoted = []
-if slots > 0:
-    for t in q['tasks']:
-        if t['status'] == 'HOLD' and slots > 0:
-            t['status'] = 'PENDING'
-            promoted.append(t['entry'])
-            slots -= 1
-    if promoted:
-        json.dump(q, open(QUEUE, 'w'), indent=4)
-print(json.dumps({"promoted": promoted, "running": running, "pending": pending}))
-PYEOF
-""".replace("MAX_GPUS", str(MAX_GPUS))
+
 
 def check():
     global prev_completed, prev_journals
@@ -194,19 +174,7 @@ def check():
                 notify_mac("✅ 实验完成", msg)
         prev_completed = curr_completed
 
-        # Auto-promote HOLD → PENDING if slots available
-        running = counts.get('RUNNING', 0)
-        pending = counts.get('PENDING', 0)
-        hold = counts.get('HOLD', 0)
-        if hold > 0 and (running + pending) < MAX_GPUS:
-            raw2 = ssh_exec(REMOTE_PROMOTE)
-            for line in raw2.strip().split('\n'):
-                if line.startswith('{'):
-                    promo = json.loads(line)
-                    if promo['promoted']:
-                        msg = f"Auto-promoted: {', '.join(promo['promoted'])}"
-                        log(f"  🚀 {msg}")
-                        notify_mac("🚀 新任务启动", msg)
+
 
         # Alerts
         if data['alerts']:
@@ -225,9 +193,9 @@ def check():
         notify_mac("🚨 Monitor Error", str(e)[:80])
 
 if __name__ == "__main__":
-    log("🔍 CaLaM Monitor v3 started")
+    log("🔍 CaLaM Monitor v4 (READ-ONLY) started")
     log(f"   Every {INTERVAL//60}min | Alert: {ALERT_FILE} | Results: {RESULTS_FILE}")
-    log(f"   Auto-promote HOLD→PENDING when GPU slots < {MAX_GPUS}")
+    log(f"   Monitor NEVER writes to queue.json")
     check()
     while True:
         time.sleep(INTERVAL)
