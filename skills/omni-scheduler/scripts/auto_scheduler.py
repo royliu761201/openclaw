@@ -156,10 +156,15 @@ def pull_git_updates(queue_path, max_retries=2):
                 time.sleep(wait)
     logging.error("❌ Git pull retries exhausted. Continuing with local queue state.")
 
-def pull_next_task_locked(f, data, target_name, gpu_id=None):
-    """Pulls the next PENDING task, marks it RUNNING, assigns GPU, saves, and returns."""
+def pull_next_task_locked(f, data, target_name, gpu_id=None, blocked_groups=None):
+    """Pulls the next PENDING task, marks it RUNNING, assigns GPU, saves, and returns.
+    blocked_groups: set of group names that have reached their GPU quota."""
+    blocked_groups = blocked_groups or set()
     for index, task in enumerate(data.get("tasks", [])):
         if task.get("status") == "PENDING" and task.get("target", "local") == target_name:
+            group = task.get("group", "default")
+            if group in blocked_groups:
+                continue
             data["tasks"][index]["status"] = "RUNNING"
             data["tasks"][index]["start_time"] = datetime.now().isoformat()
             if gpu_id is not None:
@@ -366,6 +371,20 @@ def daemon_loop(args):
                     else:
                         available_gpus = available_gpus[:slots_left]
                     
+                    # [GPU Quota Groups] Compute per-group running counts
+                    gpu_quota = data.get("gpu_quota", {})
+                    group_running = {}
+                    for t in data.get("tasks", []):
+                        if t.get("status") == "RUNNING":
+                            g = t.get("group", "default")
+                            group_running[g] = group_running.get(g, 0) + 1
+                    blocked_groups = set()
+                    for g, limit in gpu_quota.items():
+                        if group_running.get(g, 0) >= limit:
+                            blocked_groups.add(g)
+                    if blocked_groups:
+                        logging.info(f"GPU quota reached for groups: {blocked_groups}")
+                    
                     if available_gpus:
                         if assigned_gpus:
                             logging.info(f"Detected {len(available_gpus)} idle GPUs: {available_gpus} | Active Exclusive Locks: {list(assigned_gpus)}")
@@ -373,7 +392,18 @@ def daemon_loop(args):
                             logging.info(f"Detected {len(available_gpus)} idle GPUs: {available_gpus}")
                             
                         for gpu_id in available_gpus:
-                            task = pull_next_task_locked(f, data, "local", gpu_id=gpu_id)
+                            # Recompute blocked_groups after each dispatch (a new task changes counts)
+                            group_running = {}
+                            for t in data.get("tasks", []):
+                                if t.get("status") == "RUNNING":
+                                    g = t.get("group", "default")
+                                    group_running[g] = group_running.get(g, 0) + 1
+                            blocked_groups = set()
+                            for g, limit in gpu_quota.items():
+                                if group_running.get(g, 0) >= limit:
+                                    blocked_groups.add(g)
+                            
+                            task = pull_next_task_locked(f, data, "local", gpu_id=gpu_id, blocked_groups=blocked_groups)
                             if task:
                                 git_sync_needed = True
                                 _launch_local(task, gpu_id, args.queue)
