@@ -162,7 +162,7 @@ def pull_next_task_locked(f, data, target_name, gpu_id=None, blocked_groups=None
     blocked_groups = blocked_groups or set()
     for index, task in enumerate(data.get("tasks", [])):
         if task.get("status") == "PENDING" and task.get("target", "local") == target_name:
-            group = task.get("group", "default")
+            group = task.get("group", task.get("project", "default"))
             if group in blocked_groups:
                 continue
             data["tasks"][index]["status"] = "RUNNING"
@@ -389,7 +389,7 @@ def daemon_loop(args):
                     group_running = {}
                     for t in data.get("tasks", []):
                         if t.get("status") == "RUNNING":
-                            g = t.get("group", "default")
+                            g = t.get("group", t.get("project", "default"))
                             group_running[g] = group_running.get(g, 0) + 1
                     blocked_groups = set()
                     for g, limit in gpu_quota.items():
@@ -409,7 +409,7 @@ def daemon_loop(args):
                             group_running = {}
                             for t in data.get("tasks", []):
                                 if t.get("status") == "RUNNING":
-                                    g = t.get("group", "default")
+                                    g = t.get("group", t.get("project", "default"))
                                     group_running[g] = group_running.get(g, 0) + 1
                             blocked_groups = set()
                             for g, limit in gpu_quota.items():
