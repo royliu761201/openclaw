@@ -280,7 +280,16 @@ def _launch_local(task, gpu_id, queue_path):
         
         def run_task():
             try:
-                proc = subprocess.Popen(shlex.split(cmd), cwd=cwd, env=env)
+                # [FIX] conda run detach: replace with direct env python path
+                import re
+                _cmd = cmd
+                m = re.match(r'(.*)/bin/conda run -n (\S+)\s+(.*)', _cmd)
+                if m:
+                    conda_base, env_name, rest = m.group(1), m.group(2), m.group(3)
+                    env_py = f'{conda_base}/envs/{env_name}/bin/python3'
+                    _cmd = rest.replace('python3', env_py)
+                    logging.info(f"🔧 conda run → direct: {_cmd[:120]}")
+                proc = subprocess.Popen(shlex.split(_cmd), cwd=cwd, env=env)
                 proc.wait()
                 final_status = "COMPLETED" if proc.returncode == 0 else "FAILED"
             except Exception as e:
