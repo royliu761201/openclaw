@@ -349,6 +349,14 @@ def daemon_loop(args):
                     available_gpus = [idx for idx, util in gpu_stats.items() 
                                       if util < args.threshold and idx not in assigned_gpus]
                     
+                    # [Law #9] Respect --max-gpus: limit total concurrent tasks
+                    total_running = len(assigned_gpus)
+                    slots_left = args.max_gpus - total_running
+                    if slots_left <= 0:
+                        available_gpus = []
+                    else:
+                        available_gpus = available_gpus[:slots_left]
+                    
                     if available_gpus:
                         if assigned_gpus:
                             logging.info(f"Detected {len(available_gpus)} idle GPUs: {available_gpus} | Active Exclusive Locks: {list(assigned_gpus)}")
@@ -401,6 +409,7 @@ if __name__ == "__main__":
     parser.add_argument("--target", default="kaggle_account_A", help="If mode=kaggle, which account target to look for")
     parser.add_argument("--threshold", type=float, default=10.0, help="If mode=local, VRAM idle trigger %")
     parser.add_argument("--max-concurrent", type=int, default=2, help="If mode=kaggle, max active kernels limit")
+    parser.add_argument("--max-gpus", type=int, default=5, help="Max GPUs to use simultaneously (reserve rest for other projects)")
     
     args = parser.parse_args()
     
@@ -417,14 +426,22 @@ if __name__ == "__main__":
         logging.critical("FATAL: Constitutional Violation! You are attempting to run a background daemon on Node 01.")
         sys.exit(1)
     
-    # [Layer 3: Singleton Check] Only one scheduler instance allowed
-    try:
-        res = subprocess.run(["pgrep", "-c", "-f", "auto_scheduler.py"], capture_output=True, text=True, timeout=5)
-        count = int(res.stdout.strip()) if res.returncode == 0 else 0
-        if count > 1:  # 1 = self
-            logging.critical("🚨 FATAL: Another scheduler instance is already running! Aborting to prevent conflicts.")
+    # [Layer 3: Singleton Check] Only one scheduler instance allowed (PID file approach)
+    PIDFILE = "/tmp/auto_scheduler.pid"
+    if os.path.exists(PIDFILE):
+        try:
+            old_pid = int(open(PIDFILE).read().strip())
+            # Check if old PID is still alive
+            os.kill(old_pid, 0)  # signal 0 = existence check only
+            logging.critical(f"🚨 FATAL: Another scheduler (PID {old_pid}) is still alive! Aborting.")
             sys.exit(1)
-    except Exception:
-        pass  # If pgrep fails, allow startup
+        except (ProcessLookupError, ValueError):
+            logging.info(f"Stale PID file found (PID gone). Cleaning up.")
+        except PermissionError:
+            logging.critical(f"🚨 FATAL: Another scheduler process exists but we can't signal it. Aborting.")
+            sys.exit(1)
+    # Write our PID
+    with open(PIDFILE, "w") as pf:
+        pf.write(str(os.getpid()))
         
     daemon_loop(args)
