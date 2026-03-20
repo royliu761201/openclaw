@@ -297,7 +297,17 @@ def _launch_local(task, gpu_id, queue_path):
                     # Replace 'python' or 'python3' in the rest with env python
                     _cmd = re.sub(r'\bpython3?\b', env_py, rest, count=1)
                     logging.info(f"🔧 conda run → direct: {_cmd[:120]}")
-                proc = subprocess.Popen(shlex.split(_cmd), cwd=cwd, env=env)
+                # [FIX] Parse inline KEY=VALUE env var prefixes (e.g. PYTHONPATH=...)
+                # shlex.split treats them as the executable, so extract and inject into env
+                tokens = shlex.split(_cmd)
+                extra_env = {}
+                while tokens and '=' in tokens[0] and not tokens[0].startswith('-'):
+                    k, v = tokens.pop(0).split('=', 1)
+                    extra_env[k] = v
+                if extra_env:
+                    env.update(extra_env)
+                    logging.info(f"🔧 Injected env vars: {list(extra_env.keys())}")
+                proc = subprocess.Popen(tokens, cwd=cwd, env=env)
                 proc.wait()
                 final_status = "COMPLETED" if proc.returncode == 0 else "FAILED"
             except Exception as e:
