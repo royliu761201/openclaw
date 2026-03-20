@@ -288,11 +288,14 @@ def _launch_local(task, gpu_id, queue_path):
                 # [FIX] conda run detach: replace with direct env python path
                 import re
                 _cmd = cmd
-                m = re.match(r'(.*)/bin/conda run -n (\S+)\s+(.*)', _cmd)
+                # Match both full-path and bare 'conda run'
+                m = re.match(r'(?:(.*)/bin/)?conda run -n (\S+)\s+(.*)', _cmd)
                 if m:
-                    conda_base, env_name, rest = m.group(1), m.group(2), m.group(3)
+                    conda_base = m.group(1) if m.group(1) else '/root/miniconda3'
+                    env_name, rest = m.group(2), m.group(3)
                     env_py = f'{conda_base}/envs/{env_name}/bin/python3'
-                    _cmd = rest.replace('python3', env_py)
+                    # Replace 'python' or 'python3' in the rest with env python
+                    _cmd = re.sub(r'\bpython3?\b', env_py, rest, count=1)
                     logging.info(f"🔧 conda run → direct: {_cmd[:120]}")
                 proc = subprocess.Popen(shlex.split(_cmd), cwd=cwd, env=env)
                 proc.wait()
