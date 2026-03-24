@@ -323,9 +323,8 @@ def _launch_local(task, gpu_id, queue_path):
         if key in env:
             del env[key]
     
-    # [Law #5] conda run strips CUDA_VISIBLE_DEVICES — inject --gpu into command
-    if "--gpu" not in cmd:
-        cmd = cmd + f" --gpu {gpu_id}"
+    # [Law #5 - Deprecated] conda run bypass is now inherently utilized securely via env injection instead of CLI arguments,
+    # preventing strict argparse implementations (like PESSO) from instantly crashing on `--gpu` unknown flags.
     
     # [Constitutional Guard] Git Liveness SSoT Probe
     if not check_git_liveness(cwd):
