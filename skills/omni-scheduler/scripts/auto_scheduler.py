@@ -118,6 +118,58 @@ def prune_queue_locked(f):
         
     return data, False
 
+def zombie_reaper(queue_path, data, gpu_stats):
+    """[Zombie Reaper] Hunts down and kills orphaned locks or deadlocked 0% GPU processes."""
+    now = datetime.now()
+    modified = False
+    reaped = 0
+    
+    for t in data.get("tasks", []):
+        if t.get("status") == "RUNNING":
+            entry = t.get("entry", "")
+            assigned_gpu = t.get("assigned_gpu")
+            start_time_str = t.get("start_time")
+            
+            is_alive = True
+            if entry:
+                try:
+                    res = subprocess.run(["pgrep", "-f", f"--task {entry}"], capture_output=True, text=True)
+                    is_alive = (res.returncode == 0)
+                except Exception:
+                    pass
+            
+            is_hung = False
+            is_timeout = False
+            if start_time_str and is_alive and assigned_gpu is not None:
+                try:
+                    start_time = datetime.fromisoformat(start_time_str)
+                    age_hours = (now - start_time).total_seconds() / 3600.0
+                    
+                    # 1. Hung at 0% logic (If > 1 hour and <= 1% util)
+                    if age_hours > 1.0 and gpu_stats.get(int(assigned_gpu), 100.0) <= 1.0:
+                        is_hung = True
+                    
+                    # 2. 24h absolute timeout
+                    if age_hours > 24.0:
+                        is_timeout = True
+                except Exception:
+                    pass
+            
+            if not is_alive or is_hung or is_timeout:
+                reason = "Orphaned Lock" if not is_alive else ("Hung at 0% GPU" if is_hung else "24h Timeout")
+                logging.warning(f"💀 [Zombie Reaper] Reaping task '{entry}' on GPU {assigned_gpu}. Reason: {reason}.")
+                t["status"] = "FAILED"
+                t["end_time"] = now.isoformat()
+                t["reaper_reason"] = reason
+                modified = True
+                reaped += 1
+                
+                if is_alive and entry:
+                    logging.warning(f"🔫 Executing pkill for zombie task: {entry}")
+                    subprocess.run(["pkill", "-9", "-f", f"--task {entry}"])
+                    
+    return modified, reaped
+
 def sync_queue_to_git(queue_path, max_retries=3):
     """Automatically commit and push the updated queue state back to the central nervous system.
     Uses exponential backoff retry to survive transient DNS/network failures."""
@@ -366,6 +418,14 @@ def daemon_loop(args):
                 if args.mode == "local":
                     gpu_stats = check_nvidia_smi()
                     
+                    # --- ZOMBIE REAPER TICK ---
+                    needs_sync, reaped_count = zombie_reaper(args.queue, data, gpu_stats)
+                    if needs_sync:
+                        f.seek(0)
+                        json.dump(data, f, indent=4)
+                        f.truncate()
+                        git_sync_needed = True
+                    
                     # [Solidify Scheduling] Calculate currently assigned GPUs from JSON queue to enforce EXCLUSIVE LOCK
                     assigned_gpus = set()
                     for t in data.get("tasks", []):
@@ -459,7 +519,7 @@ if __name__ == "__main__":
     parser.add_argument("--queue", default=os.path.expanduser("~/workspace/projects_core/experiment_queue.json"), help="Path to PDCA JSON queue")
     parser.add_argument("--poll", type=int, default=1800, help="Poll interval in seconds")
     parser.add_argument("--target", default="kaggle_account_A", help="If mode=kaggle, which account target to look for")
-    parser.add_argument("--threshold", type=float, default=10.0, help="If mode=local, VRAM idle trigger %")
+    parser.add_argument("--threshold", type=float, default=10.0, help="If mode=local, VRAM idle trigger %%")
     parser.add_argument("--max-concurrent", type=int, default=2, help="If mode=kaggle, max active kernels limit")
     parser.add_argument("--max-gpus", type=int, default=5, help="Max GPUs to use simultaneously (reserve rest for other projects)")
     

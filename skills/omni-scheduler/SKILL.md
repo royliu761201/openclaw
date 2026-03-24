@@ -230,6 +230,23 @@ _This instantly appends the payload with a generated UUID and an exact timestamp
 > - Layer 3: Singleton check (only one scheduler instance)
 > - Layer 4: Health alert (`/tmp/scheduler_alert.txt`)
 
+> [!IMPORTANT]
+> **Law #10 (Daemon Surgeon & Quota Integrity — Production Incident Fix 2026-03-24)**
+>
+> **1. Zombie JSON Locks**: If the Python daemon hard-crashes (or is killed via `pkill`), any tasks it was actively chewing remain tagged as `"status": "RUNNING"` with `"assigned_gpu"` in the JSON. The newly restarted daemon will blindly trust these locks and falsely assume GPUs are busy, starving the queue.
+> **Fix**: You MUST run a scrubber script on the JSON to downgrade these abandoned tags back to `"PENDING"` before cold-booting the new daemon.
+>
+> **2. Quota Isolation**: When running multiple projects (e.g. CaLaM vs PESSO), the daemon MUST enforce the JSON `gpu_quota` dict. Without `if project_counts.get(proj, 0) >= quotas.get(proj, 99): continue`, the daemon defaults to a greedy "First-In-First-Out" sweep, starving tail-end payloads. Any patched `auto_scheduler` must retain this logic.
+
 ## ⚠️ CONSTITUTIONAL ANCHORS
 
 - **Strategic Action Exemption**: While `cluster_net_dashboard` and `gpu_status_board` remain strictly read-only, the unified `auto_scheduler` possesses a specialized surgical exemption to execute pre-approved CLI commands from the `experiment_queue.json` solely to prevent expensive GPU idle time. It cannot arbitrarily modify parameters.
+
+> [!IMPORTANT]
+> **Law #11 (The Zombie Reaper Protocol — Production Incident Fix 2026-03-24)**
+>
+> A built-in garbage collection mechanism inside `auto_scheduler.py` performs rigorous multi-dimensional anomaly detection every cycle to clean up 0% utilization "Hung Processes" or missing PIDs.
+>
+> 1. **Hung at 0% GPU**: If a task has been running > 1 hour, but GPU utilization remains strictly <= 1.0%, the daemon assumes it is a deadlocked process (e.g. W&B `CommError` with background thread zombies), force-kills it via `pkill -9`, and marks it `FAILED` with `reaper_reason`.
+> 2. **24h Timeout**: Absolute timeout; processes spanning >24h are killed and aborted to prevent infinite locking.
+> 3. **Orphaned Lock**: If the JSON queue claims a task is `RUNNING`, but `pgrep` cannot find the process in the OS (e.g. container hard crash), the lock is instantly discarded.
