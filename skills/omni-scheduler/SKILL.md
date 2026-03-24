@@ -250,3 +250,20 @@ _This instantly appends the payload with a generated UUID and an exact timestamp
 > 1. **Hung at 0% GPU**: If a task has been running > 1 hour, but GPU utilization remains strictly <= 1.0%, the daemon assumes it is a deadlocked process (e.g. W&B `CommError` with background thread zombies), force-kills it via `pkill -9`, and marks it `FAILED` with `reaper_reason`.
 > 2. **24h Timeout**: Absolute timeout; processes spanning >24h are killed and aborted to prevent infinite locking.
 > 3. **Orphaned Lock**: If the JSON queue claims a task is `RUNNING`, but `pgrep` cannot find the process in the OS (e.g. container hard crash), the lock is instantly discarded.
+
+> [!CAUTION]
+> **Law #12 (The SSoT Anti-Shortcut Dictate — Production Incident Fix 2026-03-24)**
+>
+> **NEVER use `scp` to hot-patch code bypassing version control.**
+> If code needs fixing (e.g. baseline architecture changes), you MUST:
+>
+> 1. Edit the files on the designated SSoT repository (Mac).
+> 2. `git commit` and `git push` to the remote origin.
+> 3. `ssh` to the GPU cluster and `git pull`.
+>    **Violating this fractures the Git tree, causes silent execution drift, and bypasses formal architectural audits.**
+
+> [!IMPORTANT]
+> **Law #13 (Constitutional Tracking Identifier — Fail-Fast Guard)**
+>
+> The daemon scheduler MUST instantly abort any experimental payloads that do not map the `--task <name>` argument.
+> Without `--task`, the Zombie Reaper and Duplicate Tracker natively break, leading to unobservable multi-GPU starvation deadlocks. This Fail-Fast ensures runtime tracking integrity.
