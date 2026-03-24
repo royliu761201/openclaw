@@ -133,7 +133,7 @@ def zombie_reaper(queue_path, data, gpu_stats):
             is_alive = True
             if entry:
                 try:
-                    res = subprocess.run(["pgrep", "-f", f"--task {entry}"], capture_output=True, text=True)
+                    res = subprocess.run(["pgrep", "-f", "--", f"--task {entry}"], capture_output=True, text=True)
                     is_alive = (res.returncode == 0)
                 except Exception:
                     pass
