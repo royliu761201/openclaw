@@ -13,9 +13,31 @@ INTERVAL = 300
 ALERT_FILE = "/tmp/calam_alert.txt"
 LOG_FILE = "/tmp/calam_monitor.log"
 RESULTS_FILE = "/tmp/calam_results.json"
+SEEN_FILE = os.path.expanduser("~/.openclaw/monitor_seen.json")
+COMPLETED_FILE = os.path.expanduser("~/.openclaw/monitor_completed.json")
 
-prev_completed = set()
 prev_journals = {}
+
+def load_seen():
+    if os.path.exists(SEEN_FILE):
+        try: return json.load(open(SEEN_FILE))
+        except: return []
+    return []
+
+def save_seen(seen_list):
+    os.makedirs(os.path.dirname(SEEN_FILE), exist_ok=True)
+    json.dump(seen_list, open(SEEN_FILE, 'w'))
+
+def load_completed():
+    if os.path.exists(COMPLETED_FILE):
+        try: return json.load(open(COMPLETED_FILE))
+        except: return []
+    return []
+
+def save_completed(completed_list):
+    os.makedirs(os.path.dirname(COMPLETED_FILE), exist_ok=True)
+    json.dump(completed_list, open(COMPLETED_FILE, 'w'))
+
 
 def notify_mac(title, message):
     try:
@@ -54,12 +76,12 @@ q = json.load(open(QUEUE))
 for t in q['tasks']:
     result["queue"].append({"entry": t["entry"], "status": t["status"], "gpu": t.get("assigned_gpu", "-")})
     if t["status"] == "FAILED":
-        result["alerts"].append(f"FAILED: {t['entry']}")
+        result["alerts"].append({"type": "task", "id": t.get("id", str(t["entry"])), "msg": f"FAILED: {t['entry']}"})
 
 try:
     sp.check_output(['pgrep', '-f', 'auto_scheduler'], text=True)
 except:
-    result["alerts"].append("SCHEDULER DEAD")
+    result["alerts"].append({"type": "system", "id": "scheduler_dead", "msg": "SCHEDULER DEAD"})
 
 # Vanilla baseline for comparison
 vanilla_scores = {}
@@ -120,7 +142,7 @@ PYEOF
 
 
 def check():
-    global prev_completed, prev_journals
+    global prev_journals
     try:
         raw = ssh_exec(REMOTE_STATUS)
         json_line = None
@@ -159,12 +181,13 @@ def check():
                 vs = a.get('vs_vanilla', '-')
                 log(f"  {k}: mean={a['mean']:.4f}, toxic={a['toxic_rate']}%, vs_vanilla={vs}%, gate={gate}")
                 if gate == "FAIL":
-                    data['alerts'].append(f"POST-GATE FAIL: {k}")
+                    data['alerts'].append({"type": "gate", "id": f"gate_{k}", "msg": f"POST-GATE FAIL: {k}"})
             with open(RESULTS_FILE, 'w') as f:
                 json.dump(data['analysis'], f, indent=2)
 
         # New completions → notify
         curr_completed = set(data['analysis'].keys())
+        prev_completed = set(load_completed())
         new_completed = curr_completed - prev_completed
         if new_completed:
             for exp in new_completed:
@@ -172,17 +195,27 @@ def check():
                 msg = f"{exp}: toxic={a['toxic_rate']}%, gate={a.get('gate','-')}"
                 log(f"  🎉 NEW: {msg}")
                 notify_mac("✅ 实验完成", msg)
-        prev_completed = curr_completed
+            save_completed(list(curr_completed))
 
 
 
         # Alerts
         if data['alerts']:
+            seen_alerts = load_seen()
+            new_alerts = []
+            
             for a in data['alerts']:
-                log(f"  🚨 {a}")
-            with open(ALERT_FILE, 'w') as f:
-                f.write('\n'.join(data['alerts']))
-            notify_mac("🚨 CaLaM 异常", data['alerts'][0][:100])
+                log(f"  🚨 {a['msg']}")
+                if a['id'] not in seen_alerts:
+                    new_alerts.append(a)
+                    seen_alerts.append(a['id'])
+                    
+            if new_alerts:
+                save_seen(seen_alerts)
+                alert_msgs = [a['msg'] for a in new_alerts]
+                with open(ALERT_FILE, 'w') as f:
+                    f.write('\n'.join(alert_msgs))
+                notify_mac("🚨 CaLaM 新异常", alert_msgs[0][:100])
         else:
             if os.path.exists(ALERT_FILE):
                 os.remove(ALERT_FILE)

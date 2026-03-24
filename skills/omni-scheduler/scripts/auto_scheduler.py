@@ -318,6 +318,11 @@ def _launch_local(task, gpu_id, queue_path):
     env = os.environ.copy()
     env["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
     
+    # [Proxy Quarantine] Scrub all lethal proxy inheritance that crashes W&B / Sentry hooks
+    for key in ["http_proxy", "https_proxy", "all_proxy", "HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY"]:
+        if key in env:
+            del env[key]
+    
     # [Law #5] conda run strips CUDA_VISIBLE_DEVICES — inject --gpu into command
     if "--gpu" not in cmd:
         cmd = cmd + f" --gpu {gpu_id}"

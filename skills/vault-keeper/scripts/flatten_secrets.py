@@ -43,11 +43,41 @@ def flatten_secrets():
         "GOG_OAUTH_CLIENT_ID": old.get("gog_oauth_client", {}).get("client_id"),
         "GOG_OAUTH_CLIENT_SECRET": old.get("gog_oauth_client", {}).get("client_secret"),
         
-        "NVIDIA_NGC_PASS": old.get("nvidia_ngc", {}).get("password")
+        "NVIDIA_NGC_PASS": old.get("nvidia_ngc", {}).get("password"),
+
+        # Search APIs (dual-key rotation support)
+        "TAVILY_API_KEY_1": (old.get("TAVILY_API_KEY_1")
+                             or old.get("search_apis", {}).get("TAVILY_API_KEY_1")),
+        "TAVILY_API_KEY_2": (old.get("TAVILY_API_KEY_2")
+                             or old.get("search_apis", {}).get("TAVILY_API_KEY_2")),
+        "TAVILY_API_KEY":   (old.get("TAVILY_API_KEY")
+                             or old.get("search_apis", {}).get("TAVILY_API_KEY")),
+        "EXA_API_KEY":      (old.get("EXA_API_KEY")
+                             or old.get("search_apis", {}).get("EXA_API_KEY")),
+
+        # Vertex AI
+        "VERTEX_API_KEY":   old.get("google_vertex_api_key") or old.get("VERTEX_API_KEY"),
+        "VERTEX_PROJECT":   old.get("google_vertex_project") or old.get("VERTEX_PROJECT"),
+        "GEMINI_API_KEY":   old.get("GOOGLE_API_KEY") or old.get("google_api_key"),
     }
 
     # Remove Nones
     new_secrets = {k: v for k, v in new_secrets.items() if v}
+
+    # ⚠️ ANTI-LOSS PROTECTION: diff before overwrite
+    # If any key exists in current flat file but NOT in new result, warn loudly.
+    if os.path.exists(NEW_SECRETS_PATH):
+        with open(NEW_SECRETS_PATH, "r", encoding="utf-8") as f:
+            existing_flat = json.load(f)
+        lost_keys = [k for k in existing_flat if k not in new_secrets]
+        if lost_keys:
+            print(f"⚠️  [ANTI-LOSS] The following keys exist in the current flat file but are NOT in secrets.json:")
+            for k in lost_keys:
+                print(f"    ❌ WOULD LOSE: {k}")
+            print("⚠️  ACTION REQUIRED: Add these keys to secrets.json before running flatten again.")
+            print("    Aborting to prevent data loss.")
+            import sys
+            sys.exit(1)
 
     with open(NEW_SECRETS_PATH, "w", encoding="utf-8") as f:
         json.dump(new_secrets, f, indent=4)

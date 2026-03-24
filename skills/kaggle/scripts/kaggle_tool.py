@@ -16,46 +16,79 @@ def get_api():
     api.authenticate()
     return api
 
+def _verify_dataset(api, ref):
+    """Post-push verification: confirm dataset actually exists on Kaggle."""
+    import requests
+    username = os.environ.get('KAGGLE_USERNAME', '')
+    key = os.environ.get('KAGGLE_KEY', '')
+    if not username or not key:
+        print("[VERIFY] Skipped — no credentials in env for verification.")
+        return
+    owner, slug = ref.split('/')
+    r = requests.get(
+        f'https://www.kaggle.com/api/v1/datasets/view/{owner}/{slug}',
+        auth=(username, key)
+    )
+    if r.status_code == 200:
+        d = r.json()
+        print(f"[VERIFY] ✅ Dataset confirmed: totalBytes={d.get('totalBytes')}, "
+              f"isPrivate={d.get('isPrivate')}")
+    else:
+        print(f"[VERIFY] ⚠️ Dataset NOT found (status {r.status_code}). "
+              f"Push may have silently failed!")
+
 def create_dataset(args):
     api = get_api()
     path = args.path
     is_zip = args.zip
     msg = args.message
-    
-    if is_zip and not path.endswith('.zip'):
-        # If path is a folder and zip is requested, make archive
-        print(f"Zipping {path}...")
-        # shutil.make_archive base_name is without extension
-        # If path is 'foo/bar', make_archive('foo/bar', 'zip', 'foo/bar') -> 'foo/bar.zip'
-        # But we want to control where it goes? 
-        # For simplicity, let's assume path provided IS the folder to upload.
-        # Kaggle API handles zipping if dir_mode='zip'.
-        pass
+    dir_mode = 'zip' if is_zip else 'skip'
 
-    print(f"Creating/Updating dataset from {path}...")
+    meta_path = os.path.join(path, "dataset-metadata.json")
+    if not os.path.exists(meta_path):
+        print(f"Error: {meta_path} not found. Please create metadata first.")
+        return
+
+    with open(meta_path, 'r') as f:
+        meta = json.load(f)
+        ref = meta.get('id')
+
+    print(f"Creating/Updating dataset '{ref}' from {path} (dir_mode={dir_mode})...")
+
+    # Try update first, then create_new as fallback
+    result = None
     try:
-        # Check if exists (by metadata.json in folder)
-        meta_path = os.path.join(path, "dataset-metadata.json")
-        if not os.path.exists(meta_path):
-            print(f"Error: {meta_path} not found. Please create metadata first.")
+        result = api.dataset_create_version(
+            path, msg, dir_mode=dir_mode, quiet=False, convert_to_csv=False)
+        print(f"[dataset_create_version] Result: {result}")
+    except Exception as e:
+        print(f"[dataset_create_version] Failed: {e}")
+        print("Falling back to dataset_create_new...")
+        try:
+            result = api.dataset_create_new(
+                path, dir_mode=dir_mode, quiet=False, convert_to_csv=False)
+            print(f"[dataset_create_new] Result: {result}")
+        except Exception as e2:
+            print(f"[dataset_create_new] ALSO FAILED: {e2}")
             return
 
-        with open(meta_path, 'r') as f:
-            meta = json.load(f)
-            ref = meta.get('id')
-            
-        # Try update first (most common)
+    # CRITICAL: Verify the result status — CLI can return Ok but do nothing
+    if result:
         try:
-            api.dataset_create_version(path, msg, dir_mode='zip' if is_zip else 'skip', quiet=False)
-            print("Dataset version created.")
+            result_dict = json.loads(str(result)) if not isinstance(result, dict) else result
+            status = result_dict.get('status', 'Unknown')
+            error = result_dict.get('error', '')
+            url = result_dict.get('url', '')
+            if status != 'Ok':
+                print(f"⚠️ API returned status='{status}', error='{error}'")
+            else:
+                print(f"✅ Dataset push Ok: {url}")
         except Exception:
-            # Fallback to create
-            print("Update failed, trying create_new...")
-            api.dataset_create_new(path, dir_mode='zip' if is_zip else 'skip', quiet=False)
-            print("Dataset created.")
-            
-    except Exception as e:
-        print(f"Error: {e}")
+            print(f"[Result raw]: {result}")
+
+    # Post-push verification
+    if ref:
+        _verify_dataset(api, ref)
 
 def push_kernel(args):
     api = get_api()

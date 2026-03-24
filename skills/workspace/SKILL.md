@@ -18,6 +18,7 @@ You MUST execute this skill FIRST whenever:
 - The user wants to see, check, review, or project ANY non-session global text document (.md files) on the SSoT (Global Board, PDCA files, Rules, Idea Lists).
 - You enter a new project or start a session and need context.
 - The user explicitly issues "close", "archive" (Archive/Close) to shutdown the current session.
+- **[ANTI-FRAUD CHECK]** When tasked to "audit", "review", or "reproduce" external or legacy evaluation code/scripts (`run_benchmarks.py`, etc.), you MUST explicitly enforce the End-to-End Traceability rule defined in `03_RESEARCH_PROJECT_LAW.md`. DO NOT assume script integrity based on file names.
 
 ## 🛠️ USAGE (Pure MD-Driven SOP)
 

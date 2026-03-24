@@ -45,6 +45,7 @@ def enqueue_task(queue_path, project, command, directory, target, entry, dataset
         "command": command,
         "entry": entry,
         "directory": directory,
+        "group": project,
         "status": "PENDING",
         "created_at": datetime.now().isoformat()
     }

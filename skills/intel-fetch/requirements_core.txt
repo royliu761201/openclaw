@@ -1,2 +1,0 @@
-# Enter core heavy dependencies here, e.g., onnxruntime, torch, etc.
-# DO NOT run pip install. Use `python3 forge.py --harvest <skill_name>`
