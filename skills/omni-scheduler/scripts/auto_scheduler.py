@@ -313,6 +313,14 @@ def _launch_local(task, gpu_id, queue_path):
         # Revert status back to PENDING so it's not stuck as RUNNING
         mark_completed(queue_path, job_id, "PENDING")
         return
+        
+    # [Constitutional Guard] Fail-Fast on Tracking Identifier
+    if "--task" not in cmd:
+        logging.critical(f"🚨 FATAL: Payload violates tracking constraints! The command string lacks the mandatory '--task' argument.")
+        logging.critical(f"Without '--task', the Zombie Reaper and Duplicate Guard cannot track this process lifecycle.")
+        logging.critical(f"Offending payload: {cmd}")
+        mark_completed(queue_path, job_id, "FAILED_INVALID_CLI")
+        return
     
     # Environment Isolation
     env = os.environ.copy()
