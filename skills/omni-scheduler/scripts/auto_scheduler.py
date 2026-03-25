@@ -174,7 +174,7 @@ def sync_queue_to_git(queue_path, max_retries=3):
     """Automatically commit and push the updated queue state back to the central nervous system.
     Uses exponential backoff retry to survive transient DNS/network failures."""
     directory = os.path.dirname(queue_path)
-    cmd = f"cd {directory} && git add {os.path.basename(queue_path)} && git commit -m 'chore: Auto-Scheduler state pulse checkpoint' && GIT_SSH_COMMAND=\"ssh -o Port=443 -o HostName=ssh.github.com -o ConnectTimeout=15 -o StrictHostKeyChecking=no\" git push origin main"
+    cmd = f"cd {directory} && git add {os.path.basename(queue_path)} && git commit -m 'chore: Auto-Scheduler state pulse checkpoint' && git push origin main"
     for attempt in range(max_retries):
         try:
             res = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
@@ -194,7 +194,7 @@ def pull_git_updates(queue_path, max_retries=2):
     """Pull the latest task queue and codebase from the central source of truth.
     Retries once on failure to handle transient DNS issues."""
     directory = os.path.dirname(queue_path)
-    cmd = f"cd {directory} && GIT_SSH_COMMAND=\"ssh -o Port=443 -o HostName=ssh.github.com -o ConnectTimeout=15 -o StrictHostKeyChecking=no\" git pull origin main"
+    cmd = f"cd {directory} && git pull origin main"
     for attempt in range(max_retries):
         try:
             res = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
@@ -371,6 +371,10 @@ def _launch_local(task, gpu_id, queue_path):
                 if extra_env:
                     env.update(extra_env)
                     logging.info(f"🔧 Injected env vars: {list(extra_env.keys())}")
+                
+                # [NETWORK ARMOR] Force WandB to cache local logs, preventing GFW TCP connection resets
+                env["WANDB_MODE"] = "offline"
+                
                 proc = subprocess.Popen(tokens, cwd=cwd, env=env)
                 proc.wait()
                 final_status = "COMPLETED" if proc.returncode == 0 else "FAILED"
