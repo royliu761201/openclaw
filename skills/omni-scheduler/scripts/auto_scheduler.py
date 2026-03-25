@@ -503,6 +503,15 @@ def daemon_loop(args):
                     
                     # [GPU Quota Groups] Compute per-group running counts
                     gpu_quota = data.get("gpu_quota", {})
+                    
+                    # [LAW #12] QUOTA KEY ALIGNMENT VALIDATOR (Poka-Yoke)
+                    # Prevents silent quota bypass when task.group != gpu_quota keys
+                    if gpu_quota:
+                        task_groups = set(t.get("group", t.get("project", "default")) for t in data.get("tasks", []))
+                        unprotected = task_groups - set(gpu_quota.keys()) - {"default"}
+                        if unprotected:
+                            logging.warning(f"⚠️ [LAW #12] QUOTA BYPASS RISK! Groups {unprotected} have NO quota limit. Tasks in these groups can consume unlimited GPUs!")
+                    
                     group_running = {}
                     for t in data.get("tasks", []):
                         if t.get("status") == "RUNNING":
