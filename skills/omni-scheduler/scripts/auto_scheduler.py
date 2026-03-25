@@ -464,7 +464,7 @@ def daemon_loop(args):
         f = get_file_lock(args.queue)
         if f:
             try:
-                data, pruned_flag = prune_queue_locked(f)
+                data, pruned_flag = prune_queue_locked(f, args.queue)
                 if pruned_flag:
                     git_sync_needed = True
                 
