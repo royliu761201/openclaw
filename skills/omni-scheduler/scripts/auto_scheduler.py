@@ -149,6 +149,28 @@ def zombie_reaper(queue_path, data, gpu_stats):
                     pass
             
             if not is_alive or is_hung or is_timeout:
+                # [BUG FIX 1 & 2] Grace Period & State File Audit (Race Condition Prevention)
+                if not is_alive:
+                    state_path = queue_path.replace("experiment_queue.json", "matrix_state.json")
+                    if os.path.exists(state_path):
+                        try:
+                            with open(state_path) as sf:
+                                fresh_state = json.load(sf)
+                            # If the monitor thread has ALREADY written a terminal state, skip reaper
+                            if fresh_state.get(t.get("id"), {}).get("status") in ["COMPLETED", "FAILED", "FAILED_INVALID_CLI", "FAILED_NON_GIT_WORKSPACE"]:
+                                continue
+                        except Exception:
+                            pass
+                    
+                    if start_time_str:
+                        # Allow 60 seconds startup grace period before reaping instant-crashes silently
+                        try:
+                            start_time = datetime.fromisoformat(start_time_str)
+                            if (now - start_time).total_seconds() < 60:
+                                continue
+                        except Exception:
+                            pass
+
                 reason = "Orphaned Lock" if not is_alive else ("Hung at 0% GPU" if is_hung else "24h Timeout")
                 logging.warning(f"💀 [Zombie Reaper] Reaping task '{entry}' on GPU {assigned_gpu}. Reason: {reason}.")
                 t["status"] = "FAILED"
@@ -412,10 +434,16 @@ def _launch_local(task, gpu_id, queue_path):
                 # [NETWORK ARMOR] Force WandB to cache local logs, preventing GFW TCP connection resets
                 env["WANDB_MODE"] = "offline"
                 
-                # [PROCESS ISOLATION ARMOR] Detach child from Parent Process Group
-                # Ensures Graceful Restart SOP does not murder running GPU jobs via mass SIGHUP
-                proc = subprocess.Popen(tokens, cwd=cwd, env=env, start_new_session=True)
-                proc.wait()
+                # [PROCESS ISOLATION ARMOR & DIAGNOSTICS] 
+                # 1. Detach child from Parent Process Group (SIGHUP immunity for Graceful Restart)
+                # 2. Redirect stdout/stderr to a durable log file for instant crash debugging
+                log_dir = "/jhdx0003008/workspace/projects_core/scheduler_logs"
+                os.makedirs(log_dir, exist_ok=True)
+                log_path = os.path.join(log_dir, f"{entry}_stderr.log")
+                
+                with open(log_path, "w") as log_file:
+                    proc = subprocess.Popen(tokens, cwd=cwd, env=env, start_new_session=True, stdout=log_file, stderr=subprocess.STDOUT)
+                    proc.wait()
                 final_status = "COMPLETED" if proc.returncode == 0 else "FAILED"
             except Exception as e:
                 logging.error(f"Task {job_id} crashed: {e}")
