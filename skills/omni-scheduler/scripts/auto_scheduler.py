@@ -554,19 +554,82 @@ if __name__ == "__main__":
         logging.critical("FATAL: Constitutional Violation! You are attempting to run a background daemon on Node 01.")
         sys.exit(1)
     
-    # [Layer 3: Singleton Check] Only one scheduler instance allowed (PID file approach)
+    # [Layer 3: Singleton Check with Health Audit] (Law #16 — 2026-03-25)
+    # Instead of blindly aborting when another PID exists, perform a 3-layer
+    # health audit to detect ghost/zombie schedulers and auto-takeover.
     PIDFILE = "/tmp/auto_scheduler.pid"
     if os.path.exists(PIDFILE):
         try:
             old_pid = int(open(PIDFILE).read().strip())
-            # Check if old PID is still alive
             os.kill(old_pid, 0)  # signal 0 = existence check only
-            logging.critical(f"🚨 FATAL: Another scheduler (PID {old_pid}) is still alive! Aborting.")
-            sys.exit(1)
+            
+            # === 三重健康度审计 (Law #16) ===
+            is_ghost = False
+            ghost_reasons = []
+            
+            # 审计 1: cwd 合法性 — 必须在 Git 仓库内
+            try:
+                old_cwd = os.readlink(f"/proc/{old_pid}/cwd")
+                # 检查 cwd 或其祖先是否包含 .git
+                cwd_has_git = False
+                check_path = old_cwd
+                for _ in range(10):  # 最多向上查 10 级
+                    if os.path.isdir(os.path.join(check_path, ".git")):
+                        cwd_has_git = True
+                        break
+                    parent = os.path.dirname(check_path)
+                    if parent == check_path:
+                        break
+                    check_path = parent
+                if not cwd_has_git:
+                    is_ghost = True
+                    ghost_reasons.append(f"cwd={old_cwd} 不在任何 Git 仓库内")
+            except (FileNotFoundError, PermissionError):
+                ghost_reasons.append("无法读取 /proc cwd（可能在容器内）")
+            
+            # 审计 2: 子进程活跃度 — 健康 scheduler 应有实验子进程
+            try:
+                children = subprocess.run(
+                    ["pgrep", "-P", str(old_pid)],
+                    capture_output=True, text=True, timeout=5
+                )
+                has_children = (children.returncode == 0 and children.stdout.strip())
+                if not has_children:
+                    ghost_reasons.append("无活跃子进程（空转调度器）")
+            except Exception:
+                pass  # pgrep 失败不作为判定依据
+            
+            # 审计 3: 空转时长 — 无子进程且运行超 1 小时 = 幽灵
+            try:
+                proc_stat = os.stat(f"/proc/{old_pid}")
+                import time as _time
+                age_hours = (_time.time() - proc_stat.st_mtime) / 3600.0
+                if age_hours > 1.0 and not has_children:
+                    is_ghost = True
+                    ghost_reasons.append(f"空转 {age_hours:.1f} 小时且无子进程")
+            except Exception:
+                pass
+            
+            if is_ghost:
+                logging.warning(f"🔫 检测到幽灵 scheduler (PID {old_pid})，原因: {'; '.join(ghost_reasons)}")
+                logging.warning(f"🔫 自动接管：正在终止幽灵进程 PID {old_pid}...")
+                try:
+                    os.kill(old_pid, 9)  # SIGKILL 强制终止
+                    import time as _time
+                    _time.sleep(2)
+                    logging.info(f"✅ 幽灵进程 PID {old_pid} 已被清除，新 scheduler 接管控制权。")
+                except Exception as kill_err:
+                    logging.critical(f"🚨 无法终止幽灵进程 PID {old_pid}: {kill_err}。请手动 kill。")
+                    sys.exit(1)
+            else:
+                # 旧进程通过了所有健康审计 → 真正的健康 scheduler，正常 abort
+                logging.critical(f"🚨 FATAL: 健康的 scheduler (PID {old_pid}) 正在运行。新实例 abort。")
+                sys.exit(1)
+                
         except (ProcessLookupError, ValueError):
-            logging.info(f"Stale PID file found (PID gone). Cleaning up.")
+            logging.info(f"发现过期 PID 文件（进程已死）。清理中。")
         except PermissionError:
-            logging.critical(f"🚨 FATAL: Another scheduler process exists but we can't signal it. Aborting.")
+            logging.critical(f"🚨 FATAL: 存在另一个 scheduler 进程但无权限信号它。Aborting。")
             sys.exit(1)
     # Write our PID
     with open(PIDFILE, "w") as pf:
