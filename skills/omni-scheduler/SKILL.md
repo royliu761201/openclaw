@@ -282,3 +282,16 @@ _This instantly appends the payload with a generated UUID and an exact timestamp
 >
 > **2. The Git SSH Port Override Desync**: Hardcoding `GIT_SSH_COMMAND="ssh -o Port=443 -o HostName=ssh.github.com"` in Python explicitly bypasses standard proxy settings in the host's `~/.ssh/config`. If DNS resolution for `ssh.github.com` fails, Git fetching drops dead.
 > **Fix**: Rely entirely on the host's native `ssh` and git configurations. Remove all hard-coded network TLS overrides from the python scheduling daemon to ensure it inherits the cluster's resilient proxy tunnels.
+
+> [!CAUTION]
+> **Law #16 (幽灵 Singleton 防锁定 — Production Incident Fix 2026-03-25)**
+>
+> **事故复盘**：一个 Agent 在 `tmux data_dl`（非标准数据下载会话）内手动启动了 `auto_scheduler.py`，cwd 为 `/root`（不在 Git 仓库内）。该幽灵进程占据 Singleton 锁，导致所有合规新 daemon 被 FATAL 自杀。幽灵进程因 cwd 错误导致 Git sync 永久失败，同时 Zombie Reaper 将 33 个实验全部误杀为 FAILED。5 张 A40 空闲数小时。
+>
+> **三重防线（必须全部遵守）：**
+>
+> 1. **tmux 会话命名强制**：scheduler 只能在 `tmux -s scheduler` 会话中启动。禁止在 `data_dl`、`monitor` 或任何其他会话中手动运行 `auto_scheduler.py`。
+> 2. **cwd 必须为 Git 仓库根目录**：启动命令必须以 `cd /jhdx0003008/workspace &&` 开头，确保 Git sync 能找到 `.git` 目录。cwd 为 `/root` 或其他路径一律视为违规。
+> 3. **启动前必须执行幽灵扫描**：在运行 `tmux new-session -d -s scheduler` 之前，必须先执行 `ps aux | grep auto_scheduler | grep -v grep` 确认没有残留 scheduler 进程。如果有，必须先 `kill` 再启动。
+>
+> **代码侧增强建议**：`auto_scheduler.py` 的 Singleton 检查应增加"占锁进程健康度审计"——检测到旧 PID 存活时，额外验证其 cwd 是否合法、是否有活跃子进程。若旧进程为空转幽灵，应自动接管而非自杀。
