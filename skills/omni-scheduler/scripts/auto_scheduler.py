@@ -531,7 +531,7 @@ def daemon_loop(args):
                                 if group_running.get(g, 0) >= limit:
                                     blocked_groups.add(g)
                             
-                            task = pull_next_task_locked(f, data, "local", gpu_id=gpu_id, blocked_groups=blocked_groups)
+                            task = pull_next_task_locked(f, data, "local", gpu_id=gpu_id, blocked_groups=blocked_groups, queue_path=args.queue)
                             if task:
                                 git_sync_needed = True
                                 _launch_local(task, gpu_id, args.queue)
