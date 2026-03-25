@@ -453,6 +453,8 @@ def daemon_loop(args):
     logging.info(f"Initializing Unified Multi-GPU Auto-Scheduler v2.0.")
     logging.info(f"Mode: {args.mode.upper()} | Poll: {args.poll}s | Threshold: < {args.threshold}%")
     
+    first_boot = True
+    
     while True:
         # [Layer 4] Read alert file at start of each cycle
         if os.path.exists(ALERT_PATH):
@@ -465,8 +467,10 @@ def daemon_loop(args):
         if f:
             try:
                 data, pruned_flag = prune_queue_locked(f, args.queue)
-                if pruned_flag:
+                if pruned_flag or first_boot:
+                    write_state_overlay(args.queue, data)
                     git_sync_needed = True
+                    first_boot = False
                 
                 if args.mode == "local":
                     gpu_stats = check_nvidia_smi()
