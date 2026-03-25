@@ -474,9 +474,7 @@ def daemon_loop(args):
                     # --- ZOMBIE REAPER TICK ---
                     needs_sync, reaped_count = zombie_reaper(args.queue, data, gpu_stats)
                     if needs_sync:
-                        f.seek(0)
-                        json.dump(data, f, indent=4)
-                        f.truncate()
+                        write_state_overlay(args.queue, data)
                         git_sync_needed = True
                     
                     # [Solidify Scheduling] Calculate currently assigned GPUs from JSON queue to enforce EXCLUSIVE LOCK
