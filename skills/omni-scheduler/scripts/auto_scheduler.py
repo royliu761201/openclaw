@@ -171,15 +171,17 @@ def zombie_reaper(queue_path, data, gpu_stats):
     return modified, reaped
 
 def sync_queue_to_git(queue_path, max_retries=3):
-    """Automatically commit and push the updated queue state back to the central nervous system.
-    Uses exponential backoff retry to survive transient DNS/network failures."""
+    """Commit and push ONLY the queue JSON file back to the central nervous system.
+    Scoped to single-file sync to prevent accidental code commits. (Law #16 refinement)"""
     directory = os.path.dirname(queue_path)
-    cmd = f"cd {directory} && git add {os.path.basename(queue_path)} && git commit -m 'chore: Auto-Scheduler state pulse checkpoint' && git push origin main"
+    basename = os.path.basename(queue_path)
+    cmd = f"cd {directory} && git add {basename} && git diff --cached --quiet && echo 'NO_CHANGE' || (git commit -m 'chore: Auto-Scheduler state pulse checkpoint' -- {basename} && git push origin main)"
     for attempt in range(max_retries):
         try:
             res = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
             if res.returncode == 0:
-                logging.info("📡 Queue state successfully beamed back to Command Center.")
+                if "NO_CHANGE" not in res.stdout:
+                    logging.info("📡 Queue state successfully beamed back to Command Center.")
                 return
             else:
                 raise RuntimeError(res.stderr.strip()[:200])
@@ -191,22 +193,35 @@ def sync_queue_to_git(queue_path, max_retries=3):
     logging.error("❌ All sync retries exhausted. Local JSON is authoritative; will retry next cycle.")
 
 def pull_git_updates(queue_path, max_retries=2):
-    """Pull the latest task queue and codebase from the central source of truth.
-    Retries once on failure to handle transient DNS issues."""
+    """Fetch and checkout ONLY the queue JSON file from remote, not the entire repo.
+    This prevents code overwrites during daemon runtime. (Law #16 refinement)
+    Code updates must be done manually via 'git pull' by an operator."""
     directory = os.path.dirname(queue_path)
-    cmd = f"cd {directory} && git pull origin main"
+    # 计算 queue 文件相对于 Git 仓库根目录的路径
+    try:
+        repo_root = subprocess.run(
+            f"cd {directory} && git rev-parse --show-toplevel",
+            shell=True, capture_output=True, text=True, timeout=5
+        ).stdout.strip()
+        rel_path = os.path.relpath(queue_path, repo_root)
+    except Exception:
+        rel_path = os.path.basename(queue_path)
+    
+    cmd = f"cd {directory} && git fetch origin main 2>&1 && git checkout origin/main -- {rel_path} 2>&1"
     for attempt in range(max_retries):
         try:
             res = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
-            if "Already up to date." not in res.stdout and res.returncode == 0:
-                logging.info("📥 Detected and pulled new updates from Command Center.")
-            return
+            if res.returncode == 0:
+                logging.info("📥 Queue file synced from Command Center (single-file pull).")
+                return
+            else:
+                raise RuntimeError(res.stderr.strip()[:200])
         except Exception as e:
             wait = 2 ** attempt * 5
-            logging.warning(f"Git pull failed (attempt {attempt+1}/{max_retries}): {e}")
+            logging.warning(f"Queue pull failed (attempt {attempt+1}/{max_retries}): {e}")
             if attempt < max_retries - 1:
                 time.sleep(wait)
-    logging.error("❌ Git pull retries exhausted. Continuing with local queue state.")
+    logging.error("❌ Queue pull retries exhausted. Continuing with local queue state.")
 
 def pull_next_task_locked(f, data, target_name, gpu_id=None, blocked_groups=None):
     """Pulls the next PENDING task, marks it RUNNING, assigns GPU, saves, and returns.
