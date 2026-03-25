@@ -544,17 +544,27 @@ def daemon_loop(args):
                             logging.info("All GPUs are busy or nvidia-smi failed.")
                             
                     # --- [LAW #11] END-TO-END SATURATION ASSERTION (Poka-Yoke) ---
-                    # To prevent the "Sandbox Saturation Blindness" incident, mechanically guarantee throughput
+                    # Physically verifiable, post-dispatch recalculated state
+                    post_group_running = {}
+                    for t in data.get("tasks", []):
+                        if t.get("status") == "RUNNING":
+                            g = t.get("group", t.get("project", "default"))
+                            post_group_running[g] = post_group_running.get(g, 0) + 1
+                    post_blocked_groups = set(g for g, limit in gpu_quota.items() if post_group_running.get(g, 0) >= limit)
+                            
                     pending_unblocked = [
                         t.get("entry", t.get("id")) for t in data.get("tasks", []) 
                         if t.get("status") == "PENDING" 
                         and t.get("target", "local") == "local"
-                        and t.get("group", t.get("project", "default")) not in blocked_groups
+                        and t.get("group", t.get("project", "default")) not in post_blocked_groups
                     ]
-                    if pending_unblocked and available_gpus:
-                        # At this point, if there are STILL unblocked PENDING tasks AND idle GPUs,
-                        # it means the dispatch loop has fundamentally failed (e.g. a silent exception).
-                        alert_msg = f"LAW #11 VIOLATION (Saturation Trap)! {len(available_gpus)} GPUs idle {available_gpus}, but {len(pending_unblocked)} unblocked PENDING tasks ignored: {pending_unblocked[:3]}..."
+                    
+                    actually_idle = [g for g in available_gpus if not any(t.get("assigned_gpu") == g and t.get("status") == "RUNNING" for t in data.get("tasks", []))]
+                    
+                    if pending_unblocked and actually_idle:
+                        # At this point, if there are STILL unblocked PENDING tasks AND genuinely idle GPUs,
+                        # it means the dispatch loop has fundamentally failed.
+                        alert_msg = f"LAW #11 VIOLATION (Saturation Trap)! {len(actually_idle)} GPUs idle {actually_idle}, but {len(pending_unblocked)} unblocked PENDING tasks ignored: {pending_unblocked[:3]}..."
                         logging.critical(f"🚨 {alert_msg}")
                         with open(ALERT_PATH, "a") as af:
                             af.write(f"  🚨 {alert_msg}\n")
