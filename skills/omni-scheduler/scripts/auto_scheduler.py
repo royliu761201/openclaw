@@ -542,6 +542,22 @@ def daemon_loop(args):
                             logging.info(f"All GPUs busy or locked. Active Exclusive Locks: {list(assigned_gpus)}")
                         else:
                             logging.info("All GPUs are busy or nvidia-smi failed.")
+                            
+                    # --- [LAW #11] END-TO-END SATURATION ASSERTION (Poka-Yoke) ---
+                    # To prevent the "Sandbox Saturation Blindness" incident, mechanically guarantee throughput
+                    pending_unblocked = [
+                        t.get("entry", t.get("id")) for t in data.get("tasks", []) 
+                        if t.get("status") == "PENDING" 
+                        and t.get("target", "local") == "local"
+                        and t.get("group", t.get("project", "default")) not in blocked_groups
+                    ]
+                    if pending_unblocked and available_gpus:
+                        # At this point, if there are STILL unblocked PENDING tasks AND idle GPUs,
+                        # it means the dispatch loop has fundamentally failed (e.g. a silent exception).
+                        alert_msg = f"LAW #11 VIOLATION (Saturation Trap)! {len(available_gpus)} GPUs idle {available_gpus}, but {len(pending_unblocked)} unblocked PENDING tasks ignored: {pending_unblocked[:3]}..."
+                        logging.critical(f"🚨 {alert_msg}")
+                        with open(ALERT_PATH, "a") as af:
+                            af.write(f"  🚨 {alert_msg}\n")
                         
                 elif args.mode == "kaggle":
                     running = check_kaggle_quota()
