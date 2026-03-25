@@ -295,3 +295,27 @@ _This instantly appends the payload with a generated UUID and an exact timestamp
 > 3. **启动前必须执行幽灵扫描**：在运行 `tmux new-session -d -s scheduler` 之前，必须先执行 `ps aux | grep auto_scheduler | grep -v grep` 确认没有残留 scheduler 进程。如果有，必须先 `kill` 再启动。
 >
 > **代码侧增强建议**：`auto_scheduler.py` 的 Singleton 检查应增加"占锁进程健康度审计"——检测到旧 PID 存活时，额外验证其 cwd 是否合法、是否有活跃子进程。若旧进程为空转幽灵，应自动接管而非自杀。
+
+> [!WARNING]
+> **Law #17 (W&B 离线死锁免疫 — Production Incident Fix 2026-03-25)**
+>
+> **事故复盘**：在服务器断网/不稳定的环境下（设置了 `WANDB_MODE=offline`），如果 Python 主进程因为任何报错（如 `NameError`, OOM）意外退出，如果全局没有强制结束 W&B 句柄，W&B 的 C++ 守护线程（`atexit` 钩子）会陷入无限期的网络等待环（`status_report` lock）。导致主进程永远不死，GPU 显存（如 8GB）被永久占用锁死 0% 利用率，集群彻底瘫痪。
+>
+> **Fix**: 在所有整合了 `wandb` 的训练脚本主入口 `main()`，必须使用至高权重的防爆套包裹主函数逻辑：
+>
+> ```python
+> try:
+>     train_task(args)
+> finally:
+>     if args.wandb:
+>         wandb.finish(exit_code=exit_code)
+> ```
+>
+> 强制斩断 W&B 亡语阻塞，确保进程抛异常时也能 100% 把显存吐出来。
+
+> [!IMPORTANT]
+> **Law #18 (强制冒烟前置法则 — DevOps Meta-Protocol 2026-03-25)**
+>
+> **事故复盘**：在修复上述连环死锁的紧急状态时，由于图快，只过了本地静态 Python `py_compile` 语法校验，就直接按 Git SSoT 工作流把代码推上了 GitHub，结果把之前复制粘贴漏改的 `NameError` 隐患直接送上了生产 GPU，引发了更大面积的实验挂载。
+>
+> **Fix (The Rule)**：任何针对集群守护层 (`auto_scheduler.py`)、基座物理求解器、数据加载器 (`train_*.py`) 的热修复（Hotfix/Refactor），在向主干执行 `git commit + push` 进行 SSoT 分发之前，**必须在受控算力节点上，强制用对应的 `--smoke`（或 `-h` / 1 个 epoch截断）进行至少一次活体前台冒烟测试**。确信没有任何运行期崩溃（Runtime Crashing）、挂载后再合入主线。**“先冒烟试跑，后 Git SSoT”！**
