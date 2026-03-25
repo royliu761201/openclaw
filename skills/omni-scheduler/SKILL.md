@@ -267,3 +267,18 @@ _This instantly appends the payload with a generated UUID and an exact timestamp
 >
 > The daemon scheduler MUST instantly abort any experimental payloads that do not map the `--task <name>` argument.
 > Without `--task`, the Zombie Reaper and Duplicate Tracker natively break, leading to unobservable multi-GPU starvation deadlocks. This Fail-Fast ensures runtime tracking integrity.
+
+> [!IMPORTANT]
+> **Law #14 (The Zombie Reaper String Parsing Flaw — Production Incident Fix 2026-03-24)**
+>
+> When using `pgrep -f` to track string matches in the OS process table, if the search term starts with a double dash (like `--task calam`), `pgrep` will misinterpret it as an illegal command line flag and immediately crash with a non-zero exit code. This causes the scheduler to falsely assume the process is dead (the "Orphaned Lock" hallucination), aggressively killing and marking all healthy tasks as `FAILED`.
+> **Fix**: You MUST explicitly inject a `--` terminator before the search string to force literal evaluation: `pgrep -f -- "--task {name}"`.
+
+> [!IMPORTANT]
+> **Law #15 (GFW Network Immunization & Git SSoT Bridge — Production Incident Fix 2026-03-25)**
+>
+> **1. W&B TCP Reset Crash (`WANDB_MODE=offline`)**: In strict GFW-proxied GPU clusters, long-lived metrics telemetry connections (like W&B) over port 443 are routinely subjected to TCP Connection Resets (`ConnectionResetError`). Because `wandb` operates synchronously in the main thread by default on crash, it will drag down the entire training process (Exit Code 125).
+> **Fix**: Always forcefully inject `env["WANDB_MODE"] = "offline"` into the dataset generation/training subprocess OS environments, forcing W&B to cache telemetry to disk entirely offline. Manual `wandb sync` can push data later.
+>
+> **2. The Git SSH Port Override Desync**: Hardcoding `GIT_SSH_COMMAND="ssh -o Port=443 -o HostName=ssh.github.com"` in Python explicitly bypasses standard proxy settings in the host's `~/.ssh/config`. If DNS resolution for `ssh.github.com` fails, Git fetching drops dead.
+> **Fix**: Rely entirely on the host's native `ssh` and git configurations. Remove all hard-coded network TLS overrides from the python scheduling daemon to ensure it inherits the cluster's resilient proxy tunnels.
