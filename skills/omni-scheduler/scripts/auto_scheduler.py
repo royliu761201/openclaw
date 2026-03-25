@@ -412,7 +412,9 @@ def _launch_local(task, gpu_id, queue_path):
                 # [NETWORK ARMOR] Force WandB to cache local logs, preventing GFW TCP connection resets
                 env["WANDB_MODE"] = "offline"
                 
-                proc = subprocess.Popen(tokens, cwd=cwd, env=env)
+                # [PROCESS ISOLATION ARMOR] Detach child from Parent Process Group
+                # Ensures Graceful Restart SOP does not murder running GPU jobs via mass SIGHUP
+                proc = subprocess.Popen(tokens, cwd=cwd, env=env, start_new_session=True)
                 proc.wait()
                 final_status = "COMPLETED" if proc.returncode == 0 else "FAILED"
             except Exception as e:

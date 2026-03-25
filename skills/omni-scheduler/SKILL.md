@@ -46,12 +46,10 @@ You are STRICTLY FORBIDDEN from running this script on Node 01. It must only be 
 **To run for Local GPUs**:
 
 ```bash
-tmux new-session -d -s scheduler "python3 $HOME/openclaw/skills/omni-scheduler/scripts/auto_scheduler.py \
-  --mode local \
-  --queue ~/workspace/projects_core/experiment_queue.json \
-  --poll 30 \
-  --max-gpus 4"
+bash $HOME/openclaw/skills/omni-scheduler/scripts/start_scheduler.sh
 ```
+
+> **CRITICAL**: Never use raw `tmux` or `python` commands to start the local daemon. You MUST use the `start_scheduler.sh` SOP to guarantee `conda` environment injection and safe singleton takeover.
 
 **To run for Kaggle Cloud**:
 
@@ -89,15 +87,22 @@ _This instantly appends the payload with a generated UUID and an exact timestamp
 ## 🛡️ ANTI-HALLUCINATION LAWS (Production Incident Fixes)
 
 > [!IMPORTANT]
-> **Law #1 (Daemon Launch Protocol - Updated 2026-03-20)**
+> **Law #1 (Daemon Launch Protocol - Updated 2026-03-25)**
 >
-> The scheduler daemon **MUST** be launched via **tmux**.
-> **NEVER** use `nohup ... &` as it makes log monitoring and process management messy.
+> The scheduler daemon **MUST** be launched via the formalized SOP script.
+> **NEVER** use `nohup ... &` or raw `tmux new-session` strings, as they either break log monitoring or fail to inherit `.bashrc` conda initialization lines leading to instant `command not found` execution failures.
 >
 > **Correct Launch Command**:
-> `tmux new-session -d -s scheduler "python3 scripts/auto_scheduler.py ..."`
+> `bash scripts/start_scheduler.sh`
 >
-> This guarantees the scheduler survives SSH disconnection and its logs can be attached to at any time via `tmux attach -t scheduler`.
+> This gracefully kills old instances and securely injects the `pesso` conda environment before handing off to a detached `tmux` daemon.
+
+> [!IMPORTANT]
+> **Law #5 (Graceful Restart & SIGHUP Immunity - Updated 2026-03-25)**
+>
+> If you need to restart the `auto_scheduler` daemon while experiments are actively utilizing physical GPU hardware, the `start_scheduler.sh` script is completely safe to run.
+>
+> Because the local dispatch mechanism internally fires `subprocess.Popen` with `start_new_session=True`, all dispatched GPU experiments belong to orphaned detached process groups. They are **100% immune to `SIGHUP`** broadcasted by `tmux kill-session`. A restart of the daemon perfectly achieves a "Smooth Transition" (平稳过渡) without annihilating existing compute.
 
 > [!IMPORTANT]
 > **Law #2 (Git Sync Resilience)**
