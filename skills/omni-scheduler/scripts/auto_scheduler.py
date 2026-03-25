@@ -34,17 +34,17 @@ def check_git_liveness(directory: str) -> bool:
         return False
 
 def get_file_lock(file_path):
-    """Acquire an atomic file lock to prevent JSON race conditions."""
+    """Acquire an atomic file lock on the intent file, and load the state overlay file to prevent JSON race conditions."""
     if not os.path.exists(file_path):
         with open(file_path, 'w') as f:
             json.dump({"tasks": []}, f)
-    
-    f = open(file_path, 'r+')
+            
+    f = open(file_path, 'r') # READ ONLY FOR INTENT
     try:
-        fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        fcntl.flock(f, fcntl.LOCK_SH | fcntl.LOCK_NB) # Shared lock for reading
         return f
     except BlockingIOError:
-        logging.warning("JSON Queue is currently locked by another process. Skipping this cycle.")
+        logging.warning("JSON Queue intent is exclusively locked. Skipping.")
         f.close()
         return None
 
@@ -85,37 +85,30 @@ def check_kaggle_quota():
         logging.error("Kaggle CLI not installed or not in PATH.")
         return 999 # Block execution
 
-def prune_queue_locked(f):
-    """7-Day GC for old JSON records, assumes file is already locked and loaded."""
+def prune_queue_locked(f, queue_path):
+    """7-Day GC for old JSON records, now adapted for CQRS Overlay."""
     f.seek(0)
     try:
         data = json.load(f)
     except json.JSONDecodeError:
-        return data, False
-
-    now = datetime.now()
-    active_tasks = []
-    pruned = 0
-    
+        return {"tasks": []}, False
+        
+    state_path = queue_path.replace("experiment_queue.json", "matrix_state.json")
+    state = {}
+    if os.path.exists(state_path):
+        try:
+            with open(state_path, "r") as sf:
+                state = json.load(sf)
+        except Exception:
+            pass
+            
+    # Apply State Overlay (CQRS In-Memory Merge)
     for t in data.get("tasks", []):
-        if t.get("status") in ["COMPLETED", "FAILED"]:
-            try:
-                created_t = datetime.fromisoformat(t.get("created_at", ""))
-                if now - created_t > timedelta(days=7):
-                    pruned += 1
-                    continue
-            except Exception:
-                pass
-        active_tasks.append(t)
-        
-    if pruned > 0:
-        logging.info(f"🧹 GC Triggered: Pruned {pruned} old tasks from queue.")
-        data["tasks"] = active_tasks
-        f.seek(0)
-        json.dump(data, f, indent=4)
-        f.truncate()
-        return data, True
-        
+        tid = t.get("id")
+        if tid in state:
+            t.update(state[tid])
+
+    # No pruning logic here since we no longer write back to the Intent File!
     return data, False
 
 def zombie_reaper(queue_path, data, gpu_stats):
@@ -171,17 +164,17 @@ def zombie_reaper(queue_path, data, gpu_stats):
     return modified, reaped
 
 def sync_queue_to_git(queue_path, max_retries=3):
-    """Commit and push ONLY the queue JSON file back to the central nervous system.
-    Scoped to single-file sync to prevent accidental code commits. (Law #16 refinement)"""
+    """Commit and push ONLY the matrix_state.json file back to the central nervous system.
+    CQRS: The Daemon writes state, SSoT writes intent."""
     directory = os.path.dirname(queue_path)
-    basename = os.path.basename(queue_path)
-    cmd = f"cd {directory} && git add {basename} && git diff --cached --quiet && echo 'NO_CHANGE' || (git commit -m 'chore: Auto-Scheduler state pulse checkpoint' -- {basename} && git push origin main)"
+    state_file = "matrix_state.json"
+    cmd = f"cd {directory} && git add {state_file} && git diff --cached --quiet && echo 'NO_CHANGE' || (git commit -m 'chore: CQRS Auto-Scheduler STATE pulse checkpoint' -- {state_file} && git push origin main)"
     for attempt in range(max_retries):
         try:
             res = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=30)
             if res.returncode == 0:
                 if "NO_CHANGE" not in res.stdout:
-                    logging.info("📡 Queue state successfully beamed back to Command Center.")
+                    logging.info("📡 Queue STATE state successfully beamed back to Command Center.")
                 return
             else:
                 raise RuntimeError(res.stderr.strip()[:200])
@@ -223,12 +216,35 @@ def pull_git_updates(queue_path, max_retries=2):
                 time.sleep(wait)
     logging.error("❌ Queue pull retries exhausted. Continuing with local queue state.")
 
-def pull_next_task_locked(f, data, target_name, gpu_id=None, blocked_groups=None):
-    """Pulls the next PENDING task, marks it RUNNING, assigns GPU, saves, and returns.
-    blocked_groups: set of group names that have reached their GPU quota."""
+def write_state_overlay(queue_path, data):
+    """Write the patched state to matrix_state.json without touching Intent."""
+    state_path = queue_path.replace("experiment_queue.json", "matrix_state.json")
+    state = {}
+    for t in data.get("tasks", []):
+        if "status" in t:
+            state[t["id"]] = {
+                k: v for k, v in t.items() if k in ["status", "assigned_gpu", "start_time", "end_time", "reaper_reason"]
+            }
+    with open(state_path + ".tmp", "w") as sf:
+        json.dump(state, sf, indent=4)
+    os.rename(state_path + ".tmp", state_path)
+
+def pull_next_task_locked(f, data, target_name, gpu_id=None, blocked_groups=None, queue_path=None):
+    """Pulls the next PENDING task, marks it RUNNING, assigns GPU, saves STATE, and returns."""
     blocked_groups = blocked_groups or set()
+    
+    # 强制重启接管 (Force Restart Override) Law 10 Support
     for index, task in enumerate(data.get("tasks", [])):
-        if task.get("status") == "PENDING" and task.get("target", "local") == target_name:
+        force_version = task.get("force_restart_version", 0)
+        state_version = task.get("executed_version", 0)
+        if force_version > state_version and task.get("status") == "FAILED":
+            logging.info(f"🔄 CQRS FORCE RESTART: Reviving task '{task.get('entry')}' (v{force_version})")
+            data["tasks"][index]["status"] = "PENDING"
+            data["tasks"][index]["executed_version"] = force_version
+            write_state_overlay(queue_path, data)
+            
+    for index, task in enumerate(data.get("tasks", [])):
+        if task.get("status", "PENDING") == "PENDING" and task.get("target", "local") == target_name:
             group = task.get("group", task.get("project", "default"))
             if group in blocked_groups:
                 continue
@@ -237,26 +253,32 @@ def pull_next_task_locked(f, data, target_name, gpu_id=None, blocked_groups=None
             if gpu_id is not None:
                 data["tasks"][index]["assigned_gpu"] = gpu_id
             
-            f.seek(0)
-            json.dump(data, f, indent=4)
-            f.truncate()
+            write_state_overlay(queue_path, data)
             return data["tasks"][index]
     return None
 
 def mark_completed(queue_path, job_id, final_status="COMPLETED"):
-    """Locks the file just to mark a task completed."""
+    """Locks the STATE file just to mark a task completed."""
+    state_path = queue_path.replace("experiment_queue.json", "matrix_state.json")
     f = get_file_lock(queue_path)
     if not f: return
     try:
         f.seek(0)
         data = json.load(f)
+        state = {}
+        if os.path.exists(state_path):
+            with open(state_path, "r") as sf: state = json.load(sf)
+            
         for t in data.get("tasks", []):
             if t.get("id") == job_id:
-                t["status"] = final_status
-                t["end_time"] = datetime.now().isoformat()
-        f.seek(0)
-        json.dump(data, f, indent=4)
-        f.truncate()
+                tid = t.get("id")
+                if tid not in state: state[tid] = {}
+                state[tid]["status"] = final_status
+                state[tid]["end_time"] = datetime.now().isoformat()
+                
+        with open(state_path + ".tmp", "w") as sf:
+            json.dump(state, sf, indent=4)
+        os.rename(state_path + ".tmp", state_path)
     except Exception as e:
         logging.error(f"Failed to mark task {job_id} as {final_status}: {e}")
     finally:
