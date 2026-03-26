@@ -97,6 +97,23 @@ def analyze_raw_data(date_str: str = None):
         print(f"❌ Error: Raw data file {raw_path} not found. Producer has not generated data for {date_str}.")
         return
 
+    # === ArXiv Fallback Protocol ===
+    # Auto-detect Tavily failures and supplement with ArXiv data
+    fallback_script = Path(__file__).resolve().parent / "radar_arxiv_fallback.py"
+    if fallback_script.exists():
+        raw_content = read_file_safe(raw_path)
+        tavily_failures = raw_content.count("FATAL: ENGINE OFFLINE (TAVILY)")
+        if tavily_failures > 5:
+            print(f"🚨 Detected {tavily_failures} Tavily failures. Running ArXiv Fallback...")
+            try:
+                subprocess.run(
+                    ["python3", str(fallback_script), "--date", date_str],
+                    check=True, timeout=120
+                )
+                print("✅ ArXiv Fallback completed.")
+            except Exception as e:
+                print(f"⚠️ ArXiv Fallback warning: {e}")
+    
     print(f"🧠 Formatting Radar Inbox Prompt for Dandan on {date_str}...")
     raw_data = read_file_safe(raw_path)
     prompt_content = generate_dandan_prompt(raw_data, date_str)

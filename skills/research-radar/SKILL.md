@@ -28,6 +28,22 @@ To eradicate manual literature monitoring while ensuring absolute data security 
    - **The 5-Stage Swarming Engine**: Triggers the Triage, Red Team, Blue Team, Ranger, and the newly enforced **Academic Grounding (Stage 5)**.
    - **Academic Grounding Law**: Forces the LLM to output 20-30 rigorous citations (CCF-A, CAS Q1, < 3 years old) for every high-value research idea proposed.
 
+3. **📚 ArXiv Fallback Protocol (Consumer-Side Auto-Supplement)**:
+   - **触发条件**: 当 Consumer (Brain) 读取 `{date}_RAW.md` 时，若检测到 `FATAL: ENGINE OFFLINE (TAVILY)` 错误占比 > 50%，则自动触发 ArXiv Fallback。
+   - **执行流程**:
+     1. 从 `radar_targets.json` 读取所有 `radar_sectors` 的 `query` 字段
+     2. 调用 `academic-search/scripts/search_arxiv.py search --query "..." --max_results 10 --sort_by date`
+     3. 将结果追加到 `{date}_RAW.md` 末尾的 `# 📚 ArXiv Supplement` 区块
+     4. 继续执行正常的 Swarm Analysis
+   - **关键原则**: ArXiv 是**补充而非替代** Tavily。Tavily 覆盖产业/政策/基金，ArXiv 仅覆盖学术。两者共存时取并集。
+   - **脚本快捷调用**:
+     ```bash
+     # 手动为指定日期补充 ArXiv 数据
+     python3 scripts/radar_arxiv_fallback.py --date 2026-03-25
+     # 然后正常分析
+     python3 scripts/radar_analyzer.py --date 2026-03-25
+     ```
+
 ## Usage
 
 **On Edge Node (02)** - Pure Collection:
@@ -112,3 +128,4 @@ ssh 02 "cd ~/workspace && rm -rf .git/rebase-merge && git fetch origin && git re
 
 **Symptom**: `⚠️ [KEY_1] Quota exhausted (432). Rotating to next key...`
 **Status**: Expected behavior. `search_tavily.py` implements dual-key rotation. Monitor both keys in `~/.openclaw_env`.
+**ArXiv Fallback**: 当双 key 同时耗尽时，Consumer 端自动触发 ArXiv Fallback Protocol (见 Core Mechanisms #3)，确保学术侧数据不中断。产业/政策侧数据会标记为 `[PENDING_TAVILY_RESTORE]` 待 API 恢复后补扫。
