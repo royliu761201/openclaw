@@ -112,7 +112,11 @@ def prune_queue_locked(f, queue_path):
     return data, False
 
 def zombie_reaper(queue_path, data, gpu_stats):
-    """[Zombie Reaper] Hunts down and kills orphaned locks or deadlocked 0% GPU processes."""
+    """[Zombie Reaper V2] Hunts down orphaned locks via THREE independent signals:
+    1. pgrep: process not found → Orphaned Lock
+    2. GPU utilization: assigned GPU at 0% for >1h → GPU Idle Reap (INDEPENDENT of pgrep)
+    3. Absolute timeout: >24h → Timeout Kill
+    """
     now = datetime.now()
     modified = False
     reaped = 0
@@ -123,6 +127,7 @@ def zombie_reaper(queue_path, data, gpu_stats):
             assigned_gpu = t.get("assigned_gpu")
             start_time_str = t.get("start_time")
             
+            # Signal 1: Process liveness via pgrep
             is_alive = True
             if entry:
                 try:
@@ -131,25 +136,29 @@ def zombie_reaper(queue_path, data, gpu_stats):
                 except Exception:
                     pass
             
-            is_hung = False
+            # Signal 2: GPU utilization (INDEPENDENT of is_alive — this is the critical fix)
+            is_gpu_idle = False
             is_timeout = False
-            if start_time_str and is_alive and assigned_gpu is not None:
+            age_hours = 0.0
+            if start_time_str and assigned_gpu is not None:
                 try:
                     start_time = datetime.fromisoformat(start_time_str)
                     age_hours = (now - start_time).total_seconds() / 3600.0
                     
-                    # 1. Hung at 0% logic (If > 1 hour and <= 1% util)
-                    if age_hours > 1.0 and gpu_stats.get(int(assigned_gpu), 100.0) <= 1.0:
-                        is_hung = True
+                    # [FIX] GPU idle check is now UNCONDITIONAL — no is_alive gate
+                    # If GPU utilization is ≤1% for >1 hour, the task is dead regardless of pgrep
+                    gpu_util = gpu_stats.get(int(assigned_gpu), -1.0)
+                    if age_hours > 1.0 and gpu_util >= 0 and gpu_util <= 1.0:
+                        is_gpu_idle = True
                     
-                    # 2. 24h absolute timeout
+                    # Signal 3: 24h absolute timeout
                     if age_hours > 24.0:
                         is_timeout = True
                 except Exception:
                     pass
             
-            if not is_alive or is_hung or is_timeout:
-                # [BUG FIX 1 & 2] Grace Period & State File Audit (Race Condition Prevention)
+            if not is_alive or is_gpu_idle or is_timeout:
+                # Grace Period & State File Audit (Race Condition Prevention)
                 if not is_alive:
                     state_path = queue_path.replace("experiment_queue.json", "matrix_state.json")
                     if os.path.exists(state_path):
@@ -163,7 +172,7 @@ def zombie_reaper(queue_path, data, gpu_stats):
                             pass
                     
                     if start_time_str:
-                        # Allow 60 seconds startup grace period before reaping instant-crashes silently
+                        # Allow 60 seconds startup grace period before reaping instant-crashes
                         try:
                             start_time = datetime.fromisoformat(start_time_str)
                             if (now - start_time).total_seconds() < 60:
@@ -171,8 +180,8 @@ def zombie_reaper(queue_path, data, gpu_stats):
                         except Exception:
                             pass
 
-                reason = "Orphaned Lock" if not is_alive else ("Hung at 0% GPU" if is_hung else "24h Timeout")
-                logging.warning(f"💀 [Zombie Reaper] Reaping task '{entry}' on GPU {assigned_gpu}. Reason: {reason}.")
+                reason = "Orphaned Lock" if not is_alive else ("GPU Idle (0% >1h)" if is_gpu_idle else "24h Timeout")
+                logging.warning(f"💀 [Zombie Reaper V2] Reaping task '{entry}' on GPU {assigned_gpu}. Reason: {reason}. Age: {age_hours:.1f}h")
                 t["status"] = "FAILED"
                 t["end_time"] = now.isoformat()
                 t["reaper_reason"] = reason

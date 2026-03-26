@@ -284,3 +284,29 @@ DATA_ROOT = os.path.dirname(hits[0]) if hits else "/kaggle/input"
 ```python
 _np = lambda x: x.numpy() if hasattr(x, 'numpy') else np.asarray(x)
 ```
+
+### Read-Only `/kaggle/input/` Mount (2026-03-26 实战验证)
+
+Kaggle mounts datasets at `/kaggle/input/` as **completely read-only**. Any attempt to write files (checkpoints, W&B cache, `os.makedirs()`) under this path will crash with `OSError: [Errno 30] Read-only file system`. This is **not documented prominently** in official Kaggle docs.
+
+**Mandatory fix**: All kernel bootstrapper scripts must include at the very top:
+
+```python
+import os
+os.chdir('/kaggle/working')  # The ONLY writable directory
+```
+
+### Credential Pre-Flight Gate (2026-03-26 血的教训)
+
+Before any `kaggle datasets create` or `kaggle kernels push`, **MUST validate credentials** via a whoami handshake:
+
+```bash
+export KAGGLE_USERNAME="TARGET_USER" KAGGLE_KEY="TARGET_KEY"
+kaggle datasets list --user TARGET_USER  # Exit 0 = valid
+```
+
+If 401 → **ABORT immediately**. Do not proceed to push.
+
+**SSoT**: The only authoritative source for Kaggle API tokens is `Kaggle Web > Settings > API > Create New Token`. Local files (`kaggle.json`, env vars) are **caches only** and must be periodically synced.
+
+See also: `KAGGLE_COMPUTE_PROFILE.md [AB-KAG-04/05/06]` and `04_AGENT_ANTIBODIES.md [AB-050]`.

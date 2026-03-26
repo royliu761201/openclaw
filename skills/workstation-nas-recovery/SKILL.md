@@ -1,5 +1,5 @@
 ---
-name: gpu-reboot-recovery
+name: workstation-nas-recovery
 description: Post-reboot recovery protocol for 90-series GPU workstations. Remounts the NAS, restores CUDA guards, and relaunches interrupted background jobs.
 ---
 

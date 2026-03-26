@@ -261,3 +261,18 @@ _Retrospective Issue_: Highly specific physical operational rules (like Mac slee
 - **The PM2 Reconnaissance Law**: Never blindly restart PM2 processes on remote nodes (e.g., `pm2 reload openclaw-gateway`). Always execute `pm2 list` and read `ecosystem.config.cjs` first to identify the exact, official daemon name before taking action.
 - **The True Hardware Topology**: Nodes 02/03 are simply local Mac clients. Do NOT refer to them as GPU servers. The true, singular heavy-compute GPU cluster is accessed exclusively via the designated IP (`10.190.30.220`).
 - **Offline Mode Preservation**: Laptops (Node 01/02/03) frequently go to sleep on battery. You MUST NOT perform heavy dataset downloads (>1GB) or long-running computations directly on these local terminals. You MUST route heavy data lifting to the GPU Server (`10.190.30.220`) or Kaggle P100 arrays to prevent job death upon host sleep.
+
+### 27. The Nested Quote Poison (Vault Serialization Trap)
+
+_Retrospective Issue_: An explicitly quoted API key (`"\"AIzaSy...\""`) inside `secrets_flat.json` was synced via `sync_secrets.py`, injecting literally escaped double-quotes into the PM2 `GOOGLE_API_KEY` process environment. The LLM refused it with an `API_KEY_INVALID` HTTP 400 error, leading to a long wild goose chase.
+
+- **The Serialization Law**: When writing JSON vault configurations (`secrets_flat.json`), **NEVER** wrap the string values in secondary double-quotes (e.g., `""abc""`). The extraction scripts perform internal escaping; providing manual pre-escaped quotes injects literal quote characters straight into Node/Python memory, instantly breaking strict Google/Anthropic auth headers.
+
+### 28. The PM2 `--update-env` Phantom Load (Environment Context Trap)
+
+_Retrospective Issue_: Executing `ssh 02 "pm2 reload dandan-mac02 --update-env"` failed to inject the newly synced `~/.openclaw_env` because SSH instantiated an empty headless shell that was completely blind to the new file on disk.
+
+- **The Shell Sourcing Mandate**: `pm2 reload --update-env` **does NOT** re-read config files from disk by itself—it only absorbs variables present in the **current active shell**.
+- **The Execution Formula**: When running a Zero-Downtime Hot-Reload via SSH for a configuration fix, you **MUST** physically source the environment payload in the exact same command chain before triggering the reload:
+  `ssh 02 "source ~/.openclaw_env && pm2 reload dandan-mac02 --update-env"`
+  Failure to source the file guarantees PM2 will reload with the old ghost cache, deceiving you with a false sense of success.
