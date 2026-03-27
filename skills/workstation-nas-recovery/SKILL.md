@@ -60,6 +60,14 @@ ssh 90-1 "bash /jhdx0003008/workspace/projects_core/Frenet/baselines/recover_90.
 > **I/O 绞杀禁令 (Law 8)**：重新拉起下载任务时，严禁并发多路百GB级数据流！
 > 必须单线程串行执行，保护算力核心的 SSH 心跳畅通。
 
+> [!WARNING]
+> **内存红线警告 (32GB RAM Ceiling - 防死机铁律)**
+> 90 系列裸金属工作站（90-1/90-2）的系统物理内存**仅有 32GB**（头重脚轻的算力怪兽）！
+>
+> 1. **严禁 CPU Fallback**：绝对禁止在 GPU OOM 时让 PyTorch 回退到 CPU 内存执行计算。海量 3D 医学张量会瞬间打爆 32G 内存，引发灾难级的 Swap Thrashing（内存全员颠簸），直接导致 SSH 彻底死亡，只能强制拔电源硬重启。
+> 2. **Dataloader 锁死**：处理多模态或 3D NIfTI 图像时，`num_workers` 强烈建议设为 0 或极小值，严防多进程复制内存把机池撑爆。
+> 3. **大数据禁区**：禁止尝试把几十 GB 的完整数据集一次性 `pd.read_csv` 或载入内存池，必须严格 Streaming 或 Chunk 级分发！
+
 ## Quick Reference (一键复制区)
 
 ```bash
