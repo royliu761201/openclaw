@@ -148,3 +148,31 @@ python3 ~/openclaw/skills/workspace/scripts/wandb_sync.py --api-key $WANDB_API_K
 - **Zero Content Pollution**: Never inject native LLM chat artifacts back into the pure `01_GLOBAL_TASK_BOARD.md` SSoT file. The board must remain clean markdown links only.
 - **The Boss Directive Echo**: When the Boss highlights text on an Artifact Projection and leaves a Comment, you must physically weave that Comment back into the original SSoT source file you projected from, prefixing it with `> [!Boss Directive]`.
 - **Archive Verification**: You cannot report a successful "Close" or "Archive" unless the `archive.py` script exits with code `0`.
+
+---
+
+### 8. Global GPU SSoT Allocation (Anti-Collision Protocol)
+
+**🚨 CRITICAL CLUSTER RULE 🚨**:
+Before launching any training or evaluation experiments on the `90-1`, `90-2`, or `gpu` clusters via remote SSH, **you MUST explicitly allocate a GPU via the `workspace` manager**.
+Failure to acquire a GPU lock from the SSoT Registry will cause race conditions and Out-Of-Memory (OOM) failures!
+
+**To allocate a GPU programmatically:**
+
+```bash
+python3 $HOME/openclaw/skills/workspace/scripts/gpu_manager.py allocate \
+    --node "90-1" \
+    --project "CaLaM" \
+    --task "Running RLHF Sweep" \
+    --agent "Antigravity"
+```
+
+_If successful, the script will lock the GPU in `08_GLOBAL_GPU_REGISTRY.md` and print the assigned GPU ID (e.g., `GPU-0`). You MUST use this assigned ID for your `CUDA_VISIBLE_DEVICES` environment variable!_
+
+**To free a GPU after your task cleanly exits or crashes:**
+
+```bash
+python3 $HOME/openclaw/skills/workspace/scripts/gpu_manager.py free \
+    --node "90-1" \
+    --gpu_id "GPU-0"
+```
