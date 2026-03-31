@@ -1,7 +1,7 @@
 import json
 import os
 
-OLD_SECRETS_PATH = os.environ.get("OPENCLAW_OLD_SECRETS_JSON", os.path.expanduser("~/Documents/projects/secrets.json"))
+OLD_SECRETS_PATH = os.environ.get("OPENCLAW_OLD_SECRETS_JSON", os.path.expanduser("~/workspace/.secrets/secrets.json"))
 NEW_SECRETS_PATH = os.environ.get("OPENCLAW_SECRETS_JSON", os.path.expanduser("~/workspace/.secrets/secrets_flat.json"))
 
 def flatten_secrets():
@@ -64,20 +64,16 @@ def flatten_secrets():
     # Remove Nones
     new_secrets = {k: v for k, v in new_secrets.items() if v}
 
-    # ⚠️ ANTI-LOSS PROTECTION: diff before overwrite
-    # If any key exists in current flat file but NOT in new result, warn loudly.
+    # ⚠️ ANTI-LOSS PROTECTION: auto-merge legacy keys that might exist in flat file but not in secrets.json mapping.
     if os.path.exists(NEW_SECRETS_PATH):
         with open(NEW_SECRETS_PATH, "r", encoding="utf-8") as f:
             existing_flat = json.load(f)
         lost_keys = [k for k in existing_flat if k not in new_secrets]
         if lost_keys:
-            print(f"⚠️  [ANTI-LOSS] The following keys exist in the current flat file but are NOT in secrets.json:")
+            print(f"⚠️  [ANTI-LOSS] The following legacy keys exist in the flat file but are missing from the python mapping:")
             for k in lost_keys:
-                print(f"    ❌ WOULD LOSE: {k}")
-            print("⚠️  ACTION REQUIRED: Add these keys to secrets.json before running flatten again.")
-            print("    Aborting to prevent data loss.")
-            import sys
-            sys.exit(1)
+                print(f"    🛡️ PRESERVED (Auto-merged): {k}")
+                new_secrets[k] = existing_flat[k]
 
     with open(NEW_SECRETS_PATH, "w", encoding="utf-8") as f:
         json.dump(new_secrets, f, indent=4)
