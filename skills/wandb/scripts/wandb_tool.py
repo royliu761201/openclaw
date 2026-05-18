@@ -5,6 +5,7 @@ import sys
 import json
 import wandb
 import os
+import subprocess
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -151,6 +152,50 @@ def export_latex(args):
         print(json.dumps({"error": str(e)}))
         sys.exit(1)
 
+def probe_env(args):
+    target_hosts = [args.remote] if args.remote else ["localhost"]
+    api_key = get_api_key()
+    
+    # We want to search standard conda environment roots, plus the jhdx array
+    search_dirs = ["~/.conda/envs", "/opt/conda/envs", "/jhdx0003008/envs", "/home/kaixin/.conda/envs"]
+    
+    # The deep probe: Verify the binary, the package, the network, and the API key validity.
+    probe_script = f"""
+    export WANDB_API_KEY='{api_key}'
+    DIRS="{" ".join(search_dirs)}"
+    for d in $DIRS; do
+      eval d=$d
+      if [ -d "$d" ]; then
+        for env in "$d"/*; do
+          if [ -x "$env/bin/python" ]; then
+            if "$env/bin/python" -c "import wandb, os; api=wandb.Api(api_key=os.environ.get('WANDB_API_KEY')); api.default_entity" >/dev/null 2>&1; then
+              echo "$env/bin/python"
+            fi
+          fi
+        done
+      fi
+    done
+    """
+    
+    results = {}
+    for host in target_hosts:
+        try:
+            if host in ["localhost", "127.0.0.1"]:
+                cmd = ["/bin/bash", "-c", probe_script]
+            else:
+                cmd = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", host, probe_script]
+            
+            res = subprocess.run(cmd, capture_output=True, text=True)
+            if res.returncode == 0:
+                valid_paths = [p for p in res.stdout.strip().split("\n") if p]
+                results[host] = valid_paths
+            else:
+                results[host] = {"error": res.stderr.strip() or f"Command failed with exit {res.returncode}"}
+        except Exception as e:
+            results[host] = {"error": str(e)}
+            
+    print(json.dumps({"status": "success", "probe_results": results}, indent=2))
+
 
 def main():
     parser = argparse.ArgumentParser(description="WandB Skill Tool")
@@ -189,6 +234,16 @@ def main():
         help="Output .tex file path (stdout if omitted)"
     )
     
+    # probe
+    p_parser = subparsers.add_parser(
+        "probe",
+        help="Probe Conda environments for W&B readiness across distributed nodes"
+    )
+    p_parser.add_argument(
+        "--remote", default=None,
+        help="Specific remote host to probe via SSH (e.g., 90-1, gpu)"
+    )
+    
     args = parser.parse_args()
     
     if args.command == "log":
@@ -197,6 +252,8 @@ def main():
         list_runs(args)
     elif args.command == "export_latex":
         export_latex(args)
+    elif args.command == "probe":
+        probe_env(args)
     else:
         parser.print_help()
 

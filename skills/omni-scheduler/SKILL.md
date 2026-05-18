@@ -56,33 +56,35 @@ bash $HOME/openclaw/skills/omni-scheduler/scripts/start_scheduler.sh
 ```bash
 python3 $HOME/openclaw/skills/omni-scheduler/scripts/auto_scheduler.py \
   --mode kaggle \
-  --queue ~/workspace/projects_core/experiment_queue.json \
+  --log-path ~/workspace/projects_core/matrix_intent.jsonl \
+  --db-path ~/workspace/projects_core/.scheduler_state/pesso_state.sqlite \
   --target kaggle_account_A
 ```
 
-### 4. Queue Lifecycle & Schema (Self-Managing JSON)
+### 4. CQRS Event Sourcing Schema (The JSONL + SQLite Reducer)
 
-The `experiment_queue.json` file is the shared contract between the Agent (Producer) and the Daemon (Consumer).
+The `matrix_intent.jsonl` file and `pesso_state.sqlite` database form the definitive CQRS contract between the Agent (Producer) and the Daemon (Consumer).
 
-- **The Schema**: Every task must be an object containing: `id` (uuid), `project` (str), `target` (str), `command` (str), `directory` (str), `status` (str), and `created_at` (ISO-8601).
-- **The State Machine**:
-  1. `PENDING`: Appended by the Agent/Boss. Waiting to be executed.
-  2. `RUNNING`: Claimed by the Daemon via locking.
-  3. `COMPLETED` / `FAILED`: Terminal states.
-- **Garbage Collection (The 7-Day Prune)**: To prevent JSON bloat and UI crashing, the unified `auto_scheduler.py` automatically sweeps and deletes any `COMPLETED` or `FAILED` tasks that are older than 7 days during its poll cycle. No manual grooming is required.
+- **The Intent Log (Write-Only)**: Every task action is strictly an append-only event recorded in `projects_core/matrix_intent.jsonl`. No code should ever `open(..., 'r+')` or rewrite this file.
+- **The Projection (Read-Only SSoT)**: The Python reducer instantaneously replays the event log into a local, high-concurrency WAL database: `projects_core/.scheduler_state/pesso_state.sqlite`.
+- **The State Fold**:
+  1. `task.enqueued` events default to `PENDING`.
+  2. `task.assigned` events translate to `RUNNING` along with a GPU ID lock.
+  3. `task.completed` / `task.failed` emit terminal statuses.
+- **Git Protocol**: The `.jsonl` log is optionally tracked. The `.sqlite` projection is ephemeral and strictly git-ignored to prevent continuous merge conflicts.
 
 ### 5. Task Generation (The Producer CLI)
 
-To safely inject tasks into the `experiment_queue.json` without risking JSON syntax corruption, both the Boss and the AI Agent **MUST** use the provided CLI:
+To safely inject event intents into the CQRS backend without manual parsing errors, both the Boss and the AI Agent **MUST** use the provided CLI:
 
 ```bash
 python3 $HOME/openclaw/skills/omni-scheduler/scripts/enqueue_task.py \
   --project "CaLaM" \
-  --command "conda run -n calam bash scripts/run_exp_02.sh" \
-  --dir "~/workspace/projects_core/calam"
+  --entry "scripts/run_exp_02.sh" \
+  --target "local"
 ```
 
-_This instantly appends the payload with a generated UUID and an exact timestamp._
+_This instantaneously appends a `task.enqueued` intent payload into `matrix_intent.jsonl` and triggers a synchronous flush to the SQLite projection._
 
 ## 🛡️ ANTI-HALLUCINATION LAWS (Production Incident Fixes)
 

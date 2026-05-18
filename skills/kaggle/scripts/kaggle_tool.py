@@ -1,11 +1,6 @@
 #!/usr/bin/env python3
 import argparse
 import os
-from dotenv import load_dotenv
-
-# Load env vars BEFORE importing kaggle
-load_dotenv()
-
 import json
 import shutil
 import time

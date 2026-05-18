@@ -121,3 +121,16 @@ dist/protocol.schema.json
 
 # Synthing
 **/.stfolder/
+
+# Python
+venv/
+.venv/
+ENV/
+*.log
+*.sqlite
+.ipynb_checkpoints/
+data/
+data_local/
+outputs/
+checkpoints/
+wandb/

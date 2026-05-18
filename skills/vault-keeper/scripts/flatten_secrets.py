@@ -18,6 +18,7 @@ def flatten_secrets():
         "HF_TOKEN": old.get("hf_token") or old.get("HF_TOKEN"),
         "WANDB_API_KEY": old.get("wandb_api_key") or old.get("WANDB_API_KEY"),
         "GITHUB_TOKEN": old.get("github_token"),
+        "GITHUB_OAUTH_TOKEN": old.get("github_oauth_token"),
         "GOOGLE_API_KEY": old.get("google_api_key") or old.get("GOOGLE_API_KEY"),
         
         # Groq

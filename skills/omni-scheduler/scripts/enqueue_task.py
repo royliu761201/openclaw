@@ -1,87 +1,83 @@
 #!/usr/bin/env python3
-"""
-Queue Producer (Task Generator)
-Used by the Agent (during PDCA) or the Boss to safely inject new PENDING tasks into the SSoT JSON queue.
-"""
+"""Append immutable scheduler intents into the PESSO CQRS event log."""
+
+from __future__ import annotations
+
 import argparse
-import json
-import os
-import uuid
-import logging
-from datetime import datetime
+import sys
+from pathlib import Path
 
-logging.basicConfig(level=logging.INFO, format='➕ [Queue Producer] %(message)s')
 
-def enqueue_task(queue_path, project, command, directory, target, entry, datasets, conda_env):
-    # Ensure queue exists
-    if not os.path.exists(queue_path):
+WORKSPACE_ROOT = Path("/Users/roy-jd/workspace")
+PESSO_ROOT = WORKSPACE_ROOT / "projects_core" / "PESSO"
+if str(PESSO_ROOT) not in sys.path:
+    sys.path.insert(0, str(PESSO_ROOT))
 
-        data = {"tasks": []}
-        logging.info("Queue file not found. Creating a fresh JSON schema.")
-    else:
-        try:
-            with open(queue_path, 'r') as f:
-                data = json.load(f)
-        except json.JSONDecodeError:
-            logging.error(f"FATAL: The queue file {queue_path} is corrupted. Could not parse JSON.")
-            return False
+from src.cqrs.event_store import (  # noqa: E402
+    DEFAULT_EXPERIMENT_QUEUE,
+    DEFAULT_OMNI_QUEUE,
+    MatrixIntentEventStore,
+)
+from src.cqrs.reducer import DEFAULT_DB_PATH, PESSOStateReducer  # noqa: E402
 
-    task_id = str(uuid.uuid4())[:8]
-    
-    # Auto-wrap the command in the designated Conda environment for headless GPU servers
-    if not conda_env:
-        conda_env = project.lower()  # fallback to project name
-        
-    # Prevent double wrapping if the user already typed conda run
-    if not command.startswith('/root/miniconda3/bin/conda run') and not command.startswith('conda run'):
-        command = f"/root/miniconda3/bin/conda run -n {conda_env} {command}"
-    elif command.startswith('conda run'):
-        command = command.replace('conda run', '/root/miniconda3/bin/conda run')
-        
-    new_task = {
-        "id": f"task_{task_id}",
-        "project": project,
-        "target": target,
-        "command": command,
-        "entry": entry,
-        "directory": directory,
-        "group": project,
-        "status": "PENDING",
-        "created_at": datetime.now().isoformat()
-    }
 
-    if datasets:
-        new_task["kaggle_payload"] = {
-            "dataset_mounts": datasets,
+def enqueue() -> None:
+    parser = argparse.ArgumentParser(description="Append a task.enqueued intent into the PESSO CQRS backend")
+    parser.add_argument("--project", required=True, help="Project name")
+    parser.add_argument("--entry", required=True, help="Entry script path")
+    parser.add_argument("--target", choices=["local", "kaggle_a", "kaggle_b"], default="local")
+    parser.add_argument("--datasets", nargs="*", default=[], help="Optional dataset mounts for Kaggle payloads")
+    parser.add_argument("--queue-name", choices=[DEFAULT_OMNI_QUEUE, DEFAULT_EXPERIMENT_QUEUE], default=None)
+    parser.add_argument("--command", default=None)
+    parser.add_argument("--dir", dest="directory", default=None)
+    parser.add_argument("--env", default=None)
+    parser.add_argument("--group", default=None)
+    parser.add_argument("--task-id", default=None, help="Explicit external task identifier")
+    parser.add_argument("--actor", default="enqueue_task.py")
+    parser.add_argument("--status", default="PENDING")
+    parser.add_argument("--db-path", default=str(DEFAULT_DB_PATH))
+    parser.add_argument("--log-path", default=None)
+    args = parser.parse_args()
+
+    queue_name = args.queue_name
+    if queue_name is None:
+        queue_name = DEFAULT_EXPERIMENT_QUEUE if args.command or args.directory or args.group else DEFAULT_OMNI_QUEUE
+
+    payload: dict[str, object] = {}
+    if args.target.startswith("kaggle"):
+        payload["kaggle_payload"] = {
+            "dataset_mounts": list(args.datasets),
+            "secret_mounts": ["WANDB_API_KEY"],
             "gpu_type": "P100",
-            "internet": True
+            "internet": True,
         }
-    
-    data.setdefault("tasks", []).append(new_task)
-    
-    # Save safely
-    with open(queue_path, 'w') as f:
-        json.dump(data, f, indent=4)
+    if args.env:
+        payload["env"] = args.env
 
-        
-    logging.info(f"Successfully enqueued new PENDING task for project [{project}].")
-    logging.info(f"  -> Task ID: {new_task['id']}")
-    logging.info(f"  -> Target:  {target}")
-    logging.info(f"  -> Entry:   {entry}")
-    logging.info(f"  -> Command: {command}")
-    return True
+    event_store = MatrixIntentEventStore(log_path=args.log_path) if args.log_path else MatrixIntentEventStore()
+    reducer = PESSOStateReducer(log_path=event_store.log_path, db_path=args.db_path)
+
+    event = event_store.append_enqueue_intent(
+        queue_name=queue_name,
+        project=args.project,
+        entry=args.entry,
+        target=args.target,
+        actor=args.actor,
+        command=args.command,
+        directory=args.directory,
+        group_name=args.group,
+        payload=payload,
+        status=args.status,
+        external_task_id=args.task_id,
+    )
+    reducer.refresh_projection()
+
+    print(f"✅ Task [{args.project}] appended into [{queue_name}]")
+    print(f"   Task Key: {event['task_key']}")
+    print(f"   Intent ID: {event['intent_id']}")
+    print(f"   Intent Log: {event_store.log_path}")
+    print(f"   SQLite Projection: {Path(reducer.db_path)}")
+
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Safely inject a new task into the experiment Queue.")
-    parser.add_argument("--queue", default=os.path.expanduser("~/workspace/projects_core/experiment_queue.json"), help="Path to PDCA JSON queue")
-    parser.add_argument("--project", required=True, help="Target project name (e.g., CaLaM, Frenet)")
-    parser.add_argument("--target", default="local", help="Execution target (e.g., local, kaggle_account_A)")
-    parser.add_argument("--entry", required=True, help="Entry script for cloud execution packaging.")
-    parser.add_argument("--datasets", nargs='*', help="List of Kaggle dataset mounts (e.g., rajat936/pdebench-coarse)")
-    parser.add_argument("--command", required=True, help="The literal bash command to execute (e.g., 'conda run -n calam bash scripts/run.sh')")
-    parser.add_argument("--dir", required=True, help="The absolute directory to execute the command inside.")
-    parser.add_argument("--env", help="The specific conda environment to execute in (defaults to lowercase project name)")
-    
-    args = parser.parse_args()
-    
-    enqueue_task(args.queue, args.project, args.command, args.dir, args.target, args.entry, args.datasets, args.env)
+    enqueue()

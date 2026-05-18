@@ -92,13 +92,19 @@ description: Advanced end-to-end data reconnaissance and physical retrieval macr
 # rsync 推送: rsync --partial -e "ssh -J node06"
 ```
 
-## Law 8: The Compute-Node Subjugation Fallacy 🚨
+## Law 8: The Compute-Node Subjugation Fallacy 🚨 (NFS I/O Choke Ban)
 
 **2026-03-26 深刻教训**: 绝对不可将 90 系列裸金属工作站（90-1/90-2，仅 32GB RAM）用作超大体量资产（>100GB）的并发下载与极速解压（Unzip）宿主机。多线程数据注入与碎片化写入会引发灾难级的存储阵列 I/O 阻塞（I/O Wait），直接导致节点网络层瘫痪（SSH 握手严重超时，`Connection timed out`），白白锁死且浪费了极高昂的算力资源。
+**2026-03-27 第二次血泪固化 (POSTMORTEM-002)**: 先前的认知存在致命盲区——以为只要去掉 `--unzip` 的负担，90-1 就能安全后台排队下载 `.zip` 容器。**这是极度危险的谬误！** 因为即使是纯下载，只要目标路径是远程网络挂载盘（如 `/jhdx0003008`），90-1 孱弱的网卡和 I/O 系统都将被外网超速下载与局域网 NFS 回写的双重洪流瞬间打爆，引发大量 `D` 状态不可中断进程，节点必定**再次暴死失联**。
+**不可践踏的黄金法则 (Local Disk First Protocol)**:
+若因为 K8s 防火墙阻断而**被迫**要在 90-1 上进行穿透墙的重型文件攫取，**绝对禁止直接填入 NFS 挂载点目录！**
+1. 必须将目标路径重定向到 **90-1 本地的 NVMe 固态硬盘** (如 `/tmp` 或用户家目录)。
+2. 本地落盘 100% 成功后。
+3. 再通过 `rsync --bwlimit=20000` (限速 20MB/s) 等守护进程缓慢向 `/jhdx0003008` NFS 移交。强行直写杀无赦。
 
 ## Law 9: GPU-Server-First Download Mandate (航母优先下载铁令) 🚢
 
-**2026-03-27 固化**: 所有超过 10GB 的重型数据集下载，**必须直接在 GPU 主服务器 (10.190.30.220) 内部执行**，严禁在 90 系列工作站上发起！
+**2026-03-27 固化**: 所有超过 10GB 的重型数据集下载，**优先且必须直接在拥有一级存储群支撑的 GPU 主服务器 (10.190.30.220) 内部执行**，严禁在网络带宽易受波动的 90 系列工作站上发起！
 
 **物理原理**：
 | | 90-x 工作站 | GPU 主服 (10.190.30.220) |
@@ -117,7 +123,13 @@ ssh 90-1 "ssh -p 30305 root@10.190.30.220"
 conda activate /jhdx0003008/envs/workspace
 
 # 在主服内部直接下载 (本地磁盘写入，零 SSHFS 开销)
-nohup kaggle datasets download -d <slug> --path /jhdx0003008/data/<target> > /jhdx0003008/data/fetch_<name>.log 2>&1 &
+# 使用绝对路径确保非交互式 Shell 下依然可用
+nohup /jhdx0003008/envs/workspace/bin/kaggle datasets download -d <slug> --path /jhdx0003008/data/<target> > /jhdx0003008/data/fetch_<name>.log 2>&1 &
 ```
 
-**例外条件**：仅当 GPU 主服的防火墙完全封锁目标 URL 时（如 HuggingFace），才退降到 Node 05 (加拿大全通) 中继再 SCP 回传。
+**2026-03-27 终极验证 (Restriction Cleared)**:
+经实测证明，先前认为 GPU 服务器存在“下载受限”（DNS/K8s 阻断）而被迫转向 90-1 的判断属于以偏概全或临时网络抖动引发的误判。当前 GPU 服务器 (10.190.30.220) 的 DNS 解析与 Kaggle API 通信已全面恢复正常（Ping/Host 验证通过）。
+**以此为准：今后所有大体量下载任务，首选且必须在 GPU 服务器内部发起！** 严禁以“受限”为借口私自降级到 90 系物理机进行直写。
+
+**例外条件**：仅当 GPU 主服的防火墙确凿地（由 Pre-flight 验证）完全封锁目标 URL 时，才允许退降到 Node 05 (加拿大全通) 中继再 SCP 回传，或按照 Law 8 使用 90-1 本地盘中转。
+

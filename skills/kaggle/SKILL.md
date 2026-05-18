@@ -14,7 +14,7 @@ Advanced tools for Kaggle automation.
 The script requires Kaggle authentication credentials. You can provide these in two ways:
 
 1. **Environment Variables** (Recommended):
-   Add the following to your project's `.env` file:
+   Export the following in the shell or runner that invokes the tool. If you keep them in a project `.env`, you must source that file explicitly before running the command; `kaggle_tool.py` no longer auto-loads `.env`.
 
    ```bash
    KAGGLE_USERNAME=your_username
@@ -56,17 +56,25 @@ Create or update a Kaggle dataset. Code-as-Dataset supported.
 ./scripts/kaggle_tool.py dataset_push "workspace/my_dataset" -m "Update" -z
 ```
 
-### `kaggle_kernel_push`
+### `kaggle_kernel_push` (Safeguarded)
 
-Push (deploy) a kernel to Kaggle.
+Push (deploy) a kernel to Kaggle. **RAW PUSHING VIA CLI IS NOW FORBIDDEN.** You must use the python controller to prevent Dual-Account hallucination and CPU/GPU accelerator misallocation.
 
 - **path** (string, required): Local folder containing `kernel-metadata.json` and script file.
+- **account** (string, required): The target account credentials to use (e.g. `roylxh5147` or `account_B`). Prevents quota leakage.
+- **hardware** (string, required): Explicit accelerator declaration (`5CPU` or `2P100`).
 
-**Usage**:
+**Usage (The Kaggle Controller)**:
 
 ```bash
-./scripts/kaggle_tool.py kernel_push "workspace/my_kernel"
+# To push a heavy PyTorch script to the 2x P100 Dual GPU under account A:
+python3 /Users/roy-jd/workspace/.local_skills/kaggle/scripts/kaggle_controller.py push "workspace/my_kernel" --account roylxh5147 --hardware 2P100
+
+# To push a lightweight scraping/EDA script to the 5x CPU under account B:
+python3 /Users/roy-jd/workspace/.local_skills/kaggle/scripts/kaggle_controller.py push "workspace/my_eda" --account account_B --hardware 5CPU
 ```
+
+The controller will auto-inject the correct `"accelerator"` metadata and ensure the specific `KAGGLE_CONFIG_DIR` is loaded before touching the cloud.
 
 ### `kaggle_kernels_list`
 
@@ -199,6 +207,30 @@ curl -L --resolve www.kaggle.com:443:35.244.233.98 \
      "https://www.kaggle.com/api/v1/datasets/download/OWNER/DATASET_NAME"
 ```
 
+### 🇦🇺 Internal Mirror Protocol (Sydney Physics Cluster)
+
+> [!IMPORTANT]
+> **GPU Node Isolation**: The Sydney `gpu` node (Node 220) cannot resolve `www.kaggle.com` directly. It MUST use the internal mirror gateway (Node 90-1).
+
+**Step 1: Infrastructure Mapping**
+If `ping kaggle-mirror.physics` fails, inject the following into `/etc/hosts` (requires sudo or coordination with Node 90-1):
+```bash
+10.190.35.201 kaggle-mirror.physics
+```
+
+**Step 2: Environment Injection**
+Force the Kaggle CLI to route all API calls through the internal physics mirror:
+```bash
+export KAGGLE_API_ENDPOINT="https://kaggle-mirror.physics"
+export KAGGLE_CONFIG_DIR="/path/to/your/project/.kaggle"
+```
+
+**Step 3: Protocol Verification**
+Perform a zero-trust handshake before launching heavy downloads:
+```bash
+curl -k -I https://kaggle-mirror.physics
+```
+
 ### Known Traps (from historical postmortems)
 
 | #   | Trap                                                                                                                                                                                                                              | Killed     | Fix                                                                                                                                                                                                    |
@@ -217,7 +249,9 @@ curl -L --resolve www.kaggle.com:443:35.244.233.98 \
 | 12  | **Script Mode Phantom Files** — `kernel_type: "script"` only deploys the single `code_file`. Companion `.py` files in the same folder are silently ignored and will produce `FileNotFoundError` at runtime.                       | 2026-03-20 | Base64-encode companion scripts and self-extract them at runtime inside the entry point. Or use `dataset_sources` to mount them.                                                                       |
 | 13  | **Disk Overflow on Data Generation** — Kaggle free tier has **20GB disk limit**. Data generation kernels that produce large HDF5/tar outputs will silently die with "disk space exceeded" if you don't pre-calculate output size. | 2026-03-21 | **Always do capacity math before pushing**: `n_samples × n_configs × per_sample_MB < 20GB`. Include tar overhead (~1.5x). Reduce `--n_samples` for Kaggle runs.                                        |
 | 14  | **Skipping SKILL.md** — Agent wrote custom Kaggle code without reading this SKILL.md first, causing a cascade of 5 avoidable errors (CLI not found → 401 → FileNotFoundError → disk overflow) over 12 hours.                      | 2026-03-21 | **This SKILL.md exists for a reason.** Read it BEFORE writing any Kaggle automation code. Every trap above was discovered the hard way.                                                                |
-| 15  | **GPU Metadata Lock (P100 Trap)** — Attempting to set `"accelerator": "GPU_T4"` in `kernel-metadata.json` for script deployments is ignored. Kaggle scripts ONLY accept `"accelerator": "GPU"` which strictly forces legacy P100. | 2026-03-27 | Accept `"accelerator": "GPU"`, but manually downgrade PyTorch via pip before any ML imports (`pip install torch==2.3.1 --index-url https://download.pytorch.org/whl/cu118`) to restore Pascal support. |
+| 15  | **GPU Metadata Lock (P100 Trap)** — Attempting to set `"accelerator": "GPU_T4"` in `kernel-metadata.json` for script deployments is ignored. Kaggle scripts ONLY accept `"accelerator": "GPU"` which strictly forces legacy P100. | 2026-03-27 | See [AB-KAG-07v2] below. Use `torch 2.7.1+cu126` wheel + `torchvision` from cu126 index + `os.execvpe()` process restart. The old `torch==2.3.1+cu118` protocol is **dead** as of 2026-04 Kaggle images. |
+| 16  | **Torch/Torchvision Version Mismatch** — Installing only torch from cu126 but leaving system torchvision (0.25+cu128) causes `RuntimeError: operator torchvision::nms does not exist` due to ABI incompatibility. | 2026-04-05 | Always co-install `torchvision` alongside `torch` from the **same cu126 index**. Never install torch alone. |
+| 17  | **Module Cache Poisoning** — `pip install torch==X` in the same Python process that already imported torch doesn't replace the in-memory module. `load_state_dict` then crashes with `ModuleNotFoundError: torch.utils.serialization`. | 2026-04-05 | Use `os.execvpe()` to fully restart the script after pip install, with an env-var guard (`MY_TORCH_COMPAT_READY=1`) to prevent infinite re-exec loops. |
 
 ### 🛡️ Kernel Push Pre-Flight Checklist (MANDATORY)
 
@@ -238,7 +272,7 @@ If a kernel execution fails:
 
 1. **Check Status**: Use `kernels_list` to see if it's "error" or "running".
 2. **Get Logs**: Use `kernels_output` to download the log files (`.log`).
-3. **Auth Errors (403)**: Ensure `.env` has valid `KAGGLE_USERNAME` and `KAGGLE_KEY`.
+3. **Auth Errors (403)**: Ensure the current shell environment or `~/.kaggle/kaggle.json` has valid `KAGGLE_USERNAME` and `KAGGLE_KEY`.
 4. **Auth Errors (401 Unauthorized during Kernel Push)**: The Notebook API requires the destination Kaggle account to be **Phone Verified**. Even if the API key can download datasets, it will return 401 on `kernel_push` if unverified. **Resolution**: Switch to a verified backup account key (e.g., `KAGGLE_ROYLXH_KEY`) using official dispatch scripts.
 5. **Conflict (409 Conflict during Kernel Push)**: The `title` field in `kernel-metadata.json` MUST mathematically map to the kernel slug in the `id` field. Do NOT use human-readable titles that differ from the slug, or Kaggle will instantly reject the push with a 409 URL Conflict. **Resolution**: Set `"title": "$SLUG"`.
 
@@ -315,15 +349,86 @@ If 401 → **ABORT immediately**. Do not proceed to push.
 **SSoT**: The only authoritative source for Kaggle API tokens is `Kaggle Web > Settings > API > Create New Token`. Local files (`kaggle.json`, env vars) are **caches only** and must be periodically synced.
 
 - **`[AB-KAG-06] Fail-Fast Smoke Test Before Full Sweep`**: 向 Kaggle 发射大规模矩阵实验前，**必须先用最小单元任务（1 个 task, 1 轮 epoch）做 Smoke Test 探针**。只有探针返回 `KernelWorkerStatus.COMPLETE` 后，才允许发射全量 Sweep。禁止未经探针直接全量盲推！(2026-03-26 SynergyFL 实战验证)
-- **`[AB-KAG-07] Kaggle Script GPU Lock (P100 架构陷阱)`**: 在通过 API 发送 `kernel_type: "script"` 的后台任务时，`kernel-metadata.json` 中的 `accelerator` 字段**无法强制指定 `"GPU_T4"`**。系统只能接受 `"accelerator": "GPU"`，且云端**默认全部强制分配古老的 P100 (Pascal) 架构**。
+- **`[AB-KAG-07v2] Kaggle Script GPU Lock (P100 sm_60 架构陷阱) — 2026-04-05 实战更新`**: 在通过 API 发送 `kernel_type: "script"` 的后台任务时，`kernel-metadata.json` 中的 `accelerator` 字段**无法强制指定 `"GPU_T4"`**。系统只能接受 `"accelerator": "GPU"`，且云端**默认全部强制分配古老的 P100 (Pascal, sm_60) 架构**。
 
-  > **严重后果**: Kaggle 官方新版容器搭载了 Python 3.12 和 PyTorch >= 2.4。PyTorch 从 2.4 版本开始，默认的 CUDA 12 构建包**彻底移除了对 P100 (sm_60) 的 SASS 支持**。任何在此容器内的 `torch.relu` 等硬件交互都会导致 `CUDA error: no kernel image is available` 无报错瞬间闪退。
+  > **严重后果**: Kaggle 官方新版容器搭载 Python 3.12 和 PyTorch >= 2.10+cu128。PyTorch 从 2.4 版本开始，默认的 CUDA 12.8 构建包**彻底移除了对 P100 (sm_60) 的 SASS 支持**。硬件交互会导致 `CUDA error: no kernel image is available` 闪退。
 
-  **强制求生法则**: 如果你部署的是要求 GPU 的脚本 Kernel，你必须**在 Python 脚本的第零行（最开头）** 插入一个强行的 Pip 降级命令，下载带有 CUDA 11.8 (cu118) 的 PyTorch 2.3 系列包，从而恢复原生的 P100 SASS 码。
+  > **⚠️ 旧协议 (cu118 / torch 2.3.1) 已失效！** Kaggle 2026-04 容器 Python 3.12 环境下 `torch 2.3.1+cu118` 的 `torchvision` 加载时会崩溃 (`ModuleNotFoundError: torch.utils.serialization`)。必须使用下面的 v2 协议。
+
+  **[AB-KAG-07v2] 强制求生法则 (经 PIQ / RiskNO / TopoTME 三项目验证)**:
+
+  核心要点：
+  1. **使用 `torch 2.7.1+cu126`** 而非 2.3.1 — 这是目前已知最后一个支持 sm_60 的官方 wheel
+  2. **同时安装 torchvision** — 从同一 cu126 索引安装，避免 operator registration 冲突
+  3. **`os.execvpe()` 重启** — pip 安装后必须重启进程，否则 Python 模块缓存会加载旧版 torch
+  4. **环境变量防重入** — 设置一个标志位避免重启后再次触发安装
 
   ```python
-  import subprocess
-  subprocess.run(["python3", "-m", "pip", "install", "torch==2.3.1", "torchvision==0.18.1", "--index-url", "https://download.pytorch.org/whl/cu118"])
+  # === [AB-KAG-07v2] P100 COMPATIBILITY PROTOCOL ===
+  # MUST be at the VERY TOP of your script, BEFORE any `import torch`
+  import subprocess, sys, os
+
+  CU126_TORCH_VERSION = "2.7.1+cu126"
+
+  def _resolve_cu126_torch_wheel():
+      py_tag = f"cp{sys.version_info.major}{sys.version_info.minor}"
+      version_tag = CU126_TORCH_VERSION.replace("+", "%2B")
+      return (
+          f"https://download.pytorch.org/whl/cu126/"
+          f"torch-{version_tag}-{py_tag}-{py_tag}-manylinux_2_28_x86_64.whl"
+      )
+
+  def _ensure_compatible_torch():
+      if os.environ.get("MY_TORCH_COMPAT_READY", "0") == "1":
+          return  # Already re-exec'd
+
+      try:
+          import torch
+      except ImportError:
+          return
+
+      if not torch.cuda.is_available():
+          return
+
+      try:
+          capability = torch.cuda.get_device_capability(0)
+      except Exception:
+          return
+
+      if capability >= (7, 0):
+          return  # T4/V100/A100 etc. — no fix needed
+
+      # P100 (sm_60) detected. Reinstall torch + torchvision from cu126.
+      subprocess.run([
+          sys.executable, "-m", "pip", "install", "-q",
+          "--upgrade", "--force-reinstall", "--no-cache-dir",
+          "--index-url", "https://download.pytorch.org/whl/cu126",
+          "--extra-index-url", "https://pypi.org/simple",
+          _resolve_cu126_torch_wheel(),
+          "torchvision",  # MUST co-install to avoid operator mismatch
+      ], check=True)
+
+      # Re-exec script so Python loads the NEW torch cleanly
+      reexec_env = os.environ.copy()
+      reexec_env["MY_TORCH_COMPAT_READY"] = "1"
+      os.execvpe(sys.executable, [sys.executable, __file__, *sys.argv[1:]], reexec_env)
+
+  _ensure_compatible_torch()
+  # === END PROTOCOL ===
+
+  import torch  # NOW safe to import
   ```
 
-See also: `KAGGLE_COMPUTE_PROFILE.md [AB-KAG-04/05/06/07]` and `04_AGENT_ANTIBODIES.md [AB-050]`.
+  **参考实现**:
+  - PIQ: `piq_soft_stabilizer_kaggle.py` → `ensure_compatible_torch()`
+  - RiskNO: `scripts/ensure_legacy_torch_compat.py` → `build_pip_command()` + `os.execvpe()`
+  - TopoTME: `kaggle_pack/kernel_main.py` → `_ensure_compatible_torch()` (V6 成功)
+
+
+- **`[AB-KAG-08] Kaggle Quota Preservation (Poison Pill Override)`**: The official Kaggle CLI **does not have a `cancel` command** for running kernels. If you need to immediately abort a running kernel to stop it from wasting the 30-hour weekly GPU quota, DO NOT hallucinate a `kaggle kernels cancel` command.
+  
+  **Strategy**: Push an overriding "Poison Pill". Create an empty script that just calls `sys.exit(0)`, and use `kaggle kernels push` with the **exact same `kernel_slug` and `username`**.
+  
+  **Mechanism**: Kaggle's backend queue detects the new push, instantly terminates the old running P100 pod, runs the new 1-second empty script, and completes. This guarantees an instant remote kill and frees the GPU quota.
+
+See also: `KAGGLE_COMPUTE_PROFILE.md [AB-KAG-04/05/06/07/08]` and `04_AGENT_ANTIBODIES.md [AB-050]`.

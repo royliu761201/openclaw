@@ -17,7 +17,9 @@ You MUST execute this skill FIRST whenever:
 - You need to leave a message, note, or error stack trace for another Agent session (`--board-write`).
 - The user wants to see, check, review, or project ANY non-session global text document (.md files) on the SSoT (Global Board, PDCA files, Rules, Idea Lists).
 - You enter a new project or start a session and need context.
+- **[CONTINUITY]** You need to perform a session handoff or resume from a previous state (eg: "prepare handoff", "continue session", "token optimization").
 - The user explicitly issues "close", "archive" (Archive/Close) to shutdown the current session.
+- **[COLD STORAGE]** The user wants to archive a research project for NeurIPS/Journal submission (eg: "冷存", "research archive", "sync to 03").
 - **[ANTI-FRAUD CHECK]** When tasked to "audit", "review", or "reproduce" external or legacy evaluation code/scripts (`run_benchmarks.py`, etc.), you MUST explicitly enforce the End-to-End Traceability rule defined in `03_RESEARCH_PROJECT_LAW.md`. DO NOT assume script integrity based on file names.
 
 ## 🛠️ USAGE (Pure MD-Driven SOP)
@@ -176,3 +178,109 @@ python3 $HOME/openclaw/skills/workspace/scripts/gpu_manager.py free \
     --node "90-1" \
     --gpu_id "GPU-0"
 ```
+
+### 9. Remote GPU Zombie Purger (L20 / 4090 Context Leak Hotfix)
+
+When PyTorch Distributed Data Parallel (DDP), `compile_worker`, or `wandb-core` crash detach from the OS, they lock massive amounts of VRAM without displaying a PID in `nvidia-smi`.
+To globally purge these zombies across a remote SSH node without requiring `sudo` host resetting:
+
+```bash
+bash /Users/roy-jd/openclaw/skills/workspace/scripts/purge_zombies.sh <TARGET_IP> [PORT] [USER]
+```
+_Example for the L20 Cluster:_
+`bash /Users/roy-jd/openclaw/skills/workspace/scripts/purge_zombies.sh 10.190.30.220 30305 root`
+
+### 10. Minimal Research Cold Storage (Server 03 Sync)
+
+For NeurIPS/Journal submissions, use this protocol to archive core code and results while excluding massive data/checkpoints.
+
+```bash
+# Activation: "请使用 workspace 技能进行冷存"
+python3 ~/openclaw/skills/workspace/scripts/cold_archiver.py [PROJECT_PATH]
+```
+
+**Key Patterns**:
+
+- **Inclusions**: `src/`, `scripts/`, `paper/`, `best_model.pt`, `results.json`.
+- **Exclusions**: `*.npz`, `*.ckpt`, `wandb/`, non-mandatory models > 50MB.
+- **Sync Targets**: Primary GPU cluster and Server 03 (Cold Vault).
+
+### 11. NeurIPS Sprint Session Handoff
+
+To maintain continuity across multi-day research sessions, use the `HANDOFF.md` protocol.
+
+**1. Create Handoff (Current Session)**:
+Summarize the current state, GPU allocations, and Kaggle P100 compatibility patches in `~/openclaw/skills/workspace/HANDOFF.md`.
+
+**2. Resume Handoff (New Session)**:
+Read `~/openclaw/skills/workspace/HANDOFF.md` immediately upon startup and present the "Continuation Prompt" to the user.
+
+### 12. Automated Continuity Handoff (Token Optimizer)
+
+When a session becomes too long and token usage is high, use this automated script to generate a high-fidelity "Super-Prompt" for immediate resumption in a new session.
+
+```bash
+# Activation: "准备交接" or "运行 handoff 优化"
+python3 ~/openclaw/skills/workspace/scripts/handoff.py
+```
+
+**What it does**:
+
+- Aggregates `task.md` progress (Done vs Pending).
+- Detects active background processes (SSH, Rsync, Benchmarks).
+- Summarizes the active Design Pattern (`implementation_plan.md`).
+- Outputs a single Markdown block for copy-pasting.
+
+### 12. SSoT Consolidation (归集 — Project Restore & Sync)
+
+**TRIGGER**: User says "归集", "检查SSoT", "restore workspace", "冷存同步", "projects_core 为空", or any indication that local workspace code is missing/degraded after cold storage.
+
+**Architecture**:
+- **SSoT (Single Source of Truth)**: `~/workspace/projects_core/<PROJECT>/` on Mac
+- **GPU Mirror**: `gpu:/jhdx0003008/workspace/projects_core/<PROJECT>/`
+- **Cold Vault (03)**: `03:/Users/roy-003/cold_storage/<PROJECT>/`
+- **Direction**: GPU → Local SSoT (restore) | Local SSoT → 03 (cold push)
+
+**Exclusion Law**: The following intermediate artifacts are NEVER pulled to Mac:
+`*.npz *.h5 *.pt *.ckpt *.pth *.npy wandb/ __pycache__/ .git/ data/raw/ data/processed/ results/checkpoints/`
+
+**Usage**:
+
+```bash
+# Audit all core projects (show local vs GPU integrity)
+python3 ~/openclaw/skills/workspace/scripts/ssot_consolidate.py
+
+# Restore all degraded projects from GPU
+python3 ~/openclaw/skills/workspace/scripts/ssot_consolidate.py --restore
+
+# Restore a specific project
+python3 ~/openclaw/skills/workspace/scripts/ssot_consolidate.py --restore --project FoveaCNO
+
+# Push local SSoT to Server 03 cold storage
+python3 ~/openclaw/skills/workspace/scripts/ssot_consolidate.py --push-cold
+
+# Dry-run (show what would transfer)
+python3 ~/openclaw/skills/workspace/scripts/ssot_consolidate.py --restore --dry-run
+```
+
+**⚠️ CRITICAL**: After any cold storage operation, you MUST run the audit to verify the local SSoT was not degraded. The `--ignore-times` flag is used internally to handle timestamp skew between Mac and GPU.
+
+### 13. High-Throughput Sync Protocol (Internal Network Optimization)
+
+**TRIGGER**: When transferring large datasets (>1GB) or performing SSoT consolidation across high-speed internal networks (Direct Connect / Local Subnet / 10GbE+).
+
+**THE COMPRESSION BAN**: 
+On internal networks with bandwidth >1Gbps, **STRICTLY PROHIBITED** from using `rsync -z`. The CPU cost of compression is the bottleneck, resulting in ~6MB/s speeds. Disabling it yields **200MB/s+**.
+
+**Optimized Pattern**:
+Use `-av` (Archive + Verbose) without `-z`, and force a high-performance cipher:
+
+```bash
+# Correct Pattern for Internal High-Speed Sync
+rsync -av --progress \
+  -e "ssh -c aes128-gcm@openssh.com -o Compression=no" \
+  /source/path/ user@remote:/target/path/
+```
+
+**SSoT Verification**:
+After any high-speed transfer, always verify the file counts and integrity via the `ssot_consolidate.py` audit mechanism.

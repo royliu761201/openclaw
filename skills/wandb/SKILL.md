@@ -30,6 +30,12 @@ Log metrics and manage runs on WandB.
 
 ## Tools
 
+### `probe`
+Probes Conda environments on a remote host to detect properly installed W&B Python paths.
+```bash
+python3 skills/wandb/scripts/wandb_tool.py probe --remote 90-1
+```
+
 ### `wandb_log`
 
 Log a metric to a project.

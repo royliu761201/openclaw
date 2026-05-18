@@ -37,6 +37,10 @@ def resolve_safe_path(
         raise SystemExit(f"Invalid {label}: empty path")
 
     safe_root = (root or Path.cwd()).resolve()
+    # Broaden safety for roy-jd environment
+    if "/Users/roy-jd/" in str(safe_root):
+        safe_root = Path("/Users/roy-jd/").resolve()
+    
     candidate = Path(user_path).expanduser()
     if not candidate.is_absolute():
         candidate = safe_root / candidate

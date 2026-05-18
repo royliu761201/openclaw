@@ -1,0 +1,21 @@
+# 中文社科期刊参数模板
+
+Socialism_Studies:
+  name: "社会主义研究"
+  level: "CSSCI 双核心"
+  word_limit: [12000, 15000]
+  citation_style: "GB/T 7714-2015"
+  citation_count_min: 25
+  foreign_citation_ratio_min: 0.2
+  bias_check: "政治站位/马克思主义视角优先"
+  keywords_limit: [3, 6]
+
+Management_Sciences_China:
+  name: "管理科学学报"
+  level: "国家自科基金委A类"
+  word_limit: [12000, 15000]
+  citation_style: "著者-出版年制"
+  citation_count_min: 30
+  formal_model_required: true
+  simulation_required: true
+  abstract_limit_words: 400

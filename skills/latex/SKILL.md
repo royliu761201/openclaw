@@ -16,7 +16,7 @@ Agents handling LaTeX tasks **must** adhere strictly to the following execution 
 1. **Do not use native OS commands directly.** Never invoke `pdflatex` or `xelatex` using raw terminal commands. The target host machine might be missing critical font databases (e.g., Fandol on Mac 03) or have restrictive sudo rules.
 2. **Always use the `latex_tool.py` wrapper.**
    The tool handles engine selection (`pdflatex` vs `xelatex`), sequential `bibtex` passes, and crucially, an aggressive deep-scan of the generated `.log` file to catch silent `Missing character` drops that the native compiler ignores.
-3. **The Overflow Prevention Rule.** All TikZ graphics, large tables, or wide code blocks MUST be wrapped in `\resizebox{\textwidth}{!}{...}` or structured in equivalent boundary containers to prevent page margin overflows.
+3. **The Overflow & Undefined Reference Prevention Rule.** All TikZ graphics, large tables, or wide code blocks MUST be wrapped in `\resizebox{\textwidth}{!}{...}` or structured in equivalent boundary containers to prevent page margin overflows. Furthermore, agents must actively reject any output document containing undefined references (e.g., `[?]` or `??`).
 4. **Mandatory Artifact Storage.** The generated `.tex` source and final `.pdf` output must reside in the working artifact directory where the user can access them easily.
 
 ## Execution Contract
@@ -52,7 +52,8 @@ After successful compilation (Exit Code 0), the agent **must** perform visual re
    - A page with tables (check alignment, borders)
    - A page with figures (check image rendering)
 3. **View screenshots** via `view_file` to visually confirm rendering
-4. **Fix and recompile** if any issues are found
+4. **Scan for `[?]` / `??` Artifacts**: Actively check the generated bibliography, in-text citations, and equation numbers. If any question marks appear, the semantic linking broke (often due to missing `.bib` keys).
+5. **Fix and recompile** if any issues are found
 
 ### Common CJK Font Issues on macOS
 
